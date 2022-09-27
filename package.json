@@ -1,0 +1,17 @@
+{
+  "name": "react-nest-monorepo",
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@7.11.0",
+  "scripts": {
+    "client": "esno scripts/client.ts",
+    "nest": "esno scripts/server.ts"
+  },
+  "engines": {
+    "node": "^16.15.0"
+  },
+  "devDependencies": {
+    "esno": "^0.16.3",
+    "mri": "^1.2.0"
+  }
+}
