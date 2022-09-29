@@ -14,6 +14,7 @@ importers:
     specifiers:
       '@headlessui/react': ^1.7.2
       '@heroicons/react': ^2.0.11
+      '@tailwindcss/line-clamp': ^0.4.2
       '@types/node': ^16.11.62
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -21,6 +22,7 @@ importers:
       date-fns: ^2.29.3
       eslint: ^8.24.0
       eslint-config-next: 12.3.1
+      immer: ^9.0.15
       next: 12.3.1
       postcss: ^8.4.16
       react: 18.2.0
@@ -36,6 +38,7 @@ importers:
     devDependencies:
       '@headlessui/react': 1.7.2_biqbaboplfbrettd7655fr4n2y
       '@heroicons/react': 2.0.11_react@18.2.0
+      '@tailwindcss/line-clamp': 0.4.2_tailwindcss@3.1.8
       '@types/node': 16.11.62
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -43,11 +46,12 @@ importers:
       date-fns: 2.29.3
       eslint: 8.24.0
       eslint-config-next: 12.3.1_7ilbxdl5iguzcjriqqcg2m5cku
+      immer: 9.0.15
       postcss: 8.4.16
       react-use: 17.4.0_biqbaboplfbrettd7655fr4n2y
       tailwindcss: 3.1.8_postcss@8.4.16
       typescript: 4.8.3
-      zustand: 4.1.1_react@18.2.0
+      zustand: 4.1.1_immer@9.0.15+react@18.2.0
 
   packages/server:
     specifiers:
@@ -1291,6 +1295,14 @@ packages:
     dependencies:
       tslib: 2.4.0
     dev: false
+
+  /@tailwindcss/line-clamp/0.4.2_tailwindcss@3.1.8:
+    resolution: {integrity: sha512-HFzAQuqYCjyy/SX9sLGB1lroPzmcnWv1FHkIpmypte10hptf4oPUfucryMKovZh2u0uiS9U5Ty3GghWfEJGwVw==}
+    peerDependencies:
+      tailwindcss: '>=2.0.0 || >=3.0.0 || >=3.0.0-alpha.1'
+    dependencies:
+      tailwindcss: 3.1.8_postcss@8.4.16
+    dev: true
 
   /@tsconfig/node10/1.0.9:
     resolution: {integrity: sha512-jNsYVVxU8v5g43Erja32laIDHXeoNvFEpX33OK4d6hljo3jDhCBDhx5dhCCTMWUojscpAagGiRkBKxpdl9fxqA==}
@@ -3766,6 +3778,10 @@ packages:
   /ignore/5.2.0:
     resolution: {integrity: sha512-CmxgYGiEPCLhfLnpPp1MoRmifwEIOgjcHXxOBjv7mY96c+eWScsOP9c112ZyLdWHi0FxHjI+4uVhKYp/gcdRmQ==}
     engines: {node: '>= 4'}
+    dev: true
+
+  /immer/9.0.15:
+    resolution: {integrity: sha512-2eB/sswms9AEUSkOm4SbV5Y7Vmt/bKRwByd52jfLkW4OLYeaTP3EEiJ9agqU0O/tq6Dk62Zfj+TJSqfm1rLVGQ==}
     dev: true
 
   /import-fresh/3.3.0:
@@ -6503,7 +6519,7 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /zustand/4.1.1_react@18.2.0:
+  /zustand/4.1.1_immer@9.0.15+react@18.2.0:
     resolution: {integrity: sha512-h4F3WMqsZgvvaE0n3lThx4MM81Ls9xebjvrABNzf5+jb3/03YjNTSgZXeyrvXDArMeV9untvWXRw1tY+ntPYbA==}
     engines: {node: '>=12.7.0'}
     peerDependencies:
@@ -6515,6 +6531,7 @@ packages:
       react:
         optional: true
     dependencies:
+      immer: 9.0.15
       react: 18.2.0
       use-sync-external-store: 1.2.0_react@18.2.0
     dev: true

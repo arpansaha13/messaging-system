@@ -1,8 +1,11 @@
+import { memo } from 'react'
+
+// Components
 import SidebarHeader from './SidebarHeader'
 import ChatList from './ChatList'
 import SearchBar from './SearchBar'
 
-export default function ChatSidebar() {
+const ChatSidebar = () => {
   return (
     <div className='h-full space-y-2'>
       <SidebarHeader />
@@ -14,3 +17,4 @@ export default function ChatSidebar() {
     </div>
   )
 }
+export default memo(ChatSidebar)

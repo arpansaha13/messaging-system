@@ -1,10 +1,17 @@
-import type { NextPage } from 'next'
+import { memo } from 'react'
 
+// Components
 import ChatView from '../components/ChatView'
 import ChatSidebar from '../components/ChatSidebar'
 
+// Stores
+import { useChatListStore } from '../stores/useChatListStore'
+
+// Types
+import type { NextPage } from 'next'
+
 const Home: NextPage = () => {
-  const chatSelected = true
+  const activeChat = useChatListStore(state => state.activeChat)
 
   return (
     <main className='grid grid-cols-10 h-full'>
@@ -13,12 +20,10 @@ const Home: NextPage = () => {
       </section>
 
       <section className='col-span-7 h-full bg-gray-800'>
-        {
-          chatSelected && <ChatView />
-        }
+        { activeChat !== null && <ChatView /> }
       </section>
     </main>
   )
 }
 
-export default Home
+export default memo(Home)

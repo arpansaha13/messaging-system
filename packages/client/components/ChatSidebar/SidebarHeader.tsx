@@ -57,5 +57,4 @@ const SidebarHeader = () => {
     </header>
   )
 }
-
 export default memo(SidebarHeader)

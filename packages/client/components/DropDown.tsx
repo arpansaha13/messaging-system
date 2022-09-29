@@ -1,9 +1,10 @@
 import { Fragment } from 'react'
+// Components
 import { Menu, Transition } from '@headlessui/react'
-
-import type { ReactNode } from 'react'
-
+// Utils
 import classNames from '../utils/classNames'
+// Types
+import type { ReactNode } from 'react'
 
 interface DropDownProps {
   buttonSlot: string | ReactNode
@@ -13,7 +14,7 @@ interface DropDownProps {
   }[]
 }
 
-export default function DropDown({ buttonSlot, menuItems }: DropDownProps) {
+const DropDown = ({ buttonSlot, menuItems }: DropDownProps) => {
   return (
     <Menu as="div" className="relative inline-block text-left">
       {
@@ -64,3 +65,5 @@ export default function DropDown({ buttonSlot, menuItems }: DropDownProps) {
     </Menu>
   )
 }
+// Not memoizing this component because it will frequently update when parent re-renders.
+export default DropDown

@@ -1,18 +1,23 @@
-export interface ChatListItemData {
+export interface ChatListItemType {
   userTag: string
   dp: string
   name: string
-  time: string
+  time: number
   muted: boolean
   read: boolean
   latestMsg: string
-  active: boolean
 }
 
 export interface MessageType {
   msg: string
   /** Whether this message is posted by the logged-in user or not. */
   myMsg: boolean
-  time: string
+  time: number
   status: 'sent' | 'delivered' | 'read'
+}
+
+export interface UserDataType {
+  userTag: string
+  name: string
+  dp: string
 }

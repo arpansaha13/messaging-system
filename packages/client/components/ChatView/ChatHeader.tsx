@@ -1,13 +1,18 @@
-import { EllipsisVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import { memo } from 'react'
-
+// Icons
+import { EllipsisVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+// Components
 import DropDown from '../DropDown'
+// Sotres
+import { useUserStore } from '../../stores/useUserStore'
+import { useChatListStore } from '../../stores/useChatListStore'
+// Types
+import { UserDataType } from '../../types'
 
 const ChatHeader = () => {
-
-  const groupMenuItems = [
+  const chatMenuItems = [
     {
-      slot: 'Group info',
+      slot: 'User info',
       onClick() {
         console.log('clicked')
       },
@@ -19,7 +24,19 @@ const ChatHeader = () => {
       },
     },
     {
+      slot: 'Close chat',
+      onClick() {
+        console.log('clicked')
+      },
+    },
+    {
       slot: 'Mute notifications',
+      onClick() {
+        console.log('clicked')
+      },
+    },
+    {
+      slot: 'Disappearing messages',
       onClick() {
         console.log('clicked')
       },
@@ -31,19 +48,27 @@ const ChatHeader = () => {
       },
     },
     {
-      slot: 'Exit group',
+      slot: 'Delete chat',
       onClick() {
         console.log('clicked')
       },
     },
   ]
+  const users = useUserStore(state => state.users)
+  const activeChat = useChatListStore(state => state.activeChat) as string
+  /**
+   * The details of the user whose chat is opened.
+   */
+  const activeChatUser = users.get(activeChat)!
 
   return (
     <header className='px-4 py-2.5 flex items-center justify-between bg-gray-800'>
       <div className='flex items-center text-gray-400 space-x-3'>
-        <img className="h-10 w-10 rounded-full" src='https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80' alt="" />
+        <img className="h-10 w-10 rounded-full" src={ activeChatUser.dp } alt="" />
 
-        <p className='text-gray-50 font-semibold'>Name</p>
+        <p className='text-gray-50 font-semibold'>
+          { activeChatUser.name }
+        </p>
       </div>
 
       <div className='flex items-center text-gray-400 space-x-2'>
@@ -53,11 +78,11 @@ const ChatHeader = () => {
 
         <DropDown
           buttonSlot={ <EllipsisVerticalIcon className='w-6 h-6 flex-shrink-0' /> }
-          menuItems={ groupMenuItems }
+          menuItems={ chatMenuItems }
         />
       </div>
     </header>
   )
 }
-
+// Memoizing because this component should only update when `activeChat` changes.
 export default memo(ChatHeader)

@@ -1,7 +1,9 @@
+import { memo } from 'react'
+// Icons
 import { MagnifyingGlassIcon } from '@heroicons/react/24/solid'
 import { FunnelIcon } from '@heroicons/react/24/outline'
 
-export default function SearchBar() {
+const SearchBar = () => {
   return (
     <div className='pl-1.5'>
       <div className="flex items-center">
@@ -29,3 +31,4 @@ export default function SearchBar() {
     </div>
   )
 }
+export default memo(SearchBar)
