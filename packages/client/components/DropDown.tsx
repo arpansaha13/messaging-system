@@ -12,9 +12,14 @@ interface DropDownProps {
     slot: string | ReactNode
     onClick: () => void
   }[]
+  /**
+   * Width of menu items dropdown in 'rem' units
+   * @default 12
+   */
+  width?: number
 }
 
-const DropDown = ({ buttonSlot, menuItems }: DropDownProps) => {
+const DropDown = ({ buttonSlot, menuItems, width }: DropDownProps) => {
   return (
     <Menu as="div" className="relative inline-block text-left">
       {
@@ -35,8 +40,8 @@ const DropDown = ({ buttonSlot, menuItems }: DropDownProps) => {
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95"
             >
-              <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 text-gray-100 shadow shadow-black focus:outline-none">
-                <div className="py-1">
+              <Menu.Items className='absolute right-1 z-10 mt-2 origin-top-right rounded-md bg-gray-800 text-gray-100 shadow shadow-black focus:outline-none' style={{ width: `${width ?? 12}rem` }}>
+                <div className="py-2">
                   {
                     menuItems.map((menuItem, i) => {
                       return (
@@ -45,7 +50,7 @@ const DropDown = ({ buttonSlot, menuItems }: DropDownProps) => {
                             <button
                               className={classNames(
                                 active ? 'bg-gray-900' : '',
-                                'block w-full px-4 py-2 text-sm text-left'
+                                'block w-full px-6 py-2.5 text-sm text-left'
                               )}
                               onClick={ menuItem.onClick }
                             >

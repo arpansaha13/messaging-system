@@ -21,7 +21,12 @@ export const useChatStore = create<ChatStoreType>()(
   (set, get) => ({
     chats: new Map<string, MessageType[]>(),
     add(userTag: string, chat: MessageType[]) {
-      set(state => ({ chats: state.chats.set(userTag, chat) }))
+      // Update through `Immer`
+      set(
+        produce(state => {
+          state.chats.set(userTag, chat)
+        })
+      )
     },
     push(userTag: string, messages: MessageType[]) {
       // Use `Immer` for nested updates
@@ -39,7 +44,7 @@ export const useChatStore = create<ChatStoreType>()(
           msg,
           myMsg: true,
           status: 'sent',
-          time: '4:60 PM',
+          time: Date.now(),
         }
       ])
     }

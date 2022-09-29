@@ -2,7 +2,8 @@
 import ChatArea from './ChatArea'
 import ChatHeader from './ChatHeader'
 import ChatFooter from './ChatFooter'
-
+// Hooks
+import { useSize } from 'react-use'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useChatListStore } from '../../stores/useChatListStore'
@@ -12,14 +13,18 @@ export default function ChatView() {
   const chats = useChatStore(state => state.chats)
   const activeChat = useChatListStore(state => state.activeChat) as string
 
-  return (
-    <div className={ 'flex flex-col h-full' }>
-      <ChatHeader />
-
-      <div className='px-20 flex-grow bg-gray-900 overflow-auto'>
-        <ChatArea messages={ chats.get(activeChat) ?? [] } />
+  const [child] = useSize(
+    ({ height }) => (
+      <div className='flex-grow bg-gray-900'>
+        <ChatArea messages={ chats.get(activeChat) ?? [] } height={ height } />
       </div>
+    )
+  )
 
+  return (
+    <div className='flex flex-col h-full'>
+      <ChatHeader />
+      { child }
       <ChatFooter />
     </div>
   )

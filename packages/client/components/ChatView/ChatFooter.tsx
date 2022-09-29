@@ -3,7 +3,7 @@ import { memo, useEffect, useRef, useState } from 'react'
 import { MicrophoneIcon } from '@heroicons/react/24/solid'
 import { PaperClipIcon , FaceSmileIcon } from '@heroicons/react/24/outline'
 // Components
-import TypeArea from './TypeArea'
+import TextArea from './TextArea'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useDraftStore } from '../../stores/useDraftStore'
@@ -22,7 +22,7 @@ const ChatFooter = () => {
   const prevChat = useRef<string>(activeChat)
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && value) {
       send(activeChat, value)
       setValue('')
     }
@@ -53,7 +53,7 @@ const ChatFooter = () => {
       </button>
 
       <div className='px-1 flex-grow'>
-        <TypeArea value={ value } setValue={ setValue } handleKeyDown={ handleKeyDown } />
+        <TextArea value={ value } setValue={ setValue } handleKeyDown={ handleKeyDown } />
       </div>
 
       <button className='p-2 btn-icon'>

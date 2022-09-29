@@ -1,5 +1,4 @@
 import create from 'zustand'
-import { devtools } from 'zustand/middleware'
 
 import type { UserDataType } from '../types'
 
@@ -12,20 +11,18 @@ interface UserStoreType {
 }
 
 export const useUserStore = create<UserStoreType>()(
-  devtools(
-    (set) => ({
-      users: new Map<string, UserDataType>(),
-      init(initUsers: UserDataType[]) {
-        set(() => {
-          const newUsersMap = new Map<string, UserDataType>()
+  (set) => ({
+    users: new Map<string, UserDataType>(),
+    init(initUsers: UserDataType[]) {
+      set(() => {
+        const newUsersMap = new Map<string, UserDataType>()
 
-          for (const user of initUsers) {
-            newUsersMap.set(user.userTag, user)
-          }
+        for (const user of initUsers) {
+          newUsersMap.set(user.userTag, user)
+        }
 
-          return {users: newUsersMap}
-        })
-      },
-    }),
-  )
+        return {users: newUsersMap}
+      })
+    },
+  }),
 )

@@ -1,5 +1,4 @@
 import create from 'zustand'
-import { devtools } from 'zustand/middleware'
 
 import type { ChatListItemType } from '../types'
 
@@ -18,24 +17,22 @@ interface ChatListStoreType {
 }
 
 export const useChatListStore = create<ChatListStoreType>()(
-  devtools(
-    (set) => ({
-      activeChat: null,
-      chatList: [],
-      init(initChatList: ChatListItemType[]) {
-        set(() => {
-          const newChatList: ChatListItemType[] = []
+  (set) => ({
+    activeChat: null,
+    chatList: [],
+    init(initChatList: ChatListItemType[]) {
+      set(() => {
+        const newChatList: ChatListItemType[] = []
 
-          for (const chatListItem of initChatList) {
-            newChatList.push(chatListItem)
-          }
+        for (const chatListItem of initChatList) {
+          newChatList.push(chatListItem)
+        }
 
-          return {chatList: newChatList}
-        })
-      },
-      setActiveChat(userTag: string) {
-        set(() => ({ activeChat: userTag }))
-      }
-    }),
-  )
+        return {chatList: newChatList}
+      })
+    },
+    setActiveChat(userTag: string) {
+      set(() => ({ activeChat: userTag }))
+    }
+  }),
 )

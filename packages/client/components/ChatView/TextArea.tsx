@@ -1,16 +1,24 @@
+import { useEffect, useRef } from 'react'
 // Types
 import type { ChangeEvent, Dispatch, KeyboardEvent, SetStateAction } from 'react'
 
-interface TypeAreaProps {
+interface TextAreaProps {
   value: string
   setValue: Dispatch<SetStateAction<string>>
   handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void
 }
 
-const TypeArea = ({ value, setValue, handleKeyDown }: TypeAreaProps) => {
+const TextArea = ({ value, setValue, handleKeyDown }: TextAreaProps) => {
+  const inputRef = useRef<HTMLInputElement>(null)
+
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
     setValue(e.target.value)
   }
+
+  // Shift focus to the textarea on every render
+  useEffect(() => {
+    inputRef.current?.focus()
+  })
 
   return (
     <div>
@@ -19,6 +27,7 @@ const TypeArea = ({ value, setValue, handleKeyDown }: TypeAreaProps) => {
       </label>
       <div className="relative">
         <input
+          ref={ inputRef }
           id="type-area"
           name="type-area"
           className="block w-full rounded-lg bg-gray-700/70 text-gray-200 px-3 py-2.5 placeholder-gray-400 focus:outline-none"
@@ -33,4 +42,4 @@ const TypeArea = ({ value, setValue, handleKeyDown }: TypeAreaProps) => {
   )
 }
 // Not memoizing this component because it will frequently update on state change.
-export default TypeArea
+export default TextArea

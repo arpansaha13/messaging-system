@@ -6,8 +6,6 @@ import DropDown from '../DropDown'
 // Sotres
 import { useUserStore } from '../../stores/useUserStore'
 import { useChatListStore } from '../../stores/useChatListStore'
-// Types
-import { UserDataType } from '../../types'
 
 const ChatHeader = () => {
   const chatMenuItems = [
@@ -79,6 +77,7 @@ const ChatHeader = () => {
         <DropDown
           buttonSlot={ <EllipsisVerticalIcon className='w-6 h-6 flex-shrink-0' /> }
           menuItems={ chatMenuItems }
+          width={ 14.5 }
         />
       </div>
     </header>

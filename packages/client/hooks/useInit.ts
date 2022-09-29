@@ -47,7 +47,7 @@ export function useInit() {
         latestMsg: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
         muted: false,
         read: true,
-        time: '3:49 AM',
+        time: 1664452378595,
       },
       {
         userTag: 'second',
@@ -56,7 +56,7 @@ export function useInit() {
         latestMsg: 'Latest text message',
         muted: false,
         read: true,
-        time: '3:49 AM',
+        time: 1664452388595,
       },
       {
         userTag: 'third',
@@ -65,7 +65,7 @@ export function useInit() {
         latestMsg: 'Latest text message',
         muted: false,
         read: true,
-        time: '3:49 AM',
+        time: 1664552378595,
       },
     ]
     initChatListStore(initChatListData)

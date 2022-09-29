@@ -23,19 +23,19 @@ export default function ChatList() {
         {
           msg: 'My message',
           myMsg: true,
-          time: '3:29 AM',
+          time: 1664452378595,
           status: 'delivered',
         },
         {
           msg: 'Other message',
           myMsg: false,
-          time: '4:30 AM',
+          time: 1664452388595,
           status: 'sent',
         },
         {
           msg: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
           myMsg: true,
-          time: '5:29 AM',
+          time: 1664552378595,
           status: 'read',
         },
       ]

@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import { format } from 'date-fns'
 
 import type { ChatListItemType } from '../../types'
 
@@ -14,7 +15,7 @@ const ChatListItem = ({ chatListItem }: ChatListItemProps) => {
         <div className='flex justify-between'>
           <p className="text-base text-gray-50">{ chatListItem.name }</p>
           <p className="text-xs text-gray-400 flex items-end">
-            <span>{ chatListItem.time }</span>
+            <span>{ format(chatListItem.time, 'h:mm a') }</span>
           </p>
         </div>
         <div className='flex justify-between'>
