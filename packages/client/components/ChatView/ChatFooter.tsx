@@ -29,7 +29,7 @@ const ChatFooter = () => {
   }
 
   useEffect(() => {
-    // Store the draft, if any.
+    // Store the draft, if any, when `activeChat` changes
     if (value) {
       addDraft(prevChat.current, value)
       setValue('')

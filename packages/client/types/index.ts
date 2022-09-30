@@ -1,6 +1,6 @@
 export interface ChatListItemType {
   userTag: string
-  dp: string
+  dp: string | null
   name: string
   time: number
   muted: boolean

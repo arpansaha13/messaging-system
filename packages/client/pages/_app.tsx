@@ -1,16 +1,13 @@
 // Hooks
-
 import { useDark } from '../hooks/useDark'
-import { useInit } from '../hooks/useInit'
-
+// Immer
+import { enableMapSet } from 'immer'
 // Types
 import type { ReactElement, ReactNode } from 'react'
 import type { NextPage } from 'next'
 import type { AppProps } from 'next/app'
-
 // Styles
 import '../styles/globals.css'
-
 // Layout
 import DefaultLayout from '../layouts/default'
 
@@ -24,7 +21,9 @@ type AppPropsWithLayout = AppProps & {
 
 function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   useDark()
-  useInit()
+
+  // Enable Maps for `Immer`
+  enableMapSet()
 
   // If a layout is not specified then use the default layout
   const getLayout = Component.getLayout ?? ((page) => (

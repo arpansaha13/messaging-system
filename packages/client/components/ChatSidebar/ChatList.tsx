@@ -14,32 +14,13 @@ export default function ChatList() {
   const activeChat = useChatListStore(state => state.activeChat)
   const setActiveChat = useChatListStore(state => state.setActiveChat)
 
-  function handleClick(chatListItem: ChatListItemType) {
+  async function handleClick(chatListItem: ChatListItemType) {
     setActiveChat(chatListItem.userTag)
 
     if (!chats.has(chatListItem.userTag)) {
-      // Fetch from api
-      const tempChat: MessageType[] = [
-        {
-          msg: 'My message',
-          myMsg: true,
-          time: 1664452378595,
-          status: 'delivered',
-        },
-        {
-          msg: 'Other message',
-          myMsg: false,
-          time: 1664452388595,
-          status: 'sent',
-        },
-        {
-          msg: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.',
-          myMsg: true,
-          time: 1664552378595,
-          status: 'read',
-        },
-      ]
-      add(chatListItem.userTag, tempChat)
+      const chatRes = await fetch(`http://localhost:4000/chats/${ chatListItem.userTag }`)
+      const chat: MessageType[] = await chatRes.json()
+      add(chatListItem.userTag, chat)
     }
   }
 
@@ -47,7 +28,7 @@ export default function ChatList() {
     <ul role="list">
       {
         chatList.map((chatListItem) => (
-          <li key={chatListItem.userTag}>
+          <li key={ chatListItem.userTag }>
             <button className={classNames(
                 'px-3 w-full text-left flex items-center relative',
                 chatListItem.userTag === activeChat ? 'bg-gray-700/90' : 'hover:bg-gray-600/40'
