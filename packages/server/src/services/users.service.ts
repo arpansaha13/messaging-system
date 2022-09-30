@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
-// Types
-import type { UserDataType } from 'src/types'
+// Models
+import type { UserDataModel } from 'src/models/user.model'
 
 @Injectable()
 export class UsersService {
-  getUsers(): UserDataType[] {
+  getUsers(): UserDataModel[] {
     // Fake data for now
     return [
       {

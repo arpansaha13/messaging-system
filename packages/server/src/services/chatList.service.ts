@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
-// Types
-import type { ChatListItemType } from 'src/types'
+// Models
+import type { ChatListItemModel } from 'src/models/chat-list.model'
 
 @Injectable()
 export class ChatListService {
   /** Get the list of chats for a particular user. This will be displayed on the sidebar */
-  getChatList(): ChatListItemType[] {
+  getChatList(): ChatListItemModel[] {
     // Fake data for now
     return [
       {
