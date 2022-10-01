@@ -3,24 +3,24 @@ import { memo, useEffect } from 'react'
 import ChatView from '../components/ChatView'
 import ChatSidebar from '../components/ChatSidebar'
 // Stores
-import { useUserStore } from '../stores/useUserStore'
+import { useContactStore } from '../stores/useContactStore'
 import { useChatListStore } from '../stores/useChatListStore'
 // Types
 import type { NextPage } from 'next'
-import type { UserDataType, ChatListItemType } from '../types'
+import type { ContactType, ChatListItemType } from '../types'
 
 interface HomePageProps {
-  initUsersData: UserDataType[]
+  initContactsData: ContactType[]
   initChatListData: ChatListItemType[]
 }
 
-const Home: NextPage<HomePageProps> = ({ initUsersData, initChatListData }) => {
+const Home: NextPage<HomePageProps> = ({ initContactsData, initChatListData }) => {
   const activeChat = useChatListStore(state => state.activeChat)
-  const initUserStore = useUserStore(state => state.init)
+  const initContactStore = useContactStore(state => state.init)
   const initChatListStore = useChatListStore(state => state.init)
 
   useEffect(() => {
-    initUserStore(initUsersData)
+    initContactStore(initContactsData)
     initChatListStore(initChatListData)
   }, [])
 
@@ -39,17 +39,17 @@ const Home: NextPage<HomePageProps> = ({ initUsersData, initChatListData }) => {
 
 export async function getServerSideProps() {
   // Fetch data from external API
-  const [chatListRes, usersRes] = await Promise.all([
+  const [chatListRes, contactsRes] = await Promise.all([
     fetch('http://localhost:4000/chat-list'),
-    fetch('http://localhost:4000/users'),
+    fetch('http://localhost:4000/contacts'),
   ])
-  const [chatList, users] = await Promise.all([
+  const [chatList, contacts] = await Promise.all([
     chatListRes.json(),
-    usersRes.json()
+    contactsRes.json()
   ])
   return {
     props: {
-      initUsersData: users,
+      initContactsData: contacts,
       initChatListData: chatList
     }
   }

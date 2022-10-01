@@ -16,7 +16,7 @@ export interface MessageType {
   status: 'sent' | 'delivered' | 'read'
 }
 
-export interface UserDataType {
+export interface ContactType {
   userTag: string
   name: string
   dp: string

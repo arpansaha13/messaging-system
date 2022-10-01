@@ -4,13 +4,13 @@ import { EllipsisVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/20/s
 // Components
 import DropDown from '../DropDown'
 // Sotres
-import { useUserStore } from '../../stores/useUserStore'
+import { useContactStore } from '../../stores/useContactStore'
 import { useChatListStore } from '../../stores/useChatListStore'
 
 const ChatHeader = () => {
   const chatMenuItems = [
     {
-      slot: 'User info',
+      slot: 'Contact info',
       onClick() {
         console.log('clicked')
       },
@@ -52,12 +52,12 @@ const ChatHeader = () => {
       },
     },
   ]
-  const users = useUserStore(state => state.users)
+  const contacts = useContactStore(state => state.contacts)
   const activeChat = useChatListStore(state => state.activeChat) as string
   /**
    * The details of the user whose chat is opened.
    */
-  const activeChatUser = users.get(activeChat)!
+  const activeChatUser = contacts.get(activeChat)!
 
   return (
     <header className='px-4 py-2.5 flex items-center justify-between bg-gray-800'>
