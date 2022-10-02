@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Param } from '@nestjs/common'
 import { ChatListService } from 'src/services/chatList.service'
 // Models
 import type { ChatListItemModel } from 'src/models/chat-list.model'
@@ -7,8 +7,10 @@ import type { ChatListItemModel } from 'src/models/chat-list.model'
 export class ChatListController {
   constructor(private readonly chatListService: ChatListService) {}
 
-  @Get()
-  getChatList(): ChatListItemModel[] {
-    return this.chatListService.getChatList()
+  @Get('/:userTag')
+  getChatListOfUser(
+    @Param('userTag') userTag: string,
+  ): Promise<ChatListItemModel[]> {
+    return this.chatListService.getChatListOfUser(userTag)
   }
 }
