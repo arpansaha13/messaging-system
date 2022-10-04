@@ -18,9 +18,7 @@ export class UserService {
       where: { userTag },
     })
     if (userEntity === null) {
-      throw new NotFoundException(
-        'No user could be found with the given user tag.',
-      )
+      throw new NotFoundException('User could not be found.')
     }
     return userEntity
   }

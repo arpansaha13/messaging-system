@@ -14,6 +14,6 @@ export class ContactEntity {
   userTag2: string
 
   /** Alias by which the user1 has saved user2 in contacts. */
-  @Column()
-  alias: string
+  @Column({ default: null })
+  alias: string | null
 }

@@ -1,14 +1,22 @@
-import { Controller, Get, Param } from '@nestjs/common'
+import { Controller, Get, UseGuards } from '@nestjs/common'
+import { AuthGuard } from '@nestjs/passport'
+// Service
 import { ContactService } from 'src/services/contact.service'
-// Entity
-import { ContactEntity } from 'src/entities/contact.entity'
+// Custom Decorator
+import { GetPayload } from 'src/auth/getPayload.decorator'
+// Types
+import type { UserEntity } from 'src/entities/user.entity'
+import type { ContactEntity } from 'src/entities/contact.entity'
 
 @Controller('contacts')
+@UseGuards(AuthGuard())
 export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
-  @Get('/:userTag')
-  getContacts(@Param('userTag') userTag: string): Promise<ContactEntity[]> {
-    return this.contactService.getAllContactsOfUser(userTag)
+  @Get()
+  getContacts(
+    @GetPayload('user') userEntity: UserEntity,
+  ): Promise<ContactEntity[]> {
+    return this.contactService.getAllContactsOfUser(userEntity.userTag)
   }
 }

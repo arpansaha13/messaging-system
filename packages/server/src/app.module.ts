@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-
-// Controller
-import { AppController } from './app.controller'
-// Service
-import { AppService } from './app.service'
 // Modules
 import { ChatModule } from './modules/chat.module'
-import { ChatListModule } from './modules/chatList.module'
 import { ContactModule } from './modules/contact.module'
+import { ChatListModule } from './modules/chatList.module'
 
 @Module({
   imports: [
+    // AuthModule,
     ChatModule,
     ContactModule,
     ChatListModule,
@@ -28,7 +24,7 @@ import { ContactModule } from './modules/contact.module'
       synchronize: true,
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

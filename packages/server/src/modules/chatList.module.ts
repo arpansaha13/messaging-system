@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
+
+// Auth Module
+import { AuthModule } from 'src/auth/auth.module'
 // Controller
 import { ChatListController } from 'src/controllers/chatList.controller'
 // Services
@@ -21,6 +24,7 @@ import { MessageEntity } from 'src/entities/message.entity'
       MessageEntity,
       ContactEntity,
     ]),
+    AuthModule,
   ],
   controllers: [ChatListController],
   providers: [ChatListService, ContactService, UserService, ChatService],

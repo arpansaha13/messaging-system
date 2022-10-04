@@ -25,14 +25,12 @@ export class ChatService {
       where: { userTag1, userTag2 },
     })
     if (chatEntity === null) {
-      throw new NotFoundException(
-        'No chat could be found for the given user tags.',
-      )
+      throw new NotFoundException('No chat could be found for the given user.')
     }
     return chatEntity
   }
 
-  /** Get the chat of user1 with user2. */
+  /** Get the chat between user1 with user2. */
   async getChat(userTag1: string, userTag2: string): Promise<MessageEntity[]> {
     const chat = await this.#getChatEntity(userTag1, userTag2)
     // Find and return all messages (array) with this chatId
