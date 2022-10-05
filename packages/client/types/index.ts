@@ -21,3 +21,8 @@ export interface ContactType {
   name: string
   dp: string
 }
+
+export interface JwtToken {
+  authToken: string
+  expiresAt: number
+}

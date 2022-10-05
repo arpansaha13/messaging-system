@@ -1,28 +1,20 @@
+import Router from 'next/router'
+import { useToggle } from 'react-use'
 import { memo, useEffect } from 'react'
+// Custom Hooks
+import { useFetch } from '../hooks/useFetch'
 // Components
 import ChatView from '../components/ChatView'
 import ChatSidebar from '../components/ChatSidebar'
 // Stores
+import { useAuthStore } from '../stores/useAuthStore'
 import { useContactStore } from '../stores/useContactStore'
 import { useChatListStore } from '../stores/useChatListStore'
 // Types
 import type { NextPage } from 'next'
-import type { ContactType, ChatListItemType } from '../types'
 
-interface HomePageProps {
-  initContactsData: ContactType[]
-  initChatListData: ChatListItemType[]
-}
-
-const Home: NextPage<HomePageProps> = ({ initContactsData, initChatListData }) => {
+function AsyncPage() {
   const activeChat = useChatListStore(state => state.activeChat)
-  const initContactStore = useContactStore(state => state.init)
-  const initChatListStore = useChatListStore(state => state.init)
-
-  useEffect(() => {
-    initContactStore(initContactsData)
-    initChatListStore(initChatListData)
-  }, [])
 
   return (
     <main className='grid grid-cols-10 h-full'>
@@ -37,21 +29,36 @@ const Home: NextPage<HomePageProps> = ({ initContactsData, initChatListData }) =
   )
 }
 
-export async function getServerSideProps() {
-  // Fetch data from external API
-  const [chatListRes, contactsRes] = await Promise.all([
-    fetch('http://localhost:4000/chat-list'),
-    fetch('http://localhost:4000/contacts'),
-  ])
-  const [chatList, contacts] = await Promise.all([
-    chatListRes.json(),
-    contactsRes.json()
-  ])
-  return {
-    props: {
-      initContactsData: contacts,
-      initChatListData: chatList
+const Home: NextPage = () => {
+  const [loaded, setLoaded] = useToggle(false)
+  const fetchHook = useFetch()
+
+  const authToken = useAuthStore(state => state.authToken)
+  const initContactStore = useContactStore(state => state.init)
+  const initChatListStore = useChatListStore(state => state.init)
+
+  useEffect(() => {
+    if (authToken === null) {
+      Router.push('/auth/signin')
     }
+    else {
+      Promise.all([
+        fetchHook('http://localhost:4000/chat-list'),
+        fetchHook('http://localhost:4000/contacts'),
+      ])
+      .then(([chatList, contacts]) => {
+        initContactStore(contacts)
+        initChatListStore(chatList)
+        setLoaded(true)
+      })
+    }
+  }, [])
+
+  if (!loaded) {
+    // TODO: make a component for 'loading'
+    return <p> Loading...</p>
+  } else {
+    return <AsyncPage />
   }
 }
 

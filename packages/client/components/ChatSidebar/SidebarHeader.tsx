@@ -1,9 +1,14 @@
 import { memo } from 'react'
+import Router from 'next/router'
+// Icons
 import { ChatBubbleBottomCenterTextIcon, EllipsisVerticalIcon, ViewfinderCircleIcon } from '@heroicons/react/20/solid'
-
+// Stores
+import { useAuthStore } from '../../stores/useAuthStore'
+// Components
 import DropDown from '../DropDown'
 
 const SidebarHeader = () => {
+  const resetAuthState = useAuthStore(state => state.resetAuthState)
 
   const menuItems = [
     {
@@ -33,7 +38,8 @@ const SidebarHeader = () => {
     {
       slot: 'Log out',
       onClick() {
-        console.log('clicked')
+        Router.push('/auth/signin')
+        resetAuthState()
       },
     },
   ]

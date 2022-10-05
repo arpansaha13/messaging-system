@@ -1,0 +1,116 @@
+import Router from 'next/router'
+import NextLink from 'next/link'
+import { useEffect } from 'react'
+import { useMap } from 'react-use'
+// Custom Hooks
+import { useFetch } from '../../hooks/useFetch'
+// Components
+import BaseInput from '../../components/base/BaseInput'
+// Stores
+import { useAuthStore } from '../../stores/useAuthStore'
+import { useNotificationStore } from '../../stores/useNotificationStore'
+// Layout
+import AuthLayout from '../../layouts/auth'
+// Types
+import type { FormEvent, ReactElement } from 'react'
+import type { JwtToken } from '../../types'
+
+const SignInPage = () => {
+  const authToken = useAuthStore(state => state.authToken)
+
+  useEffect(() => {
+    if (authToken !== null) {
+      Router.push('/')
+    }
+  }, [])
+
+  const fetchHook = useFetch()
+  const setAuthState = useAuthStore(state => state.setAuthState)
+  const setNotification = useNotificationStore(state => state.setNotification)
+
+  const [formData, { set }] = useMap({
+    email: '',
+    password: '',
+  })
+
+  function signIn(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    fetchHook('http://localhost:4000/auth/sign-in', {
+      method: 'POST',
+      body: JSON.stringify(formData),
+    })
+    .then((data: JwtToken) => {
+      setAuthState(data)
+      Router.push('/')
+      setNotification({ show: false })
+    })
+    .catch((err) => {
+      setNotification({
+        show: true,
+        status: 'error',
+        title: 'Sign in failed!',
+        description: err.message,
+      })
+    })
+  }
+
+  return (
+    <form className="space-y-6" onSubmit={ signIn }>
+      <BaseInput
+        id="email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        label='Email address'
+        value={ formData.email }
+        onChange={ (e) => set('email', e.target.value) }
+      />
+
+      <BaseInput
+        id="password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        label='Password'
+        value={ formData.password }
+        onChange={ (e) => set('password', e.target.value) }
+      />
+
+      <div className="flex items-center justify-end">
+        <div className="text-sm">
+          <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
+            Forgot your password?
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          className="flex w-full justify-center rounded-md border border-transparent bg-emerald-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        >
+          Sign in
+        </button>
+      </div>
+
+      <div className="flex items-center justify-start">
+        <div className="text-sm">
+          <span className="text-gray-100">
+            Don&apos;t have an account?
+          </span>
+          { ' ' }
+          <NextLink href="/auth/signup">
+            <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">
+              Sign up
+            </span>
+          </NextLink>
+        </div>
+      </div>
+    </form>
+  )
+}
+SignInPage.getLayout = (page: ReactElement) => <AuthLayout heading='Sign in to your account'>{ page }</AuthLayout>
+export default SignInPage

@@ -1,4 +1,4 @@
-// Hooks
+// Custom Hooks
 import { useDark } from '../hooks/useDark'
 // Immer
 import { enableMapSet } from 'immer'

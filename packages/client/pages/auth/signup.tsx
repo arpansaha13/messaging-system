@@ -1,0 +1,146 @@
+import Router from 'next/router'
+import NextLink from 'next/link'
+import { useEffect } from 'react'
+import { useMap } from 'react-use'
+// Custom Hooks
+import { useFetch } from '../../hooks/useFetch'
+// Components
+import BaseInput from '../../components/base/BaseInput'
+// Stores
+import { useAuthStore } from '../../stores/useAuthStore'
+import { useNotificationStore } from '../../stores/useNotificationStore'
+// Layout
+import AuthLayout from '../../layouts/auth'
+// Types
+import type { FormEvent, ReactElement } from 'react'
+import type { JwtToken } from '../../types'
+
+const SignUpPage = () => {
+  const authToken = useAuthStore(state => state.authToken)
+
+  useEffect(() => {
+    if (authToken !== null) {
+      Router.push('/')
+    }
+  }, [])
+
+  const fetchHook = useFetch()
+  const setAuthState = useAuthStore(state => state.setAuthState)
+  const setNotification = useNotificationStore(state => state.setNotification)
+
+  const [formData, { set }] = useMap({
+    email: '',
+    username: '',
+    password: '',
+  })
+  const [validationErrors, { reset, set: setError }] = useMap<Record<string, string | null>>({
+    email: null,
+    username: null,
+    password: null,
+  })
+
+  function signUp(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    reset()
+
+    fetchHook('http://localhost:4000/auth/sign-up', {
+      method: 'POST',
+      body: JSON.stringify(formData),
+    })
+    .then((data: JwtToken) => {
+      setAuthState(data)
+      Router.push('/')
+      setNotification({ show: false })
+    })
+    .catch((err) => {
+      if (err.statusCode === 409) {
+        setError('email', err.message.email ?? null)
+        setError('username', err.message.username ?? null)
+      } else {
+        setNotification({
+          show: true,
+          status: 'error',
+          title: 'Sign up failed!',
+          description: err.message,
+        })
+      }
+    })
+  }
+
+  return (
+    <form className="space-y-6" onSubmit={ signUp }>
+      <BaseInput
+        id="email"
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        label='Email address'
+        value={ formData.email }
+        validationError={ validationErrors.email }
+        onChange={ (e) => set('email', e.target.value) }
+      />
+
+      <BaseInput
+        id="username"
+        name="username"
+        type="username"
+        autoComplete="username"
+        required
+        minLength={ 4 }
+        maxLength={ 30 }
+        label='Username'
+        value={ formData.username }
+        validationError={ validationErrors.username }
+        onChange={ (e) => set('username', e.target.value) }
+      />
+
+      <BaseInput
+        id="password"
+        name="password"
+        type="password"
+        autoComplete="current-password"
+        required
+        minLength={ 8 }
+        maxLength={ 30 }
+        label='Password'
+        value={ formData.password }
+        validationError={ validationErrors.password }
+        onChange={ (e) => set('password', e.target.value) }
+      />
+
+      <div className="flex items-center justify-end">
+        <div className="text-sm">
+          <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
+            Forgot your password?
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <button
+          type="submit"
+          className="flex w-full justify-center rounded-md border border-transparent bg-emerald-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+        >
+          Sign up
+        </button>
+      </div>
+
+      <div className="flex items-center justify-start">
+        <div className="text-sm">
+          <span className="text-gray-100">
+            Already have an account?
+          </span>
+          { ' ' }
+          <NextLink href="/auth/signin">
+            <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">
+              Sign in
+            </span>
+          </NextLink>
+        </div>
+      </div>
+    </form>
+  )
+}
+SignUpPage.getLayout = (page: ReactElement) => <AuthLayout heading='Create your account'>{ page }</AuthLayout>
+export default SignUpPage

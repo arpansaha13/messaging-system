@@ -1,5 +1,5 @@
 import Head from 'next/head'
-
+// Types
 import type { ReactNode } from 'react'
 
 interface DefaultLayoutProps {
