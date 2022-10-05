@@ -15,6 +15,8 @@ import { SignInDto, SignUpDto } from './auth.dto'
 // Types
 import type { Repository } from 'typeorm'
 import type { JwtPayload, JwtToken } from './jwt.types'
+// Constants
+import { JWT_TOKEN_VALIDITY_DURATION } from '../constants'
 
 @Injectable()
 export class AuthService {
@@ -31,7 +33,8 @@ export class AuthService {
   async #createAuthToken(userEntity: UserEntity): Promise<JwtToken> {
     const payload: JwtPayload = { userTag: userEntity.userTag }
     const authToken = this.jwtService.sign(payload)
-    return { authToken }
+    const expiresAt = Date.now() + JWT_TOKEN_VALIDITY_DURATION
+    return { authToken, expiresAt }
   }
 
   async signUp(credentials: SignUpDto): Promise<JwtToken> {
@@ -42,6 +45,8 @@ export class AuthService {
 
     try {
       await this.userRepository.save(userEntity)
+
+      // Save encrypted password
       const hash = await bcrypt.hash(
         credentials.password,
         await bcrypt.genSalt(),

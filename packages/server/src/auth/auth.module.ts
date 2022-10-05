@@ -10,6 +10,8 @@ import { AuthService } from './auth.service'
 import { UserEntity } from 'src/entities/user.entity'
 import { AuthEntity } from './auth.entity'
 import { JwtStrategy } from './jwt.strategy'
+// Constants
+import { JWT_TOKEN_VALIDITY_DURATION } from '../constants'
 
 @Module({
   imports: [
@@ -19,7 +21,7 @@ import { JwtStrategy } from './jwt.strategy'
     JwtModule.register({
       secret: 'dummy-secret-key-13',
       signOptions: {
-        expiresIn: 3600,
+        expiresIn: JWT_TOKEN_VALIDITY_DURATION,
       },
     }),
   ],

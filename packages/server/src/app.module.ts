@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { ChatModule } from './modules/chat.module'
 import { ContactModule } from './modules/contact.module'
 import { ChatListModule } from './modules/chatList.module'
+// Constants
+import { DATABASE_HOST_PORT } from './constants'
 
 @Module({
   imports: [
@@ -16,7 +18,7 @@ import { ChatListModule } from './modules/chatList.module'
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
-      port: 5432,
+      port: DATABASE_HOST_PORT,
       username: 'postgres',
       password: 'postgres',
       database: 'db-whatsapp-clone',

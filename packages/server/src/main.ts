@@ -2,6 +2,8 @@ import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 
+import { NEST_SERVER_PORT } from './constants'
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
@@ -14,6 +16,6 @@ async function bootstrap() {
   )
 
   app.enableCors()
-  await app.listen(4000)
+  await app.listen(NEST_SERVER_PORT)
 }
 bootstrap()
