@@ -55,9 +55,25 @@ export class AuthService {
     } catch (error) {
       if (error.code === '23505') {
         // Duplicate key
-        throw new ConflictException(
-          error.detail ?? 'Username or email is already taken.',
-        )
+        if ((error.detail as string).includes('username')) {
+          throw new ConflictException({
+            statusCode: 409,
+            message: {
+              username: 'Username is already taken.',
+            },
+            error: 'Conflict',
+          })
+        } else if ((error.detail as string).includes('email')) {
+          throw new ConflictException({
+            statusCode: 409,
+            message: {
+              email: 'Email id is already registered.',
+            },
+            error: 'Conflict',
+          })
+        } else {
+          throw new InternalServerErrorException()
+        }
       } else {
         throw new InternalServerErrorException()
       }
