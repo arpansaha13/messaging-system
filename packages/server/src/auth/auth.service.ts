@@ -33,7 +33,8 @@ export class AuthService {
   async #createAuthToken(userEntity: UserEntity): Promise<JwtToken> {
     const payload: JwtPayload = { userTag: userEntity.userTag }
     const authToken = this.jwtService.sign(payload)
-    const expiresAt = Date.now() + JWT_TOKEN_VALIDITY_DURATION
+    const expiresAt =
+      Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_DURATION * 100 /* secs */
     return { authToken, expiresAt }
   }
 

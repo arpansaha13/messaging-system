@@ -1,6 +1,4 @@
 import Image from 'next/image'
-// Layout
-import DefaultLayout from './default'
 // Components
 import Notification from '../components/Notification'
 // Types
@@ -13,7 +11,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children, heading }: AuthLayoutProps) {
   return (
-    <DefaultLayout>
+    <div className='w-screen h-screen'>
       <Notification />
 
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 dark:bg-gray-800">
@@ -25,7 +23,7 @@ export default function AuthLayout({ children, heading }: AuthLayoutProps) {
               layout='fill'
               objectFit='contain'
             />
-            </div>
+          </div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
             { heading }
           </h2>
@@ -37,6 +35,6 @@ export default function AuthLayout({ children, heading }: AuthLayoutProps) {
           </div>
         </div>
       </div>
-    </DefaultLayout>
+    </div>
   )
 }

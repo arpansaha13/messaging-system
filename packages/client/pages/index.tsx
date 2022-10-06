@@ -34,11 +34,13 @@ const Home: NextPage = () => {
   const fetchHook = useFetch()
 
   const authToken = useAuthStore(state => state.authToken)
+  const expiresAt = useAuthStore(state => state.expiresAt)
   const initContactStore = useContactStore(state => state.init)
   const initChatListStore = useChatListStore(state => state.init)
 
   useEffect(() => {
-    if (authToken === null) {
+    // Redirects to sign-in page if unauthorized or if auth token expires.
+    if (authToken === null || (expiresAt !== null && Date.now() >= expiresAt)) {
       Router.push('/auth/signin')
     }
     else {
