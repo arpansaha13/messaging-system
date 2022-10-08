@@ -19,7 +19,7 @@ export default function AuthLayout({ children, heading }: AuthLayoutProps) {
           <div className="mx-auto w-auto h-16 relative">
             <Image
               src="/react-logo.svg"
-              alt="Watsapp Clone"
+              alt="Whatsapp Clone"
               layout='fill'
               objectFit='contain'
             />

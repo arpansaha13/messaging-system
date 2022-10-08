@@ -10,7 +10,7 @@ import { useFetch } from '../../hooks/useFetch'
 import BaseInput from '../../components/base/BaseInput'
 // Stores
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useNotificationStore } from '../../stores/useNotificationStore'
+import { useNotificationState } from '../../stores/useNotificationState'
 // Layout
 import AuthLayout from '../../layouts/auth'
 // Types
@@ -28,7 +28,7 @@ const SignUpPage = () => {
 
   const fetchHook = useFetch()
   const setAuthState = useAuthStore(state => state.setAuthState)
-  const setNotification = useNotificationStore(state => state.setNotification)
+  const setNotification = useNotificationState(state => state.setNotification)
 
   const [formData, { set }] = useMap({
     email: '',

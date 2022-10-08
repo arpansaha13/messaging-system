@@ -4,10 +4,10 @@ import { Transition } from '@headlessui/react'
 import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 // Stores
-import { useNotificationStore } from '../stores/useNotificationStore'
+import { useNotificationState } from '../stores/useNotificationState'
 
 const Notification = () => {
-  const store = useNotificationStore()
+  const store = useNotificationState()
 
   return (
     <>
