@@ -1,20 +1,23 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
-@Entity()
+@Entity({ name: 'chats' })
 export class ChatEntity {
-  /** Unique chat id for every chat. */
-  @PrimaryGeneratedColumn('uuid')
-  chatId: string
+  @PrimaryGeneratedColumn()
+  id: number
 
-  /** Users in first column have chats with users in second column. */
+  /** User with the first-person perspective in a chat. This is the authorized/logged-in user */
   @Column()
-  userTag1: string
+  user: number
 
-  /** Users in first column have chats with users in second column. */
+  /** User with the second-person perspective in a chat. */
   @Column()
-  userTag2: string
+  sec_person: number
 
-  // Whether the user1 has muted the chat with user2.
+  /** Timestamp of the first message of this chat for the first-person user. If a user performs "clear-chat", this timestamp will help to identify which messages to show. If this field is `null`, then the user does not have any messages in this chat, either because the user has cleared the chat, or they never chatted. */
+  @Column({ nullable: true })
+  first_msg_tstamp: Date
+
+  /** Whether the user1 has muted the chat with user2. */
   @Column()
-  muted: boolean
+  is_muted: boolean
 }

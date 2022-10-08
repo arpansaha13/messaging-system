@@ -3,31 +3,39 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 @Entity()
 export class MessageEntity {
   @PrimaryGeneratedColumn()
-  rowNum: number
+  id: number
 
-  /** Unique id for every chat between any two users. The chatId is used to identify which chat the message belongs to. */
+  /** Unique id for every chat between any two users. The chat_id is used to identify which chat the message belongs to. */
   @Column()
-  chatId: string
-
-  /** Unique id for every message in a particular chat. */
-  @Column()
-  messageId: number
+  chat_id: number
 
   /** The actual message that was sent. */
   @Column()
   message: string
 
-  /** Time at which the message was sent. */
-  @Column()
-  time: number
-
   /** Status of the message. */
   @Column()
   status: MessageStatus
 
-  /** User tag of the user who sent the message. */
+  /** Id of the user who sent the message. */
   @Column()
-  userTag: string
+  sender_id: number
+
+  /** If this message was deleted by one of the participants of the chat, then `deleted_by` will contain the id of the user who deleted this message. If `deleted_by` is negative (-1), then this message was deleted by both participants. If `deleted_by` is `null`, then this message was not deleted by either participant. */
+  @Column({ nullable: true, type: 'integer' })
+  deleted_by: number
+
+  /** Time at which the message was sent. */
+  @Column()
+  created_at: Date
+
+  /** Messages cannot be edited (yet?) */
+  // @Column()
+  // updated_at: Date
+
+  /** Time at which the message was deleted */
+  @Column({ nullable: true })
+  deleted_at: Date
 }
 
 export enum MessageStatus {

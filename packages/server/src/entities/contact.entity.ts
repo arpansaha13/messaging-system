@@ -1,19 +1,28 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
 
-@Entity()
+@Entity({ name: 'contacts' })
 export class ContactEntity {
   @PrimaryGeneratedColumn()
-  rowNum: number
+  id: number
 
-  /** Users in first column have the users in second column in their contacts. */
+  /** The first-person (authorized/logged-in) user who has stored the sec-person in their contacts. */
   @Column()
-  userTag1: string
+  user: number
 
-  /** Users in first column have the users in second column in their contacts. */
+  /** The sec-person user who is stored by the first-person in their contacts. */
   @Column()
-  userTag2: string
+  contact: number
 
-  /** Alias by which the user1 has saved user2 in contacts. */
+  /** Alias or name by which the first-person user has saved the sec-person in contacts. */
   @Column({ default: null })
   alias: string | null
+
+  @Column()
+  created_at: Date
+
+  @Column()
+  updated_at: Date
+
+  @Column({ nullable: true })
+  deleted_at: Date
 }
