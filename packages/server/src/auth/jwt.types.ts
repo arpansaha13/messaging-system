@@ -1,5 +1,5 @@
 export interface JwtPayload {
-  userTag: string
+  user_id: number
 }
 
 export interface JwtToken {

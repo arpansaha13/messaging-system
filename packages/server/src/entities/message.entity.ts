@@ -1,6 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 
-@Entity()
+@Entity({ name: 'messages' })
 export class MessageEntity {
   @PrimaryGeneratedColumn()
   id: number
@@ -26,15 +32,15 @@ export class MessageEntity {
   deleted_by: number
 
   /** Time at which the message was sent. */
-  @Column()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date
 
   /** Messages cannot be edited (yet?) */
-  // @Column()
+  // @UpdateDateColumn({ type: 'timestamptz' })
   // updated_at: Date
 
   /** Time at which the message was deleted */
-  @Column({ nullable: true })
+  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
   deleted_at: Date
 }
 

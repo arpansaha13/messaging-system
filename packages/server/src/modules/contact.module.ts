@@ -7,11 +7,12 @@ import { AuthModule } from 'src/auth/auth.module'
 import { ContactController } from 'src/controllers/contact.controller'
 // Service
 import { ContactService } from 'src/services/contact.service'
-// Entity
+// Entities
+import { UserEntity } from 'src/entities/user.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ContactEntity]), AuthModule],
+  imports: [TypeOrmModule.forFeature([UserEntity, ContactEntity]), AuthModule],
   controllers: [ContactController],
   providers: [ContactService],
 })

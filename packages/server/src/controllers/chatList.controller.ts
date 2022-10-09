@@ -18,6 +18,6 @@ export class ChatListController {
   getChatListOfUser(
     @GetPayload('user') userEntity: UserEntity,
   ): Promise<ChatListItemModel[]> {
-    return this.chatListService.getChatListOfUser(userEntity.userTag)
+    return this.chatListService.getChatListOfUser(userEntity.id)
   }
 }

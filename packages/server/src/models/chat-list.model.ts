@@ -2,7 +2,7 @@ import { MessageStatus } from 'src/entities/message.entity'
 
 export class ChatListItemModel {
   /** User tag oif the user with whom the chat is */
-  readonly userTag: string
+  readonly user_id: number
 
   /** Dp of the user with whom the chat is. */
   dp: string | null
@@ -11,7 +11,7 @@ export class ChatListItemModel {
   alias: string | null
 
   /** Time of the latest message */
-  time: number
+  time: Date
 
   /** Whether the logged-in user has muted this chat or not. */
   muted: boolean

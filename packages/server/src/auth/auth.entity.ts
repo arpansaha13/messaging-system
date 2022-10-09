@@ -1,12 +1,29 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 
-@Entity()
+@Entity({ name: 'auth' })
 export class AuthEntity {
-  /** A unique tag for the user. This will never change for a user. */
   @PrimaryColumn()
-  userTag: string
+  user_id: number
 
-  /** Password for auth. */
   @Column({ unique: true })
   password: string
+
+  /** Time when the user account was created */
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date
+
+  /** Time when the password was last updated */
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updated_at: Date
+
+  /** Time when the user account was deleted */
+  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
+  deleted_at: Date
 }

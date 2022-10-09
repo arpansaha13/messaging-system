@@ -1,16 +1,25 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Exclude } from 'class-transformer'
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 
 @Entity({ name: 'users' })
 export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  /** Display name set by the user. */
+  /** Display name set by the user. This is not a username. */
   @Column({ nullable: true })
   name: string
 
   /** Email id of the user. */
   @Column({ unique: true })
+  @Exclude({ toPlainOnly: true })
   email: string
 
   /** Profile photo set by the user. */
@@ -22,14 +31,17 @@ export class UserEntity {
   about: string
 
   /** Time when the user account was created */
-  @Column()
+  @CreateDateColumn({ type: 'timestamptz' })
+  @Exclude({ toPlainOnly: true })
   created_at: Date
 
   /** Time when the user information was last updated */
-  @Column()
+  @UpdateDateColumn({ type: 'timestamptz' })
+  @Exclude({ toPlainOnly: true })
   updated_at: Date
 
   /** Time when the user account was deleted */
-  @Column({ nullable: true })
+  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
+  @Exclude({ toPlainOnly: true })
   deleted_at: Date
 }

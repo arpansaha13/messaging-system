@@ -31,7 +31,7 @@ export class AuthService {
   ) {}
 
   async #createAuthToken(userEntity: UserEntity): Promise<JwtToken> {
-    const payload: JwtPayload = { userTag: userEntity.userTag }
+    const payload: JwtPayload = { user_id: userEntity.id }
     const authToken = this.jwtService.sign(payload)
     const expiresAt =
       Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_DURATION * 100 /* secs */
@@ -40,7 +40,6 @@ export class AuthService {
 
   async signUp(credentials: SignUpDto): Promise<JwtToken> {
     const userEntity = this.userRepository.create({
-      username: credentials.username,
       email: credentials.email,
     })
 
@@ -53,7 +52,7 @@ export class AuthService {
         await bcrypt.genSalt(),
       )
       const authEntity = this.authRepository.create({
-        userTag: userEntity.userTag,
+        user_id: userEntity.id,
         password: hash,
       })
       await this.authRepository.save(authEntity)
@@ -61,26 +60,9 @@ export class AuthService {
     } catch (error) {
       if (error.code === '23505') {
         // Duplicate key
-        if ((error.detail as string).includes('username')) {
-          throw new ConflictException({
-            statusCode: 409,
-            message: {
-              username: 'Username is already taken.',
-            },
-            error: 'Conflict',
-          })
-        } else if ((error.detail as string).includes('email')) {
-          throw new ConflictException({
-            statusCode: 409,
-            message: {
-              email: 'Email id is already registered.',
-            },
-            error: 'Conflict',
-          })
-        } else {
-          throw new InternalServerErrorException()
-        }
+        throw new ConflictException('Email id is already registered.')
       } else {
+        console.log(error)
         throw new InternalServerErrorException()
       }
     }
@@ -92,7 +74,7 @@ export class AuthService {
     })
     if (userEntity !== null) {
       const authEntity = await this.authRepository.findOne({
-        where: { userTag: userEntity.userTag },
+        where: { user_id: userEntity.id },
       })
       if (await bcrypt.compare(credentials.password, authEntity.password)) {
         return this.#createAuthToken(userEntity)

@@ -6,11 +6,6 @@ export class SignUpDto {
   email: string
 
   @IsNotEmpty()
-  @MinLength(4)
-  @MaxLength(30)
-  username: string
-
-  @IsNotEmpty()
   @MinLength(8)
   @MaxLength(30)
   password: string

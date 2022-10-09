@@ -15,28 +15,28 @@ export class ChatListService {
   ) {}
 
   /** Get the list of chats for a particular user. This will be displayed on the sidebar */
-  async getChatListOfUser(userTag: string): Promise<ChatListItemModel[]> {
+  async getChatListOfUser(user_id: number): Promise<ChatListItemModel[]> {
     const chatList: ChatListItemModel[] = []
 
-    const chats = await this.chatService.getAllChatsOfUser(userTag)
+    const chats = await this.chatService.getAllChatsOfUser(user_id)
     if (chats.length === 0) return chatList
 
     const promises: Promise<void>[] = []
 
     for (const chat of chats) {
       promises.push(
-        new Promise<void>(async (resolve) => {
+        new Promise<void>(async resolve => {
           const [latestMsg, user, contact] = await Promise.all([
-            this.chatService.getLatestMsgByChatId(chat.chatId),
-            this.userService.getUser(chat.userTag2),
-            this.contactService.getContactEntity(chat.userTag1, chat.userTag2),
+            this.chatService.getLatestMsgByChatId(chat.id),
+            this.userService.getUser(chat.sec_person),
+            this.contactService.getContactEntity(chat.user, chat.sec_person),
           ])
           chatList.push({
-            userTag: chat.userTag2,
+            user_id: chat.user,
             dp: user.dp,
             alias: contact !== null ? contact.alias : null,
-            time: latestMsg.time,
-            muted: chat.muted,
+            time: latestMsg.created_at,
+            muted: chat.is_muted,
             status: latestMsg.status,
             latestMsg: latestMsg.message,
           })

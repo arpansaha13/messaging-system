@@ -21,6 +21,7 @@ module.exports = {
       'error',
       {
         endOfLine: 'auto',
+        arrowParens: 'avoid',
       },
     ],
     '@typescript-eslint/interface-name-prefix': 'off',

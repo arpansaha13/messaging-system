@@ -1,4 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from 'typeorm'
 
 @Entity({ name: 'chats' })
 export class ChatEntity {
@@ -9,7 +15,7 @@ export class ChatEntity {
   @Column()
   user: number
 
-  /** User with the second-person perspective in a chat. */
+  /** User-id of the second-person perspective in a chat. */
   @Column()
   sec_person: number
 
@@ -20,4 +26,12 @@ export class ChatEntity {
   /** Whether the user1 has muted the chat with user2. */
   @Column()
   is_muted: boolean
+
+  /** Time when the chat was created */
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date
+
+  /** Time when the chat was deleted */
+  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
+  deleted_at: Date
 }
