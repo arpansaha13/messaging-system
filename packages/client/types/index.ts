@@ -1,5 +1,5 @@
 export interface ChatListItemType {
-  userTag: string
+  user_id: number
   dp: string | null
   name: string
   time: number
@@ -17,7 +17,7 @@ export interface MessageType {
 }
 
 export interface ContactType {
-  userTag: string
+  user_id: string
   name: string
   dp: string
 }
