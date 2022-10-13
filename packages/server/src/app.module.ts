@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 // Modules
 import { ChatModule } from './modules/chat.module'
+import { AuthUserModule } from './modules/me.module'
 import { ContactModule } from './modules/contact.module'
 import { ChatListModule } from './modules/chatList.module'
 // Constants
@@ -9,10 +10,10 @@ import { DATABASE_HOST_PORT } from './constants'
 
 @Module({
   imports: [
-    // AuthModule,
     ChatModule,
     ContactModule,
     ChatListModule,
+    AuthUserModule,
 
     // DB Connection
     TypeOrmModule.forRoot({
