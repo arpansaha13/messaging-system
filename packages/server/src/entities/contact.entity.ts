@@ -24,13 +24,14 @@ export class ContactEntity {
   @Exclude({ toPlainOnly: true })
   user: number
 
-  /**
-   * The sec-person **user_id** who is stored by the first-person in their contacts.
-   *
-   * The data of this user will be automatically fetched from user's table (`eager=true`).
-   */
-  @ManyToOne(() => UserEntity, user => user.id, { eager: true })
-  contact: number
+  /** The sec-person user who is stored by the first-person in their contacts. */
+  @Column()
+  @Exclude({ toPlainOnly: true })
+  contact_user_id: number
+
+  /** The sec-person user. The relation id is the user_id of contact-user. */
+  @ManyToOne(() => UserEntity, user => user.id)
+  contact_user: number
 
   /** Alias or name by which the first-person user has saved the sec-person in contacts. */
   @Column()

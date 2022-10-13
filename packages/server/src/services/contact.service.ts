@@ -24,6 +24,9 @@ export class ContactService {
   getAllContactsOfUser(auth_user_id: number): Promise<ContactEntity[]> {
     return this.contactRepository.find({
       where: { user: auth_user_id },
+      relations: {
+        contact_user: true,
+      },
     })
   }
   /**
@@ -39,12 +42,10 @@ export class ContactService {
     if (auth_user_id === contact_user_id) {
       throw new BadRequestException('Invalid contact_user_id')
     }
-    // FIXME: find with relation-id won't work
     const existing = await this.contactRepository.count({
-      loadRelationIds: true, // retrieve `contact` field
       where: {
         user: auth_user_id,
-        contact: contact_user_id,
+        contact_user_id,
       },
     })
     if (existing > 0) {
@@ -58,7 +59,8 @@ export class ContactService {
     }
     const contactEntity = this.contactRepository.create({
       user: auth_user_id,
-      contact: contact_user_id,
+      contact_user_id,
+      contact_user: contact_user_id,
       alias: alias,
     })
     try {
@@ -70,10 +72,13 @@ export class ContactService {
   }
   getContactEntity(
     auth_user_id: number,
-    contact_user: number,
+    contact_user_id: number,
   ): Promise<ContactEntity> {
     return this.contactRepository.findOne({
-      where: { user: auth_user_id, contact: contact_user },
+      where: {
+        user: auth_user_id,
+        contact_user_id,
+      },
     })
   }
 }
