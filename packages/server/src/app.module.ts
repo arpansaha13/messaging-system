@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 // Modules
-import { ChatModule } from './modules/chat.module'
-import { AuthUserModule } from './modules/me.module'
-import { ContactModule } from './modules/contact.module'
-import { ChatListModule } from './modules/chatList.module'
+import { ChatModule } from './chats/chat.module'
+import { AuthUserModule } from './me/me.module'
+import { ContactModule } from './contacts/contact.module'
+import { ChatListModule } from './chat-list/chatList.module'
 // Constants
 import { DATABASE_HOST_PORT } from './constants'
 

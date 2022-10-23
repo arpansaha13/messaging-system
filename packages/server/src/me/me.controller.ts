@@ -1,9 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Custom Decorator
-import { GetPayload } from 'src/auth/getPayload.decorator'
+import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // Types
-import type { UserEntity } from 'src/entities/user.entity'
+import type { UserEntity } from 'src/users/user.entity'
 
 @Controller('me')
 @UseGuards(AuthGuard())

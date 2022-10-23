@@ -4,11 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 // Auth Module
 import { AuthModule } from 'src/auth/auth.module'
 // Controller
-import { ContactController } from 'src/controllers/contact.controller'
+import { ContactController } from 'src/contacts/contact.controller'
 // Service
-import { ContactService } from 'src/services/contact.service'
+import { ContactService } from 'src/contacts/contact.service'
 // Entities
-import { UserEntity } from 'src/entities/user.entity'
+import { UserEntity } from 'src/users/user.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
 
 @Module({

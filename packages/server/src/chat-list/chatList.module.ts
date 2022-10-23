@@ -4,15 +4,15 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 // Auth Module
 import { AuthModule } from 'src/auth/auth.module'
 // Controller
-import { ChatListController } from 'src/controllers/chatList.controller'
+import { ChatListController } from 'src/chat-list/chatList.controller'
 // Services
-import { UserService } from 'src/services/user.service'
-import { ChatService } from 'src/services/chat.service'
-import { ContactService } from 'src/services/contact.service'
-import { ChatListService } from 'src/services/chatList.service'
+import { UserService } from 'src/users/user.service'
+import { ChatService } from 'src/chats/chat.service'
+import { ContactService } from 'src/contacts/contact.service'
+import { ChatListService } from 'src/chat-list/chatList.service'
 // Entities
-import { UserEntity } from 'src/entities/user.entity'
-import { ChatEntity } from 'src/entities/chat.entity'
+import { UserEntity } from 'src/users/user.entity'
+import { ChatEntity } from 'src/chats/chat.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
 import { MessageEntity } from 'src/entities/message.entity'
 

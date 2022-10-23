@@ -4,9 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 // Auth Module
 import { AuthModule } from 'src/auth/auth.module'
 // Controller
-import { AuthUserController } from 'src/controllers/me.controller'
+import { AuthUserController } from 'src/me/me.controller'
 // Entity
-import { UserEntity } from 'src/entities/user.entity'
+import { UserEntity } from 'src/users/user.entity'
 
 /**
  * Module for getting auth user information.

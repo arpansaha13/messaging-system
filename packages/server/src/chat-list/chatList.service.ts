@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common'
 // Services
-import { ChatService } from './chat.service'
-import { UserService } from './user.service'
-import { ContactService } from './contact.service'
+import { ChatService } from '../chats/chat.service'
+import { UserService } from '../users/user.service'
+import { ContactService } from '../contacts/contact.service'
 // Models
-import type { ChatListItemModel } from 'src/models/chat-list.model'
+import type { ChatListItemModel } from 'src/chat-list/chat-list.model'
 
 @Injectable()
 export class ChatListService {

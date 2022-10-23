@@ -1,6 +1,6 @@
 import { createParamDecorator } from '@nestjs/common'
 // Entity
-import { UserEntity } from 'src/entities/user.entity'
+import { UserEntity } from 'src/users/user.entity'
 // Types
 import type { ExecutionContext } from '@nestjs/common'
 

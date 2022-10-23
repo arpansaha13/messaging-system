@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 // Entities
-import { ChatEntity } from 'src/entities/chat.entity'
+import { ChatEntity } from 'src/chats/chat.entity'
 import { MessageEntity } from 'src/entities/message.entity'
 // Types
 import type { Repository } from 'typeorm'

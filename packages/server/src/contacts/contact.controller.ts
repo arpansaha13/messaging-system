@@ -8,16 +8,16 @@ import {
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Service
-import { ContactService } from 'src/services/contact.service'
+import { ContactService } from 'src/contacts/contact.service'
 // Custom Decorator
-import { GetPayload } from 'src/auth/getPayload.decorator'
+import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // Interceptors
-import { TransformToPlainInterceptor } from 'src/interceptors/toPlain.interceptor'
+import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.interceptor'
 // DTOs
-import { AddToContactDto } from 'src/dtos/addToContact.dto'
+import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
 // Types
-import type { UserEntity } from 'src/entities/user.entity'
-import type { ContactModel } from 'src/models/contact.model'
+import type { UserEntity } from 'src/users/user.entity'
+import type { ContactModel } from 'src/contacts/contact.model'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())

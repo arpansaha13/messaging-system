@@ -4,11 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 // Auth Module
 import { AuthModule } from 'src/auth/auth.module'
 // Controller
-import { ChatController } from 'src/controllers/chat.controller'
+import { ChatController } from 'src/chats/chat.controller'
 // Service
-import { ChatService } from 'src/services/chat.service'
+import { ChatService } from 'src/chats/chat.service'
 // Entities
-import { ChatEntity } from 'src/entities/chat.entity'
+import { ChatEntity } from 'src/chats/chat.entity'
 import { MessageEntity } from 'src/entities/message.entity'
 
 @Module({

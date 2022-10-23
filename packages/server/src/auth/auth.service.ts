@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import * as bcrypt from 'bcrypt'
 // Entity
 import { AuthEntity } from './auth.entity'
-import { UserEntity } from 'src/entities/user.entity'
+import { UserEntity } from 'src/users/user.entity'
 // DTO
 import { SignInDto, SignUpDto } from './auth.dto'
 // Types

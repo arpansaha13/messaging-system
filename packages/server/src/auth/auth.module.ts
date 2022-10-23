@@ -7,7 +7,7 @@ import { AuthController } from './auth.controller'
 // Service
 import { AuthService } from './auth.service'
 // Entities
-import { UserEntity } from 'src/entities/user.entity'
+import { UserEntity } from 'src/users/user.entity'
 import { AuthEntity } from './auth.entity'
 import { JwtStrategy } from './jwt.strategy'
 // Constants

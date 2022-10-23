@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
-import { UserEntity } from './user.entity'
+import { UserEntity } from '../users/user.entity'
 
 @Entity({ name: 'contacts' })
 export class ContactEntity {

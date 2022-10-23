@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 // Model
-import { ContactModel } from 'src/models/contact.model'
+import { ContactModel } from 'src/contacts/contact.model'
 // Entities
-import { UserEntity } from 'src/entities/user.entity'
+import { UserEntity } from 'src/users/user.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
 // Types
 import type { Repository } from 'typeorm'
@@ -51,16 +51,6 @@ export class ContactService {
         },
       }),
     )
-
-    // return this.dataSource
-    //   .createQueryBuilder()
-    //   .select(['user', 'contact.alias'])
-    //   .from(UserEntity, 'user')
-    //   .innerJoin(ContactEntity, 'contact', 'contact.contact_user_id = user.id')
-    //   .where('contact.user_id = :auth_user_id', {
-    //     auth_user_id,
-    //   })
-    //   .getRawMany()
   }
   /**
    * @param auth_user_id id of authorized user
