@@ -24,6 +24,7 @@ const SignUpPage = () => {
     if (expiresAt !== null && Date.now() < expiresAt) {
       Router.push('/')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchHook = useFetch()
@@ -32,12 +33,12 @@ const SignUpPage = () => {
 
   const [formData, { set }] = useMap({
     email: '',
-    username: '',
     password: '',
   })
-  const [validationErrors, { reset, set: setError }] = useMap<Record<string, string | null>>({
+  const [validationErrors, { reset, set: setError }] = useMap<
+    Record<string, string | null>
+  >({
     email: null,
-    username: null,
     password: null,
   })
 
@@ -45,28 +46,28 @@ const SignUpPage = () => {
     e.preventDefault()
     reset()
 
-    fetchHook('http://localhost:4000/auth/sign-up', {
+    fetchHook('auth/sign-up', {
       method: 'POST',
       body: JSON.stringify(formData),
     })
-    .then((data: JwtToken) => {
-      setAuthState(data)
-      Router.push('/')
-      setNotification({ show: false })
-    })
-    .catch((err) => {
-      if (err.statusCode === 409) {
-        setError('email', err.message.email ?? null)
-        setError('username', err.message.username ?? null)
-      } else {
-        setNotification({
-          show: true,
-          status: 'error',
-          title: 'Sign up failed!',
-          description: err.message,
-        })
-      }
-    })
+      .then((data: JwtToken) => {
+        setAuthState(data)
+        Router.push('/')
+        setNotification({ show: false })
+      })
+      .catch(err => {
+        if (err.statusCode === 409) {
+          setError('email', err.message.email ?? null)
+          setError('username', err.message.username ?? null)
+        } else {
+          setNotification({
+            show: true,
+            status: 'error',
+            title: 'Sign up failed!',
+            description: err.message,
+          })
+        }
+      })
   }
 
   return (
@@ -77,31 +78,17 @@ const SignUpPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <form className="space-y-6" onSubmit={ signUp }>
+      <form className="space-y-6" onSubmit={signUp}>
         <BaseInput
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           required
-          label='Email address'
-          value={ formData.email }
-          validationError={ validationErrors.email }
-          onChange={ (e) => set('email', e.target.value) }
-        />
-
-        <BaseInput
-          id="username"
-          name="username"
-          type="username"
-          autoComplete="username"
-          required
-          minLength={ 4 }
-          maxLength={ 30 }
-          label='Username'
-          value={ formData.username }
-          validationError={ validationErrors.username }
-          onChange={ (e) => set('username', e.target.value) }
+          label="Email address"
+          value={formData.email}
+          validationError={validationErrors.email}
+          onChange={e => set('email', e.target.value)}
         />
 
         <BaseInput
@@ -110,17 +97,20 @@ const SignUpPage = () => {
           type="password"
           autoComplete="current-password"
           required
-          minLength={ 8 }
-          maxLength={ 30 }
-          label='Password'
-          value={ formData.password }
-          validationError={ validationErrors.password }
-          onChange={ (e) => set('password', e.target.value) }
+          minLength={8}
+          maxLength={30}
+          label="Password"
+          value={formData.password}
+          validationError={validationErrors.password}
+          onChange={e => set('password', e.target.value)}
         />
 
         <div className="flex items-center justify-end">
           <div className="text-sm">
-            <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
+            <a
+              href="#"
+              className="font-medium text-emerald-600 hover:text-emerald-500"
+            >
               Forgot your password?
             </a>
           </div>
@@ -137,10 +127,7 @@ const SignUpPage = () => {
 
         <div className="flex items-center justify-start">
           <div className="text-sm">
-            <span className="text-gray-100">
-              Already have an account?
-            </span>
-            { ' ' }
+            <span className="text-gray-100">Already have an account?</span>{' '}
             <NextLink href="/auth/signin">
               <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">
                 Sign in
@@ -152,5 +139,7 @@ const SignUpPage = () => {
     </>
   )
 }
-SignUpPage.getLayout = (page: ReactElement) => <AuthLayout heading='Create your account'>{ page }</AuthLayout>
+SignUpPage.getLayout = (page: ReactElement) => (
+  <AuthLayout heading="Create your account">{page}</AuthLayout>
+)
 export default SignUpPage

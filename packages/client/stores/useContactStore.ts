@@ -1,31 +1,47 @@
 import create from 'zustand'
 
-import type { ContactType } from '../types'
+import type { ContactType, UserType } from '../types'
+
+type ContactResponseType = {
+  [key: string]: {
+    alias: string
+    contact_user: UserType
+  }[]
+}
 
 interface ContactStoreType {
-  /** List of all contacts with whom the logged-in user chats, mapped with their respective userTags. */
-  contacts: Map<string, ContactType>
+  /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */
+  contacts: {
+    [key: string]: ContactType[]
+  }
 
   /**
    * Initialize the contacts map.
-   * @param initContacts Array of contacts. This array will be stored in the state as a Map object.
+   * @param initContacts
    */
-  init: (initContacts: ContactType[]) => void
+  init: (initContacts: ContactResponseType) => void
 }
 
-export const useContactStore = create<ContactStoreType>()(
-  (set) => ({
-    contacts: new Map<string, ContactType>(),
-    init(initContacts: ContactType[]) {
-      set(() => {
-        const newContactsMap = new Map<string, ContactType>()
+export const useContactStore = create<ContactStoreType>()(set => ({
+  contacts: {},
+  init(initContacts: ContactResponseType) {
+    set(() => {
+      const newContacts: ContactStoreType['contacts'] = {}
 
-        for (const user of initContacts) {
-          newContactsMap.set(user.userTag, user)
+      for (const letter of Object.keys(initContacts)) {
+        newContacts[letter] = []
+
+        for (const contact of initContacts[letter]) {
+          newContacts[letter].push({
+            user_id: contact.contact_user.id,
+            name: contact.alias,
+            dp: contact.contact_user.dp,
+            text: contact.contact_user.about,
+          })
         }
+      }
 
-        return {contacts: newContactsMap}
-      })
-    },
-  }),
-)
+      return { contacts: newContacts }
+    })
+  },
+}))

@@ -54,23 +54,21 @@ const Home: NextPage = () => {
   const initContactStore = useContactStore(state => state.init)
   const initChatListStore = useChatListStore(state => state.init)
 
-  // useEffect(() => {
-  //   // Redirects to sign-in page if unauthorized or if auth token expires.
-  //   if (authToken === null || (expiresAt !== null && Date.now() >= expiresAt)) {
-  //     Router.push('/auth/signin')
-  //   }
-  //   else {
-  //     Promise.all([
-  //       fetchHook('chat-list'),
-  //       fetchHook('contacts'),
-  //     ])
-  //     .then(([chatList, contacts]) => {
-  //       initContactStore(contacts)
-  //       initChatListStore(chatList)
-  //       setLoaded(true)
-  //     })
-  //   }
-  // }, [])
+  useEffect(() => {
+    // Redirects to sign-in page if unauthorized or if auth token expires.
+    if (authToken === null || (expiresAt !== null && Date.now() >= expiresAt)) {
+      Router.push('/auth/signin')
+    } else {
+      Promise.all([fetchHook('chat-list'), fetchHook('contacts')]).then(
+        ([chatList, contacts]) => {
+          initContactStore(contacts)
+          initChatListStore(chatList)
+          setLoaded(true)
+        },
+      )
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (!loaded) {
     // TODO: make a component for 'loading'

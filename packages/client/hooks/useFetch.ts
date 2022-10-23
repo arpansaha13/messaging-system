@@ -1,5 +1,7 @@
 import { useAuthStore } from '../stores/useAuthStore'
 
+const FETCH_BASE_URL = 'http://localhost:4000/'
+
 /**
  * Returns a wrapper over the Fetch API.
  *
@@ -20,24 +22,24 @@ import { useAuthStore } from '../stores/useAuthStore'
 export function useFetch() {
   const authToken = useAuthStore(state => state.authToken)
 
-  return (input: RequestInfo | URL, options?: RequestInit) => {
-    return (
-      fetch(input, {
-        ...options,
-        body: options?.body ? new URLSearchParams(JSON.parse(options?.body as string)) : null,
-        headers: {
-          ...(options?.headers ?? {}),
-          'Content-Type': 'application/x-www-form-urlencoded',
-          ...(authToken !== null ? {Authorization: `Bearer ${ authToken }`} : {}),
-        }
-      })
-      .then(async (res) => {
-        const data = await res.json()
-        if (res.status >= 400) {
-          throw data;
-        }
-        return data
-      })
-    )
+  const fecthHook = (url: string, options?: RequestInit) => {
+    return fetch(`${FETCH_BASE_URL}${url}`, {
+      ...options,
+      body: options?.body
+        ? new URLSearchParams(JSON.parse(options?.body as string))
+        : null,
+      headers: {
+        ...(options?.headers ?? {}),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        ...(authToken !== null ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+    }).then(async res => {
+      const data = await res.json()
+      if (res.status >= 400) {
+        throw data
+      }
+      return data
+    })
   }
+  return fecthHook
 }

@@ -24,6 +24,7 @@ const SignInPage = () => {
     if (expiresAt !== null && Date.now() < expiresAt) {
       Router.push('/')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchHook = useFetch()
@@ -38,23 +39,23 @@ const SignInPage = () => {
   function signIn(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    fetchHook('http://localhost:4000/auth/sign-in', {
+    fetchHook('auth/sign-in', {
       method: 'POST',
       body: JSON.stringify(formData),
     })
-    .then((data: JwtToken) => {
-      setAuthState(data)
-      Router.push('/')
-      setNotification({ show: false })
-    })
-    .catch((err) => {
-      setNotification({
-        show: true,
-        status: 'error',
-        title: 'Sign in failed!',
-        description: err.message,
+      .then((data: JwtToken) => {
+        setAuthState(data)
+        Router.push('/')
+        setNotification({ show: false })
       })
-    })
+      .catch(err => {
+        setNotification({
+          show: true,
+          status: 'error',
+          title: 'Sign in failed!',
+          description: err.message,
+        })
+      })
   }
 
   return (
@@ -65,16 +66,16 @@ const SignInPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <form className="space-y-6" onSubmit={ signIn }>
+      <form className="space-y-6" onSubmit={signIn}>
         <BaseInput
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           required
-          label='Email address'
-          value={ formData.email }
-          onChange={ (e) => set('email', e.target.value) }
+          label="Email address"
+          value={formData.email}
+          onChange={e => set('email', e.target.value)}
         />
 
         <BaseInput
@@ -83,14 +84,17 @@ const SignInPage = () => {
           type="password"
           autoComplete="current-password"
           required
-          label='Password'
-          value={ formData.password }
-          onChange={ (e) => set('password', e.target.value) }
+          label="Password"
+          value={formData.password}
+          onChange={e => set('password', e.target.value)}
         />
 
         <div className="flex items-center justify-end">
           <div className="text-sm">
-            <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
+            <a
+              href="#"
+              className="font-medium text-emerald-600 hover:text-emerald-500"
+            >
               Forgot your password?
             </a>
           </div>
@@ -107,10 +111,7 @@ const SignInPage = () => {
 
         <div className="flex items-center justify-start">
           <div className="text-sm">
-            <span className="text-gray-100">
-              Don&apos;t have an account?
-            </span>
-            { ' ' }
+            <span className="text-gray-100">Don&apos;t have an account?</span>{' '}
             <NextLink href="/auth/signup">
               <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">
                 Sign up
@@ -122,5 +123,7 @@ const SignInPage = () => {
     </>
   )
 }
-SignInPage.getLayout = (page: ReactElement) => <AuthLayout heading='Sign in to your account'>{ page }</AuthLayout>
+SignInPage.getLayout = (page: ReactElement) => (
+  <AuthLayout heading="Sign in to your account">{page}</AuthLayout>
+)
 export default SignInPage
