@@ -17,7 +17,7 @@ import { TransformToPlainInterceptor } from 'src/interceptors/toPlain.intercepto
 import { AddToContactDto } from 'src/dtos/addToContact.dto'
 // Types
 import type { UserEntity } from 'src/entities/user.entity'
-import type { ContactEntity } from 'src/entities/contact.entity'
+import type { ContactModel } from 'src/models/contact.model'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())
@@ -28,7 +28,7 @@ export class ContactController {
   @Get()
   getContacts(
     @GetPayload('user') auth_user: UserEntity,
-  ): Promise<ContactEntity[]> {
+  ): Promise<ContactModel> {
     return this.contactService.getAllContactsOfUser(auth_user.id)
   }
 

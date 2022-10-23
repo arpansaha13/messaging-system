@@ -5,7 +5,9 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-// Entity
+// Model
+import { ContactModel } from 'src/models/contact.model'
+// Entities
 import { UserEntity } from 'src/entities/user.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
 // Types
@@ -21,13 +23,44 @@ export class ContactService {
     private contactRepository: Repository<ContactEntity>,
   ) {}
 
-  getAllContactsOfUser(auth_user_id: number): Promise<ContactEntity[]> {
-    return this.contactRepository.find({
-      where: { user: auth_user_id },
-      relations: {
-        contact_user: true,
-      },
-    })
+  async getAllContactsOfUser(auth_user_id: number): Promise<ContactModel> {
+    /** Format the response as required by the client - Group all contacts by the first letter of alias */
+    function groupAlphabetically(
+      contactEntities: Pick<ContactEntity, 'alias' | 'contact_user'>[],
+    ) {
+      const res: ContactModel = {}
+
+      for (const contactEntity of contactEntities) {
+        const letter = contactEntity.alias[0].toUpperCase()
+        if (typeof res[letter] === 'undefined') {
+          res[letter] = []
+        }
+        res[letter].push(contactEntity)
+      }
+      return res
+    }
+
+    return groupAlphabetically(
+      await this.contactRepository.find({
+        select: ['alias', 'contact_user'],
+        where: {
+          user_id: auth_user_id,
+        },
+        relations: {
+          contact_user: true,
+        },
+      }),
+    )
+
+    // return this.dataSource
+    //   .createQueryBuilder()
+    //   .select(['user', 'contact.alias'])
+    //   .from(UserEntity, 'user')
+    //   .innerJoin(ContactEntity, 'contact', 'contact.contact_user_id = user.id')
+    //   .where('contact.user_id = :auth_user_id', {
+    //     auth_user_id,
+    //   })
+    //   .getRawMany()
   }
   /**
    * @param auth_user_id id of authorized user
@@ -44,7 +77,7 @@ export class ContactService {
     }
     const existing = await this.contactRepository.count({
       where: {
-        user: auth_user_id,
+        user_id: auth_user_id,
         contact_user_id,
       },
     })
@@ -58,9 +91,9 @@ export class ContactService {
       throw new BadRequestException('Invalid contact_user_id')
     }
     const contactEntity = this.contactRepository.create({
-      user: auth_user_id,
+      user_id: auth_user_id,
       contact_user_id,
-      contact_user: contact_user_id,
+      contact_user,
       alias: alias,
     })
     try {
@@ -76,7 +109,7 @@ export class ContactService {
   ): Promise<ContactEntity> {
     return this.contactRepository.findOne({
       where: {
-        user: auth_user_id,
+        user_id: auth_user_id,
         contact_user_id,
       },
     })

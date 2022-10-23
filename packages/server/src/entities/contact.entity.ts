@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -16,13 +17,13 @@ export class ContactEntity {
   id: number
 
   /**
-   * The first-person (authorized/logged-in) user who has stored the sec-person in their contacts.
+   * The first-person (authorized/logged-in) user_id who has stored the sec-person in their contacts.
    *
    * It is not required to send this column to the client because it will aways be the user_id of logged-in user.
    */
   @Column()
   @Exclude({ toPlainOnly: true })
-  user: number
+  user_id: number
 
   /** The sec-person user who is stored by the first-person in their contacts. */
   @Column()
@@ -30,8 +31,9 @@ export class ContactEntity {
   contact_user_id: number
 
   /** The sec-person user. The relation id is the user_id of contact-user. */
-  @ManyToOne(() => UserEntity, user => user.id)
-  contact_user: number
+  @ManyToOne(() => UserEntity)
+  @JoinColumn({ name: 'contact_user', referencedColumnName: 'id' })
+  contact_user: UserEntity
 
   /** Alias or name by which the first-person user has saved the sec-person in contacts. */
   @Column()
