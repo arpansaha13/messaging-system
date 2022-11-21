@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react'
 // Icons
 import { MicrophoneIcon } from '@heroicons/react/24/solid'
-import { PaperClipIcon , FaceSmileIcon } from '@heroicons/react/24/outline'
+import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 // Components
 import TextArea from './TextArea'
 // Stores
@@ -16,48 +16,53 @@ const ChatFooter = () => {
   const addDraft = useDraftStore(state => state.add)
   const drafts = useDraftStore(state => state.drafts)
   const removeDraft = useDraftStore(state => state.remove)
-  const activeChat = useChatListStore(state => state.activeChat)!
+  const activeChatUserId = useChatListStore(state => state.activeChatUserId)!
 
-  const [ value, setValue ] = useState('')
-  const prevChat = useRef<string>(activeChat)
+  const [value, setValue] = useState('')
+  const prevChatUserId = useRef(activeChatUserId)
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && value) {
-      send(activeChat, value)
+      send(activeChatUserId, value)
       setValue('')
     }
   }
 
   useEffect(() => {
-    // Store the draft, if any, when `activeChat` changes
+    // Store the draft, if any, when `activeChatUserId` changes
     if (value) {
-      addDraft(prevChat.current, value)
+      addDraft(prevChatUserId.current, value)
       setValue('')
     }
     // Retrieve the draft, if any.
-    if (drafts.has(activeChat)) {
-      setValue(drafts.get(activeChat)!)
-      removeDraft(activeChat)
+    if (drafts.has(activeChatUserId)) {
+      setValue(drafts.get(activeChatUserId)!)
+      removeDraft(activeChatUserId)
     }
-    prevChat.current = activeChat
-  }, [activeChat])
+    prevChatUserId.current = activeChatUserId
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChatUserId])
 
   return (
-    <div className='px-4 py-2.5 w-full flex items-center text-gray-400 bg-gray-800 space-x-1'>
-      <button className='p-1 btn-icon'>
-        <FaceSmileIcon className='w-7 h-7 flex-shrink-0' />
+    <div className="px-4 py-2.5 w-full flex items-center text-gray-400 bg-gray-800 space-x-1">
+      <button className="p-1 btn-icon">
+        <FaceSmileIcon className="w-7 h-7 flex-shrink-0" />
       </button>
 
-      <button className='p-2 rounded-full hover:bg-gray-700/70 btn-icon'>
-        <PaperClipIcon className='w-6 h-6 flex-shrink-0' />
+      <button className="p-2 rounded-full hover:bg-gray-700/70 btn-icon">
+        <PaperClipIcon className="w-6 h-6 flex-shrink-0" />
       </button>
 
-      <div className='px-1 flex-grow'>
-        <TextArea value={ value } setValue={ setValue } handleKeyDown={ handleKeyDown } />
+      <div className="px-1 flex-grow">
+        <TextArea
+          value={value}
+          setValue={setValue}
+          handleKeyDown={handleKeyDown}
+        />
       </div>
 
-      <button className='p-2 btn-icon'>
-        <MicrophoneIcon className='w-6 h-6 flex-shrink-0' />
+      <button className="p-2 btn-icon">
+        <MicrophoneIcon className="w-6 h-6 flex-shrink-0" />
       </button>
     </div>
   )

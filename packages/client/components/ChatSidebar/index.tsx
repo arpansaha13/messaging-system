@@ -17,16 +17,25 @@ const ChatSidebar = () => {
   const add = useChatStore(state => state.add)
   const chats = useChatStore(state => state.chats)
   const chatList = useChatListStore(state => state.chatList)
-  const activeChat = useChatListStore(state => state.activeChat)
-  const setActiveChat = useChatListStore(state => state.setActiveChat)
+  const activeChatUserId = useChatListStore(state => state.activeChatUserId)
+  const setActiveChatUser = useChatStore(state => state.setActiveChatUser)
+  const setActiveChatUserId = useChatListStore(
+    state => state.setActiveChatUserId,
+  )
 
   async function handleClick(listItem: ChatListItemType) {
-    setActiveChat(listItem.user_id)
+    setActiveChatUserId(listItem.userId)
+    setActiveChatUser({
+      userId: listItem.userId,
+      name: listItem.name,
+      text: listItem.text,
+      dp: listItem.dp,
+    })
 
-    if (!chats.has(listItem.user_id)) {
-      const chatRes = await fetchHook(`chats/${listItem.user_id}`)
+    if (!chats.has(listItem.userId)) {
+      const chatRes = await fetchHook(`chats/${listItem.userId}`)
       const chat: MessageType[] = await chatRes.json()
-      add(listItem.user_id, chat)
+      add(listItem.userId, chat)
     }
   }
   return (
@@ -36,7 +45,7 @@ const ChatSidebar = () => {
 
       <div className="overflow-auto">
         <StackedList
-          active={activeChat}
+          active={activeChatUserId}
           stackedList={chatList}
           handleClick={handleClick}
         />

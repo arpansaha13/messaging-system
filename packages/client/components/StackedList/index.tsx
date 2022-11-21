@@ -6,7 +6,7 @@ import classNames from '../../utils/classNames'
 import type { StackedListItemProps } from './StackedListItem'
 
 interface StackedListItemType extends StackedListItemProps {
-  user_id: number
+  userId: number
 }
 interface StackedListProps {
   stackedList: StackedListItemType[]
@@ -22,11 +22,11 @@ export default function StackedList({
   return (
     <ul role="list">
       {stackedList.map(listItem => (
-        <li key={listItem.user_id}>
+        <li key={listItem.userId}>
           <button
             className={classNames(
               'px-3 w-full text-left flex items-center relative',
-              listItem.user_id === active
+              listItem.userId === active
                 ? 'bg-gray-700/90'
                 : 'hover:bg-gray-600/40',
             )}

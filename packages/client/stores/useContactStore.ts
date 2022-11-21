@@ -33,7 +33,7 @@ export const useContactStore = create<ContactStoreType>()(set => ({
 
         for (const contact of initContacts[letter]) {
           newContacts[letter].push({
-            user_id: contact.contact_user.id,
+            userId: contact.contact_user.id,
             name: contact.alias,
             dp: contact.contact_user.dp,
             text: contact.contact_user.about,

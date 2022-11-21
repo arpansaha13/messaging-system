@@ -17,7 +17,7 @@ import { useSlideOverState } from '../stores/useSlideOverState'
 import type { NextPage } from 'next'
 
 function AsyncPage() {
-  const activeChat = useChatListStore(state => state.activeChat)
+  const activeChatUserId = useChatListStore(state => state.activeChatUserId)
   const slideOverComponentName = useSlideOverState(state => state.componentName)
 
   function getSlideOverContent() {
@@ -39,7 +39,7 @@ function AsyncPage() {
       </section>
 
       <section className="col-span-7 h-full bg-gray-800">
-        {activeChat !== null && <ChatView />}
+        {activeChatUserId !== null && <ChatView />}
       </section>
     </main>
   )

@@ -11,20 +11,18 @@ import { useChatListStore } from '../../stores/useChatListStore'
 // Not memoizing this component because it will frequently update on state change.
 export default function ChatView() {
   const chats = useChatStore(state => state.chats)
-  const activeChat = useChatListStore(state => state.activeChat) as string
+  const activeChatUserId = useChatListStore(state => state.activeChatUserId)!
 
-  const [child] = useSize(
-    ({ height }) => (
-      <div className='flex-grow bg-gray-900'>
-        <ChatArea messages={ chats.get(activeChat) ?? [] } height={ height } />
-      </div>
-    )
-  )
+  const [child] = useSize(({ height }) => (
+    <div className="flex-grow bg-gray-900">
+      <ChatArea messages={chats.get(activeChatUserId) ?? []} height={height} />
+    </div>
+  ))
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className="flex flex-col h-full">
       <ChatHeader />
-      { child }
+      {child}
       <ChatFooter />
     </div>
   )

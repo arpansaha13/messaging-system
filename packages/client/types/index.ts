@@ -1,6 +1,7 @@
 export interface ChatListItemType {
   /** user_id of the user with whom the chat is. */
-  user_id: number
+  userId: number
+  /** The display picture of the user. If the user has not set any dp then it will be `null`. */
   dp: string | null
   /** Alias of the user with whom the chat is. */
   name: string
@@ -8,9 +9,10 @@ export interface ChatListItemType {
   time: number
   /** Whether the chat has been muted or not. */
   muted: boolean
+  /** Whether the latest message has been read or not. */
   read: boolean
   /** The latest message in this chat. */
-  latestMsg: string
+  text: string
 }
 
 export interface MessageType {
@@ -24,18 +26,18 @@ export interface MessageType {
 export interface UserType {
   id: number
   name: string
-  dp: string
+  dp: string | null
   about: string
 }
 
 export interface ContactType {
   /** user_id of the contact-user */
-  user_id: number
+  userId: number
   /** Alias by which the auth-user has stored this contact. */
   name: string
   /** About or Bio of the contact-user. */
   text: string
-  dp: string
+  dp: string | null
 }
 
 export interface JwtToken {

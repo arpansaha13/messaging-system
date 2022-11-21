@@ -2,28 +2,26 @@ import create from 'zustand'
 
 interface DraftStoreType {
   /** List of all drafts, mapped with their respective userTags (chats). */
-  drafts: Map<string, string>
+  drafts: Map<number, string>
 
   /** Add a draft. */
-  add: (userTag: string, draft: string) => void
+  add: (userId: number, draft: string) => void
 
   /** Remove a draft. */
-  remove: (userTag: string) => void
+  remove: (userId: number) => void
 }
 
 /** Store for the draft messages that were not sent or removed. */
-export const useDraftStore = create<DraftStoreType>()(
-  (set) => ({
-    drafts: new Map<string, string>(),
-    add(userTag: string, draft: string) {
-      set(state => ({ drafts: state.drafts.set(userTag, draft) }))
-    },
-    remove(userTag: string) {
-      set(state => {
-        const tempDrafts = state.drafts
-        tempDrafts.delete(userTag)
-        return { drafts: tempDrafts }
-      })
-    },
-  }),
-)
+export const useDraftStore = create<DraftStoreType>()(set => ({
+  drafts: new Map<number, string>(),
+  add(userId: number, draft: string) {
+    set(state => ({ drafts: state.drafts.set(userId, draft) }))
+  },
+  remove(userId: number) {
+    set(state => {
+      const tempDrafts = state.drafts
+      tempDrafts.delete(userId)
+      return { drafts: tempDrafts }
+    })
+  },
+}))
