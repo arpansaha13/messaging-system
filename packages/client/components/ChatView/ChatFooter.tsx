@@ -4,7 +4,10 @@ import { MicrophoneIcon } from '@heroicons/react/24/solid'
 import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 // Components
 import TextArea from './TextArea'
+// Custom Hooks
+import { useSocket } from '../../hooks/useSocket'
 // Stores
+import { useAuthStore } from '../../stores/useAuthStore'
 import { useChatStore } from '../../stores/useChatStore'
 import { useDraftStore } from '../../stores/useDraftStore'
 import { useChatListStore } from '../../stores/useChatListStore'
@@ -12,11 +15,14 @@ import { useChatListStore } from '../../stores/useChatListStore'
 import type { KeyboardEvent } from 'react'
 
 const ChatFooter = () => {
+  const authUser = useAuthStore(state => state.authUser)!
   const send = useChatStore(state => state.send)
   const addDraft = useDraftStore(state => state.add)
   const drafts = useDraftStore(state => state.drafts)
   const removeDraft = useDraftStore(state => state.remove)
   const activeChatUserId = useChatListStore(state => state.activeChatUserId)!
+
+  const { socket } = useSocket()
 
   const [value, setValue] = useState('')
   const prevChatUserId = useRef(activeChatUserId)
@@ -25,6 +31,11 @@ const ChatFooter = () => {
     if (e.key === 'Enter' && value) {
       send(activeChatUserId, value)
       setValue('')
+      socket.emit!('chats', {
+        msg: value,
+        receiverId: authUser.id,
+        senderId: activeChatUserId,
+      })
     }
   }
 

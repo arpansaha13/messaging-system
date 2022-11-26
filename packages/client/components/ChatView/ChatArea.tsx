@@ -18,15 +18,17 @@ export default function ChatArea({ messages, height }: ChatAreaProps) {
   })
 
   return (
-    <div className='flex flex-col justify-end' style={{ 'height': `${height}px` }}>
-      <div ref={ elRef } className='px-20 py-4 max-h-full overflow-y-scroll scrollbar'>
-        {
-          messages.map((message) => {
-            return (
-              <Message key={ message.time } message={ message } />
-            )
-          })
-        }
+    <div
+      className="flex flex-col justify-end"
+      style={{ height: `${height}px` }}
+    >
+      <div
+        ref={elRef}
+        className="px-20 py-4 max-h-full overflow-y-scroll scrollbar"
+      >
+        {messages.map((message, i) => {
+          return <Message key={i} message={message} />
+        })}
       </div>
     </div>
   )

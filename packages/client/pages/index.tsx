@@ -3,6 +3,7 @@ import { useToggle } from 'react-use'
 import { memo, useEffect } from 'react'
 // Custom Hooks
 import { useFetch } from '../hooks/useFetch'
+import { useSocket } from '../hooks/useSocket'
 // Components
 import ChatView from '../components/ChatView'
 import SlideOver from '../components/SlideOver'
@@ -51,6 +52,7 @@ const Home: NextPage = () => {
 
   const authToken = useAuthStore(state => state.authToken)
   const expiresAt = useAuthStore(state => state.expiresAt)
+  const setAuthUser = useAuthStore(state => state.setAuthUser)
   const initContactStore = useContactStore(state => state.init)
   const initChatListStore = useChatListStore(state => state.init)
 
@@ -59,13 +61,16 @@ const Home: NextPage = () => {
     if (authToken === null || (expiresAt !== null && Date.now() >= expiresAt)) {
       Router.push('/auth/signin')
     } else {
-      Promise.all([fetchHook('chat-list'), fetchHook('contacts')]).then(
-        ([chatList, contacts]) => {
-          initContactStore(contacts)
-          initChatListStore(chatList)
-          setLoaded(true)
-        },
-      )
+      Promise.all([
+        fetchHook('me'),
+        fetchHook('chat-list'),
+        fetchHook('contacts'),
+      ]).then(([authUser, chatList, contacts]) => {
+        setAuthUser(authUser)
+        initContactStore(contacts)
+        initChatListStore(chatList)
+        setLoaded(true)
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

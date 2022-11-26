@@ -44,8 +44,8 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
           get().add(userId, [])
           chat = get().chats.get(userId)!
         }
-        chat!.push(...messages)
-        state.chats.set(userId, chat!)
+        chat.push(...messages)
+        state.chats.set(userId, chat)
       }),
     )
   },
@@ -54,8 +54,7 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       {
         msg,
         myMsg: true,
-        status: 'sent',
-        time: Date.now(),
+        status: 'sending',
       },
     ])
   },

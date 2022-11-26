@@ -5,7 +5,7 @@ import { ChatService } from 'src/chats/chat.service'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // DTOs
-import { GetChatParams } from 'src/chats/dtos/chat.dto'
+import { GetChatParamsDto } from 'src/chats/dtos/chat.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
 import type { MessageEntity } from 'src/entities/message.entity'
@@ -22,7 +22,7 @@ export class ChatController {
    */
   @Get('/:user_id')
   async getChat(
-    @Param() params: GetChatParams,
+    @Param() params: GetChatParamsDto,
     @GetPayload('user') userEntity: UserEntity,
   ): Promise<MessageEntity[]> {
     return this.chatService.getChat(userEntity.id, params.user_id)

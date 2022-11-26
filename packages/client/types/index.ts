@@ -15,19 +15,30 @@ export interface ChatListItemType {
   text: string
 }
 
-export interface MessageType {
+interface BaseMessageType {
   msg: string
   /** Whether this message is posted by the logged-in user or not. */
   myMsg: boolean
+}
+
+interface MessageSendingType extends BaseMessageType {
+  status: 'sending'
+}
+interface MessageConfirmedType extends BaseMessageType {
   time: number
   status: 'sent' | 'delivered' | 'read'
 }
+
+export type MessageType = MessageSendingType | MessageConfirmedType
 
 export interface UserType {
   id: number
   name: string
   dp: string | null
   about: string
+}
+export interface AuthUserType extends UserType {
+  email: string
 }
 
 export interface ContactType {
