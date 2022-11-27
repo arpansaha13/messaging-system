@@ -31,7 +31,7 @@ const ChatFooter = () => {
     if (e.key === 'Enter' && value) {
       send(activeChatUserId, value)
       setValue('')
-      socket.emit!('chats', {
+      socket.emit('chat', {
         msg: value,
         receiverId: authUser.id,
         senderId: activeChatUserId,

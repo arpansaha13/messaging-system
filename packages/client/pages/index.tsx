@@ -1,53 +1,17 @@
 import Router from 'next/router'
-import { useToggle } from 'react-use'
-import { memo, useEffect } from 'react'
+import { memo, useEffect, useState } from 'react'
 // Custom Hooks
 import { useFetch } from '../hooks/useFetch'
-import { useSocket } from '../hooks/useSocket'
 // Components
-import ChatView from '../components/ChatView'
-import SlideOver from '../components/SlideOver'
-import ChatSidebar from '../components/ChatSidebar'
-import ContactList from '../components/ContactList'
+import AsyncPage from '../components/AsyncPage' // Import this dynamically when needed
 // Stores
 import { useAuthStore } from '../stores/useAuthStore'
 import { useContactStore } from '../stores/useContactStore'
 import { useChatListStore } from '../stores/useChatListStore'
-import { useSlideOverState } from '../stores/useSlideOverState'
 // Types
 import type { NextPage } from 'next'
 
-function AsyncPage() {
-  const activeChatUserId = useChatListStore(state => state.activeChatUserId)
-  const slideOverComponentName = useSlideOverState(state => state.componentName)
-
-  function getSlideOverContent() {
-    switch (slideOverComponentName) {
-      case 'ContactList':
-        return <ContactList />
-      case 'Archived':
-        return <ContactList /> /* for now */
-      default:
-        return null
-    }
-  }
-
-  return (
-    <main className="grid grid-cols-10 h-full">
-      <section className="col-span-3 h-full border-r border-gray-600/70 relative overflow-hidden">
-        <SlideOver>{getSlideOverContent()}</SlideOver>
-        <ChatSidebar />
-      </section>
-
-      <section className="col-span-7 h-full bg-gray-800">
-        {activeChatUserId !== null && <ChatView />}
-      </section>
-    </main>
-  )
-}
-
 const Home: NextPage = () => {
-  const [loaded, setLoaded] = useToggle(true)
   const fetchHook = useFetch()
 
   const authToken = useAuthStore(state => state.authToken)
@@ -56,9 +20,16 @@ const Home: NextPage = () => {
   const initContactStore = useContactStore(state => state.init)
   const initChatListStore = useChatListStore(state => state.init)
 
+  const [hasLoaded, setLoaded] = useState<boolean>(false)
+  const isAuthorized = !(
+    authToken === null ||
+    (expiresAt !== null && Date.now() >= expiresAt)
+  )
+
   useEffect(() => {
     // Redirects to sign-in page if unauthorized or if auth token expires.
-    if (authToken === null || (expiresAt !== null && Date.now() >= expiresAt)) {
+    if (!isAuthorized) {
+      // TODO: use Router.replace() after successful signin or signup, and logout, and also here below
       Router.push('/auth/signin')
     } else {
       Promise.all([
@@ -75,11 +46,11 @@ const Home: NextPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (!loaded) {
+  if (hasLoaded) {
+    return <AsyncPage />
+  } else {
     // TODO: make a component for 'loading'
     return <p> Loading...</p>
-  } else {
-    return <AsyncPage />
   }
 }
 

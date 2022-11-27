@@ -11,6 +11,27 @@ interface MessageProps {
   message: MessageType
 }
 
+function MessageContent({ message }: { message: MessageType }) {
+  if (!message.myMsg) {
+    return (
+      <span className="absolute right-2 bottom-1">
+        {format(message.time, 'h:mm a')}
+      </span>
+    )
+  } else if (message.status === 'sending') {
+    return (
+      <ClockIcon className="absolute right-2 bottom-1 w-3 h-3 flex-shrink-0" />
+    )
+  } else {
+    // TODO: Update this part to include single tick, double tick and blue tick.
+    return (
+      <span className="absolute right-2 bottom-1">
+        {format(message.time, 'h:mm a')}
+      </span>
+    )
+  }
+}
+
 const Message = ({ message }: MessageProps) => {
   return (
     <div
@@ -22,13 +43,7 @@ const Message = ({ message }: MessageProps) => {
       <span>{message.msg}</span>
 
       <p className="min-w-[4rem] text-xs text-gray-300 inline-flex items-end justify-end">
-        {message.status === 'sending' ? (
-          <ClockIcon className="absolute right-2 bottom-1 w-3 h-3 flex-shrink-0" />
-        ) : (
-          <span className="absolute right-2 bottom-1">
-            {format(message.time, 'h:mm a')}
-          </span>
-        )}
+        {<MessageContent message={message} />}
       </p>
     </div>
   )

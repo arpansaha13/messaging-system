@@ -1,3 +1,5 @@
+export * from './message.types'
+
 export interface ChatListItemType {
   /** user_id of the user with whom the chat is. */
   userId: number
@@ -14,22 +16,6 @@ export interface ChatListItemType {
   /** The latest message in this chat. */
   text: string
 }
-
-interface BaseMessageType {
-  msg: string
-  /** Whether this message is posted by the logged-in user or not. */
-  myMsg: boolean
-}
-
-interface MessageSendingType extends BaseMessageType {
-  status: 'sending'
-}
-interface MessageConfirmedType extends BaseMessageType {
-  time: number
-  status: 'sent' | 'delivered' | 'read'
-}
-
-export type MessageType = MessageSendingType | MessageConfirmedType
 
 export interface UserType {
   id: number
