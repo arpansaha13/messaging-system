@@ -33,9 +33,8 @@ const ChatSidebar = () => {
     })
 
     if (!chats.has(listItem.userId)) {
-      const chatRes = await fetchHook(`chats/${listItem.userId}`)
-      const chat: MessageType[] = await chatRes.json()
-      add(listItem.userId, chat)
+      const chatRes: MessageType[] = await fetchHook(`chats/${listItem.userId}`)
+      add(listItem.userId, chatRes)
     }
   }
   return (

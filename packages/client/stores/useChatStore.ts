@@ -1,11 +1,16 @@
 import create from 'zustand'
 import produce from 'immer'
+// Types
+import type { ContactType, MessageType, MsgConfirmedType } from '../types'
 
-import type { ContactType, MessageType } from '../types'
+// TODO: Try to use some other usique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
 interface ChatStoreType {
-  /** List of all chats of the logged-in user, mapped with their respective user_id. */
-  chats: Map<number, MessageType[]>
+  /**
+   * List of all chats of the logged-in user, mapped with their respective user_id.
+   * Each message in a chat is again mapped with their timestamps.
+   */
+  chats: Map<number, Map<number, MessageType>>
 
   /** The details of the user whose chat is opened. */
   activeChatUser: ContactType | null
@@ -26,7 +31,7 @@ interface ChatStoreType {
    * @param userId All chats are mapped with the user_id with whom the chat is.
    * @param msg Message to be sent.
    */
-  send: (userId: number, msg: string) => void
+  send: (userId: number, msg: string, time: number) => void
 
   /** Append the received messages to ongoing chat.
    * @param userId All chats are mapped with the user_id with whom the chat is.
@@ -34,18 +39,28 @@ interface ChatStoreType {
    */
   receive: (userId: number, msg: string, time: number) => void
 
+  updateStatus: (
+    userId: number,
+    time: number,
+    newStatus: MsgConfirmedType['status'],
+  ) => void
+
   /** Update the active chat-user when a new chat is opened. */
   setActiveChatUser: (contact: ContactType) => void
 }
 
 export const useChatStore = create<ChatStoreType>()((set, get) => ({
-  chats: new Map<number, MessageType[]>(),
+  chats: new Map<number, Map<number, MessageType>>(),
   activeChatUser: null,
   add(userId: number, chat: MessageType[]) {
     // Update through `Immer`
     set(
       produce(state => {
-        state.chats.set(userId, chat)
+        const newChat = new Map<number, MessageType>()
+        for (const message of chat) {
+          newChat.set(message.time, message)
+        }
+        state.chats.set(userId, newChat)
       }),
     )
   },
@@ -60,15 +75,18 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
           get().add(userId, [])
           chat = get().chats.get(userId)!
         }
-        chat.push(...messages)
+        for (const message of messages) {
+          chat.set(message.time, message)
+        }
         state.chats.set(userId, chat)
       }),
     )
   },
-  send(userId: number, msg: string) {
+  send(userId: number, msg: string, time: number) {
     get().push(userId, [
       {
         msg,
+        time,
         myMsg: true,
         status: 'sending',
       },
@@ -82,6 +100,21 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
         myMsg: false,
       },
     ])
+  },
+  updateStatus(
+    userId: number,
+    time: number,
+    newStatus: MsgConfirmedType['status'],
+  ) {
+    // Update through `Immer`
+    set(
+      produce((state: ChatStoreType) => {
+        const chat = state.chats.get(userId)!
+        const msgToUpdate = chat.get(time)! as MsgConfirmedType
+        const updatedMsg = { ...msgToUpdate, status: newStatus }
+        chat.set(time, updatedMsg)
+      }),
+    )
   },
   setActiveChatUser(contact: ContactType) {
     set({ activeChatUser: contact })

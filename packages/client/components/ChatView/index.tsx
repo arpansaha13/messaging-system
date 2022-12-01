@@ -15,7 +15,10 @@ export default function ChatView() {
 
   const [child] = useSize(({ height }) => (
     <div className="flex-grow bg-gray-900">
-      <ChatArea messages={chats.get(activeChatUserId) ?? []} height={height} />
+      <ChatArea
+        messages={chats.get(activeChatUserId) ?? null}
+        height={height}
+      />
     </div>
   ))
 

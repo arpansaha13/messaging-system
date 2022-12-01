@@ -3,9 +3,15 @@ import io from 'socket.io-client'
 // Stores
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
+// Types
+import type { MsgStatusType, ReceiveMsgType } from '../types/socket.types'
 
-type SocketOnEvents = 'connect' | 'disconnect' | 'chat'
-type SocketEmitEvents = 'chat' | 'join' | 'session-connect'
+type SocketOnEvents =
+  | 'connect'
+  | 'disconnect'
+  | 'receive-message'
+  | 'message-status'
+type SocketEmitEvents = 'send-message' | 'join' | 'session-connect'
 
 const socket = io('http://localhost:4000', { autoConnect: true })
 
@@ -14,7 +20,7 @@ const socketWrapper = {
   emit(event: SocketEmitEvents, data: any) {
     socket.emit(event, data)
   },
-  on(event: SocketOnEvents, cb: () => void) {
+  on(event: SocketOnEvents, cb: (...args: any) => void) {
     socket.on(event, cb)
   },
   off(event: SocketOnEvents) {
@@ -30,6 +36,7 @@ const socketWrapper = {
 export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
   const receive = useChatStore(state => state.receive)
+  const updateStatus = useChatStore(state => state.updateStatus)
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [_, setHookRunCount] = useState<number>(0)
@@ -57,12 +64,19 @@ export function useSocketInit() {
       setIsConnected(false)
     })
 
-    socketWrapper.on('chat', () => {})
+    socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
+      receive(data.userId, data.msg, data.time)
+    })
+
+    socketWrapper.on('message-status', (data: MsgStatusType) => {
+      updateStatus(data.userId, data.time, data.status)
+    })
 
     return () => {
       socketWrapper.off('connect')
       socketWrapper.off('disconnect')
-      socketWrapper.off('chat')
+      socketWrapper.off('receive-message')
+      socketWrapper.off('message-status')
     }
   }, [])
 

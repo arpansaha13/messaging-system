@@ -29,12 +29,15 @@ const ChatFooter = () => {
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && value) {
-      send(activeChatUserId, value)
+      const timestamp = Date.now()
+      send(activeChatUserId, value, timestamp)
       setValue('')
-      socket.emit('chat', {
+      // Server should listen to `send-message` event
+      socket.emit('send-message', {
         msg: value,
-        receiverId: authUser.id,
-        senderId: activeChatUserId,
+        time: timestamp,
+        senderId: authUser.id,
+        receiverId: activeChatUserId,
       })
     }
   }

@@ -5,12 +5,30 @@ import Message from './Message'
 import type { MessageType } from '../../types'
 
 interface ChatAreaProps {
-  messages: MessageType[]
+  messages: Map<number, MessageType> | null
   height: number
 }
 
 export default function ChatArea({ messages, height }: ChatAreaProps) {
   const elRef = useRef<HTMLDivElement>(null)
+  const mapItr = messages?.entries() ?? null
+
+  // TODO: refactor this code to make it cleaner
+  const renderMap: JSX.Element[] | null =
+    mapItr === null
+      ? null
+      : (() => {
+          const temp: JSX.Element[] = []
+          let mapEntry = mapItr.next()
+
+          while (!mapEntry.done) {
+            temp.push(
+              <Message key={mapEntry.value[0]} message={mapEntry.value[1]} />,
+            )
+            mapEntry = mapItr.next()
+          }
+          return temp
+        })()
 
   // Keep scroll position at bottom
   useEffect(() => {
@@ -26,9 +44,7 @@ export default function ChatArea({ messages, height }: ChatAreaProps) {
         ref={elRef}
         className="px-20 py-4 max-h-full overflow-y-scroll scrollbar"
       >
-        {messages.map((message, i) => {
-          return <Message key={i} message={message} />
-        })}
+        {renderMap}
       </div>
     </div>
   )

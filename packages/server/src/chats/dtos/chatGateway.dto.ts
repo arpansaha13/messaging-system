@@ -7,6 +7,11 @@ export class WsChatEventDto {
   @IsString()
   msg: string
 
+  /** Time at which the message was sent. */
+  @Type(() => Number)
+  @IsNumber()
+  time: number
+
   /** Id of the user who sent the message. */
   @Type(() => Number)
   @IsNumber()

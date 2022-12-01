@@ -1,26 +1,22 @@
-interface BaseMessageType {
+interface BaseMsgType {
   msg: string
   /** Whether this message is posted by the logged-in user or not. */
   myMsg: boolean
+  time: number
 }
 /** When the message sending process is initiated. */
-interface MessageSendingType extends BaseMessageType {
+interface MsgSendingType extends BaseMsgType {
   status: 'sending'
   myMsg: true
 }
 /** When the message is successfully stored in the database. */
-interface MessageConfirmedType extends BaseMessageType {
-  time: number
+export interface MsgConfirmedType extends BaseMsgType {
   myMsg: true
   status: 'sent' | 'delivered' | 'read'
 }
 /** When a message is received from some other user. */
-interface MessageReceivedType extends BaseMessageType {
-  time: number
+interface MsgReceivedType extends BaseMsgType {
   myMsg: false
 }
 
-export type MessageType =
-  | MessageSendingType
-  | MessageConfirmedType
-  | MessageReceivedType
+export type MessageType = MsgSendingType | MsgConfirmedType | MsgReceivedType
