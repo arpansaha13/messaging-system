@@ -15,30 +15,37 @@ export class ChatListService {
   ) {}
 
   /** Get the list of chats for a particular user. This will be displayed on the sidebar */
-  async getChatListOfUser(user_id: number): Promise<ChatListItemModel[]> {
+  async getChatListOfUser(userId: number): Promise<ChatListItemModel[]> {
     const chatList: ChatListItemModel[] = []
 
-    const chats = await this.chatService.getAllChatsOfUser(user_id)
-    if (chats.length === 0) return chatList
+    const chatEntites = await this.chatService.getAllChatEntitiesOfUser(userId)
+    if (chatEntites.length === 0) return chatList
 
     const promises: Promise<void>[] = []
 
-    for (const chat of chats) {
+    for (const chatEntity of chatEntites) {
       promises.push(
         new Promise<void>(async resolve => {
+          const receiverId =
+            chatEntity.participant_1 === userId
+              ? chatEntity.participant_2
+              : chatEntity.participant_1
+
           const [latestMsg, user, contact] = await Promise.all([
-            this.chatService.getLatestMsgByChatId(chat.id),
-            this.userService.getUser(chat.sec_person),
-            this.contactService.getContactEntity(chat.user, chat.sec_person),
+            this.chatService.getLatestMsgByChatId(chatEntity.id),
+            this.userService.getUser(receiverId),
+            this.contactService.getContactEntity(userId, receiverId),
           ])
+
           chatList.push({
-            user_id: chat.user,
+            userId: receiverId,
             dp: user.dp,
             alias: contact !== null ? contact.alias : null,
-            time: latestMsg.created_at,
-            muted: chat.is_muted,
+            bio: user.bio,
+            time: latestMsg.createdAt,
+            muted: chatEntity.isMuted[receiverId],
             status: latestMsg.status,
-            latestMsg: latestMsg.message,
+            latestMsg: latestMsg.content,
           })
           resolve()
         }),

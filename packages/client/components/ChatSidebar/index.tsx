@@ -1,8 +1,8 @@
 import { memo } from 'react'
 // Components
 import SearchBar from './SearchBar'
-import StackedList from '../StackedList'
 import SidebarHeader from './SidebarHeader'
+import StackedListItem from '../StackedList/StackedListItem'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useChatListStore } from '../../stores/useChatListStore'
@@ -27,8 +27,8 @@ const ChatSidebar = () => {
     setActiveChatUserId(listItem.userId)
     setActiveChatUser({
       userId: listItem.userId,
-      name: listItem.name,
-      text: listItem.text,
+      name: listItem.alias,
+      bio: listItem.bio,
       dp: listItem.dp,
     })
 
@@ -43,11 +43,24 @@ const ChatSidebar = () => {
       <SearchBar />
 
       <div className="overflow-auto">
-        <StackedList
-          active={activeChatUserId}
-          stackedList={chatList}
-          handleClick={handleClick}
-        />
+        <ul role="list">
+          {chatList.map(listItem => (
+            <StackedListItem
+              key={listItem.userId}
+              userId={listItem.userId}
+              name={listItem.alias}
+              dp={listItem.dp}
+              time={listItem.time}
+              text={listItem.latestMsg}
+              active={activeChatUserId}
+              onClick={
+                typeof handleClick === 'function'
+                  ? () => handleClick(listItem)
+                  : undefined
+              }
+            />
+          ))}
+        </ul>
       </div>
     </div>
   )

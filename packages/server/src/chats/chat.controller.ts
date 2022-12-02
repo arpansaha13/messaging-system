@@ -8,7 +8,7 @@ import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 import { GetChatParamsDto } from 'src/chats/dtos/chat.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
-import type { MessageEntity } from 'src/entities/message.entity'
+import type { MessageEntity } from './message.entity'
 
 @Controller('chats')
 @UseGuards(AuthGuard())
@@ -20,11 +20,11 @@ export class ChatController {
    * @param params user tag of the other user with whom the chat is.
    * @param userEntity Authorized user entity.
    */
-  @Get('/:user_id')
+  @Get('/:userId')
   async getChat(
     @Param() params: GetChatParamsDto,
     @GetPayload('user') userEntity: UserEntity,
   ): Promise<MessageEntity[]> {
-    return this.chatService.getChat(userEntity.id, params.user_id)
+    return this.chatService.getChatByUserId(userEntity.id, params.userId)
   }
 }

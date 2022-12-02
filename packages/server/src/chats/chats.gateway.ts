@@ -1,16 +1,20 @@
 import {
-  ConnectedSocket,
   MessageBody,
+  ConnectedSocket,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets'
+// Services
+import { ChatService } from './chat.service'
 // DTOs
-import { WsChatEventDto } from './dtos/chatGateway.dto'
+import { Ws1to1MessageDto } from './dtos/chatGateway.dto'
+// Enum
+import { MessageStatus } from './message.entity'
+// Constants
+import { CLIENT_ORIGIN } from 'src/constants'
 // Types
 import type { Server, Socket } from 'socket.io'
-
-import { CLIENT_ORIGIN } from 'src/constants'
 
 @WebSocketGateway({
   cors: {
@@ -18,6 +22,8 @@ import { CLIENT_ORIGIN } from 'src/constants'
   },
 })
 export class ChatsGateway {
+  constructor(private readonly chatService: ChatService) {}
+
   @WebSocketServer()
   server: Server
 
@@ -49,39 +55,53 @@ export class ChatsGateway {
   }
 
   @SubscribeMessage('send-message')
-  handleEvent(
-    @MessageBody() data: WsChatEventDto,
+  async handleEvent(
+    @MessageBody() data: Ws1to1MessageDto,
     @ConnectedSocket() senderSocket: Socket,
   ) {
     const receiverClientId = this.clients.get(data.receiverId)
 
-    function emitMsgStatus(status: 'sent' | 'delivered' | 'read') {
+    // TODO: Try to save this info so that we don't run this api again and again
+    const chatEntity = await this.chatService.getChatEntityByUserId(
+      data.senderId,
+      data.receiverId,
+      true,
+    )
+    let chatId = chatEntity !== null ? chatEntity.id : null
+
+    if (chatEntity === null) {
+      chatId = await this.chatService.create1to1Chat(data)
+    }
+    // Store message in db
+    const msgId = await this.chatService.create1to1ChatMsg(
+      chatId,
+      data.senderId,
+      data.receiverId,
+      data.msg,
+    )
+
+    /** Inform the sender about the new message status. */
+    function emitMsgStatus(status: MessageStatus) {
       this.server.to(senderSocket.id).emit('message-status', {
         status,
         /** The chats are mapped with receiver user_id in client-side. */
-        userId: data.receiverId,
-        time: data.time,
+        receiverId: data.receiverId,
+        ISOtime: data.ISOtime,
       })
     }
 
-    // Inform the sender that the message has been "sent"
-    // TODO: Store the message in database and if the storing (save) is successful then send this "sent" signal to sender.
-    //       If the save is not successful, then send a "failed to send" signal to sender.
-    emitMsgStatus.bind(this)('sent')
+    emitMsgStatus.bind(this)(MessageStatus.SENT)
 
     // If the receiver is not online
-    if (typeof receiverClientId === 'undefined') {
-      return
-    }
+    if (typeof receiverClientId === 'undefined') return
 
     // Send the message to receiver
-    // Client should listen to `receive-message` event
     this.server.to(receiverClientId).emit('receive-message', {
       userId: data.senderId,
       msg: data.msg,
-      time: data.time,
+      ISOtime: data.ISOtime,
     })
-    // Inform the sender that the message has been "delivered"
-    emitMsgStatus.bind(this)('delivered')
+    this.chatService.updateMsgStatus(msgId, MessageStatus.DELIVERED)
+    emitMsgStatus.bind(this)(MessageStatus.DELIVERED)
   }
 }

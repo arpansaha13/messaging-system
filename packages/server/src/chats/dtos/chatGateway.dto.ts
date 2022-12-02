@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer'
 import { IsNumber, IsString } from 'class-validator'
 
-export class WsChatEventDto {
+export class Ws1to1MessageDto {
   /** The message that was received. */
   @Type(() => String)
   @IsString()
@@ -10,7 +10,7 @@ export class WsChatEventDto {
   /** Time at which the message was sent. */
   @Type(() => Number)
   @IsNumber()
-  time: number
+  ISOtime: string
 
   /** Id of the user who sent the message. */
   @Type(() => Number)

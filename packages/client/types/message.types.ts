@@ -1,22 +1,25 @@
-interface BaseMsgType {
-  msg: string
-  /** Whether this message is posted by the logged-in user or not. */
-  myMsg: boolean
-  time: number
+export interface MsgSendingType {
+  content: string
+  senderId: number
+  createdAt: string
+  status: MessageStatus.SENDING
 }
-/** When the message sending process is initiated. */
-interface MsgSendingType extends BaseMsgType {
-  status: 'sending'
-  myMsg: true
+export interface MsgConfirmedType {
+  content: string
+  senderId: number
+  createdAt: string
+  status: Exclude<MessageStatus, MessageStatus.SENDING>
 }
-/** When the message is successfully stored in the database. */
-export interface MsgConfirmedType extends BaseMsgType {
-  myMsg: true
-  status: 'sent' | 'delivered' | 'read'
+export interface MsgReceivedType {
+  content: string
+  senderId: number
+  createdAt: string
 }
-/** When a message is received from some other user. */
-interface MsgReceivedType extends BaseMsgType {
-  myMsg: false
-}
-
 export type MessageType = MsgSendingType | MsgConfirmedType | MsgReceivedType
+
+export enum MessageStatus {
+  SENDING = 'SENDING',
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  READ = 'READ',
+}

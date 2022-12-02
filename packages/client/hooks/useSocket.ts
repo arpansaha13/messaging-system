@@ -4,7 +4,20 @@ import io from 'socket.io-client'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 // Types
-import type { MsgStatusType, ReceiveMsgType } from '../types/socket.types'
+import { MessageStatus } from '../types/message.types'
+
+export interface ReceiveMsgType {
+  userId: number
+  msg: string
+  ISOtime: string
+}
+
+export interface MsgStatusUpdateType {
+  /** The chats are mapped with receiver user_id. */
+  receiverId: number
+  ISOtime: string
+  status: Exclude<MessageStatus, MessageStatus.SENDING>
+}
 
 type SocketOnEvents =
   | 'connect'
@@ -65,11 +78,11 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
-      receive(data.userId, data.msg, data.time)
+      receive(data.userId, data.msg, data.ISOtime)
     })
 
-    socketWrapper.on('message-status', (data: MsgStatusType) => {
-      updateStatus(data.userId, data.time, data.status)
+    socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
+      updateStatus(data.receiverId, data.ISOtime, data.status)
     })
 
     return () => {
@@ -78,6 +91,7 @@ export function useSocketInit() {
       socketWrapper.off('receive-message')
       socketWrapper.off('message-status')
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return { isConnected, socket: socketWrapper }

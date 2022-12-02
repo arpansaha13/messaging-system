@@ -6,15 +6,17 @@ export interface ChatListItemType {
   /** The display picture of the user. If the user has not set any dp then it will be `null`. */
   dp: string | null
   /** Alias of the user with whom the chat is. */
-  name: string
+  alias: string
+  /** A short bio of the user. */
+  bio: string
   /** Timestamp of the latest message */
-  time: number
+  time: string
   /** Whether the chat has been muted or not. */
   muted: boolean
   /** Whether the latest message has been read or not. */
-  read: boolean
+  status: boolean
   /** The latest message in this chat. */
-  text: string
+  latestMsg: string
 }
 
 export interface UserType {
@@ -33,7 +35,7 @@ export interface ContactType {
   /** Alias by which the auth-user has stored this contact. */
   name: string
   /** About or Bio of the contact-user. */
-  text: string
+  bio: string
   dp: string | null
 }
 

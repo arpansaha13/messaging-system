@@ -1,9 +1,14 @@
 import create from 'zustand'
 import produce from 'immer'
+// Utils
+import { ISOToMilliSecs } from '../utils/ISODate'
+// Enum
+import { MessageStatus } from '../types'
 // Types
-import type { ContactType, MessageType, MsgConfirmedType } from '../types'
+import type { MessageType, ContactType } from '../types'
 
-// TODO: Try to use some other usique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
+// TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
+// TODO: Refactor senderId and receiverId variable names properly
 
 interface ChatStoreType {
   /**
@@ -29,20 +34,25 @@ interface ChatStoreType {
 
   /** Append a newly sent message. This can be used during an ongoing chat.
    * @param userId All chats are mapped with the user_id with whom the chat is.
-   * @param msg Message to be sent.
+   * @param content Message to be sent.
    */
-  send: (userId: number, msg: string, time: number) => void
+  send: (
+    receiverId: number,
+    senderId: number,
+    content: string,
+    ISOtime: string,
+  ) => void
 
   /** Append the received messages to ongoing chat.
    * @param userId All chats are mapped with the user_id with whom the chat is.
-   * @param msg Message to be received.
+   * @param content Message to be received.
    */
-  receive: (userId: number, msg: string, time: number) => void
+  receive: (userId: number, content: string, ISOtime: string) => void
 
   updateStatus: (
-    userId: number,
-    time: number,
-    newStatus: MsgConfirmedType['status'],
+    receiverId: number,
+    ISOtime: string,
+    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
   ) => void
 
   /** Update the active chat-user when a new chat is opened. */
@@ -55,10 +65,10 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
   add(userId: number, chat: MessageType[]) {
     // Update through `Immer`
     set(
-      produce(state => {
+      produce((state: ChatStoreType) => {
         const newChat = new Map<number, MessageType>()
         for (const message of chat) {
-          newChat.set(message.time, message)
+          newChat.set(ISOToMilliSecs(message.createdAt), message)
         }
         state.chats.set(userId, newChat)
       }),
@@ -76,43 +86,44 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
           chat = get().chats.get(userId)!
         }
         for (const message of messages) {
-          chat.set(message.time, message)
+          chat.set(ISOToMilliSecs(message.createdAt), message)
         }
         state.chats.set(userId, chat)
       }),
     )
   },
-  send(userId: number, msg: string, time: number) {
-    get().push(userId, [
+  send(receiverId: number, senderId: number, content: string, ISOtime: string) {
+    get().push(receiverId, [
       {
-        msg,
-        time,
-        myMsg: true,
-        status: 'sending',
+        content,
+        senderId,
+        createdAt: ISOtime,
+        status: MessageStatus.SENDING,
       },
     ])
   },
-  receive(userId: number, msg: string, time: number) {
+  receive(userId: number, content: string, ISOtime: string) {
     get().push(userId, [
       {
-        msg,
-        time,
-        myMsg: false,
+        content,
+        createdAt: ISOtime,
+        senderId: userId,
       },
     ])
   },
   updateStatus(
-    userId: number,
-    time: number,
-    newStatus: MsgConfirmedType['status'],
+    receiverId: number,
+    ISOtime: string,
+    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
   ) {
     // Update through `Immer`
     set(
       produce((state: ChatStoreType) => {
-        const chat = state.chats.get(userId)!
-        const msgToUpdate = chat.get(time)! as MsgConfirmedType
+        const timeMilliSecs = ISOToMilliSecs(ISOtime)
+        const chat = state.chats.get(receiverId)!
+        const msgToUpdate = chat.get(timeMilliSecs)! as MessageType
         const updatedMsg = { ...msgToUpdate, status: newStatus }
-        chat.set(time, updatedMsg)
+        chat.set(timeMilliSecs, updatedMsg)
       }),
     )
   },

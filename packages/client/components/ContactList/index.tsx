@@ -3,7 +3,7 @@ import { memo } from 'react'
 import { useFetch } from '../../hooks/useFetch'
 import { useSocket } from '../../hooks/useSocket'
 // Components
-import StackedList from '../StackedList'
+import StackedListItem from '../StackedList/StackedListItem'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useContactStore } from '../../stores/useContactStore'
@@ -20,15 +20,17 @@ export const ContactList = () => {
   )
 
   async function handleClick(contact: ContactType) {
+    // TODO: make this api call only if there are new unread messages
+    //       and then append those new messages to chat
     fetchHook(`chats/${contact.userId}`)
       .then(chat => {
         console.log(chat)
       })
       .catch(err => {
         console.log(err)
-        setActiveChatUserId(contact.userId)
-        setActiveChatUser(contact)
       })
+    setActiveChatUserId(contact.userId)
+    setActiveChatUser(contact)
   }
 
   return (
@@ -40,10 +42,22 @@ export const ContactList = () => {
             <h3>{letter}</h3>
           </div>
 
-          <StackedList
-            stackedList={contacts[letter as keyof typeof contacts]}
-            handleClick={handleClick}
-          />
+          <ul role="list">
+            {contacts[letter as keyof typeof contacts].map(listItem => (
+              <StackedListItem
+                key={listItem.userId}
+                userId={listItem.userId}
+                name={listItem.name}
+                dp={listItem.dp}
+                text={listItem.bio}
+                onClick={
+                  typeof handleClick === 'function'
+                    ? () => handleClick(listItem)
+                    : undefined
+                }
+              />
+            ))}
+          </ul>
         </div>
       ))}
     </nav>

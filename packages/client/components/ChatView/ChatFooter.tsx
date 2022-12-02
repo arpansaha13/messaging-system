@@ -11,6 +11,8 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { useChatStore } from '../../stores/useChatStore'
 import { useDraftStore } from '../../stores/useDraftStore'
 import { useChatListStore } from '../../stores/useChatListStore'
+// Utils
+import { ISODateNow } from '../../utils/ISODate'
 // Types
 import type { KeyboardEvent } from 'react'
 
@@ -29,13 +31,12 @@ const ChatFooter = () => {
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && value) {
-      const timestamp = Date.now()
-      send(activeChatUserId, value, timestamp)
+      const ISOtimestamp = ISODateNow()
+      send(activeChatUserId, authUser.id, value, ISOtimestamp)
       setValue('')
-      // Server should listen to `send-message` event
       socket.emit('send-message', {
         msg: value,
-        time: timestamp,
+        ISOtime: ISOtimestamp,
         senderId: authUser.id,
         receiverId: activeChatUserId,
       })

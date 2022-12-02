@@ -13,8 +13,8 @@ import { ChatListService } from 'src/chat-list/chatList.service'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 import { ChatEntity } from 'src/chats/chat.entity'
+import { MessageEntity } from 'src/chats/message.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
-import { MessageEntity } from 'src/entities/message.entity'
 
 @Module({
   imports: [
