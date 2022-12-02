@@ -28,7 +28,7 @@ export class UserEntity {
 
   /** A short bio set by the user. */
   @Column({ nullable: true })
-  about: string
+  bio: string
 
   /** Time when the user account was created */
   @CreateDateColumn({ type: 'timestamptz' })
