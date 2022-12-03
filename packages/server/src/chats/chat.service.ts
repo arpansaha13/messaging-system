@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { In, Not } from 'typeorm'
 // Entities
 import { ChatEntity } from './chat.entity'
 import { MessageEntity, MessageStatus } from './message.entity'
@@ -60,16 +61,36 @@ export class ChatService {
     return chatEntity
   }
 
+  /**
+   * Update status of **all received** messages from SENT to DELIVERED.
+   * This should be done whenever a user comes online.
+   * @param authUserId user_id of authorized user
+   * @param chatEntities All chat entities of given user
+   */
+  // TODO: Update msg status when receiver comes online while sender is already onlin (real-time)
+  async updateDeliveredStatus(authUserId: number, chatEntities: ChatEntity[]) {
+    return this.messageRepository.update(
+      {
+        chatId: In(chatEntities.map(entity => entity.id)),
+        senderId: Not(authUserId), // Those messages where this user is not the sender, i.e receiver.
+        status: MessageStatus.SENT,
+      },
+      {
+        status: MessageStatus.DELIVERED,
+      },
+    )
+  }
+
   /** Get all messages with chat_id. */
   async getChatByChatId(chatId: number): Promise<MessageEntity[]> {
     const chat = await this.getChatEntityByChatId(chatId)
-    return this.messageRepository.find({ where: { chatId: chat.id } })
+    return this.messageRepository.find({ where: { chatId: chat.id }, order: { createdAt: 'ASC' } })
   }
 
   /** Get all messages with user_id. */
   async getChatByUserId(userId1: number, userId2: number): Promise<MessageEntity[]> {
     const chat = await this.getChatEntityByUserId(userId1, userId2)
-    return this.messageRepository.find({ where: { chatId: chat.id } })
+    return this.messageRepository.find({ where: { chatId: chat.id }, order: { createdAt: 'ASC' } })
   }
 
   /** Get all chat entities of given user by user_id. */
@@ -137,6 +158,7 @@ export class ChatService {
     return msgInsertRes.identifiers[0].id as number
   }
 
+  /** Update status of a single message. */
   updateMsgStatus(msgId: number, newStatus: MessageStatus.DELIVERED | MessageStatus.READ) {
     return this.messageRepository.update(msgId, { status: newStatus })
   }

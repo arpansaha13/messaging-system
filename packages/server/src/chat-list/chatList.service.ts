@@ -18,12 +18,14 @@ export class ChatListService {
   async getChatListOfUser(authUserId: number): Promise<ChatListItemModel[]> {
     const chatList: ChatListItemModel[] = []
 
-    const chatEntites = await this.chatService.getAllChatEntitiesOfUser(authUserId)
-    if (chatEntites.length === 0) return chatList
+    const chatEntities = await this.chatService.getAllChatEntitiesOfUser(authUserId)
+    await this.chatService.updateDeliveredStatus(authUserId, chatEntities)
+
+    if (chatEntities.length === 0) return chatList
 
     const promises: Promise<void>[] = []
 
-    for (const chatEntity of chatEntites) {
+    for (const chatEntity of chatEntities) {
       promises.push(
         new Promise<void>(async resolve => {
           const receiverId =
