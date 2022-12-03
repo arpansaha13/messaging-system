@@ -1,24 +1,32 @@
-import { Type } from 'class-transformer'
-import { IsNumber, IsString } from 'class-validator'
+import { IsBoolean, IsNumber, IsString } from 'class-validator'
 
 export class Ws1to1MessageDto {
   /** The message that was received. */
-  @Type(() => String)
   @IsString()
   msg: string
 
   /** Time at which the message was sent. */
-  @Type(() => Number)
   @IsNumber()
   ISOtime: string
 
   /** Id of the user who sent the message. */
-  @Type(() => Number)
   @IsNumber()
   senderId: number
 
   /** Id of the user who is supposed to receive the message. */
-  @Type(() => Number)
+  @IsNumber()
+  receiverId: number
+}
+
+export class WsTypingStateDto {
+  @IsBoolean()
+  isTyping: boolean
+
+  /** Id of the user who is typing a message (sender). */
+  @IsNumber()
+  senderId: number
+
+  /** Id of the user for whom the message is being typed (receiver). */
   @IsNumber()
   receiverId: number
 }

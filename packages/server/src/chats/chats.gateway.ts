@@ -1,14 +1,8 @@
-import {
-  MessageBody,
-  ConnectedSocket,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets'
+import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 // Services
 import { ChatService } from './chat.service'
 // DTOs
-import { Ws1to1MessageDto } from './dtos/chatGateway.dto'
+import { Ws1to1MessageDto, WsTypingStateDto } from './dtos/chatGateway.dto'
 // Enum
 import { MessageStatus } from './message.entity'
 // Constants
@@ -39,10 +33,7 @@ export class ChatsGateway {
   // FIXME: DTOs are not working with websocket event payloads
 
   @SubscribeMessage('session-connect')
-  addSession(
-    @MessageBody('userId') userId: number,
-    @ConnectedSocket() senderSocket: Socket,
-  ) {
+  addSession(@MessageBody('userId') userId: number, @ConnectedSocket() senderSocket: Socket) {
     // If the same user connects again it will overwrite previous data in map.
     // Which means multiple connections are not possible currently.
     // TODO: support multiple connections
@@ -51,38 +42,23 @@ export class ChatsGateway {
 
   @SubscribeMessage('disconnect')
   handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
-    const disconnectedUserId = this.#getMapKeyByValue(
-      this.clients,
-      senderSocket.id,
-    )
+    const disconnectedUserId = this.#getMapKeyByValue(this.clients, senderSocket.id)
     this.clients.delete(disconnectedUserId)
   }
 
   @SubscribeMessage('send-message')
-  async handleEvent(
-    @MessageBody() data: Ws1to1MessageDto,
-    @ConnectedSocket() senderSocket: Socket,
-  ) {
+  async handleEvent(@MessageBody() data: Ws1to1MessageDto, @ConnectedSocket() senderSocket: Socket) {
     const receiverClientId = this.clients.get(data.receiverId)
 
     // TODO: Try to save this info so that we don't run this api again and again
-    const chatEntity = await this.chatService.getChatEntityByUserId(
-      data.senderId,
-      data.receiverId,
-      true,
-    )
+    const chatEntity = await this.chatService.getChatEntityByUserId(data.senderId, data.receiverId, true)
     let chatId = chatEntity !== null ? chatEntity.id : null
 
     if (chatEntity === null) {
       chatId = await this.chatService.create1to1Chat(data)
     }
     // Store message in db
-    const msgId = await this.chatService.create1to1ChatMsg(
-      chatId,
-      data.senderId,
-      data.receiverId,
-      data.msg,
-    )
+    const msgId = await this.chatService.create1to1ChatMsg(chatId, data.senderId, data.receiverId, data.msg)
 
     /** Inform the sender about the new message status. */
     function emitMsgStatus(status: MessageStatus) {
@@ -107,5 +83,11 @@ export class ChatsGateway {
     })
     this.chatService.updateMsgStatus(msgId, MessageStatus.DELIVERED)
     emitMsgStatus.bind(this)(MessageStatus.DELIVERED)
+  }
+
+  @SubscribeMessage('typing-state')
+  handleTyping(@MessageBody() data: WsTypingStateDto) {
+    const receiverClientId = this.clients.get(data.receiverId)
+    this.server.to(receiverClientId).emit('typing-state', data)
   }
 }

@@ -1,14 +1,14 @@
 import { memo } from 'react'
 // Icons
-import {
-  EllipsisVerticalIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/20/solid'
+import { EllipsisVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 // Components
 import Avatar from '../Avatar'
 import DropDown from '../DropDown'
-// Sotres
+// Stores
 import { useChatStore } from '../../stores/useChatStore'
+import { useTypingState } from '../../stores/useTypingState'
+// Utils
+import classNames from '../../utils/classNames'
 
 const ChatHeader = () => {
   const chatMenuItems = [
@@ -55,6 +55,7 @@ const ChatHeader = () => {
       },
     },
   ]
+  const typingState = useTypingState(state => state.typingState)
   const activeChatUser = useChatStore(state => state.activeChatUser)!
 
   return (
@@ -62,7 +63,24 @@ const ChatHeader = () => {
       <div className="flex items-center text-gray-400 space-x-3">
         <Avatar src={activeChatUser.dp} height={2.5} width={2.5} />
 
-        <p className="text-gray-50 font-semibold">{activeChatUser.name}</p>
+        <div>
+          <p className="text-gray-50 font-semibold">{activeChatUser.name}</p>
+          <p
+            className={classNames(
+              'text-xs transition-[height] duration-200 overflow-hidden',
+              typingState[activeChatUser.userId] ? 'h-4' : 'h-0 delay-150',
+            )}
+          >
+            <span
+              className={classNames(
+                'transition-opacity',
+                typingState[activeChatUser.userId] ? 'opacity-100 delay-200' : 'opacity-0',
+              )}
+            >
+              typing...
+            </span>
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center text-gray-400 space-x-2">
@@ -71,9 +89,7 @@ const ChatHeader = () => {
         </button>
 
         <DropDown
-          buttonSlot={
-            <EllipsisVerticalIcon className="w-6 h-6 flex-shrink-0" />
-          }
+          buttonSlot={<EllipsisVerticalIcon className="w-6 h-6 flex-shrink-0" />}
           menuItems={chatMenuItems}
           width={14.5}
         />

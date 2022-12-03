@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react'
+import { useDebounce } from 'react-use'
 // Icons
 import { MicrophoneIcon } from '@heroicons/react/24/solid'
 import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
@@ -15,6 +16,17 @@ import { useChatListStore } from '../../stores/useChatListStore'
 import { ISODateNow } from '../../utils/ISODate'
 // Types
 import type { KeyboardEvent } from 'react'
+import type { TypingStateType } from '../../hooks/useSocket'
+
+const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) => {
+  if (metaKey || ctrlKey || altKey) return false
+  // 0...9
+  if (keyCode >= 48 && keyCode <= 57) return true
+  // a...z
+  if (keyCode >= 65 && keyCode <= 90) return true
+  // All other keys.
+  return false
+}
 
 const ChatFooter = () => {
   const authUser = useAuthStore(state => state.authUser)!
@@ -29,7 +41,30 @@ const ChatFooter = () => {
   const [value, setValue] = useState('')
   const prevChatUserId = useRef(activeChatUserId)
 
+  function typingStatePayload(isTyping: boolean): TypingStateType {
+    return {
+      isTyping,
+      senderId: authUser.id,
+      receiverId: activeChatUserId,
+    }
+  }
+  const isFirstRun = useRef(true)
+  const [isReady] = useDebounce(
+    () => {
+      if (isFirstRun.current) {
+        isFirstRun.current = false
+        return
+      }
+      socket.emit('typing-state', typingStatePayload(false))
+    },
+    1000,
+    [value],
+  )
+
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (isReady() && isTypedCharGood(e)) {
+      socket.emit('typing-state', typingStatePayload(true))
+    }
     if (e.key === 'Enter' && value) {
       const ISOtimestamp = ISODateNow()
       send(activeChatUserId, authUser.id, value, ISOtimestamp)
@@ -69,11 +104,7 @@ const ChatFooter = () => {
       </button>
 
       <div className="px-1 flex-grow">
-        <TextArea
-          value={value}
-          setValue={setValue}
-          handleKeyDown={handleKeyDown}
-        />
+        <TextArea value={value} setValue={setValue} handleKeyDown={handleKeyDown} />
       </div>
 
       <button className="p-2 btn-icon">

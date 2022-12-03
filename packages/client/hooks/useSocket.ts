@@ -3,20 +3,28 @@ import io from 'socket.io-client'
 // Stores
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
-// Types
+import { useTypingState } from '../stores/useTypingState'
+// Enum
 import { MessageStatus } from '../types/message.types'
 
-export interface ReceiveMsgType {
+interface ReceiveMsgType {
   userId: number
   msg: string
   ISOtime: string
 }
-
-export interface MsgStatusUpdateType {
+interface MsgStatusUpdateType {
   /** The chats are mapped with receiver user_id. */
   receiverId: number
   ISOtime: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
+}
+export interface TypingStateType {
+  isTyping: boolean
+  /** Id of the user who is typing a message. */
+  senderId: number
+  /** Id of the user for whom the message is being typed. */
+  // TODO: remove this data from response. `receiverId` is not used.
+  receiverId: number
 }
 
 type SocketOnEvents =
@@ -24,17 +32,23 @@ type SocketOnEvents =
   | 'disconnect'
   | 'receive-message'
   | 'message-status'
-type SocketEmitEvents = 'send-message' | 'join' | 'session-connect'
+  | 'typing-state'
+type SocketEmitEvents =
+  | 'send-message'
+  | 'join'
+  | 'session-connect'
+  | 'typing-state'
 
 const socket = io('http://localhost:4000', { autoConnect: true })
 
 /** A socket wrapper to allow type security. */
 const socketWrapper = {
-  emit(event: SocketEmitEvents, data: any) {
-    socket.emit(event, data)
+  emit(event: SocketEmitEvents, data: any, ack?: (res: any) => void) {
+    if (ack) socket.emit(event, data, ack)
+    else socket.emit(event, data)
   },
-  on(event: SocketOnEvents, cb: (...args: any) => void) {
-    socket.on(event, cb)
+  on(event: SocketOnEvents, listener: (...args: any[]) => void) {
+    socket.on(event, listener)
   },
   off(event: SocketOnEvents) {
     socket.off(event)
@@ -50,6 +64,7 @@ export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
   const receive = useChatStore(state => state.receive)
   const updateStatus = useChatStore(state => state.updateStatus)
+  const setTyping = useTypingState(state => state.setTyping)
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [_, setHookRunCount] = useState<number>(0)
@@ -83,6 +98,10 @@ export function useSocketInit() {
 
     socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
       updateStatus(data.receiverId, data.ISOtime, data.status)
+    })
+
+    socketWrapper.on('typing-state', (data: TypingStateType) => {
+      setTyping(data.senderId, data.isTyping)
     })
 
     return () => {
