@@ -31,7 +31,7 @@ const TextArea = ({ value, setValue, handleKeyDown }: TextAreaProps) => {
           type="text"
           id="type-area"
           name="type-area"
-          className="block w-full rounded-lg bg-gray-700/70 text-gray-200 px-3 py-2.5 placeholder-gray-400 focus:outline-none"
+          className="block w-full rounded-lg bg-gray-700/70 text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
           placeholder="Type a message"
           value={value}
           onChange={handleChange}
@@ -41,5 +41,5 @@ const TextArea = ({ value, setValue, handleKeyDown }: TextAreaProps) => {
     </div>
   )
 }
-// Not memoizing this component because it will frequently update on state change.
+// Frequently updates on state change.
 export default TextArea

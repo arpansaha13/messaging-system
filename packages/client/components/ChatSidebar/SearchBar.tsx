@@ -34,7 +34,7 @@ const SearchBar = () => {
               ref={inputRef}
               id="search"
               name="search"
-              className="block w-full rounded-lg text-gray-200 bg-gray-800 py-2 pl-16 pr-8 text-sm placeholder-gray-400 focus:outline-none"
+              className="block w-full rounded-lg text-gray-200 bg-gray-800 py-2 pl-16 pr-8 text-sm border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
               placeholder="Search or start new chat"
               type="search"
               value={value}

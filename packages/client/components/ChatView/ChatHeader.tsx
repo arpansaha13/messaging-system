@@ -97,5 +97,4 @@ const ChatHeader = () => {
     </header>
   )
 }
-// Memoizing because this component should only update when `activeChatUserId` changes.
 export default memo(ChatHeader)

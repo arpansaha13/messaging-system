@@ -74,5 +74,5 @@ const DropDown = ({ buttonSlot, menuItems, width }: DropDownProps) => {
     </Menu>
   )
 }
-// Not memoizing this component because it will frequently update when parent re-renders.
+// Frequently updates when parent re-renders.
 export default DropDown
