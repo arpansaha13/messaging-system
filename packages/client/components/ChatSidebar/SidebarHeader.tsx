@@ -51,7 +51,7 @@ const SidebarHeader = () => {
     {
       slot: 'Log out',
       onClick() {
-        Router.push('/auth/signin')
+        Router.replace('/auth/signin')
         resetAuthState()
       },
     },

@@ -26,8 +26,7 @@ const Home: NextPage = () => {
   useEffect(() => {
     // Redirects to sign-in page if unauthorized or if auth token expires.
     if (!isAuthorized) {
-      // TODO: use Router.replace() after successful signin or signup, and logout, and also here below
-      Router.push('/auth/signin')
+      Router.replace('/auth/signin')
     } else {
       Promise.all([fetchHook('me'), fetchHook('chat-list'), fetchHook('contacts')]).then(
         ([authUser, chatList, contacts]) => {

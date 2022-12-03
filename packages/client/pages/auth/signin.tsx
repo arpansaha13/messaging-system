@@ -22,8 +22,9 @@ const SignInPage = () => {
 
   useEffect(() => {
     if (expiresAt !== null && Date.now() < expiresAt) {
-      Router.push('/')
+      Router.replace('/')
     }
+    Router.prefetch('/')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -45,7 +46,7 @@ const SignInPage = () => {
     })
       .then((data: JwtToken) => {
         setAuthState(data)
-        Router.push('/')
+        Router.replace('/')
         setNotification({ show: false })
       })
       .catch(err => {
