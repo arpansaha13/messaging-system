@@ -30,17 +30,13 @@ export class ChatsGateway {
   /** A map of all clients (user_id's) to their client socket id's. */
   clients = new Map<number, string>()
 
+  #getMapKeyByValue(map: Map<number, string>, searchValue: string): number {
+    for (const [key, value] of map.entries()) {
+      if (value === searchValue) return key
+    }
+  }
+
   // FIXME: DTOs are not working with websocket event payloads
-
-  // @SubscribeMessage('connect')
-  // handleConnection(@ConnectedSocket() senderSocket: Socket) {
-  //   console.log('connect', senderSocket.id)
-  // }
-
-  // @SubscribeMessage('disconnect')
-  // handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
-  //   console.log('disconnect', senderSocket.id)
-  // }
 
   @SubscribeMessage('session-connect')
   addSession(
@@ -51,7 +47,15 @@ export class ChatsGateway {
     // Which means multiple connections are not possible currently.
     // TODO: support multiple connections
     this.clients.set(userId, senderSocket.id)
-    console.log(this.clients)
+  }
+
+  @SubscribeMessage('disconnect')
+  handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
+    const disconnectedUserId = this.#getMapKeyByValue(
+      this.clients,
+      senderSocket.id,
+    )
+    this.clients.delete(disconnectedUserId)
   }
 
   @SubscribeMessage('send-message')
