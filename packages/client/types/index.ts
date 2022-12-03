@@ -23,7 +23,7 @@ export interface UserType {
   id: number
   name: string
   dp: string | null
-  about: string
+  bio: string
 }
 export interface AuthUserType extends UserType {
   email: string

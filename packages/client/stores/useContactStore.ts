@@ -36,7 +36,7 @@ export const useContactStore = create<ContactStoreType>()(set => ({
             userId: contact.contact_user.id,
             name: contact.alias,
             dp: contact.contact_user.dp,
-            text: contact.contact_user.about,
+            bio: contact.contact_user.bio,
           })
         }
       }
