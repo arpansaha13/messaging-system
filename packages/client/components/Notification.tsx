@@ -17,8 +17,8 @@ const Notification = () => {
       >
         <div className="w-full flex flex-col items-center space-y-4">
           <Transition
-            show={ store.show }
-            as={ Fragment }
+            show={store.show}
+            as={Fragment}
             enter="transform ease-out duration-300 transition"
             enterFrom="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
             enterTo="translate-y-0 opacity-100 sm:translate-x-0"
@@ -30,15 +30,15 @@ const Notification = () => {
               <div className="p-4">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    {
-                      store.status === 'success'
-                      ? <CheckCircleIcon className="h-7 w-7 text-green-400 dark:text-green-500" aria-hidden="true" />
-                      : <ExclamationCircleIcon className="h-7 w-7 text-red-400 dark:text-red-500" aria-hidden="true" />
-                    }
+                    {store.status === 'success' ? (
+                      <CheckCircleIcon className="h-7 w-7 text-green-400 dark:text-green-500" aria-hidden="true" />
+                    ) : (
+                      <ExclamationCircleIcon className="h-7 w-7 text-red-400 dark:text-red-500" aria-hidden="true" />
+                    )}
                   </div>
                   <div className="ml-3 w-0 flex-1 pt-0.5">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{ store.title }</p>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{ store.description }</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{store.title}</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{store.description}</p>
                   </div>
                   <div className="ml-4 flex flex-shrink-0">
                     <button

@@ -15,15 +15,7 @@ export interface StackedListItemProps {
   onClick?: () => void
 }
 
-const StackedListItem = ({
-  userId,
-  name,
-  dp,
-  time,
-  text,
-  active,
-  onClick,
-}: StackedListItemProps) => {
+const StackedListItem = ({ userId, name, dp, time, text, active, onClick }: StackedListItemProps) => {
   return (
     <li>
       <button
@@ -47,9 +39,7 @@ const StackedListItem = ({
             )}
           </div>
           <div className="flex justify-between">
-            <p className="text-sm text-gray-400 line-clamp-1">
-              {text ?? 'Hey there! I am using WhatsApp.'}
-            </p>
+            <p className="text-sm text-gray-400 line-clamp-1">{text ?? 'Hey there! I am using WhatsApp.'}</p>
           </div>
         </div>
       </button>

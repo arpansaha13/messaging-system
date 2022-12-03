@@ -91,10 +91,7 @@ const SignInPage = () => {
 
         <div className="flex items-center justify-end">
           <div className="text-sm">
-            <a
-              href="#"
-              className="font-medium text-emerald-600 hover:text-emerald-500"
-            >
+            <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
               Forgot your password?
             </a>
           </div>
@@ -113,9 +110,7 @@ const SignInPage = () => {
           <div className="text-sm">
             <span className="text-gray-100">Don&apos;t have an account?</span>{' '}
             <NextLink href="/auth/signup">
-              <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">
-                Sign up
-              </span>
+              <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Sign up</span>
             </NextLink>
           </div>
         </div>
@@ -123,7 +118,5 @@ const SignInPage = () => {
     </>
   )
 }
-SignInPage.getLayout = (page: ReactElement) => (
-  <AuthLayout heading="Sign in to your account">{page}</AuthLayout>
-)
+SignInPage.getLayout = (page: ReactElement) => <AuthLayout heading="Sign in to your account">{page}</AuthLayout>
 export default SignInPage

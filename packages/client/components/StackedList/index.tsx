@@ -12,11 +12,7 @@ interface StackedListProps {
   handleClick?: (stackedListItem: any) => void
 }
 
-export default function StackedList({
-  stackedList,
-  active,
-  handleClick,
-}: StackedListProps) {
+export default function StackedList({ stackedList, active, handleClick }: StackedListProps) {
   return (
     <ul role="list">
       {stackedList.map(listItem => (
@@ -28,11 +24,7 @@ export default function StackedList({
           time={listItem.time}
           text={listItem.text}
           active={active}
-          onClick={
-            typeof handleClick === 'function'
-              ? () => handleClick(listItem)
-              : undefined
-          }
+          onClick={typeof handleClick === 'function' ? () => handleClick(listItem) : undefined}
         />
       ))}
     </ul>

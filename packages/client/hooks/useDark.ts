@@ -9,36 +9,33 @@ interface DarkState {
   setPreferredDark: (newState?: boolean) => void
 }
 
-export const useDarkState = create<DarkState>((set) => ({
+export const useDarkState = create<DarkState>(set => ({
   preferredDark: false,
   isDark: false,
   toggleDark(newState?: boolean) {
     if (typeof newState !== 'undefined') {
       set(() => ({ isDark: newState }))
-    }
-    else {
-      set((state) => ({ isDark: !state.isDark }))
+    } else {
+      set(state => ({ isDark: !state.isDark }))
     }
   },
   setPreferredDark(newState?: boolean) {
     if (typeof newState !== 'undefined') {
       set(() => ({ preferredDark: newState }))
-    }
-    else {
-      set((state) => ({ preferredDark: !state.isDark }))
+    } else {
+      set(state => ({ preferredDark: !state.isDark }))
     }
   },
 }))
-
 
 /**
  * Reactive color scheme preference. This hook does not manipulate the DOM.
  *
  * This hook will cause a rerender whenever system theme preference change.
  */
- export function usePreferredDark() {
-  const preferredDark = useDarkState((state) => state.preferredDark)
-  const setPreferredDark = useDarkState((state) => state.setPreferredDark)
+export function usePreferredDark() {
+  const preferredDark = useDarkState(state => state.preferredDark)
+  const setPreferredDark = useDarkState(state => state.setPreferredDark)
 
   const colorSchemeMedia = useRef<MediaQueryList | null>(null)
 
@@ -69,9 +66,9 @@ export const useDarkState = create<DarkState>((set) => ({
  * Initial value will be set to the default system theme preference. This hook will **not** cause a rerender when system theme preference change.
  */
 export function useDark() {
-  const isDark = useDarkState((state) => state.isDark)
-  const toggleDark = useDarkState((state) => state.toggleDark)
-  const setPreferredDark = useDarkState((state) => state.setPreferredDark)
+  const isDark = useDarkState(state => state.isDark)
+  const toggleDark = useDarkState(state => state.toggleDark)
+  const setPreferredDark = useDarkState(state => state.setPreferredDark)
 
   const selector = useRef<HTMLElement | null>(null)
 

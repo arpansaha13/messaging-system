@@ -36,12 +36,7 @@ interface ChatStoreType {
    * @param userId All chats are mapped with the user_id with whom the chat is.
    * @param content Message to be sent.
    */
-  send: (
-    receiverId: number,
-    senderId: number,
-    content: string,
-    ISOtime: string,
-  ) => void
+  send: (receiverId: number, senderId: number, content: string, ISOtime: string) => void
 
   /** Append the received messages to ongoing chat.
    * @param userId All chats are mapped with the user_id with whom the chat is.
@@ -49,11 +44,7 @@ interface ChatStoreType {
    */
   receive: (userId: number, content: string, ISOtime: string) => void
 
-  updateStatus: (
-    receiverId: number,
-    ISOtime: string,
-    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
-  ) => void
+  updateStatus: (receiverId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
 
   /** Update the active chat-user when a new chat is opened. */
   setActiveChatUser: (contact: ContactType) => void
@@ -111,11 +102,7 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       },
     ])
   },
-  updateStatus(
-    receiverId: number,
-    ISOtime: string,
-    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
-  ) {
+  updateStatus(receiverId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) {
     // Update through `Immer`
     set(
       produce((state: ChatStoreType) => {

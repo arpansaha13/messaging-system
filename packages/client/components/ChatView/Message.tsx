@@ -1,20 +1,11 @@
 import { memo } from 'react'
 import { format, parseISO } from 'date-fns'
 // Icons
-import {
-  ClockIcon,
-  CheckIcon,
-  CheckCircleIcon,
-} from '@heroicons/react/24/outline'
+import { ClockIcon, CheckIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 // Utils
 import classNames from '../../utils/classNames'
 // Types
-import {
-  MessageStatus,
-  MessageType,
-  MsgConfirmedType,
-  MsgSendingType,
-} from '../../types'
+import { MessageStatus, MessageType, MsgConfirmedType, MsgSendingType } from '../../types'
 import { useAuthStore } from '../../stores/useAuthStore'
 
 interface MessageProps {
@@ -29,13 +20,9 @@ const MsgStatusIcon = (status: MessageStatus) => {
       return <CheckIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0" />
     // TODO: Find an icon for double-tick and use here
     case MessageStatus.DELIVERED:
-      return (
-        <CheckCircleIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0" />
-      )
+      return <CheckCircleIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0" />
     case MessageStatus.READ:
-      return (
-        <CheckCircleIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0 text-blue-500" />
-      )
+      return <CheckCircleIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0 text-blue-500" />
     default:
       console.error('Invalid message status.')
   }
@@ -56,10 +43,7 @@ const Message = ({ message }: MessageProps) => {
       <p className="min-w-[4.5rem] text-xs text-gray-300 inline-flex items-end justify-end">
         <span className="absolute right-2 bottom-1">
           {format(parseISO(message.createdAt), 'h:mm a')}
-          {authUserMsg &&
-            MsgStatusIcon(
-              (message as MsgSendingType | MsgConfirmedType).status,
-            )}
+          {authUserMsg && MsgStatusIcon((message as MsgSendingType | MsgConfirmedType).status)}
         </span>
       </p>
     </div>

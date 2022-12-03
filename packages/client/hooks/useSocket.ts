@@ -27,17 +27,8 @@ export interface TypingStateType {
   receiverId: number
 }
 
-type SocketOnEvents =
-  | 'connect'
-  | 'disconnect'
-  | 'receive-message'
-  | 'message-status'
-  | 'typing-state'
-type SocketEmitEvents =
-  | 'send-message'
-  | 'join'
-  | 'session-connect'
-  | 'typing-state'
+type SocketOnEvents = 'connect' | 'disconnect' | 'receive-message' | 'message-status' | 'typing-state'
+type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state'
 
 const socket = io('http://localhost:4000', { autoConnect: true })
 
@@ -79,8 +70,7 @@ export function useSocketInit() {
       return count + 1
     })
 
-    if (socket.connected)
-      socketWrapper.emit('session-connect', { userId: authUser.id })
+    if (socket.connected) socketWrapper.emit('session-connect', { userId: authUser.id })
 
     socketWrapper.on('connect', () => {
       setIsConnected(true)

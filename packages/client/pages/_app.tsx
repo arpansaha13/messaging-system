@@ -26,9 +26,7 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   enableMapSet()
 
   // If a layout is not specified then use the default layout
-  const getLayout = Component.getLayout ?? ((page) => (
-    <DefaultLayout>{ page }</DefaultLayout>
-  ))
+  const getLayout = Component.getLayout ?? (page => <DefaultLayout>{page}</DefaultLayout>)
 
   return getLayout(<Component {...pageProps} />)
 }

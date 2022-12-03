@@ -35,9 +35,7 @@ const SignUpPage = () => {
     email: '',
     password: '',
   })
-  const [validationErrors, { reset, set: setError }] = useMap<
-    Record<string, string | null>
-  >({
+  const [validationErrors, { reset, set: setError }] = useMap<Record<string, string | null>>({
     email: null,
     password: null,
   })
@@ -107,10 +105,7 @@ const SignUpPage = () => {
 
         <div className="flex items-center justify-end">
           <div className="text-sm">
-            <a
-              href="#"
-              className="font-medium text-emerald-600 hover:text-emerald-500"
-            >
+            <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
               Forgot your password?
             </a>
           </div>
@@ -129,9 +124,7 @@ const SignUpPage = () => {
           <div className="text-sm">
             <span className="text-gray-100">Already have an account?</span>{' '}
             <NextLink href="/auth/signin">
-              <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">
-                Sign in
-              </span>
+              <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Sign in</span>
             </NextLink>
           </div>
         </div>
@@ -139,7 +132,5 @@ const SignUpPage = () => {
     </>
   )
 }
-SignUpPage.getLayout = (page: ReactElement) => (
-  <AuthLayout heading="Create your account">{page}</AuthLayout>
-)
+SignUpPage.getLayout = (page: ReactElement) => <AuthLayout heading="Create your account">{page}</AuthLayout>
 export default SignUpPage

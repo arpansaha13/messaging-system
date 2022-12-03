@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common'
+import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as bcrypt from 'bcrypt'
@@ -33,8 +28,7 @@ export class AuthService {
   async #createAuthToken(userEntity: UserEntity): Promise<JwtToken> {
     const payload: JwtPayload = { user_id: userEntity.id }
     const authToken = this.jwtService.sign(payload)
-    const expiresAt =
-      Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_DURATION * 100 /* secs */
+    const expiresAt = Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_DURATION * 100 /* secs */
     return { authToken, expiresAt }
   }
 
@@ -47,10 +41,7 @@ export class AuthService {
       await this.userRepository.save(userEntity)
 
       // Save encrypted password
-      const hash = await bcrypt.hash(
-        credentials.password,
-        await bcrypt.genSalt(),
-      )
+      const hash = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
       const authEntity = this.authRepository.create({
         user_id: userEntity.id,
         password: hash,

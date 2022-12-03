@@ -19,9 +19,7 @@ const ChatSidebar = () => {
   const chatList = useChatListStore(state => state.chatList)
   const activeChatUserId = useChatListStore(state => state.activeChatUserId)
   const setActiveChatUser = useChatStore(state => state.setActiveChatUser)
-  const setActiveChatUserId = useChatListStore(
-    state => state.setActiveChatUserId,
-  )
+  const setActiveChatUserId = useChatListStore(state => state.setActiveChatUserId)
 
   async function handleClick(listItem: ChatListItemType) {
     setActiveChatUserId(listItem.userId)
@@ -53,11 +51,7 @@ const ChatSidebar = () => {
               time={listItem.time}
               text={listItem.latestMsg}
               active={activeChatUserId}
-              onClick={
-                typeof handleClick === 'function'
-                  ? () => handleClick(listItem)
-                  : undefined
-              }
+              onClick={typeof handleClick === 'function' ? () => handleClick(listItem) : undefined}
             />
           ))}
         </ul>

@@ -15,9 +15,7 @@ export const ContactList = () => {
   const fetchHook = useFetch()
   const contacts = useContactStore(state => state.contacts)
   const setActiveChatUser = useChatStore(state => state.setActiveChatUser)
-  const setActiveChatUserId = useChatListStore(
-    state => state.setActiveChatUserId,
-  )
+  const setActiveChatUserId = useChatListStore(state => state.setActiveChatUserId)
 
   async function handleClick(contact: ContactType) {
     // TODO: make this api call only if there are new unread messages
@@ -50,11 +48,7 @@ export const ContactList = () => {
                 name={listItem.name}
                 dp={listItem.dp}
                 text={listItem.bio}
-                onClick={
-                  typeof handleClick === 'function'
-                    ? () => handleClick(listItem)
-                    : undefined
-                }
+                onClick={typeof handleClick === 'function' ? () => handleClick(listItem) : undefined}
               />
             ))}
           </ul>

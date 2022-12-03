@@ -21,10 +21,7 @@ const Home: NextPage = () => {
   const initChatListStore = useChatListStore(state => state.init)
 
   const [hasLoaded, setLoaded] = useState<boolean>(false)
-  const isAuthorized = !(
-    authToken === null ||
-    (expiresAt !== null && Date.now() >= expiresAt)
-  )
+  const isAuthorized = !(authToken === null || (expiresAt !== null && Date.now() >= expiresAt))
 
   useEffect(() => {
     // Redirects to sign-in page if unauthorized or if auth token expires.
@@ -32,16 +29,14 @@ const Home: NextPage = () => {
       // TODO: use Router.replace() after successful signin or signup, and logout, and also here below
       Router.push('/auth/signin')
     } else {
-      Promise.all([
-        fetchHook('me'),
-        fetchHook('chat-list'),
-        fetchHook('contacts'),
-      ]).then(([authUser, chatList, contacts]) => {
-        setAuthUser(authUser)
-        initContactStore(contacts)
-        initChatListStore(chatList)
-        setLoaded(true)
-      })
+      Promise.all([fetchHook('me'), fetchHook('chat-list'), fetchHook('contacts')]).then(
+        ([authUser, chatList, contacts]) => {
+          setAuthUser(authUser)
+          initContactStore(contacts)
+          initChatListStore(chatList)
+          setLoaded(true)
+        },
+      )
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  InternalServerErrorException,
-} from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 // Model
 import { ContactModel } from 'src/contacts/contact.model'
@@ -25,9 +20,7 @@ export class ContactService {
 
   async getAllContactsOfUser(auth_user_id: number): Promise<ContactModel> {
     /** Format the response as required by the client - Group all contacts by the first letter of alias */
-    function groupAlphabetically(
-      contactEntities: Pick<ContactEntity, 'alias' | 'contact_user'>[],
-    ) {
+    function groupAlphabetically(contactEntities: Pick<ContactEntity, 'alias' | 'contact_user'>[]) {
       const res: ContactModel = {}
 
       for (const contactEntity of contactEntities) {
@@ -57,11 +50,7 @@ export class ContactService {
    * @param contact_user_id user_id of the user to be added to contacts.
    * @param alias alias for this contact.
    */
-  async addToContactsOfUser(
-    auth_user_id: number,
-    contact_user_id: number,
-    alias: string,
-  ): Promise<string> {
+  async addToContactsOfUser(auth_user_id: number, contact_user_id: number, alias: string): Promise<string> {
     if (auth_user_id === contact_user_id) {
       throw new BadRequestException('Invalid contact_user_id')
     }
@@ -93,10 +82,7 @@ export class ContactService {
       throw new InternalServerErrorException()
     }
   }
-  getContactEntity(
-    auth_user_id: number,
-    contact_user_id: number,
-  ): Promise<ContactEntity> {
+  getContactEntity(auth_user_id: number, contact_user_id: number): Promise<ContactEntity> {
     return this.contactRepository.findOne({
       where: {
         user_id: auth_user_id,

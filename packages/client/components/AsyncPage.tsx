@@ -34,9 +34,7 @@ export default function AsyncPage() {
         <ChatSidebar />
       </section>
 
-      <section className="col-span-7 h-full bg-gray-800">
-        {activeChatUserId !== null && <ChatView />}
-      </section>
+      <section className="col-span-7 h-full bg-gray-800">{activeChatUserId !== null && <ChatView />}</section>
     </main>
   )
 }

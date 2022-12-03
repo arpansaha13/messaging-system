@@ -15,9 +15,7 @@ export class ChatListController {
   constructor(private readonly chatListService: ChatListService) {}
 
   @Get()
-  getChatListOfUser(
-    @GetPayload('user') userEntity: UserEntity,
-  ): Promise<ChatListItemModel[]> {
+  getChatListOfUser(@GetPayload('user') userEntity: UserEntity): Promise<ChatListItemModel[]> {
     return this.chatListService.getChatListOfUser(userEntity.id)
   }
 }

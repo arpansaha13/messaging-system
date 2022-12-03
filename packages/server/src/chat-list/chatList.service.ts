@@ -26,10 +26,7 @@ export class ChatListService {
     for (const chatEntity of chatEntites) {
       promises.push(
         new Promise<void>(async resolve => {
-          const receiverId =
-            chatEntity.participant_1 === userId
-              ? chatEntity.participant_2
-              : chatEntity.participant_1
+          const receiverId = chatEntity.participant_1 === userId ? chatEntity.participant_2 : chatEntity.participant_1
 
           const [latestMsg, user, contact] = await Promise.all([
             this.chatService.getLatestMsgByChatId(chatEntity.id),

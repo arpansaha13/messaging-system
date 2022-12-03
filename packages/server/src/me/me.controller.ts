@@ -9,9 +9,7 @@ import type { UserEntity } from 'src/users/user.entity'
 @UseGuards(AuthGuard())
 export class AuthUserController {
   @Get()
-  async getAuthUserInfo(
-    @GetPayload('user') userEntity: UserEntity,
-  ): Promise<UserEntity> {
+  async getAuthUserInfo(@GetPayload('user') userEntity: UserEntity): Promise<UserEntity> {
     return userEntity
   }
 }

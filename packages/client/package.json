@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pretty": "prettier --write \"./**/*.{js,jsx,ts,tsx,css}\" \"!**/.next/**\""
   },
   "dependencies": {
     "next": "12.3.1",

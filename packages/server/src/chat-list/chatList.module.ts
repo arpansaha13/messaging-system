@@ -17,15 +17,7 @@ import { MessageEntity } from 'src/chats/message.entity'
 import { ContactEntity } from 'src/entities/contact.entity'
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      UserEntity,
-      ChatEntity,
-      MessageEntity,
-      ContactEntity,
-    ]),
-    AuthModule,
-  ],
+  imports: [TypeOrmModule.forFeature([UserEntity, ChatEntity, MessageEntity, ContactEntity]), AuthModule],
   controllers: [ChatListController],
   providers: [ChatListService, ContactService, UserService, ChatService],
 })

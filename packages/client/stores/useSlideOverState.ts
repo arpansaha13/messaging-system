@@ -1,11 +1,6 @@
 import create from 'zustand'
 
-type SlideOverComponentNames =
-  | 'ContactList'
-  | 'Archived'
-  | 'StarredMessages'
-  | 'Settings'
-  | 'Profile'
+type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile'
 
 interface SlideOverStateType {
   open: boolean

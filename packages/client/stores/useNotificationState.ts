@@ -13,14 +13,12 @@ interface NotificationStateType {
 }
 
 /** The global notification component is used only in the auth layout (for now). The global notification will show or hide with content depending on the state of this store. */
-export const useNotificationState = create<NotificationStateType>()(
-  (set) => ({
-    status: 'success',
-    title: '',
-    description: '',
-    show: false,
-    setNotification(newState) {
-      set(() => ({...newState}))
-    }
-  }),
-)
+export const useNotificationState = create<NotificationStateType>()(set => ({
+  status: 'success',
+  title: '',
+  description: '',
+  show: false,
+  setNotification(newState) {
+    set(() => ({ ...newState }))
+  },
+}))

@@ -25,9 +25,7 @@ export function useFetch() {
   const fecthHook = (url: string, options?: RequestInit) => {
     return fetch(`${FETCH_BASE_URL}${url}`, {
       ...options,
-      body: options?.body
-        ? new URLSearchParams(JSON.parse(options?.body as string))
-        : null,
+      body: options?.body ? new URLSearchParams(JSON.parse(options?.body as string)) : null,
       headers: {
         ...(options?.headers ?? {}),
         'Content-Type': 'application/x-www-form-urlencoded',

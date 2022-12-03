@@ -22,9 +22,7 @@ export default function ChatArea({ messages, height }: ChatAreaProps) {
           let mapEntry = mapItr.next()
 
           while (!mapEntry.done) {
-            temp.push(
-              <Message key={mapEntry.value[0]} message={mapEntry.value[1]} />,
-            )
+            temp.push(<Message key={mapEntry.value[0]} message={mapEntry.value[1]} />)
             mapEntry = mapItr.next()
           }
           return temp
@@ -36,14 +34,8 @@ export default function ChatArea({ messages, height }: ChatAreaProps) {
   })
 
   return (
-    <div
-      className="flex flex-col justify-end"
-      style={{ height: `${height}px` }}
-    >
-      <div
-        ref={elRef}
-        className="px-20 py-4 max-h-full overflow-y-scroll scrollbar"
-      >
+    <div className="flex flex-col justify-end" style={{ height: `${height}px` }}>
+      <div ref={elRef} className="px-20 py-4 max-h-full overflow-y-scroll scrollbar">
         {renderMap}
       </div>
     </div>
