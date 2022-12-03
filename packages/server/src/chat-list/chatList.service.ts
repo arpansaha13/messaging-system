@@ -15,10 +15,10 @@ export class ChatListService {
   ) {}
 
   /** Get the list of chats for a particular user. This will be displayed on the sidebar */
-  async getChatListOfUser(userId: number): Promise<ChatListItemModel[]> {
+  async getChatListOfUser(authUserId: number): Promise<ChatListItemModel[]> {
     const chatList: ChatListItemModel[] = []
 
-    const chatEntites = await this.chatService.getAllChatEntitiesOfUser(userId)
+    const chatEntites = await this.chatService.getAllChatEntitiesOfUser(authUserId)
     if (chatEntites.length === 0) return chatList
 
     const promises: Promise<void>[] = []
@@ -26,12 +26,13 @@ export class ChatListService {
     for (const chatEntity of chatEntites) {
       promises.push(
         new Promise<void>(async resolve => {
-          const receiverId = chatEntity.participant_1 === userId ? chatEntity.participant_2 : chatEntity.participant_1
+          const receiverId =
+            chatEntity.participant_1 === authUserId ? chatEntity.participant_2 : chatEntity.participant_1
 
           const [latestMsg, user, contact] = await Promise.all([
             this.chatService.getLatestMsgByChatId(chatEntity.id),
             this.userService.getUser(receiverId),
-            this.contactService.getContactEntity(userId, receiverId),
+            this.contactService.getContactEntity(authUserId, receiverId),
           ])
 
           chatList.push({
@@ -41,7 +42,7 @@ export class ChatListService {
             bio: user.bio,
             time: latestMsg.createdAt,
             muted: chatEntity.isMuted[receiverId],
-            status: latestMsg.status,
+            status: latestMsg.senderId === authUserId ? latestMsg.status : null,
             latestMsg: latestMsg.content,
           })
           resolve()

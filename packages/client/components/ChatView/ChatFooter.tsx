@@ -14,6 +14,8 @@ import { useDraftStore } from '../../stores/useDraftStore'
 import { useChatListStore } from '../../stores/useChatListStore'
 // Utils
 import { ISODateNow } from '../../utils/ISODate'
+// Enum
+import { MessageStatus } from '../../types'
 // Types
 import type { KeyboardEvent } from 'react'
 import type { TypingStateType } from '../../hooks/useSocket'
@@ -35,6 +37,7 @@ const ChatFooter = () => {
   const drafts = useDraftStore(state => state.drafts)
   const removeDraft = useDraftStore(state => state.remove)
   const activeChatUserId = useChatListStore(state => state.activeChatUserId)!
+  const updateChatListItem = useChatListStore(state => state.updateChatListItem)
 
   const { socket } = useSocket()
 
@@ -68,6 +71,11 @@ const ChatFooter = () => {
     if (e.key === 'Enter' && value) {
       const ISOtimestamp = ISODateNow()
       send(activeChatUserId, authUser.id, value, ISOtimestamp)
+      updateChatListItem(activeChatUserId, {
+        latestMsg: value,
+        status: MessageStatus.SENDING,
+        time: ISOtimestamp,
+      })
       setValue('')
       socket.emit('send-message', {
         msg: value,

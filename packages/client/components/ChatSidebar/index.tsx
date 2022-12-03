@@ -49,6 +49,7 @@ const ChatSidebar = () => {
               name={listItem.alias}
               dp={listItem.dp}
               time={listItem.time}
+              status={listItem.status}
               text={listItem.latestMsg}
               active={activeChatUserId}
               onClick={typeof handleClick === 'function' ? () => handleClick(listItem) : undefined}

@@ -1,31 +1,16 @@
 import { memo } from 'react'
 import { format, parseISO } from 'date-fns'
-// Icons
-import { ClockIcon, CheckIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
+// Components
+import MsgStatusIcon from '../MsgStatusIcon'
+// Stores
+import { useAuthStore } from '../../stores/useAuthStore'
 // Utils
 import classNames from '../../utils/classNames'
 // Types
-import { MessageStatus, MessageType, MsgConfirmedType, MsgSendingType } from '../../types'
-import { useAuthStore } from '../../stores/useAuthStore'
+import type { MessageType, MsgConfirmedType, MsgSendingType } from '../../types'
 
 interface MessageProps {
   message: MessageType
-}
-
-const MsgStatusIcon = (status: MessageStatus) => {
-  switch (status) {
-    case MessageStatus.SENDING:
-      return <ClockIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0" />
-    case MessageStatus.SENT:
-      return <CheckIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0" />
-    // TODO: Find an icon for double-tick and use here
-    case MessageStatus.DELIVERED:
-      return <CheckCircleIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0" />
-    case MessageStatus.READ:
-      return <CheckCircleIcon className="inline-block w-3 h-3 ml-1 flex-shrink-0 text-blue-500" />
-    default:
-      console.error('Invalid message status.')
-  }
 }
 
 const Message = ({ message }: MessageProps) => {
@@ -40,12 +25,12 @@ const Message = ({ message }: MessageProps) => {
     >
       <span className="break-words">{message.content}</span>
 
-      <p className="min-w-[4.5rem] text-xs text-gray-300 inline-flex items-end justify-end">
-        <span className="absolute right-2 bottom-1">
-          {format(parseISO(message.createdAt), 'h:mm a')}
-          {authUserMsg && MsgStatusIcon((message as MsgSendingType | MsgConfirmedType).status)}
-        </span>
-      </p>
+      <div className="min-w-[4.5rem] text-xs text-gray-300 inline-flex items-end justify-end">
+        <p className="flex items-center absolute right-2 bottom-1">
+          <span className="mr-1">{format(parseISO(message.createdAt), 'h:mm a')}</span>
+          {authUserMsg && <MsgStatusIcon status={(message as MsgSendingType | MsgConfirmedType).status} />}
+        </p>
+      </div>
     </div>
   )
 }

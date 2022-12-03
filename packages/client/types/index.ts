@@ -1,3 +1,5 @@
+import { MessageStatus } from './message.types'
+
 export * from './message.types'
 
 export interface ChatListItemType {
@@ -13,8 +15,8 @@ export interface ChatListItemType {
   time: string
   /** Whether the chat has been muted or not. */
   muted: boolean
-  /** Whether the latest message has been read or not. */
-  status: boolean
+  /** Status of latest message. */
+  status: MessageStatus | null
   /** The latest message in this chat. */
   latestMsg: string
 }

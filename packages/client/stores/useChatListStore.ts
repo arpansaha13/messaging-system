@@ -1,4 +1,5 @@
 import create from 'zustand'
+import produce from 'immer'
 
 import type { ChatListItemType } from '../types'
 
@@ -11,6 +12,8 @@ interface ChatListStoreType {
 
   /** Initialize the chat list. */
   init: (initChatList: ChatListItemType[]) => void
+
+  updateChatListItem: (userId: number, partialChatListItem: Partial<ChatListItemType>) => void
 
   /** Open a chat with a user. */
   setActiveChatUserId: (userId: number) => void
@@ -29,6 +32,17 @@ export const useChatListStore = create<ChatListStoreType>()(set => ({
 
       return { chatList: newChatList }
     })
+  },
+  updateChatListItem(userId, partialChatListItem) {
+    set(
+      produce((state: ChatListStoreType) => {
+        const idx = state.chatList.findIndex(val => val.userId === userId)
+        if (idx === -1) return
+        let chatListItem = state.chatList.splice(idx, 1)[0]
+        chatListItem = { ...chatListItem, ...partialChatListItem }
+        state.chatList.unshift(chatListItem)
+      }),
+    )
   },
   setActiveChatUserId(userId: number) {
     set(() => ({ activeChatUserId: userId }))

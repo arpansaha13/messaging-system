@@ -4,6 +4,7 @@ import io from 'socket.io-client'
 import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { useTypingState } from '../stores/useTypingState'
+import { useChatListStore } from '../stores/useChatListStore'
 // Enum
 import { MessageStatus } from '../types/message.types'
 
@@ -56,6 +57,7 @@ export function useSocketInit() {
   const receive = useChatStore(state => state.receive)
   const updateStatus = useChatStore(state => state.updateStatus)
   const setTyping = useTypingState(state => state.setTyping)
+  const updateChatListItem = useChatListStore(state => state.updateChatListItem)
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [_, setHookRunCount] = useState<number>(0)
@@ -84,10 +86,18 @@ export function useSocketInit() {
 
     socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
       receive(data.userId, data.msg, data.ISOtime)
+      updateChatListItem(data.userId, {
+        time: data.ISOtime,
+        latestMsg: data.msg,
+        status: null,
+      })
     })
 
     socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
       updateStatus(data.receiverId, data.ISOtime, data.status)
+      updateChatListItem(data.receiverId, {
+        status: data.status,
+      })
     })
 
     socketWrapper.on('typing-state', (data: TypingStateType) => {

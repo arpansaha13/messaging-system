@@ -4,6 +4,9 @@ import { format, parseISO } from 'date-fns'
 import classNames from '../../utils/classNames'
 // Components
 import Avatar from '../Avatar'
+import MsgStatusIcon from '../MsgStatusIcon'
+// Enum
+import { MessageStatus } from '../../types'
 
 export interface StackedListItemProps {
   userId: number
@@ -12,10 +15,11 @@ export interface StackedListItemProps {
   time?: string // Contact List does not show time
   text: string
   active?: number | null // Contact List items will not have a active item
+  status?: MessageStatus | null // Contact List items will not have status
   onClick?: () => void
 }
 
-const StackedListItem = ({ userId, name, dp, time, text, active, onClick }: StackedListItemProps) => {
+const StackedListItem = ({ userId, name, dp, time, text, active, status, onClick }: StackedListItemProps) => {
   return (
     <li>
       <button
@@ -39,7 +43,10 @@ const StackedListItem = ({ userId, name, dp, time, text, active, onClick }: Stac
             )}
           </div>
           <div className="flex justify-between">
-            <p className="text-sm text-gray-400 line-clamp-1">{text ?? 'Hey there! I am using WhatsApp.'}</p>
+            <p className="flex items-center text-sm text-gray-400 space-x-1 line-clamp-1">
+              {status && <MsgStatusIcon status={status} />}
+              <span>{text ?? 'Hey there! I am using WhatsApp.'}</span>
+            </p>
           </div>
         </div>
       </button>
