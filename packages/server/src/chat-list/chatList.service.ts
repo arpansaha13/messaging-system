@@ -34,21 +34,31 @@ export class ChatListService {
             chatEntity.participant_1 === authUserId ? chatEntity.participant_2 : chatEntity.participant_1
 
           const [latestMsg, user, contact] = await Promise.all([
-            this.messageService.getLatestMsgByChatId(chatEntity.id),
+            this.messageService.getLatestMsgByChatId(chatEntity.id, chatEntity.firstMsgTstamp[authUserId]),
             this.userService.getUser(receiverId),
             this.contactService.getContactEntity(authUserId, receiverId),
           ])
-
-          chatList.push({
+          let chatListItem: ChatListItemModel = {
             userId: receiverId,
             dp: user.dp,
             alias: contact !== null ? contact.alias : null,
             bio: user.bio,
-            time: latestMsg.createdAt,
             muted: chatEntity.isMuted[receiverId],
-            status: latestMsg.senderId === authUserId ? latestMsg.status : null,
-            latestMsg: latestMsg.content,
-          })
+            time: null,
+            status: null,
+            latestMsgContent: null,
+          }
+          // `latestMsg` may be `null` if no message is found
+          if (latestMsg !== null) {
+            chatListItem = {
+              ...chatListItem,
+              time: latestMsg.createdAt,
+              status: latestMsg.senderId === authUserId ? latestMsg.status : null,
+              latestMsgContent: latestMsg.content,
+            }
+          }
+
+          chatList.push(chatListItem)
           resolve()
         }),
       )

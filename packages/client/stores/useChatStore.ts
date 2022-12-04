@@ -48,6 +48,9 @@ interface ChatStoreType {
 
   /** Update the active chat-user when a new chat is opened. */
   setActiveChatUser: (contact: ContactType) => void
+
+  /** Clears the chat with `activeChatUser`. */
+  clearChat: () => void
 }
 
 export const useChatStore = create<ChatStoreType>()((set, get) => ({
@@ -116,5 +119,12 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
   },
   setActiveChatUser(contact: ContactType) {
     set({ activeChatUser: contact })
+  },
+  clearChat() {
+    set(
+      produce((state: ChatStoreType) => {
+        state.chats.set(state.activeChatUser!.userId, new Map<number, MessageType>())
+      }),
+    )
   },
 }))

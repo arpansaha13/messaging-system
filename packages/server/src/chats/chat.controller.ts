@@ -22,19 +22,17 @@ export class ChatController {
    * @param userEntity Authorized user entity.
    */
   @Get('/:userId')
-  async getChat(
+  async getChatMessages(
     @Param() params: GetChatParamsDto,
     @GetPayload('user') userEntity: UserEntity,
   ): Promise<MessageEntity[]> {
     const chatEntity = await this.chatService.getChatEntityByUserIds(userEntity.id, params.userId)
-    return this.messageService.getMessagesByChatId(chatEntity.id)
+    const firstMsgTstamp = chatEntity.firstMsgTstamp[userEntity.id]
+    return this.messageService.getMessagesByChatId(chatEntity.id, firstMsgTstamp)
   }
 
-  // @Get('/clear/:userId')
-  // async clearChat(
-  //   @Param() params: GetChatParamsDto,
-  //   @GetPayload('user') userEntity: UserEntity,
-  // ): Promise<MessageEntity[]> {
-  //   return this.chatService.clearChat(userEntity.id, params.userId)
-  // }
+  @Get('/clear/:userId')
+  clearChat(@Param() params: GetChatParamsDto, @GetPayload('user') userEntity: UserEntity): Promise<void> {
+    return this.chatService.clearChat(userEntity.id, params.userId)
+  }
 }

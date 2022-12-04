@@ -14,7 +14,7 @@ export class ChatListItemModel {
   bio: string
 
   /** Time of the latest message. */
-  time: Date
+  time: Date | null
 
   /** Whether the logged-in user has muted this chat or not. */
   muted: boolean
@@ -23,5 +23,5 @@ export class ChatListItemModel {
   status: MessageStatus | null
 
   /** The latest message. */
-  latestMsg: string
+  latestMsgContent: string | null
 }

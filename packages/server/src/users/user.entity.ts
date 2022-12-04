@@ -20,7 +20,7 @@ export class UserEntity {
   dp: string
 
   /** A short bio set by the user. */
-  @Column({ nullable: true })
+  @Column({ nullable: false, default: 'Hey there! I am using WhatsApp.' })
   bio: string
 
   /** Time when the user account was created */

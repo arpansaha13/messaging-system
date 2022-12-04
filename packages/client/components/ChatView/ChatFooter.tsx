@@ -72,7 +72,7 @@ const ChatFooter = () => {
       const ISOtimestamp = ISODateNow()
       send(activeChatUserId, authUser.id, value, ISOtimestamp)
       updateChatListItem(activeChatUserId, {
-        latestMsg: value,
+        latestMsgContent: value,
         status: MessageStatus.SENDING,
         time: ISOtimestamp,
       })

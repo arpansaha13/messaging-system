@@ -12,13 +12,13 @@ export interface ChatListItemType {
   /** A short bio of the user. */
   bio: string
   /** Timestamp of the latest message */
-  time: string
+  time: string | null
   /** Whether the chat has been muted or not. */
   muted: boolean
   /** Status of latest message. */
   status: MessageStatus | null
   /** The latest message in this chat. */
-  latestMsg: string
+  latestMsgContent: string | null
 }
 
 export interface UserType {

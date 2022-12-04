@@ -22,7 +22,7 @@ interface ChatListStoreType {
 export const useChatListStore = create<ChatListStoreType>()(set => ({
   activeChatUserId: null,
   chatList: [],
-  init(initChatList: ChatListItemType[]) {
+  init(initChatList) {
     set(() => {
       const newChatList: ChatListItemType[] = []
 
@@ -44,7 +44,7 @@ export const useChatListStore = create<ChatListStoreType>()(set => ({
       }),
     )
   },
-  setActiveChatUserId(userId: number) {
+  setActiveChatUserId(userId) {
     set(() => ({ activeChatUserId: userId }))
   },
 }))

@@ -93,4 +93,19 @@ export class ChatService {
     })
     return chatInsertRes.identifiers[0].id as number
   }
+
+  async updateFirstMsgTstamp(authUserId: number, userId2: number, newValue: string): Promise<void> {
+    const jsonbKey = `'{${authUserId}}'` // key should be in single quotes curly braces - Postgres syntax
+    const newValuePgSyntax = newValue === 'null' ? 'null' : `"${newValue}"`
+    await this.chatRepository
+      .createQueryBuilder()
+      .update()
+      .set({ firstMsgTstamp: () => `jsonb_set(first_msg_tstamp, ${jsonbKey}, '${newValuePgSyntax}')` })
+      .where('participant_1 = :authUserId AND participant_2 = :userId2', { authUserId, userId2 })
+      .orWhere('participant_2 = :authUserId AND participant_1 = :userId2', { authUserId, userId2 })
+      .execute()
+  }
+  async clearChat(authUserId: number, userId2: number): Promise<void> {
+    await this.updateFirstMsgTstamp(authUserId, userId2, 'null')
+  }
 }

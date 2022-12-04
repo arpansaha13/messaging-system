@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, Not } from 'typeorm'
+import { In, Not, MoreThanOrEqual } from 'typeorm'
 // Entities
 import { ChatEntity } from './chat.entity'
 import { MessageEntity, MessageStatus } from './message.entity'
@@ -38,15 +38,29 @@ export class MessageService {
     )
   }
 
-  /** Get all messages with chat_id. */
-  getMessagesByChatId(chatId: number): Promise<MessageEntity[]> {
-    return this.messageRepository.find({ where: { chatId }, order: { createdAt: 'ASC' } })
+  /**
+   * Get all messages with chat_id.
+   * @param chatId
+   * @param firstMsgTstamp the timestamp before which the messages were cleared
+   */
+  getMessagesByChatId(chatId: number, firstMsgTstamp: Date | null): Promise<MessageEntity[]> | [] {
+    if (firstMsgTstamp === null) return []
+    // `firstMsgTstamp` is received as a Date number in milliseconds
+    return this.messageRepository.find({
+      where: { chatId, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
+      order: { createdAt: 'ASC' },
+    })
   }
 
-  /** Get the latest message in the chat by chat_id. */
-  getLatestMsgByChatId(chatId: number): Promise<MessageEntity> {
+  /**
+   * Get the latest message in the chat by chat_id.
+   * @returns The latest message entity. If no message is found, returns `null`.
+   */
+  getLatestMsgByChatId(chatId: number, firstMsgTstamp: Date | null): Promise<MessageEntity> | null {
+    if (firstMsgTstamp === null) return null
+    // `firstMsgTstamp` is received as a Date number in milliseconds
     return this.messageRepository.findOne({
-      where: { chatId },
+      where: { chatId, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
       order: { createdAt: 'DESC' },
     })
   }

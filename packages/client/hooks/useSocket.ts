@@ -88,7 +88,7 @@ export function useSocketInit() {
       receive(data.userId, data.msg, data.ISOtime)
       updateChatListItem(data.userId, {
         time: data.ISOtime,
-        latestMsg: data.msg,
+        latestMsgContent: data.msg,
         status: null,
       })
     })

@@ -1,4 +1,6 @@
 import { memo } from 'react'
+// Custom Hook
+import { useFetch } from '../../hooks/useFetch'
 // Icons
 import { EllipsisVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 // Components
@@ -6,11 +8,18 @@ import Avatar from '../Avatar'
 import DropDown from '../DropDown'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
+import { useChatListStore } from '../../stores/useChatListStore'
 import { useTypingState } from '../../stores/useTypingState'
 // Utils
 import classNames from '../../utils/classNames'
 
 const ChatHeader = () => {
+  const fetchHook = useFetch()
+  const typingState = useTypingState(state => state.typingState)
+  const activeChatUser = useChatStore(state => state.activeChatUser)!
+  const updateChatListItem = useChatListStore(state => state.updateChatListItem)!
+  const clearChat = useChatStore(state => state.clearChat)
+
   const chatMenuItems = [
     {
       slot: 'Contact info',
@@ -45,7 +54,13 @@ const ChatHeader = () => {
     {
       slot: 'Clear messages',
       onClick() {
-        console.log('clicked')
+        fetchHook(`chats/clear/${activeChatUser.userId}`)
+        clearChat()
+        updateChatListItem(activeChatUser.userId, {
+          latestMsgContent: null,
+          status: null,
+          time: null,
+        })
       },
     },
     {
@@ -55,8 +70,6 @@ const ChatHeader = () => {
       },
     },
   ]
-  const typingState = useTypingState(state => state.typingState)
-  const activeChatUser = useChatStore(state => state.activeChatUser)!
 
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-800">
@@ -64,7 +77,7 @@ const ChatHeader = () => {
         <Avatar src={activeChatUser.dp} height={2.5} width={2.5} />
 
         <div>
-          <p className="text-gray-50 font-semibold">{activeChatUser.name}</p>
+          <p className="text-gray-50 font-semibold">{activeChatUser.name ?? '[Unknown]'}</p>
           <p
             className={classNames(
               'text-xs transition-[height] duration-200 overflow-hidden',

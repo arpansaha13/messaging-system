@@ -49,7 +49,7 @@ export class ChatsGateway {
 
   @SubscribeMessage('send-message')
   async handleEvent(@MessageBody() data: Ws1to1MessageDto, @ConnectedSocket() senderSocket: Socket) {
-    const receiverClientId = this.clients.get(data.receiverId)
+    const receiverSocketId = this.clients.get(data.receiverId)
 
     // TODO: Try to save this info so that we don't run this api again and again
     const chatEntity = await this.chatService.getChatEntityByUserIds(data.senderId, data.receiverId, true)
@@ -57,6 +57,12 @@ export class ChatsGateway {
 
     if (chatEntity === null) {
       chatId = await this.chatService.create1to1Chat(data)
+    }
+    if (chatEntity.firstMsgTstamp[data.senderId] === null) {
+      await this.chatService.updateFirstMsgTstamp(data.senderId, data.receiverId, data.ISOtime)
+    }
+    if (chatEntity.firstMsgTstamp[data.receiverId] === null) {
+      await this.chatService.updateFirstMsgTstamp(data.receiverId, data.senderId, data.ISOtime)
     }
     // Store message in db
     const msgId = await this.messageService.create1to1ChatMsg(chatId, data.senderId, data.receiverId, data.msg)
@@ -74,10 +80,10 @@ export class ChatsGateway {
     emitMsgStatus.bind(this)(MessageStatus.SENT)
 
     // If the receiver is not online
-    if (typeof receiverClientId === 'undefined') return
+    if (typeof receiverSocketId === 'undefined') return
 
     // Send the message to receiver
-    this.server.to(receiverClientId).emit('receive-message', {
+    this.server.to(receiverSocketId).emit('receive-message', {
       userId: data.senderId,
       msg: data.msg,
       ISOtime: data.ISOtime,
@@ -88,7 +94,7 @@ export class ChatsGateway {
 
   @SubscribeMessage('typing-state')
   handleTyping(@MessageBody() data: WsTypingStateDto) {
-    const receiverClientId = this.clients.get(data.receiverId)
-    this.server.to(receiverClientId).emit('typing-state', data)
+    const receiverSocketId = this.clients.get(data.receiverId)
+    this.server.to(receiverSocketId).emit('typing-state', data)
   }
 }
