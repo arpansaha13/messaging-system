@@ -1,6 +1,7 @@
 import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 // Services
 import { ChatService } from './chat.service'
+import { MessageService } from './messages.service'
 // DTOs
 import { Ws1to1MessageDto, WsTypingStateDto } from './dtos/chatGateway.dto'
 // Enum
@@ -16,7 +17,7 @@ import type { Server, Socket } from 'socket.io'
   },
 })
 export class ChatsGateway {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService, private readonly messageService: MessageService) {}
 
   @WebSocketServer()
   server: Server
@@ -51,14 +52,14 @@ export class ChatsGateway {
     const receiverClientId = this.clients.get(data.receiverId)
 
     // TODO: Try to save this info so that we don't run this api again and again
-    const chatEntity = await this.chatService.getChatEntityByUserId(data.senderId, data.receiverId, true)
+    const chatEntity = await this.chatService.getChatEntityByUserIds(data.senderId, data.receiverId, true)
     let chatId = chatEntity !== null ? chatEntity.id : null
 
     if (chatEntity === null) {
       chatId = await this.chatService.create1to1Chat(data)
     }
     // Store message in db
-    const msgId = await this.chatService.create1to1ChatMsg(chatId, data.senderId, data.receiverId, data.msg)
+    const msgId = await this.messageService.create1to1ChatMsg(chatId, data.senderId, data.receiverId, data.msg)
 
     /** Inform the sender about the new message status. */
     function emitMsgStatus(status: MessageStatus) {
@@ -81,7 +82,7 @@ export class ChatsGateway {
       msg: data.msg,
       ISOtime: data.ISOtime,
     })
-    this.chatService.updateMsgStatus(msgId, MessageStatus.DELIVERED)
+    this.messageService.updateMsgStatus(msgId, MessageStatus.DELIVERED)
     emitMsgStatus.bind(this)(MessageStatus.DELIVERED)
   }
 

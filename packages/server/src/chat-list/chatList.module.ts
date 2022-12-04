@@ -8,6 +8,7 @@ import { ChatListController } from 'src/chat-list/chatList.controller'
 // Services
 import { UserService } from 'src/users/user.service'
 import { ChatService } from 'src/chats/chat.service'
+import { MessageService } from 'src/chats/messages.service'
 import { ContactService } from 'src/contacts/contact.service'
 import { ChatListService } from 'src/chat-list/chatList.service'
 // Entities
@@ -19,6 +20,6 @@ import { ContactEntity } from 'src/entities/contact.entity'
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, ChatEntity, MessageEntity, ContactEntity]), AuthModule],
   controllers: [ChatListController],
-  providers: [ChatListService, ContactService, UserService, ChatService],
+  providers: [ChatListService, ContactService, UserService, ChatService, MessageService],
 })
 export class ChatListModule {}

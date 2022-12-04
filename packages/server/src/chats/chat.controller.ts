@@ -1,7 +1,8 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-// Service
+// Services
 import { ChatService } from 'src/chats/chat.service'
+import { MessageService } from './messages.service'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // DTOs
@@ -13,7 +14,7 @@ import type { MessageEntity } from './message.entity'
 @Controller('chats')
 @UseGuards(AuthGuard())
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(private readonly chatService: ChatService, private readonly messageService: MessageService) {}
 
   /**
    * Get the chat between two users.
@@ -25,6 +26,15 @@ export class ChatController {
     @Param() params: GetChatParamsDto,
     @GetPayload('user') userEntity: UserEntity,
   ): Promise<MessageEntity[]> {
-    return this.chatService.getChatByUserId(userEntity.id, params.userId)
+    const chatEntity = await this.chatService.getChatEntityByUserIds(userEntity.id, params.userId)
+    return this.messageService.getMessagesByChatId(chatEntity.id)
   }
+
+  // @Get('/clear/:userId')
+  // async clearChat(
+  //   @Param() params: GetChatParamsDto,
+  //   @GetPayload('user') userEntity: UserEntity,
+  // ): Promise<MessageEntity[]> {
+  //   return this.chatService.clearChat(userEntity.id, params.userId)
+  // }
 }
