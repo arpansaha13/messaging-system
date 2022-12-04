@@ -1,34 +1,31 @@
 import { memo } from 'react'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
-import { useSocket } from '../../hooks/useSocket'
 // Components
-import StackedListItem from '../StackedList/StackedListItem'
+import ContactListItem from './ContactListItem'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useContactStore } from '../../stores/useContactStore'
 import { useChatListStore } from '../../stores/useChatListStore'
 // Types
-import type { ContactType } from '../../types'
+import type { ContactType, MessageType } from '../../types'
 
 export const ContactList = () => {
   const fetchHook = useFetch()
+  const add = useChatStore(state => state.add)
+  const chats = useChatStore(state => state.chats)
   const contacts = useContactStore(state => state.contacts)
   const setActiveChatUser = useChatStore(state => state.setActiveChatUser)
   const setActiveChatUserId = useChatListStore(state => state.setActiveChatUserId)
 
   async function handleClick(contact: ContactType) {
-    // TODO: make this api call only if there are new unread messages
-    //       and then append those new messages to chat
-    fetchHook(`chats/${contact.userId}`)
-      .then(chat => {
-        console.log(chat)
-      })
-      .catch(err => {
-        console.log(err)
-      })
     setActiveChatUserId(contact.userId)
     setActiveChatUser(contact)
+
+    if (!chats.has(contact.userId)) {
+      const chatRes: MessageType[] = await fetchHook(`chats/${contact.userId}`)
+      add(contact.userId, chatRes)
+    }
   }
 
   return (
@@ -42,13 +39,12 @@ export const ContactList = () => {
 
           <ul role="list">
             {contacts[letter as keyof typeof contacts].map(listItem => (
-              <StackedListItem
+              <ContactListItem
                 key={listItem.userId}
-                userId={listItem.userId}
                 name={listItem.name}
                 dp={listItem.dp}
-                text={listItem.bio}
-                onClick={typeof handleClick === 'function' ? () => handleClick(listItem) : undefined}
+                bio={listItem.bio}
+                onClick={() => handleClick(listItem)}
               />
             ))}
           </ul>

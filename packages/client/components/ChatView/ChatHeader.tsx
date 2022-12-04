@@ -2,10 +2,10 @@ import { memo } from 'react'
 // Custom Hook
 import { useFetch } from '../../hooks/useFetch'
 // Icons
-import { EllipsisVerticalIcon, MagnifyingGlassIcon } from '@heroicons/react/20/solid'
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 // Components
 import Avatar from '../Avatar'
-import DropDown from '../DropDown'
+import HeaderDropDown from '../HeaderDropDown'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useChatListStore } from '../../stores/useChatListStore'
@@ -101,11 +101,7 @@ const ChatHeader = () => {
           <MagnifyingGlassIcon className="w-6 h-6 flex-shrink-0" />
         </button>
 
-        <DropDown
-          buttonSlot={<EllipsisVerticalIcon className="w-6 h-6 flex-shrink-0" />}
-          menuItems={chatMenuItems}
-          width={14.5}
-        />
+        <HeaderDropDown menuItems={chatMenuItems} width={14.5} />
       </div>
     </header>
   )

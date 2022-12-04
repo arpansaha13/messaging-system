@@ -29,7 +29,8 @@ export default function AsyncPage() {
 
   return (
     <main className="grid grid-cols-10 h-full">
-      <section className="col-span-3 h-full border-r border-gray-600/70 relative overflow-hidden">
+      {/* 'overflow-x-visible' for the dropdown. */}
+      <section className="col-span-3 h-full border-r border-gray-600/70 relative overflow-x-visible">
         <SlideOver>{getSlideOverContent()}</SlideOver>
         <ChatSidebar />
       </section>

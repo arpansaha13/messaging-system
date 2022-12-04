@@ -1,37 +1,33 @@
 import { Fragment } from 'react'
 // Components
 import { Menu, Transition } from '@headlessui/react'
+// Icons
+import { ChevronDownIcon } from '@heroicons/react/24/solid'
 // Utils
-import classNames from '../utils/classNames'
+import classNames from '../../utils/classNames'
 // Types
-import type { ReactNode } from 'react'
+import type { ReactNode, MouseEvent } from 'react'
 
 interface DropDownProps {
-  buttonSlot: string | ReactNode
   menuItems: {
     slot: string | ReactNode
     onClick: () => void
   }[]
-  /**
-   * Width of menu items dropdown in 'rem' units
-   * @default 12
-   */
-  width?: number
 }
 
-const DropDown = ({ buttonSlot, menuItems, width }: DropDownProps) => {
+const ChatSidebarItemDropDown = ({ menuItems }: DropDownProps) => {
   return (
-    <Menu as="div" className="relative inline-block text-left">
+    <Menu as="div" className="relative text-left">
       {({ open }) => (
         <>
-          <div>
+          <div className="h-full flex items-center">
             <Menu.Button
-              className={classNames(
-                open ? 'bg-gray-600/80 rounded-full' : 'rounded-sm',
-                'p-2 inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-sky-500/70',
-              )}
+              className="inline-flex items-center justify-center focus:outline-none"
+              onClick={(e: MouseEvent) => {
+                e.stopPropagation()
+              }}
             >
-              {buttonSlot}
+              <ChevronDownIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
             </Menu.Button>
           </div>
 
@@ -45,8 +41,8 @@ const DropDown = ({ buttonSlot, menuItems, width }: DropDownProps) => {
             leaveTo="transform opacity-0 scale-95"
           >
             <Menu.Items
-              className="absolute right-1 z-10 mt-2 origin-top-right rounded-md bg-gray-800 text-gray-100 shadow shadow-black focus:outline-none"
-              style={{ width: `${width ?? 12}rem` }}
+              className="absolute z-10 mt-2 origin-top-left rounded-md bg-gray-800 text-gray-100 shadow shadow-black focus:outline-none"
+              style={{ width: `12rem` }}
             >
               <div className="py-2">
                 {menuItems.map((menuItem, i) => {
@@ -58,7 +54,10 @@ const DropDown = ({ buttonSlot, menuItems, width }: DropDownProps) => {
                             active ? 'bg-gray-900' : '',
                             'block w-full px-6 py-2.5 text-sm text-left',
                           )}
-                          onClick={menuItem.onClick}
+                          onClick={e => {
+                            e.stopPropagation()
+                            menuItem.onClick()
+                          }}
                         >
                           {menuItem.slot}
                         </button>
@@ -75,4 +74,4 @@ const DropDown = ({ buttonSlot, menuItems, width }: DropDownProps) => {
   )
 }
 // Frequently updates when parent re-renders.
-export default DropDown
+export default ChatSidebarItemDropDown

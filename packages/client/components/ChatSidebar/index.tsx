@@ -2,7 +2,7 @@ import { memo } from 'react'
 // Components
 import SearchBar from './SearchBar'
 import SidebarHeader from './SidebarHeader'
-import StackedListItem from '../StackedList/StackedListItem'
+import ChatSidebarItem from './ChatSidebarItem'
 // Stores
 import { useChatStore } from '../../stores/useChatStore'
 import { useChatListStore } from '../../stores/useChatListStore'
@@ -40,19 +40,15 @@ const ChatSidebar = () => {
       <SidebarHeader />
       <SearchBar />
 
-      <div className="overflow-auto">
+      {/* className="overflow-auto" */}
+      <div>
         <ul role="list">
           {chatList.map(listItem => (
-            <StackedListItem
+            <ChatSidebarItem
               key={listItem.userId}
-              userId={listItem.userId}
-              name={listItem.alias}
-              dp={listItem.dp}
-              time={listItem.time}
-              status={listItem.status}
-              text={listItem.latestMsgContent}
+              {...listItem}
               active={activeChatUserId}
-              onClick={typeof handleClick === 'function' ? () => handleClick(listItem) : undefined}
+              onClick={() => handleClick(listItem)}
             />
           ))}
         </ul>

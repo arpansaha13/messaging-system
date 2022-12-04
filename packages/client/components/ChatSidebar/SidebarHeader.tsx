@@ -1,12 +1,12 @@
 import { memo } from 'react'
 import Router from 'next/router'
 // Icons
-import { ChatBubbleBottomCenterTextIcon, EllipsisVerticalIcon, ViewfinderCircleIcon } from '@heroicons/react/20/solid'
+import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon } from '@heroicons/react/20/solid'
 // Stores
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useSlideOverState } from '../../stores/useSlideOverState'
 // Components
-import DropDown from '../DropDown'
+import HeaderDropDown from '../HeaderDropDown'
 
 const SidebarHeader = () => {
   const resetAuthState = useAuthStore(state => state.resetAuthState)
@@ -78,7 +78,7 @@ const SidebarHeader = () => {
         <button className="p-2 btn-icon" onClick={openNewChatMenu}>
           <ChatBubbleBottomCenterTextIcon className="w-6 h-6 flex-shrink-0" />
         </button>
-        <DropDown buttonSlot={<EllipsisVerticalIcon className="w-6 h-6 flex-shrink-0" />} menuItems={menuItems} />
+        <HeaderDropDown menuItems={menuItems} />
       </div>
     </header>
   )
