@@ -32,11 +32,13 @@ export function useFetch() {
         ...(authToken !== null ? { Authorization: `Bearer ${authToken}` } : {}),
       },
     }).then(async res => {
-      const data = await res.json()
+      // Handle empty responses
+      const textData = await res.text()
+      const jsonData = textData ? JSON.parse(textData) : null
       if (res.status >= 400) {
-        throw data
+        throw jsonData
       }
-      return data
+      return jsonData
     })
   }
   return fecthHook
