@@ -3,25 +3,25 @@ import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryColumn, Upda
 
 @Entity({ name: 'auth' })
 export class AuthEntity {
-  @PrimaryColumn()
-  user_id: number
+  @PrimaryColumn({ name: 'user_id' })
+  userId: number
 
   @Column({ unique: true })
   @Exclude({ toPlainOnly: true })
   password: string
 
   /** Time when the user account was created */
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   @Exclude({ toPlainOnly: true })
-  created_at: Date
+  createdAt: Date
 
   /** Time when the password was last updated */
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   @Exclude({ toPlainOnly: true })
-  updated_at: Date
+  updatedAt: Date
 
   /** Time when the user account was deleted */
-  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true, type: 'timestamptz' })
   @Exclude({ toPlainOnly: true })
-  deleted_at: Date
+  deletedAt: Date
 }

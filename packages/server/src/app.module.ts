@@ -1,19 +1,19 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 // Modules
-import { ChatModule } from './chats/chat.module'
-import { AuthUserModule } from './me/me.module'
+import { RoomModule } from './rooms/room.module'
+import { UserModule } from './users/user.module'
 import { ContactModule } from './contacts/contact.module'
-import { ChatListModule } from './chat-list/chatList.module'
 // Constants
 import { DATABASE_HOST_PORT } from './constants'
 
+// TODO: check all *.module.ts files for unnecessary imports or providers
+
 @Module({
   imports: [
-    ChatModule,
+    UserModule,
+    RoomModule,
     ContactModule,
-    ChatListModule,
-    AuthUserModule,
 
     // DB Connection
     TypeOrmModule.forRoot({

@@ -1,4 +1,4 @@
-import { MessageStatus } from 'src/chats/message.entity'
+import { MessageStatus } from 'src/messages/message.entity'
 
 export class ChatListItemModel {
   /** User tag of the user with whom the chat is. */

@@ -1,40 +1,50 @@
-import { Exclude } from 'class-transformer'
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
+// import { Exclude } from 'class-transformer'
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm'
+
+import { ContactEntity } from 'src/contacts/contact.entity'
+import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 
 @Entity({ name: 'users' })
 export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  /** Display name set by the user. This is not a username. */
-  @Column({ nullable: true })
-  name: string
+  @Column({ name: 'display_name', nullable: true })
+  displayName: string
 
-  /** Email id of the user. */
-  @Column({ unique: true })
-  @Exclude({ toPlainOnly: true })
+  @Column({ unique: true, nullable: false })
+  // @Exclude({ toPlainOnly: true })
   email: string
 
-  /** Profile photo set by the user. */
   @Column({ nullable: true })
   dp: string
 
-  /** A short bio set by the user. */
   @Column({ nullable: false, default: 'Hey there! I am using WhatsApp.' })
   bio: string
 
-  /** Time when the user account was created */
-  @CreateDateColumn({ type: 'timestamptz' })
-  @Exclude({ toPlainOnly: true })
-  created_at: Date
+  @OneToMany(() => ContactEntity, contact => contact.user)
+  contacts: ContactEntity[]
 
-  /** Time when the user information was last updated */
-  @UpdateDateColumn({ type: 'timestamptz' })
-  @Exclude({ toPlainOnly: true })
-  updated_at: Date
+  @OneToMany(() => UserToRoom, userToRoom => userToRoom.room)
+  rooms: UserToRoom[]
 
-  /** Time when the user account was deleted */
-  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
-  @Exclude({ toPlainOnly: true })
-  deleted_at: Date
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
+  // @Exclude({ toPlainOnly: true })
+  createdAt: Date
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
+  // @Exclude({ toPlainOnly: true })
+  updatedAt: Date
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true, type: 'timestamptz' })
+  // @Exclude({ toPlainOnly: true })
+  deletedAt: Date
 }

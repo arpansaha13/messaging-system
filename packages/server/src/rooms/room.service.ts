@@ -1,16 +1,16 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 // Entities
-import { ChatEntity } from './chat.entity'
+import { RoomEntity } from './room.entity'
 // Types
 import type { Repository } from 'typeorm'
 import type { Ws1to1MessageDto } from './dtos/chatGateway.dto'
 
 @Injectable()
-export class ChatService {
+export class RoomService {
   constructor(
-    @InjectRepository(ChatEntity)
-    private chatRepository: Repository<ChatEntity>,
+    @InjectRepository(RoomEntity)
+    private roomRepository: Repository<RoomEntity>,
   ) {}
 
   #sameParticipantError() {
@@ -25,8 +25,8 @@ export class ChatService {
    * @param chatId
    * @param ignoreException If the client requests for a non-existing chat, then a `NotFoundException` will be thrown. Set this value to `true` to ignore the exception.
    */
-  async getChatEntityByChatId(chatId: number, ignoreException = false): Promise<ChatEntity> {
-    const chatEntity = await this.chatRepository.findOne({
+  async getChatEntityByChatId(chatId: number, ignoreException = false): Promise<RoomEntity> {
+    const chatEntity = await this.roomRepository.findOne({
       where: { id: chatId },
     })
     if (!ignoreException && chatEntity === null) this.#chatNotFound()
@@ -39,9 +39,9 @@ export class ChatService {
    * @param userId2
    * @param ignoreException If the client requests for a non-existing chat, then a `NotFoundException` will be thrown. Set this value to `true` to ignore the exception.
    */
-  async getChatEntityByUserIds(userId1: number, userId2: number, ignoreException = false): Promise<ChatEntity> {
+  async getChatEntityByUserIds(userId1: number, userId2: number, ignoreException = false): Promise<RoomEntity> {
     if (userId1 === userId2) this.#sameParticipantError()
-    const chatEntity = await this.chatRepository.findOneBy([
+    const chatEntity = await this.roomRepository.findOneBy([
       {
         participant_1: userId1,
         participant_2: userId2,
@@ -56,8 +56,8 @@ export class ChatService {
   }
 
   /** Get all chat entities of by given user_id. */
-  getAllChatEntitiesOfUser(userId: number): Promise<ChatEntity[]> {
-    return this.chatRepository.findBy([{ participant_1: userId }, { participant_2: userId }])
+  getAllChatEntitiesOfUser(userId: number): Promise<RoomEntity[]> {
+    return this.roomRepository.findBy([{ participant_1: userId }, { participant_2: userId }])
   }
 
   /**
@@ -71,7 +71,7 @@ export class ChatService {
     const userId1 = firstMsg.senderId
     const userId2 = firstMsg.receiverId
 
-    const chatInsertRes = await this.chatRepository.insert({
+    const chatInsertRes = await this.roomRepository.insert({
       participant_1: userId1,
       participant_2: userId2,
       firstMsgTstamp: {
@@ -97,7 +97,7 @@ export class ChatService {
   async updateFirstMsgTstamp(authUserId: number, userId2: number, newValue: string): Promise<void> {
     const jsonbKey = `'{${authUserId}}'` // key should be in single quotes curly braces - Postgres syntax
     const newValuePgSyntax = newValue === 'null' ? 'null' : `"${newValue}"`
-    await this.chatRepository
+    await this.roomRepository
       .createQueryBuilder()
       .update()
       .set({ firstMsgTstamp: () => `jsonb_set(first_msg_tstamp, ${jsonbKey}, '${newValuePgSyntax}')` })

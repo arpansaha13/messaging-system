@@ -1,11 +1,11 @@
 import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 // Services
-import { ChatService } from './chat.service'
+import { RoomService } from './room.service'
 import { MessageService } from './messages.service'
 // DTOs
 import { Ws1to1MessageDto, WsTypingStateDto } from './dtos/chatGateway.dto'
 // Enum
-import { MessageStatus } from './message.entity'
+import { MessageStatus } from '../messages/message.entity'
 // Constants
 import { CLIENT_ORIGIN } from 'src/constants'
 // Types
@@ -17,7 +17,7 @@ import type { Server, Socket } from 'socket.io'
   },
 })
 export class ChatsGateway {
-  constructor(private readonly chatService: ChatService, private readonly messageService: MessageService) {}
+  constructor(private readonly roomService: RoomService, private readonly messageService: MessageService) {}
 
   @WebSocketServer()
   server: Server
@@ -52,17 +52,17 @@ export class ChatsGateway {
     const receiverSocketId = this.clients.get(data.receiverId)
 
     // TODO: Try to save this info so that we don't run this api again and again
-    const chatEntity = await this.chatService.getChatEntityByUserIds(data.senderId, data.receiverId, true)
+    const chatEntity = await this.roomService.getChatEntityByUserIds(data.senderId, data.receiverId, true)
     let chatId = chatEntity !== null ? chatEntity.id : null
 
     if (chatEntity === null) {
-      chatId = await this.chatService.create1to1Chat(data)
+      chatId = await this.roomService.create1to1Chat(data)
     }
     if (chatEntity.firstMsgTstamp[data.senderId] === null) {
-      await this.chatService.updateFirstMsgTstamp(data.senderId, data.receiverId, data.ISOtime)
+      await this.roomService.updateFirstMsgTstamp(data.senderId, data.receiverId, data.ISOtime)
     }
     if (chatEntity.firstMsgTstamp[data.receiverId] === null) {
-      await this.chatService.updateFirstMsgTstamp(data.receiverId, data.senderId, data.ISOtime)
+      await this.roomService.updateFirstMsgTstamp(data.receiverId, data.senderId, data.ISOtime)
     }
     // Store message in db
     const msgId = await this.messageService.create1to1ChatMsg(chatId, data.senderId, data.receiverId, data.msg)

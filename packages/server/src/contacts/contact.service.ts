@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { ContactModel } from 'src/contacts/contact.model'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
-import { ContactEntity } from 'src/entities/contact.entity'
+import { ContactEntity } from './contact.entity'
 // Types
 import type { Repository } from 'typeorm'
 

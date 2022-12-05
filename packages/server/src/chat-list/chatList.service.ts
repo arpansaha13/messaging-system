@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common'
 // Services
-import { ChatService } from '../chats/chat.service'
+import { RoomService } from '../rooms/room.service'
 import { UserService } from '../users/user.service'
-import { MessageService } from 'src/chats/messages.service'
+import { MessageService } from 'src/rooms/messages.service'
 import { ContactService } from '../contacts/contact.service'
 // Models
 import type { ChatListItemModel } from 'src/chat-list/chat-list.model'
@@ -11,7 +11,7 @@ import type { ChatListItemModel } from 'src/chat-list/chat-list.model'
 export class ChatListService {
   constructor(
     private readonly userService: UserService,
-    private readonly chatService: ChatService,
+    private readonly roomService: RoomService,
     private readonly messageService: MessageService,
     private readonly contactService: ContactService,
   ) {}
@@ -20,7 +20,7 @@ export class ChatListService {
   async getChatListOfUser(authUserId: number): Promise<ChatListItemModel[]> {
     const chatList: ChatListItemModel[] = []
 
-    const chatEntities = await this.chatService.getAllChatEntitiesOfUser(authUserId)
+    const chatEntities = await this.roomService.getAllChatEntitiesOfUser(authUserId)
     await this.messageService.updateDeliveredStatus(authUserId, chatEntities)
 
     if (chatEntities.length === 0) return chatList

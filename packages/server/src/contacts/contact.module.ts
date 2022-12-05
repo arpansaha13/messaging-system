@@ -8,8 +8,8 @@ import { ContactController } from 'src/contacts/contact.controller'
 // Service
 import { ContactService } from 'src/contacts/contact.service'
 // Entities
+import { ContactEntity } from './contact.entity'
 import { UserEntity } from 'src/users/user.entity'
-import { ContactEntity } from 'src/entities/contact.entity'
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, ContactEntity]), AuthModule],

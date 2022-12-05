@@ -7,19 +7,19 @@ import { AuthModule } from 'src/auth/auth.module'
 import { ChatListController } from 'src/chat-list/chatList.controller'
 // Services
 import { UserService } from 'src/users/user.service'
-import { ChatService } from 'src/chats/chat.service'
-import { MessageService } from 'src/chats/messages.service'
+import { RoomService } from 'src/rooms/room.service'
+import { MessageService } from 'src/rooms/messages.service'
 import { ContactService } from 'src/contacts/contact.service'
 import { ChatListService } from 'src/chat-list/chatList.service'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
-import { ChatEntity } from 'src/chats/chat.entity'
-import { MessageEntity } from 'src/chats/message.entity'
-import { ContactEntity } from 'src/entities/contact.entity'
+import { RoomEntity } from 'src/rooms/room.entity'
+import { MessageEntity } from 'src/messages/message.entity'
+import { ContactEntity } from 'src/contacts/contact.entity'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, ChatEntity, MessageEntity, ContactEntity]), AuthModule],
+  imports: [TypeOrmModule.forFeature([UserEntity, RoomEntity, MessageEntity, ContactEntity]), AuthModule],
   controllers: [ChatListController],
-  providers: [ChatListService, ContactService, UserService, ChatService, MessageService],
+  providers: [ChatListService, ContactService, UserService, RoomService, MessageService],
 })
 export class ChatListModule {}

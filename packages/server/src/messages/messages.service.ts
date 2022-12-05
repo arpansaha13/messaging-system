@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Not, MoreThanOrEqual } from 'typeorm'
 // Entities
-import { ChatEntity } from './chat.entity'
+import { RoomEntity } from './room.entity'
 import { MessageEntity, MessageStatus } from './message.entity'
 // Types
 import type { Repository } from 'typeorm'
@@ -25,7 +25,7 @@ export class MessageService {
    * @param chatEntities All chat entities of given user
    */
   // TODO: Update msg status when receiver comes online while sender is already online (real-time)
-  updateDeliveredStatus(authUserId: number, chatEntities: ChatEntity[]) {
+  updateDeliveredStatus(authUserId: number, chatEntities: RoomEntity[]) {
     return this.messageRepository.update(
       {
         chatId: In(chatEntities.map(entity => entity.id)),
