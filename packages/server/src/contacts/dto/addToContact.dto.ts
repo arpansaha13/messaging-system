@@ -5,7 +5,7 @@ export class AddToContactDto {
   @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
-  contact_user_id: number
+  userIdToAdd: number
 
   @IsNotEmpty()
   alias: string

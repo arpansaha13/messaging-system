@@ -1,15 +1,16 @@
 import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 // Services
-import { RoomService } from './room.service'
-import { MessageService } from './messages.service'
+import { RoomService } from 'src/rooms/room.service'
+import { MessageService } from 'src/messages/messages.service'
 // DTOs
-import { Ws1to1MessageDto, WsTypingStateDto } from './dtos/chatGateway.dto'
+import { Ws1to1MessageDto, WsTypingStateDto } from './dto/chatGateway.dto'
 // Enum
 import { MessageStatus } from '../messages/message.entity'
 // Constants
 import { CLIENT_ORIGIN } from 'src/constants'
 // Types
 import type { Server, Socket } from 'socket.io'
+import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 
 @WebSocketGateway({
   cors: {
@@ -17,7 +18,11 @@ import type { Server, Socket } from 'socket.io'
   },
 })
 export class ChatsGateway {
-  constructor(private readonly roomService: RoomService, private readonly messageService: MessageService) {}
+  constructor(
+    private readonly roomService: RoomService,
+    private readonly messageService: MessageService,
+    private readonly userToRoomService: UserToRoomService,
+  ) {}
 
   @WebSocketServer()
   server: Server
@@ -51,21 +56,20 @@ export class ChatsGateway {
   async handleEvent(@MessageBody() data: Ws1to1MessageDto, @ConnectedSocket() senderSocket: Socket) {
     const receiverSocketId = this.clients.get(data.receiverId)
 
-    // TODO: Try to save this info so that we don't run this api again and again
-    const chatEntity = await this.roomService.getChatEntityByUserIds(data.senderId, data.receiverId, true)
-    let chatId = chatEntity !== null ? chatEntity.id : null
+    if (data.roomId === null) {
+      data.roomId = await this.roomService.create1to1Room(data)
+    }
+    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(data.senderId, data.roomId)
 
-    if (chatEntity === null) {
-      chatId = await this.roomService.create1to1Chat(data)
+    if (userToRoomEntity.firstMsgTstamp === null) {
+      await this.userToRoomService.updateFirstMsgTstamp(data.senderId, data.roomId, data.ISOtime)
     }
-    if (chatEntity.firstMsgTstamp[data.senderId] === null) {
-      await this.roomService.updateFirstMsgTstamp(data.senderId, data.receiverId, data.ISOtime)
-    }
-    if (chatEntity.firstMsgTstamp[data.receiverId] === null) {
-      await this.roomService.updateFirstMsgTstamp(data.receiverId, data.senderId, data.ISOtime)
+    if (userToRoomEntity.firstMsgTstamp === null) {
+      await this.userToRoomService.updateFirstMsgTstamp(data.receiverId, data.roomId, data.ISOtime)
     }
     // Store message in db
-    const msgId = await this.messageService.create1to1ChatMsg(chatId, data.senderId, data.receiverId, data.msg)
+    const roomEntity = await this.roomService.getRoomById(data.roomId)
+    const msgId = await this.messageService.create1to1ChatMsg(roomEntity, data.senderId, data.receiverId, data.msg)
 
     /** Inform the sender about the new message status. */
     function emitMsgStatus(status: MessageStatus) {

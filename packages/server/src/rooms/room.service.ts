@@ -1,111 +1,154 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 // Entities
+import { UserEntity } from 'src/users/user.entity'
 import { RoomEntity } from './room.entity'
+import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
-import type { Repository } from 'typeorm'
-import type { Ws1to1MessageDto } from './dtos/chatGateway.dto'
+import { Not, Repository } from 'typeorm'
+import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
 @Injectable()
 export class RoomService {
   constructor(
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
     @InjectRepository(RoomEntity)
     private roomRepository: Repository<RoomEntity>,
+    @InjectRepository(UserToRoom)
+    private userToRoomRepository: Repository<UserToRoom>,
   ) {}
 
   #sameParticipantError() {
-    throw new BadRequestException('Both chat participants cannot have the same user_id.')
+    throw new BadRequestException('Both room participants cannot have the same user_id.')
   }
-  #chatNotFound() {
-    throw new NotFoundException('No chat could be found for the given users.')
+  #roomNotFound() {
+    throw new NotFoundException('No room could be found for the given users.')
   }
 
-  /**
-   * Get the chat entity by given chat_id.
-   * @param chatId
-   * @param ignoreException If the client requests for a non-existing chat, then a `NotFoundException` will be thrown. Set this value to `true` to ignore the exception.
-   */
-  async getChatEntityByChatId(chatId: number, ignoreException = false): Promise<RoomEntity> {
-    const chatEntity = await this.roomRepository.findOne({
-      where: { id: chatId },
+  getRoomById(roomId: number): Promise<RoomEntity> {
+    return this.roomRepository.findOneBy({ id: roomId })
+  }
+
+  get1to1RoomsWithReceiver(authUserId: number, archived = false): Promise<UserEntity> {
+    return this.userRepository.findOne({
+      select: {
+        rooms: {
+          userToRoomId: true,
+          archived: true,
+          deleted: true,
+          isMuted: true,
+          room: {
+            id: true,
+            isGroup: true,
+            users: {
+              // Receiver user
+              user: {
+                id: true,
+                dp: true,
+                bio: true,
+                displayName: true,
+              },
+            },
+          },
+        },
+      },
+      where: {
+        id: authUserId,
+        rooms: {
+          archived,
+          room: {
+            isGroup: false,
+            users: {
+              user: {
+                id: Not(authUserId),
+              },
+            },
+          },
+        },
+      },
+      relations: {
+        rooms: {
+          room: {
+            users: {
+              user: true,
+            },
+          },
+        },
+      },
+      relationLoadStrategy: 'query',
     })
-    if (!ignoreException && chatEntity === null) this.#chatNotFound()
-    return chatEntity
+  }
+
+  getReceiverIn1to1Room(authUserId: number, roomId: number): Promise<RoomEntity> {
+    return this.roomRepository.findOne({
+      select: {
+        id: true,
+        isGroup: true,
+        users: {
+          user: {
+            id: true,
+            dp: true,
+            bio: true,
+            displayName: true,
+          },
+        },
+      },
+      where: {
+        id: roomId,
+        isGroup: false,
+        users: {
+          user: {
+            id: Not(authUserId),
+          },
+        },
+      },
+      relations: {
+        users: {
+          user: true,
+        },
+      },
+      relationLoadStrategy: 'query',
+    })
   }
 
   /**
-   * Get the chat entity by given user_ids.
-   * @param userId1
-   * @param userId2
-   * @param ignoreException If the client requests for a non-existing chat, then a `NotFoundException` will be thrown. Set this value to `true` to ignore the exception.
+   * @param firstMsg The first message of this chat-room received through web-sockets.
+   * @returns the id of the newly created room entity.
    */
-  async getChatEntityByUserIds(userId1: number, userId2: number, ignoreException = false): Promise<RoomEntity> {
-    if (userId1 === userId2) this.#sameParticipantError()
-    const chatEntity = await this.roomRepository.findOneBy([
-      {
-        participant_1: userId1,
-        participant_2: userId2,
-      },
-      {
-        participant_2: userId1,
-        participant_1: userId2,
-      },
-    ])
-    if (!ignoreException && chatEntity === null) this.#chatNotFound()
-    return chatEntity
-  }
-
-  /** Get all chat entities of by given user_id. */
-  getAllChatEntitiesOfUser(userId: number): Promise<RoomEntity[]> {
-    return this.roomRepository.findBy([{ participant_1: userId }, { participant_2: userId }])
-  }
-
-  /**
-   * Create one-to-one chat entity.
-   * @param firstMsg The first message of this chat received through web-sockets.
-   * @returns the chat_id of the newly created chat entity.
-   */
-  async create1to1Chat(firstMsg: Ws1to1MessageDto): Promise<number> {
-    if (firstMsg.senderId === firstMsg.receiverId) this.#sameParticipantError()
-
+  async create1to1Room(firstMsg: Ws1to1MessageDto): Promise<number> {
     const userId1 = firstMsg.senderId
     const userId2 = firstMsg.receiverId
 
-    const chatInsertRes = await this.roomRepository.insert({
-      participant_1: userId1,
-      participant_2: userId2,
-      firstMsgTstamp: {
-        [userId1]: firstMsg.ISOtime,
-        [userId2]: firstMsg.ISOtime,
-      },
-      isMuted: {
-        [userId1]: false,
-        [userId2]: false,
-      },
-      archived: {
-        [userId1]: false,
-        [userId2]: false,
-      },
-      deleted: {
-        [userId1]: false,
-        [userId2]: false,
-      },
-    })
-    return chatInsertRes.identifiers[0].id as number
-  }
+    if (userId1 === userId2) this.#sameParticipantError()
 
-  async updateFirstMsgTstamp(authUserId: number, userId2: number, newValue: string): Promise<void> {
-    const jsonbKey = `'{${authUserId}}'` // key should be in single quotes curly braces - Postgres syntax
-    const newValuePgSyntax = newValue === 'null' ? 'null' : `"${newValue}"`
-    await this.roomRepository
-      .createQueryBuilder()
-      .update()
-      .set({ firstMsgTstamp: () => `jsonb_set(first_msg_tstamp, ${jsonbKey}, '${newValuePgSyntax}')` })
-      .where('participant_1 = :authUserId AND participant_2 = :userId2', { authUserId, userId2 })
-      .orWhere('participant_2 = :authUserId AND participant_1 = :userId2', { authUserId, userId2 })
-      .execute()
-  }
-  async clearChat(authUserId: number, userId2: number): Promise<void> {
-    await this.updateFirstMsgTstamp(authUserId, userId2, 'null')
+    const [user1, user2] = await Promise.all([
+      this.userRepository.findOneBy({ id: userId1 }),
+      this.userRepository.findOneBy({ id: userId2 }),
+    ])
+    if (user1 === null || user2 === null) throw new BadRequestException('Invalid user_id.')
+
+    const newUserToRoom1 = new UserToRoom()
+    const newUserToRoom2 = new UserToRoom()
+
+    newUserToRoom1.user = user1
+    newUserToRoom2.user = user2
+
+    const newRoom = new RoomEntity()
+    newRoom.users = [newUserToRoom1, newUserToRoom2]
+
+    newUserToRoom1.room = newRoom
+    newUserToRoom2.room = newRoom
+
+    try {
+      const [roomEntity] = await Promise.all([
+        this.roomRepository.save(newRoom),
+        this.userToRoomRepository.save(newUserToRoom1),
+        this.userToRoomRepository.save(newUserToRoom2),
+      ])
+      return roomEntity.id
+    } catch (error) {
+      throw new InternalServerErrorException()
+    }
   }
 }

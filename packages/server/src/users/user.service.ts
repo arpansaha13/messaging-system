@@ -12,9 +12,8 @@ export class UserService {
     private userRepository: Repository<UserEntity>,
   ) {}
 
-  /** Get the info of a particular user. */
-  async getUser(user_id: number): Promise<UserEntity> {
-    const userEntity = await this.userRepository.findOneBy({ id: user_id })
+  async getUserById(userId: number): Promise<UserEntity> {
+    const userEntity = await this.userRepository.findOneBy({ id: userId })
     if (userEntity === null) {
       throw new NotFoundException('User could not be found.')
     }

@@ -5,11 +5,11 @@ import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
 
-@Controller('me')
+@Controller('users')
 @UseGuards(AuthGuard())
-export class AuthUserController {
-  @Get()
-  async getAuthUserInfo(@GetPayload('user') userEntity: UserEntity): Promise<UserEntity> {
-    return userEntity
+export class UserController {
+  @Get('me')
+  async getAuthUserInfo(@GetPayload('user') authUser: UserEntity): Promise<UserEntity> {
+    return authUser
   }
 }

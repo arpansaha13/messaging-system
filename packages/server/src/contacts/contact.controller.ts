@@ -10,7 +10,7 @@ import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.int
 import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
-import type { ContactModel } from 'src/contacts/contact.model'
+import type { ContactEntity } from './contact.entity'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())
@@ -19,12 +19,12 @@ export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
   @Get()
-  getContacts(@GetPayload('user') auth_user: UserEntity): Promise<ContactModel> {
-    return this.contactService.getAllContactsOfUser(auth_user.id)
+  getContacts(@GetPayload('user') authUser: UserEntity): Promise<ContactEntity[]> {
+    return this.contactService.getAllContactsOfUser(authUser)
   }
 
   @Post()
-  addToContacts(@GetPayload('user') auth_user: UserEntity, @Body() contact: AddToContactDto): Promise<string> {
-    return this.contactService.addToContactsOfUser(auth_user.id, contact.contact_user_id, contact.alias)
+  addToContacts(@GetPayload('user') authUser: UserEntity, @Body() contact: AddToContactDto): Promise<string> {
+    return this.contactService.addToContactsOfUser(authUser, contact.userIdToAdd, contact.alias)
   }
 }

@@ -1,15 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Not, MoreThanOrEqual } from 'typeorm'
 // Entities
-import { RoomEntity } from './room.entity'
+import { RoomEntity } from 'src/rooms/room.entity'
 import { MessageEntity, MessageStatus } from './message.entity'
+// Services
+import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // Types
 import type { Repository } from 'typeorm'
 
 @Injectable()
 export class MessageService {
   constructor(
+    private readonly userToRoomService: UserToRoomService,
+
     @InjectRepository(MessageEntity)
     private messageRepository: Repository<MessageEntity>,
   ) {}
@@ -22,13 +26,13 @@ export class MessageService {
    * Update status of **all received** messages from SENT to DELIVERED.
    * This should be done whenever a user comes online.
    * @param authUserId user_id of authorized user
-   * @param chatEntities All chat entities of given user
+   * @param roomEntities All chat entities of given user
    */
   // TODO: Update msg status when receiver comes online while sender is already online (real-time)
-  updateDeliveredStatus(authUserId: number, chatEntities: RoomEntity[]) {
+  updateDeliveredStatus(authUserId: number, roomEntities: RoomEntity[]) {
     return this.messageRepository.update(
       {
-        chatId: In(chatEntities.map(entity => entity.id)),
+        room: In(roomEntities.map(room => room.id)),
         senderId: Not(authUserId), // Those messages where this user is not the sender, i.e receiver.
         status: MessageStatus.SENT,
       },
@@ -39,49 +43,56 @@ export class MessageService {
   }
 
   /**
-   * Get all messages with chat_id.
-   * @param chatId
+   * @param roomId
    * @param firstMsgTstamp the timestamp before which the messages were cleared
    */
-  getMessagesByChatId(chatId: number, firstMsgTstamp: Date | null): Promise<MessageEntity[]> | [] {
+  getMessagesByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<MessageEntity[]> | [] {
     if (firstMsgTstamp === null) return []
     // `firstMsgTstamp` is received as a Date number in milliseconds
     return this.messageRepository.find({
-      where: { chatId, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
+      where: { room: { id: roomId }, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
       order: { createdAt: 'ASC' },
     })
   }
 
   /**
-   * Get the latest message in the chat by chat_id.
    * @returns The latest message entity. If no message is found, returns `null`.
    */
-  getLatestMsgByChatId(chatId: number, firstMsgTstamp: Date | null): Promise<MessageEntity> | null {
+  async getLatestMsgByRoomId(authUserId: number, roomId: number): Promise<MessageEntity> | null {
+    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUserId, roomId)
+
+    // `firstMsgTstamp` is a Date number in milliseconds
+    const firstMsgTstamp: Date | null = userToRoomEntity.firstMsgTstamp
     if (firstMsgTstamp === null) return null
-    // `firstMsgTstamp` is received as a Date number in milliseconds
+
     return this.messageRepository.findOne({
-      where: { chatId, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
+      where: { room: { id: roomId }, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
       order: { createdAt: 'DESC' },
     })
   }
 
   /**
-   * Create one-to-one chat message.
    * @returns the msg_id of the newly created chat message.
    */
-  async create1to1ChatMsg(chatId: number, senderId: number, receiverId: number, content: string) {
+  async create1to1ChatMsg(room: RoomEntity, senderId: number, receiverId: number, content: string): Promise<number> {
     if (senderId === receiverId) this.#sameParticipantError()
-    const msgInsertRes = await this.messageRepository.insert({
-      chatId,
-      content,
-      senderId,
-      status: MessageStatus.SENT,
-      deletedBy: {
-        [senderId]: false,
-        [receiverId]: false,
-      },
-    })
-    return msgInsertRes.identifiers[0].id as number
+
+    const newMessage = new MessageEntity()
+    newMessage.room = room
+    newMessage.content = content
+    newMessage.deletedBy = {
+      [senderId]: false,
+      [receiverId]: false,
+    }
+    newMessage.senderId = senderId
+    newMessage.status = MessageStatus.SENT
+
+    try {
+      const messageEntity = await this.messageRepository.save(newMessage)
+      return messageEntity.id
+    } catch (error) {
+      throw new InternalServerErrorException()
+    }
   }
 
   /** Update status of a single message to DELIVERED or READ. */

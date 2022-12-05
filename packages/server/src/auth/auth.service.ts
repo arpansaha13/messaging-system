@@ -11,7 +11,7 @@ import { SignInDto, SignUpDto } from './auth.dto'
 import type { Repository } from 'typeorm'
 import type { JwtPayload, JwtToken } from './jwt.types'
 // Constants
-import { JWT_TOKEN_VALIDITY_DURATION } from '../constants'
+import { JWT_TOKEN_VALIDITY_SECONDS } from '../constants'
 
 @Injectable()
 export class AuthService {
@@ -28,26 +28,25 @@ export class AuthService {
   async #createAuthToken(userEntity: UserEntity): Promise<JwtToken> {
     const payload: JwtPayload = { user_id: userEntity.id }
     const authToken = this.jwtService.sign(payload)
-    const expiresAt = Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_DURATION * 100 /* secs */
+    const expiresAt = Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_SECONDS * 1000
     return { authToken, expiresAt }
   }
 
   async signUp(credentials: SignUpDto): Promise<JwtToken> {
-    const userEntity = this.userRepository.create({
-      email: credentials.email,
-    })
+    const newUser = new UserEntity()
+    newUser.email = credentials.email
 
     try {
-      await this.userRepository.save(userEntity)
+      await this.userRepository.save(newUser)
 
       // Save encrypted password
       const hash = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
       const authEntity = this.authRepository.create({
-        user_id: userEntity.id,
+        userId: newUser.id,
         password: hash,
       })
       await this.authRepository.save(authEntity)
-      return this.#createAuthToken(userEntity)
+      return this.#createAuthToken(newUser)
     } catch (error) {
       if (error.code === '23505') {
         // Duplicate key
@@ -65,7 +64,7 @@ export class AuthService {
     })
     if (userEntity !== null) {
       const authEntity = await this.authRepository.findOne({
-        where: { user_id: userEntity.id },
+        where: { userId: userEntity.id },
       })
       if (await bcrypt.compare(credentials.password, authEntity.password)) {
         return this.#createAuthToken(userEntity)

@@ -1,7 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-// Model
-import { ContactModel } from 'src/contacts/contact.model'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 import { ContactEntity } from './contact.entity'
@@ -18,76 +16,53 @@ export class ContactService {
     private contactRepository: Repository<ContactEntity>,
   ) {}
 
-  async getAllContactsOfUser(auth_user_id: number): Promise<ContactModel> {
-    /** Format the response as required by the client - Group all contacts by the first letter of alias */
-    function groupAlphabetically(contactEntities: Pick<ContactEntity, 'alias' | 'contact_user'>[]) {
-      const res: ContactModel = {}
-
-      for (const contactEntity of contactEntities) {
-        const letter = contactEntity.alias[0].toUpperCase()
-        if (typeof res[letter] === 'undefined') {
-          res[letter] = []
-        }
-        res[letter].push(contactEntity)
-      }
-      return res
-    }
-
-    return groupAlphabetically(
-      await this.contactRepository.find({
-        select: ['alias', 'contact_user'],
-        where: {
-          user_id: auth_user_id,
+  async getAllContactsOfUser(authUser: UserEntity): Promise<ContactEntity[]> {
+    return this.contactRepository.find({
+      select: {
+        id: true,
+        alias: true,
+        userInContact: {
+          displayName: true,
+          id: true,
+          dp: true,
+          bio: true,
         },
-        relations: {
-          contact_user: true,
-        },
-      }),
-    )
+      },
+      where: { user: { id: authUser.id } },
+      order: { alias: 'ASC' },
+      relations: { userInContact: true },
+    })
   }
-  /**
-   * @param auth_user_id id of authorized user
-   * @param contact_user_id user_id of the user to be added to contacts.
-   * @param alias alias for this contact.
-   */
-  async addToContactsOfUser(auth_user_id: number, contact_user_id: number, alias: string): Promise<string> {
-    if (auth_user_id === contact_user_id) {
-      throw new BadRequestException('Invalid contact_user_id')
+
+  async addToContactsOfUser(authUser: UserEntity, userIdToAdd: number, alias: string): Promise<string> {
+    if (authUser.id === userIdToAdd) {
+      throw new BadRequestException('Invalid user ids.')
     }
     const existing = await this.contactRepository.count({
       where: {
-        user_id: auth_user_id,
-        contact_user_id,
+        user: { id: authUser.id },
+        userInContact: { id: userIdToAdd },
       },
     })
     if (existing > 0) {
       throw new ConflictException('Given contact is already added.')
     }
-    const contact_user = await this.userRepository.findOne({
-      where: { id: contact_user_id },
+    const userToAdd = await this.userRepository.findOne({
+      where: { id: userIdToAdd },
     })
-    if (contact_user === null) {
-      throw new BadRequestException('Invalid contact_user_id')
+    if (userToAdd === null) {
+      throw new BadRequestException('Invalid user id.')
     }
-    const contactEntity = this.contactRepository.create({
-      user_id: auth_user_id,
-      contact_user_id,
-      contact_user,
-      alias: alias,
-    })
+    const newContact = new ContactEntity()
+    newContact.user = authUser
+    newContact.userInContact = userToAdd
+    newContact.alias = alias
+
     try {
-      await this.contactRepository.save(contactEntity)
+      await this.contactRepository.save(newContact)
       return `${alias} has been added to contacts.`
     } catch (error) {
       throw new InternalServerErrorException()
     }
-  }
-  getContactEntity(auth_user_id: number, contact_user_id: number): Promise<ContactEntity> {
-    return this.contactRepository.findOne({
-      where: {
-        user_id: auth_user_id,
-        contact_user_id,
-      },
-    })
   }
 }

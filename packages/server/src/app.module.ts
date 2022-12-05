@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 // Modules
 import { RoomModule } from './rooms/room.module'
 import { UserModule } from './users/user.module'
+import { ChatsModule } from './chats/chats.module'
+import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
 // Constants
 import { DATABASE_HOST_PORT } from './constants'
@@ -13,6 +15,8 @@ import { DATABASE_HOST_PORT } from './constants'
   imports: [
     UserModule,
     RoomModule,
+    ChatsModule,
+    MessageModule,
     ContactModule,
 
     // DB Connection
@@ -27,7 +31,5 @@ import { DATABASE_HOST_PORT } from './constants'
       synchronize: true,
     }),
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}
