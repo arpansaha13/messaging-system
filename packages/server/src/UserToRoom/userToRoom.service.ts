@@ -14,13 +14,21 @@ export class UserToRoomService {
 
   async getUserToRoomEntity(authUserId: number, roomId: number): Promise<UserToRoom> {
     return this.userToRoomRepository.findOne({
-      select: {
-        firstMsgTstamp: true,
-      },
+      select: { firstMsgTstamp: true },
       where: {
         user: { id: authUserId },
         room: { id: roomId },
       },
+    })
+  }
+
+  async getRoomsOfUser(authUserId: number, archived = false): Promise<UserToRoom[]> {
+    return this.userToRoomRepository.find({
+      where: {
+        user: { id: authUserId },
+        archived,
+      },
+      relations: { room: true },
     })
   }
 
@@ -30,12 +38,19 @@ export class UserToRoomService {
         user: { id: authUserId },
         room: { id: roomId },
       },
-      {
-        firstMsgTstamp: newValue,
-      },
+      { firstMsgTstamp: newValue },
     )
   }
   async clearChat(authUserId: number, roomId: number): Promise<void> {
     await this.updateFirstMsgTstamp(authUserId, roomId, null)
+  }
+  async updateArchive(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
+    await this.userToRoomRepository.update(
+      {
+        user: { id: authUserId },
+        room: { id: roomId },
+      },
+      { archived: newValue },
+    )
   }
 }

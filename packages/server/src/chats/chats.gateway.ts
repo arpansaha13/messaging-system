@@ -1,7 +1,8 @@
 import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 // Services
 import { RoomService } from 'src/rooms/room.service'
-import { MessageService } from 'src/messages/messages.service'
+import { MessageService } from 'src/messages/message.service'
+import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // DTOs
 import { Ws1to1MessageDto, WsTypingStateDto } from './dto/chatGateway.dto'
 // Enum
@@ -10,7 +11,6 @@ import { MessageStatus } from '../messages/message.entity'
 import { CLIENT_ORIGIN } from 'src/constants'
 // Types
 import type { Server, Socket } from 'socket.io'
-import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 
 @WebSocketGateway({
   cors: {

@@ -10,7 +10,7 @@ import { AuthService } from './auth.service'
 import { UserEntity } from 'src/users/user.entity'
 import { AuthEntity } from './auth.entity'
 import { JwtStrategy } from './jwt.strategy'
-// Constants
+
 import { JWT_TOKEN_VALIDITY_SECONDS } from '../constants'
 
 @Module({

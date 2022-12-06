@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { Not, Repository } from 'typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 import { RoomEntity } from './room.entity'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
-import { Not, Repository } from 'typeorm'
 import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
 @Injectable()
@@ -23,93 +23,13 @@ export class RoomService {
     throw new BadRequestException('Both room participants cannot have the same user_id.')
   }
   #roomNotFound() {
-    throw new NotFoundException('No room could be found for the given users.')
+    throw new NotFoundException('Room could not be found.')
   }
 
-  getRoomById(roomId: number): Promise<RoomEntity> {
-    return this.roomRepository.findOneBy({ id: roomId })
-  }
-
-  get1to1RoomsWithReceiver(authUserId: number, archived = false): Promise<UserEntity> {
-    return this.userRepository.findOne({
-      select: {
-        rooms: {
-          userToRoomId: true,
-          archived: true,
-          deleted: true,
-          isMuted: true,
-          room: {
-            id: true,
-            isGroup: true,
-            users: {
-              // Receiver user
-              user: {
-                id: true,
-                dp: true,
-                bio: true,
-                displayName: true,
-              },
-            },
-          },
-        },
-      },
-      where: {
-        id: authUserId,
-        rooms: {
-          archived,
-          room: {
-            isGroup: false,
-            users: {
-              user: {
-                id: Not(authUserId),
-              },
-            },
-          },
-        },
-      },
-      relations: {
-        rooms: {
-          room: {
-            users: {
-              user: true,
-            },
-          },
-        },
-      },
-      relationLoadStrategy: 'query',
-    })
-  }
-
-  getReceiverIn1to1Room(authUserId: number, roomId: number): Promise<RoomEntity> {
-    return this.roomRepository.findOne({
-      select: {
-        id: true,
-        isGroup: true,
-        users: {
-          user: {
-            id: true,
-            dp: true,
-            bio: true,
-            displayName: true,
-          },
-        },
-      },
-      where: {
-        id: roomId,
-        isGroup: false,
-        users: {
-          user: {
-            id: Not(authUserId),
-          },
-        },
-      },
-      relations: {
-        users: {
-          user: true,
-        },
-      },
-      relationLoadStrategy: 'query',
-    })
+  async getRoomById(roomId: number): Promise<RoomEntity> {
+    const roomEntity = this.roomRepository.findOneBy({ id: roomId })
+    if (roomEntity === null) this.#roomNotFound()
+    return roomEntity
   }
 
   /**

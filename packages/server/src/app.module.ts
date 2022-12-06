@@ -1,15 +1,14 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-// Modules
+
 import { RoomModule } from './rooms/room.module'
 import { UserModule } from './users/user.module'
 import { ChatsModule } from './chats/chats.module'
 import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
-// Constants
-import { DATABASE_HOST_PORT } from './constants'
+import { UserToRoomModule } from './UserToRoom/userToRoom.module'
 
-// TODO: check all *.module.ts files for unnecessary imports or providers
+import { DATABASE_HOST_PORT } from './constants'
 
 @Module({
   imports: [
@@ -18,6 +17,7 @@ import { DATABASE_HOST_PORT } from './constants'
     ChatsModule,
     MessageModule,
     ContactModule,
+    UserToRoomModule,
 
     // DB Connection
     TypeOrmModule.forRoot({

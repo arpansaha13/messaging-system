@@ -1,25 +1,30 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Not, MoreThanOrEqual } from 'typeorm'
 // Entities
 import { RoomEntity } from 'src/rooms/room.entity'
 import { MessageEntity, MessageStatus } from './message.entity'
-// Services
-import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // Types
 import type { Repository } from 'typeorm'
 
 @Injectable()
 export class MessageService {
   constructor(
-    private readonly userToRoomService: UserToRoomService,
-
     @InjectRepository(MessageEntity)
     private messageRepository: Repository<MessageEntity>,
   ) {}
 
   #sameParticipantError() {
     throw new BadRequestException('Both chat participants cannot have the same user_id.')
+  }
+  #messageNotFound() {
+    throw new NotFoundException('Message could not be found.')
+  }
+
+  async getMessageById(messageId: number): Promise<MessageEntity> {
+    const messageEntity = await this.messageRepository.findOneBy({ id: messageId })
+    if (messageEntity === null) this.#messageNotFound()
+    return messageEntity
   }
 
   /**
@@ -29,8 +34,8 @@ export class MessageService {
    * @param roomEntities All chat entities of given user
    */
   // TODO: Update msg status when receiver comes online while sender is already online (real-time)
-  updateDeliveredStatus(authUserId: number, roomEntities: RoomEntity[]) {
-    return this.messageRepository.update(
+  async updateDeliveredStatus(authUserId: number, roomEntities: RoomEntity[]): Promise<void> {
+    await this.messageRepository.update(
       {
         room: In(roomEntities.map(room => room.id)),
         senderId: Not(authUserId), // Those messages where this user is not the sender, i.e receiver.
@@ -43,7 +48,6 @@ export class MessageService {
   }
 
   /**
-   * @param roomId
    * @param firstMsgTstamp the timestamp before which the messages were cleared
    */
   getMessagesByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<MessageEntity[]> | [] {
@@ -56,13 +60,11 @@ export class MessageService {
   }
 
   /**
+   * @param firstMsgTstamp the timestamp before which the messages were cleared
    * @returns The latest message entity. If no message is found, returns `null`.
    */
-  async getLatestMsgByRoomId(authUserId: number, roomId: number): Promise<MessageEntity> | null {
-    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUserId, roomId)
-
+  async getLatestMsgByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<MessageEntity> | null {
     // `firstMsgTstamp` is a Date number in milliseconds
-    const firstMsgTstamp: Date | null = userToRoomEntity.firstMsgTstamp
     if (firstMsgTstamp === null) return null
 
     return this.messageRepository.findOne({

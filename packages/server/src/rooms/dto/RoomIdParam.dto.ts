@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsNumber } from 'class-validator'
 
-export class GetLatestMsgParamsDto {
+export class RoomIdParamDto {
   @IsNotEmpty()
   @IsNumber()
   roomId: number

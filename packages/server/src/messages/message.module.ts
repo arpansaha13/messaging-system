@@ -1,20 +1,15 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
-// Auth Module
 import { AuthModule } from 'src/auth/auth.module'
-// Controller
-import { MessageController } from './message.controller'
-// Services
-import { MessageService } from './messages.service'
-import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-// Entity
-import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import { MessageEntity } from './message.entity'
+import { MessageController } from './message.controller'
+import { MessageService } from './message.service'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MessageEntity, UserToRoom]), AuthModule],
+  imports: [AuthModule, TypeOrmModule.forFeature([MessageEntity])],
   controllers: [MessageController],
-  providers: [MessageService, UserToRoomService],
+  providers: [MessageService],
+  exports: [MessageService],
 })
 export class MessageModule {}

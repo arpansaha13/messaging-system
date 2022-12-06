@@ -1,20 +1,26 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
-// Auth Module
+
 import { AuthModule } from 'src/auth/auth.module'
-// Controller
-import { RoomController } from './room.controller'
-// Services
-import { RoomService } from './room.service'
-import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-// Entities
-import { RoomEntity } from './room.entity'
+import { MessageModule } from 'src/messages/message.module'
+import { UserToRoomModule } from 'src/UserToRoom/userToRoom.module'
+
 import { UserEntity } from 'src/users/user.entity'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 
+import { RoomEntity } from './room.entity'
+import { RoomController } from './room.controller'
+import { RoomService } from './room.service'
+
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, UserToRoom, RoomEntity]), AuthModule],
+  imports: [
+    AuthModule,
+    MessageModule,
+    UserToRoomModule,
+    TypeOrmModule.forFeature([UserEntity, RoomEntity, UserToRoom]),
+  ],
   controllers: [RoomController],
-  providers: [RoomService, UserToRoomService],
+  providers: [RoomService],
+  exports: [RoomService],
 })
 export class RoomModule {}
