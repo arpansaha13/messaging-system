@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Service
 import { ContactService } from 'src/contacts/contact.service'
@@ -8,6 +8,7 @@ import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.interceptor'
 // DTOs
 import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
+import { ContactIdParamDto, UserIdParamDto } from './dto/params.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
 import type { ContactEntity } from './contact.entity'
@@ -21,6 +22,17 @@ export class ContactController {
   @Get()
   getContacts(@GetPayload('user') authUser: UserEntity): Promise<ContactEntity[]> {
     return this.contactService.getAllContactsOfUser(authUser)
+  }
+  @Get('/:contactId')
+  getContactById(@Param() params: ContactIdParamDto): Promise<ContactEntity> {
+    return this.contactService.getContactById(params.contactId)
+  }
+  @Get('/:userId')
+  getContactByUserId(
+    @GetPayload('user') authUser: UserEntity,
+    @Param() params: UserIdParamDto,
+  ): Promise<ContactEntity> {
+    return this.contactService.getContactByUserId(authUser, params.userId)
   }
 
   @Post()

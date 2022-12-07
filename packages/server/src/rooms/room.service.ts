@@ -32,6 +32,30 @@ export class RoomService {
     return roomEntity
   }
 
+  async getUsersOfRoomById(roomId: number): Promise<RoomEntity> {
+    const roomEntity = this.roomRepository.findOne({
+      select: {
+        id: true,
+        users: {
+          user: {
+            id: true,
+            dp: true,
+            bio: true,
+            displayName: true,
+          },
+        },
+      },
+      where: { id: roomId },
+      relations: {
+        users: {
+          user: true,
+        },
+      },
+    })
+    if (roomEntity === null) this.#roomNotFound()
+    return roomEntity
+  }
+
   /**
    * @param firstMsg The first message of this chat-room received through web-sockets.
    * @returns the id of the newly created room entity.

@@ -27,6 +27,11 @@ export class RoomController {
     return this.roomService.getRoomById(params.roomId)
   }
 
+  @Get('/:roomId/users')
+  getUsersOfRoomById(@Param() params: RoomIdParamDto): Promise<RoomEntity> {
+    return this.roomService.getUsersOfRoomById(params.roomId)
+  }
+
   @Get('/:roomId/messages')
   async getMessagesByRoomId(
     @GetPayload('user') authUser: UserEntity,

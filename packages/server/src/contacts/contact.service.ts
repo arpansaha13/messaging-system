@@ -16,20 +16,38 @@ export class ContactService {
     private contactRepository: Repository<ContactEntity>,
   ) {}
 
+  #contactSelect: {
+    id: true
+    alias: true
+    userInContact: {
+      id: true
+      dp: true
+      bio: true
+      displayName: true
+    }
+  }
+
   async getAllContactsOfUser(authUser: UserEntity): Promise<ContactEntity[]> {
     return this.contactRepository.find({
-      select: {
-        id: true,
-        alias: true,
-        userInContact: {
-          displayName: true,
-          id: true,
-          dp: true,
-          bio: true,
-        },
-      },
+      select: this.#contactSelect,
       where: { user: { id: authUser.id } },
       order: { alias: 'ASC' },
+      relations: { userInContact: true },
+    })
+  }
+
+  // TODO: Add validation - if the contact is not of the user, then throe Unauthorized error
+  async getContactById(contactId: number): Promise<ContactEntity> {
+    return this.contactRepository.findOne({
+      select: this.#contactSelect,
+      where: { id: contactId },
+      relations: { userInContact: true },
+    })
+  }
+  async getContactByUserId(authUser: UserEntity, userId: number): Promise<ContactEntity> {
+    return this.contactRepository.findOne({
+      select: this.#contactSelect,
+      where: { user: { id: authUser.id }, userInContact: { id: userId } },
       relations: { userInContact: true },
     })
   }
