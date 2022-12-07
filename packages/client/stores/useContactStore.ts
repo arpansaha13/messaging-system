@@ -1,13 +1,6 @@
 import create from 'zustand'
 
-import type { ContactType, UserType } from '../types'
-
-type ContactResponseType = {
-  [key: string]: {
-    alias: string
-    contact_user: UserType
-  }[]
-}
+import type { ContactResType, ContactType, UserType } from '../types/index.types'
 
 interface ContactStoreType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */
@@ -15,30 +8,28 @@ interface ContactStoreType {
     [key: string]: ContactType[]
   }
 
-  /**
-   * Initialize the contacts map.
-   * @param initContacts
-   */
-  init: (initContacts: ContactResponseType) => void
+  /** Initialize the contacts map. */
+  init: (initContacts: ContactResType[]) => void
 }
 
 export const useContactStore = create<ContactStoreType>()(set => ({
   contacts: {},
-  init(initContacts: ContactResponseType) {
+  init(initContacts) {
     set(() => {
       const newContacts: ContactStoreType['contacts'] = {}
 
-      for (const letter of Object.keys(initContacts)) {
-        newContacts[letter] = []
+      for (const contactResItem of initContacts) {
+        const letter = contactResItem.alias[0]
+        if (typeof newContacts[letter] === 'undefined') newContacts[letter] = []
 
-        for (const contact of initContacts[letter]) {
-          newContacts[letter].push({
-            userId: contact.contact_user.id,
-            name: contact.alias,
-            dp: contact.contact_user.dp,
-            bio: contact.contact_user.bio,
-          })
-        }
+        newContacts[letter].push({
+          alias: contactResItem.alias,
+          contactId: contactResItem.id,
+          userId: contactResItem.userInContact.id,
+          bio: contactResItem.userInContact.bio,
+          dp: contactResItem.userInContact.dp,
+          displayName: contactResItem.userInContact.displayName,
+        })
       }
 
       return { contacts: newContacts }

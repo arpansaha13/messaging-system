@@ -1,7 +1,7 @@
 // Icons
 import { ClockIcon, CheckIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 // Enum
-import { MessageStatus } from '../types'
+import { MessageStatus } from '../types/index.types'
 
 export default function MsgStatusIcon({ status }: { status: MessageStatus }) {
   switch (status) {

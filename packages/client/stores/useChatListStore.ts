@@ -1,7 +1,7 @@
 import create from 'zustand'
 import produce from 'immer'
 
-import type { ChatListItemType } from '../types'
+import type { ChatListItemType, RoomResType } from '../types/index.types'
 
 interface ChatListStoreType {
   /** The currently active chat. Every chat is identified with the user_id (primary key). */
@@ -23,15 +23,7 @@ export const useChatListStore = create<ChatListStoreType>()(set => ({
   activeChatUserId: null,
   chatList: [],
   init(initChatList) {
-    set(() => {
-      const newChatList: ChatListItemType[] = []
-
-      for (const chatListItem of initChatList) {
-        newChatList.push(chatListItem)
-      }
-
-      return { chatList: newChatList }
-    })
+    set(() => ({ chatList: initChatList }))
   },
   updateChatListItem(userId, partialChatListItem) {
     set(

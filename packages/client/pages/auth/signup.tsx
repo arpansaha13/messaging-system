@@ -15,7 +15,7 @@ import { useNotificationState } from '../../stores/useNotificationState'
 import AuthLayout from '../../layouts/auth'
 // Types
 import type { FormEvent, ReactElement } from 'react'
-import type { JwtToken } from '../../types'
+import type { JwtToken } from '../../types/index.types'
 
 const SignUpPage = () => {
   const expiresAt = useAuthStore(state => state.expiresAt)

@@ -9,7 +9,7 @@ import { useChatListStore } from '../../stores/useChatListStore'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Types
-import { ChatListItemType, MessageType } from '../../types'
+import { ChatListItemType, MessageType } from '../../types/index.types'
 
 const ChatSidebar = () => {
   const fetchHook = useFetch()

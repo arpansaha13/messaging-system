@@ -1,7 +1,7 @@
 import create from 'zustand'
 import { persist } from 'zustand/middleware'
 // Types
-import type { AuthUserType } from '../types'
+import type { AuthUserType } from '../types/index.types'
 
 interface AuthStoreType {
   authToken: string | null

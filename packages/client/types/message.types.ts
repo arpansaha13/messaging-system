@@ -14,6 +14,7 @@ export interface MsgReceivedType {
   content: string
   senderId: number
   createdAt: string
+  status: null
 }
 export type MessageType = MsgSendingType | MsgConfirmedType | MsgReceivedType
 

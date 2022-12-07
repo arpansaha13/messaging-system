@@ -8,7 +8,7 @@ import { useChatStore } from '../../stores/useChatStore'
 import { useContactStore } from '../../stores/useContactStore'
 import { useChatListStore } from '../../stores/useChatListStore'
 // Types
-import type { ContactType, MessageType } from '../../types'
+import type { ContactType, MessageType } from '../../types/index.types'
 
 export const ContactList = () => {
   const fetchHook = useFetch()
@@ -38,14 +38,8 @@ export const ContactList = () => {
           </div>
 
           <ul role="list">
-            {contacts[letter as keyof typeof contacts].map(listItem => (
-              <ContactListItem
-                key={listItem.userId}
-                name={listItem.name}
-                dp={listItem.dp}
-                bio={listItem.bio}
-                onClick={() => handleClick(listItem)}
-              />
+            {contacts[letter as keyof typeof contacts].map(contact => (
+              <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
             ))}
           </ul>
         </div>

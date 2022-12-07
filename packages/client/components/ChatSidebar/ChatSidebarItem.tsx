@@ -7,7 +7,7 @@ import Avatar from '../Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
 import ChatSidebarItemDropDown from './ChatSidebarItemDropDown'
 // Enum
-import { MessageStatus } from '../../types'
+import { MessageStatus } from '../../types/index.types'
 
 export interface StackedListItemProps {
   userId: number

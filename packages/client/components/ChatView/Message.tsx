@@ -7,7 +7,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 // Utils
 import classNames from '../../utils/classNames'
 // Types
-import type { MessageType, MsgConfirmedType, MsgSendingType } from '../../types'
+import type { MessageType, MsgConfirmedType, MsgSendingType } from '../../types/index.types'
 
 interface MessageProps {
   message: MessageType

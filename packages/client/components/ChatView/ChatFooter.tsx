@@ -15,7 +15,7 @@ import { useChatListStore } from '../../stores/useChatListStore'
 // Utils
 import { ISODateNow } from '../../utils/ISODate'
 // Enum
-import { MessageStatus } from '../../types'
+import { MessageStatus } from '../../types/index.types'
 // Types
 import type { KeyboardEvent } from 'react'
 import type { TypingStateType } from '../../hooks/useSocket'

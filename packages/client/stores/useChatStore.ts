@@ -3,9 +3,9 @@ import produce from 'immer'
 // Utils
 import { ISOToMilliSecs } from '../utils/ISODate'
 // Enum
-import { MessageStatus } from '../types'
+import { MessageStatus } from '../types/index.types'
 // Types
-import type { MessageType, ContactType } from '../types'
+import type { MessageType, ContactType } from '../types/index.types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 // TODO: Refactor senderId and receiverId variable names properly
