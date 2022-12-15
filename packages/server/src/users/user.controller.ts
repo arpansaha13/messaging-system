@@ -23,4 +23,9 @@ export class UserController {
   async getUserById(@Param() params: GetUserByIdParamsDto): Promise<UserEntity> {
     return this.userService.getUserById(params.userId)
   }
+
+  @Get('/:userId/room-ids')
+  async getRoomIdsOfUser(@Param() params: GetUserByIdParamsDto): Promise<UserEntity> {
+    return this.userService.getRoomIdsOfUser(params.userId)
+  }
 }
