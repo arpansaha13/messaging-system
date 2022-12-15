@@ -50,8 +50,19 @@ export function useAppDataInit() {
       const receiverUser = usersInRoom.filter(user => user.id !== authUserRes.id)[0]
 
       chatListItem.user = receiverUser
-      chatListItem.contact = {
-        alias: ((await fetchHook(`contacts/${receiverUser.id}`)) as ContactResType).alias,
+
+      const queryString = new URLSearchParams({
+        userId: receiverUser.id.toString(),
+      })
+      const contact: ContactResType | null = await fetchHook(`contacts?${queryString}`).catch(() => null)
+
+      if (contact === null) {
+        chatListItem.contact = null
+      } else {
+        chatListItem.contact = {
+          id: contact.id,
+          alias: contact.alias,
+        }
       }
 
       initChatList.push(chatListItem)

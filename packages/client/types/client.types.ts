@@ -16,9 +16,10 @@ export interface ChatListItemType {
     bio: string
     displayName: string | null
   }
-  contact: {
-    /** Alias of the user with whom the chat is. Will be `null` if this user is not in contacts. */
-    alias: string | null
+  /** Will be `null` if this user is not in contacts. */
+  contact: null | {
+    id: number
+    alias: string
   }
   latestMsg: null | {
     content: string
@@ -32,7 +33,7 @@ export interface UserType {
   id: number
   bio: string
   dp: string | null
-  displayName: string
+  displayName: string | null
 }
 export interface AuthUserType extends UserType {
   email: string
@@ -47,7 +48,7 @@ export interface ContactType {
   alias: string
   bio: string
   dp: string | null
-  displayName: string
+  displayName: string | null
 }
 
 export interface JwtToken {

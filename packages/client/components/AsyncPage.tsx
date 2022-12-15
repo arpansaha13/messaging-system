@@ -13,8 +13,11 @@ import { useSlideOverState } from '../stores/useSlideOverState'
 export default function AsyncPage() {
   useSocketInit()
 
-  const activeChatUserId = useChatListStore(state => state.activeChatUserId)
+  const activeRoomId = useChatListStore(state => state.activeRoomId)
+  const isProxyRoom = useChatListStore(state => state.isProxyRoom)
   const slideOverComponentName = useSlideOverState(state => state.componentName)
+
+  const showChatView = activeRoomId !== null || isProxyRoom
 
   function getSlideOverContent() {
     switch (slideOverComponentName) {
@@ -35,7 +38,7 @@ export default function AsyncPage() {
         <ChatSidebar />
       </section>
 
-      <section className="col-span-7 h-full bg-gray-800">{activeChatUserId !== null && <ChatView />}</section>
+      <section className="col-span-7 h-full bg-gray-800">{showChatView && <ChatView />}</section>
     </main>
   )
 }

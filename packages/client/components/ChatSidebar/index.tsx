@@ -17,22 +17,22 @@ const ChatSidebar = () => {
   const add = useChatStore(state => state.add)
   const chats = useChatStore(state => state.chats)
   const chatList = useChatListStore(state => state.chatList)
-  const activeChatUserId = useChatListStore(state => state.activeChatUserId)
-  const setActiveChatUser = useChatStore(state => state.setActiveChatUser)
-  const setActiveChatUserId = useChatListStore(state => state.setActiveChatUserId)
+  const activeRoomId = useChatListStore(state => state.activeRoomId)
+  const setActiveChatInfo = useChatStore(state => state.setActiveChatInfo)
+  const setActiveRoomId = useChatListStore(state => state.setActiveRoomId)
+  const setProxyRoom = useChatListStore(state => state.setProxyRoom)
 
   async function handleClick(listItem: ChatListItemType) {
-    setActiveChatUserId(listItem.userId)
-    setActiveChatUser({
-      userId: listItem.userId,
-      name: listItem.alias,
-      bio: listItem.bio,
-      dp: listItem.dp,
+    setActiveRoomId(listItem.room.id)
+    setProxyRoom(false)
+    setActiveChatInfo({
+      contact: listItem.contact ?? null,
+      user: listItem.user,
     })
 
-    if (!chats.has(listItem.userId)) {
-      const chatRes: MessageType[] = await fetchHook(`chats/${listItem.userId}`)
-      add(listItem.userId, chatRes)
+    if (!chats.has(listItem.room.id)) {
+      const chatRes: MessageType[] = await fetchHook(`rooms/${listItem.room.id}/messages`)
+      add(listItem.room.id, chatRes)
     }
   }
   return (
@@ -45,9 +45,12 @@ const ChatSidebar = () => {
         <ul role="list">
           {chatList.map(listItem => (
             <ChatSidebarItem
-              key={listItem.userId}
-              {...listItem}
-              active={activeChatUserId}
+              key={listItem.room.id}
+              active={activeRoomId}
+              roomId={listItem.room.id}
+              dp={listItem.user.dp}
+              alias={listItem.contact?.alias ?? null}
+              latestMsg={listItem.latestMsg}
               onClick={() => handleClick(listItem)}
             />
           ))}

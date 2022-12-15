@@ -4,7 +4,7 @@ export class Ws1to1MessageDto {
   /** The message that was received. */
   @IsNotEmpty()
   @IsString()
-  msg: string
+  content: string
 
   /** Time at which the message was sent. */
   @IsNotEmpty()
@@ -32,7 +32,7 @@ export class WsTypingStateDto {
   /** Id of the user who is typing a message (sender). */
   @IsNotEmpty()
   @IsNumber()
-  senderId: number
+  roomId: number
 
   /** Id of the user for whom the message is being typed (receiver). */
   @IsNotEmpty()

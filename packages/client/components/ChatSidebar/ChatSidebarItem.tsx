@@ -7,29 +7,18 @@ import Avatar from '../Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
 import ChatSidebarItemDropDown from './ChatSidebarItemDropDown'
 // Enum
-import { MessageStatus } from '../../types/index.types'
+import { ChatListItemType } from '../../types/index.types'
 
 export interface StackedListItemProps {
-  userId: number
+  roomId: number
   alias: string | null
-  dp: string | null
-  time: string | null
-  latestMsgContent: string | null
   active: number | null
-  status: MessageStatus | null
+  dp: string | null
+  latestMsg: ChatListItemType['latestMsg']
   onClick: () => void
 }
 
-const ChatSidebarItem = ({
-  userId,
-  alias,
-  dp,
-  time,
-  latestMsgContent,
-  active,
-  status,
-  onClick,
-}: StackedListItemProps) => {
+const ChatSidebarItem = ({ roomId, alias, active, dp, latestMsg, onClick }: StackedListItemProps) => {
   const menuItems = [
     {
       slot: 'Archive chat',
@@ -68,7 +57,7 @@ const ChatSidebarItem = ({
       <div
         className={classNames(
           'px-3 w-full text-left flex items-center relative',
-          userId === active ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
+          roomId === active ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
         )}
         onClick={onClick}
       >
@@ -79,9 +68,9 @@ const ChatSidebarItem = ({
           <div className="flex justify-between items-center">
             {/* If the user, with whom the chat is, is not in contacts, then show [Unknown] */}
             <p className="text-base text-gray-50">{alias ?? '[Unknown]'}</p>
-            {time && (
+            {latestMsg && (
               <p className="text-xs text-gray-400 flex items-end">
-                <span>{format(parseISO(time), 'h:mm a')}</span>
+                <span>{format(parseISO(latestMsg.createdAt), 'h:mm a')}</span>
               </p>
             )}
           </div>
@@ -89,11 +78,11 @@ const ChatSidebarItem = ({
             <p
               className={classNames(
                 'flex items-center text-sm text-gray-400 space-x-1 line-clamp-1',
-                latestMsgContent === null ? 'h-5' : '', // same as line-height of 'text-sm'
+                latestMsg === null ? 'h-5' : '', // same as line-height of 'text-sm'
               )}
             >
-              {status && <MsgStatusIcon status={status} />}
-              {latestMsgContent && <span>{latestMsgContent}</span>}
+              {latestMsg?.status && <MsgStatusIcon status={latestMsg.status} />}
+              {latestMsg && <span>{latestMsg.content}</span>}
             </p>
             <ChatSidebarItemDropDown menuItems={menuItems} />
           </div>

@@ -1,12 +1,10 @@
 import create from 'zustand'
 
-import type { ContactResType, ContactType, UserType } from '../types/index.types'
+import type { ContactResType, ContactType } from '../types/index.types'
 
 interface ContactStoreType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */
-  contacts: {
-    [key: string]: ContactType[]
-  }
+  contacts: { [letter: string]: ContactType[] }
 
   /** Initialize the contacts map. */
   init: (initContacts: ContactResType[]) => void

@@ -16,8 +16,9 @@ import classNames from '../../utils/classNames'
 const ChatHeader = () => {
   const fetchHook = useFetch()
   const typingState = useTypingState(state => state.typingState)
-  const activeChatUser = useChatStore(state => state.activeChatUser)!
-  const updateChatListItem = useChatListStore(state => state.updateChatListItem)!
+  const activeChatInfo = useChatStore(state => state.activeChatInfo)!
+  const activeRoomId = useChatListStore(state => state.activeRoomId)
+  const updateChatListItem = useChatListStore(state => state.updateChatListItem)
   const clearChat = useChatStore(state => state.clearChat)
 
   const chatMenuItems = [
@@ -51,18 +52,20 @@ const ChatHeader = () => {
         console.log('clicked')
       },
     },
-    {
-      slot: 'Clear messages',
-      onClick() {
-        fetchHook(`chats/clear/${activeChatUser.userId}`)
-        clearChat()
-        updateChatListItem(activeChatUser.userId, {
-          latestMsgContent: null,
-          status: null,
-          time: null,
-        })
-      },
-    },
+    // Show 'Clear messages' only if the room exists
+    ...(() =>
+      activeRoomId !== null
+        ? [
+            {
+              slot: 'Clear messages',
+              onClick() {
+                fetchHook(`chats/clear/${activeChatInfo.user.id}`)
+                clearChat(activeRoomId)
+                updateChatListItem(activeChatInfo.user.id, null)
+              },
+            },
+          ]
+        : [])(),
     {
       slot: 'Delete chat',
       onClick() {
@@ -74,20 +77,20 @@ const ChatHeader = () => {
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-800">
       <div className="flex items-center text-gray-400 space-x-3">
-        <Avatar src={activeChatUser.dp} height={2.5} width={2.5} />
+        <Avatar src={activeChatInfo.user.dp} height={2.5} width={2.5} />
 
         <div>
-          <p className="text-gray-50 font-semibold">{activeChatUser.name ?? '[Unknown]'}</p>
+          <p className="text-gray-50 font-semibold">{activeChatInfo.contact?.alias ?? '[Unknown]'}</p>
           <p
             className={classNames(
               'text-xs transition-[height] duration-200 overflow-hidden',
-              typingState[activeChatUser.userId] ? 'h-4' : 'h-0 delay-150',
+              activeRoomId && typingState[activeRoomId] ? 'h-4' : 'h-0 delay-150',
             )}
           >
             <span
               className={classNames(
                 'transition-opacity',
-                typingState[activeChatUser.userId] ? 'opacity-100 delay-200' : 'opacity-0',
+                activeRoomId && typingState[activeRoomId] ? 'opacity-100 delay-200' : 'opacity-0',
               )}
             >
               typing...

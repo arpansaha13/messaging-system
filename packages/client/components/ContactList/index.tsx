@@ -14,17 +14,32 @@ export const ContactList = () => {
   const fetchHook = useFetch()
   const add = useChatStore(state => state.add)
   const chats = useChatStore(state => state.chats)
+  const setActiveChatInfo = useChatStore(state => state.setActiveChatInfo)
   const contacts = useContactStore(state => state.contacts)
-  const setActiveChatUser = useChatStore(state => state.setActiveChatUser)
-  const setActiveChatUserId = useChatListStore(state => state.setActiveChatUserId)
+  const setProxyRoom = useChatListStore(state => state.setProxyRoom)
+  const setActiveRoomId = useChatListStore(state => state.setActiveRoomId)
+  const searchRoomIdByUserId = useChatListStore(state => state.searchRoomIdByUserId)
 
   async function handleClick(contact: ContactType) {
-    setActiveChatUserId(contact.userId)
-    setActiveChatUser(contact)
+    setActiveChatInfo({
+      contact: {
+        id: contact.contactId,
+        alias: contact.alias,
+      },
+      user: {
+        id: contact.userId,
+        bio: contact.bio,
+        dp: contact.dp,
+        displayName: contact.displayName,
+      },
+    })
+    const roomId = searchRoomIdByUserId(contact.userId)
+    setActiveRoomId(roomId)
+    setProxyRoom(roomId === null)
 
-    if (!chats.has(contact.userId)) {
-      const chatRes: MessageType[] = await fetchHook(`chats/${contact.userId}`)
-      add(contact.userId, chatRes)
+    if (roomId && !chats.has(roomId)) {
+      const chatRes: MessageType[] = await fetchHook(`rooms/${roomId}/messages`)
+      add(roomId, chatRes)
     }
   }
 

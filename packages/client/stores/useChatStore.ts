@@ -5,58 +5,46 @@ import { ISOToMilliSecs } from '../utils/ISODate'
 // Enum
 import { MessageStatus } from '../types/index.types'
 // Types
-import type { MessageType, ContactType } from '../types/index.types'
+import type { MessageType, ChatListItemType } from '../types/index.types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 // TODO: Refactor senderId and receiverId variable names properly
 
+type ActiveChatInfo = null | Omit<ChatListItemType, 'latestMsg' | 'room' | 'userToRoomId'>
+
 interface ChatStoreType {
   /**
-   * List of all chats of the logged-in user, mapped with their respective user_id.
-   * Each message in a chat is again mapped with their timestamps.
+   * List of all chats of the logged-in user, mapped with their respective room_id.
+   * Each message in a chat is again mapped with their timestamps (for now).
    */
   chats: Map<number, Map<number, MessageType>>
 
-  /** The details of the user whose chat is opened. */
-  activeChatUser: ContactType | null
+  activeChatInfo: ActiveChatInfo | null
 
-  /** Add a new chat. This is meant to be used when a new chat is opened for the first time.
-   * @param userId All chats are mapped with the user_id with whom the chat is.
-   * @param chat The new chat and messages to be added.
-   */
-  add: (userId: number, chat: MessageType[]) => void
+  /** Add a new chat. */
+  add: (roomId: number, chat: MessageType[]) => void
 
-  /** Append new messages to existing chat. This is meant to be used when an existing chat is re-opened with new unread messages.
-   * @param userId All chats are mapped with the user_id with whom the chat is.
-   * @param messages New messages to be appended.
-   */
-  push: (userId: number, messages: MessageType[]) => void
+  /** Append new messages to existing chat. This is meant to be used when an existing chat is re-opened with new unread messages. */
+  push: (roomId: number, messages: MessageType[]) => void
 
-  /** Append a newly sent message. This can be used during an ongoing chat.
-   * @param userId All chats are mapped with the user_id with whom the chat is.
-   * @param content Message to be sent.
-   */
-  send: (receiverId: number, senderId: number, content: string, ISOtime: string) => void
+  /** Append a newly sent message. This can be used during an ongoing chat. */
+  send: (roomId: number, senderId: number, content: string, ISOtime: string) => void
 
-  /** Append the received messages to ongoing chat.
-   * @param userId All chats are mapped with the user_id with whom the chat is.
-   * @param content Message to be received.
-   */
-  receive: (userId: number, content: string, ISOtime: string) => void
+  /** Append the received messages to ongoing chat. */
+  receive: (roomId: number, content: string, senderId: number, ISOtime: string) => void
 
-  updateStatus: (receiverId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
+  updateStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
 
   /** Update the active chat-user when a new chat is opened. */
-  setActiveChatUser: (contact: ContactType) => void
+  setActiveChatInfo: (newChatInfo: ActiveChatInfo) => void
 
-  /** Clears the chat with `activeChatUser`. */
-  clearChat: () => void
+  clearChat: (roomId: number) => void
 }
 
 export const useChatStore = create<ChatStoreType>()((set, get) => ({
   chats: new Map<number, Map<number, MessageType>>(),
-  activeChatUser: null,
-  add(userId: number, chat: MessageType[]) {
+  activeChatInfo: null,
+  add(roomId: number, chat: MessageType[]) {
     // Update through `Immer`
     set(
       produce((state: ChatStoreType) => {
@@ -64,30 +52,30 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
         for (const message of chat) {
           newChat.set(ISOToMilliSecs(message.createdAt), message)
         }
-        state.chats.set(userId, newChat)
+        state.chats.set(roomId, newChat)
       }),
     )
   },
-  push(userId: number, messages: MessageType[]) {
+  push(roomId: number, messages: MessageType[]) {
     // Use `Immer` for nested updates
     set(
       produce((state: ChatStoreType) => {
-        let chat = state.chats.get(userId)
+        let chat = state.chats.get(roomId)
 
         // If this is a new chat, then it would not exist in the `chats` map. Add it first.
         if (typeof chat === 'undefined') {
-          get().add(userId, [])
-          chat = get().chats.get(userId)!
+          get().add(roomId, [])
+          chat = get().chats.get(roomId)!
         }
         for (const message of messages) {
           chat.set(ISOToMilliSecs(message.createdAt), message)
         }
-        state.chats.set(userId, chat)
+        state.chats.set(roomId, chat)
       }),
     )
   },
-  send(receiverId: number, senderId: number, content: string, ISOtime: string) {
-    get().push(receiverId, [
+  send(roomId: number, senderId: number, content: string, ISOtime: string) {
+    get().push(roomId, [
       {
         content,
         senderId,
@@ -96,34 +84,35 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       },
     ])
   },
-  receive(userId: number, content: string, ISOtime: string) {
-    get().push(userId, [
+  receive(roomId, content, senderId, ISOtime) {
+    get().push(roomId, [
       {
         content,
+        senderId,
         createdAt: ISOtime,
-        senderId: userId,
+        status: null,
       },
     ])
   },
-  updateStatus(receiverId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) {
+  updateStatus(roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) {
     // Update through `Immer`
     set(
       produce((state: ChatStoreType) => {
         const timeMilliSecs = ISOToMilliSecs(ISOtime)
-        const chat = state.chats.get(receiverId)!
-        const msgToUpdate = chat.get(timeMilliSecs)! as MessageType
+        const chat = state.chats.get(roomId)!
+        const msgToUpdate = chat.get(timeMilliSecs)!
         const updatedMsg = { ...msgToUpdate, status: newStatus }
         chat.set(timeMilliSecs, updatedMsg)
       }),
     )
   },
-  setActiveChatUser(contact: ContactType) {
-    set({ activeChatUser: contact })
+  setActiveChatInfo(newChatInfo) {
+    set({ activeChatInfo: newChatInfo })
   },
-  clearChat() {
+  clearChat(roomId: number) {
     set(
       produce((state: ChatStoreType) => {
-        state.chats.set(state.activeChatUser!.userId, new Map<number, MessageType>())
+        state.chats.set(roomId, new Map<number, MessageType>())
       }),
     )
   },

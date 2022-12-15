@@ -9,13 +9,15 @@ import { useChatListStore } from '../../stores/useChatListStore'
 // Frequently updates on state change.
 export default function ChatView() {
   const chats = useChatStore(state => state.chats)
-  const activeChatUserId = useChatListStore(state => state.activeChatUserId)!
+  const activeRoomId = useChatListStore(state => state.activeRoomId)
+
+  const messages = activeRoomId === null ? null : chats.get(activeRoomId) ?? null
 
   return (
     <div className="flex flex-col h-full">
       <ChatHeader />
       <div className="flex-grow flex flex-col justify-end bg-gray-900">
-        <ChatArea messages={chats.get(activeChatUserId) ?? null} />
+        <ChatArea messages={messages} />
       </div>
       <ChatFooter />
     </div>

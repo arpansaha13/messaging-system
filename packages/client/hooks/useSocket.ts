@@ -5,30 +5,38 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useChatStore } from '../stores/useChatStore'
 import { useTypingState } from '../stores/useTypingState'
 import { useChatListStore } from '../stores/useChatListStore'
-// Enum
+// Types
 import { MessageStatus } from '../types/message.types'
+import type { ChatListItemType } from '../types/index.types'
 
 interface ReceiveMsgType {
-  userId: number
-  msg: string
+  roomId: number
+  senderId: number
+  content: string
   ISOtime: string
 }
 interface MsgStatusUpdateType {
-  /** The chats are mapped with receiver user_id. */
-  receiverId: number
+  roomId: number
   ISOtime: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
 }
+type SendMsgNewRoomType = {
+  userToRoomId: ChatListItemType['userToRoomId']
+  room: ChatListItemType['room']
+  latestMsg: NonNullable<ChatListItemType['latestMsg']>
+}
 export interface TypingStateType {
+  roomId: number
   isTyping: boolean
-  /** Id of the user who is typing a message. */
-  senderId: number
-  /** Id of the user for whom the message is being typed. */
-  // TODO: remove this data from response. `receiverId` is not used.
-  receiverId: number
 }
 
-type SocketOnEvents = 'connect' | 'disconnect' | 'receive-message' | 'message-status' | 'typing-state'
+type SocketOnEvents =
+  | 'connect'
+  | 'disconnect'
+  | 'receive-message'
+  | 'message-status'
+  | 'typing-state'
+  | 'send-message-new-room'
 type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state'
 
 const socket = io('http://localhost:4000', { autoConnect: true })
@@ -54,13 +62,21 @@ const socketWrapper = {
  */
 export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
+  const setTyping = useTypingState(state => state.setTyping)
+
+  const addChat = useChatStore(state => state.add)
   const receive = useChatStore(state => state.receive)
   const updateStatus = useChatStore(state => state.updateStatus)
-  const setTyping = useTypingState(state => state.setTyping)
+  const activeChatInfo = useChatStore(state => state.activeChatInfo)
+
+  const setProxyRoom = useChatListStore(state => state.setProxyRoom)
+  const addNewItemToTop = useChatListStore(state => state.addNewItemToTop)
+  const setActiveRoomId = useChatListStore(state => state.setActiveRoomId)
   const updateChatListItem = useChatListStore(state => state.updateChatListItem)
+  const updateChatListItemStatus = useChatListStore(state => state.updateChatListItemStatus)
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
-  const [_, setHookRunCount] = useState<number>(0)
+  const [, setHookRunCount] = useState<number>(0)
 
   useEffect(() => {
     setHookRunCount(count => {
@@ -85,23 +101,37 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
-      receive(data.userId, data.msg, data.ISOtime)
-      updateChatListItem(data.userId, {
-        time: data.ISOtime,
-        latestMsgContent: data.msg,
+      receive(data.roomId, data.content, data.senderId, data.ISOtime)
+      updateChatListItem(data.roomId, {
+        content: data.content,
+        createdAt: data.ISOtime,
+        senderId: data.senderId,
         status: null,
       })
     })
 
+    socketWrapper.on('send-message-new-room', (data: SendMsgNewRoomType) => {
+      // Add a new item in chat-list
+      const newChatListItem: ChatListItemType = {
+        userToRoomId: data.userToRoomId,
+        contact: activeChatInfo!.contact,
+        user: activeChatInfo!.user,
+        room: data.room,
+        latestMsg: data.latestMsg,
+      }
+      addNewItemToTop(newChatListItem)
+      addChat(data.room.id, [data.latestMsg])
+      setActiveRoomId(data.room.id)
+      setProxyRoom(false)
+    })
+
     socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
-      updateStatus(data.receiverId, data.ISOtime, data.status)
-      updateChatListItem(data.receiverId, {
-        status: data.status,
-      })
+      updateStatus(data.roomId, data.ISOtime, data.status)
+      updateChatListItemStatus(data.roomId, data.status)
     })
 
     socketWrapper.on('typing-state', (data: TypingStateType) => {
-      setTyping(data.senderId, data.isTyping)
+      setTyping(data.roomId, data.isTyping)
     })
 
     return () => {
@@ -109,6 +139,8 @@ export function useSocketInit() {
       socketWrapper.off('disconnect')
       socketWrapper.off('receive-message')
       socketWrapper.off('message-status')
+      socketWrapper.off('typing-state')
+      socketWrapper.off('send-message-new-room')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
