@@ -33,7 +33,7 @@ export class UserEntity {
   @OneToMany(() => ContactEntity, contact => contact.user)
   contacts: ContactEntity[]
 
-  @OneToMany(() => UserToRoom, userToRoom => userToRoom.room)
+  @OneToMany(() => UserToRoom, userToRoom => userToRoom.user)
   rooms: UserToRoom[]
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })

@@ -11,7 +11,7 @@ export class RoomEntity {
   @Column({ name: 'is_group', default: false, nullable: false })
   isGroup: boolean
 
-  @OneToMany(() => UserToRoom, userToRoom => userToRoom.user)
+  @OneToMany(() => UserToRoom, userToRoom => userToRoom.room)
   users: UserToRoom[]
 
   @OneToMany(() => MessageEntity, message => message.room)
