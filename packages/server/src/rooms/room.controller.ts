@@ -6,8 +6,6 @@ import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
-// DTO
-import { RoomIdParamDto } from './dto/RoomIdParam.dto'
 // Types
 import type { RoomEntity } from './room.entity'
 import type { UserEntity } from 'src/users/user.entity'
@@ -23,30 +21,30 @@ export class RoomController {
   ) {}
 
   @Get('/:roomId')
-  getRoomById(@Param() params: RoomIdParamDto): Promise<RoomEntity> {
-    return this.roomService.getRoomById(params.roomId)
+  getRoomById(@Param('roomId') roomId: number): Promise<RoomEntity> {
+    return this.roomService.getRoomById(roomId)
   }
 
   @Get('/:roomId/users')
-  getUsersOfRoomById(@Param() params: RoomIdParamDto): Promise<RoomEntity> {
-    return this.roomService.getUsersOfRoomById(params.roomId)
+  getUsersOfRoomById(@Param('roomId') roomId: number): Promise<UserEntity[]> {
+    return this.roomService.getUsersOfRoomById(roomId)
   }
 
   @Get('/:roomId/messages')
   async getMessagesByRoomId(
     @GetPayload('user') authUser: UserEntity,
-    @Param() params: RoomIdParamDto,
+    @Param('roomId') roomId: number,
   ): Promise<MessageEntity[]> {
-    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUser.id, params.roomId)
-    return this.messageService.getMessagesByRoomId(params.roomId, userToRoomEntity.firstMsgTstamp)
+    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUser.id, roomId)
+    return this.messageService.getMessagesByRoomId(roomId, userToRoomEntity.firstMsgTstamp)
   }
 
   @Get('/:roomId/messages/latest')
   async getLatestMsgByRoomId(
     @GetPayload('user') authUser: UserEntity,
-    @Param() params: RoomIdParamDto,
+    @Param('roomId') roomId: number,
   ): Promise<MessageEntity> {
-    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUser.id, params.roomId)
-    return this.messageService.getLatestMsgByRoomId(params.roomId, userToRoomEntity.firstMsgTstamp)
+    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUser.id, roomId)
+    return this.messageService.getLatestMsgByRoomId(roomId, userToRoomEntity.firstMsgTstamp)
   }
 }

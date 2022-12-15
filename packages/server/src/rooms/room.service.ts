@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Not, Repository } from 'typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 import { RoomEntity } from './room.entity'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
+import type { Repository } from 'typeorm'
 import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
 @Injectable()
@@ -32,11 +32,12 @@ export class RoomService {
     return roomEntity
   }
 
-  async getUsersOfRoomById(roomId: number): Promise<RoomEntity> {
-    const roomEntity = this.roomRepository.findOne({
+  async getUsersOfRoomById(roomId: number): Promise<UserEntity[]> {
+    const roomEntity = await this.roomRepository.findOne({
       select: {
         id: true,
         users: {
+          userToRoomId: true,
           user: {
             id: true,
             dp: true,
@@ -51,46 +52,52 @@ export class RoomService {
           user: true,
         },
       },
+      relationLoadStrategy: 'query',
     })
     if (roomEntity === null) this.#roomNotFound()
-    return roomEntity
+    return roomEntity.users.map(e => e.user)
   }
 
   /**
+   * A new room is created when a user (sender) sends a message to another (receiver).
    * @param firstMsg The first message of this chat-room received through web-sockets.
    * @returns the id of the newly created room entity.
    */
-  async create1to1Room(firstMsg: Ws1to1MessageDto): Promise<number> {
-    const userId1 = firstMsg.senderId
-    const userId2 = firstMsg.receiverId
+  async create1to1Room(firstMsg: Ws1to1MessageDto): Promise<[RoomEntity, UserToRoom, UserToRoom]> {
+    const senderId = firstMsg.senderId
+    const receiverId = firstMsg.receiverId
 
-    if (userId1 === userId2) this.#sameParticipantError()
+    if (senderId === receiverId) this.#sameParticipantError()
 
-    const [user1, user2] = await Promise.all([
-      this.userRepository.findOneBy({ id: userId1 }),
-      this.userRepository.findOneBy({ id: userId2 }),
+    const [sender, receiver] = await Promise.all([
+      this.userRepository.findOneBy({ id: senderId }),
+      this.userRepository.findOneBy({ id: receiverId }),
     ])
-    if (user1 === null || user2 === null) throw new BadRequestException('Invalid user_id.')
+    if (sender === null || receiver === null) throw new BadRequestException('Invalid user_id.')
 
-    const newUserToRoom1 = new UserToRoom()
-    const newUserToRoom2 = new UserToRoom()
+    const newSenderUserToRoom = new UserToRoom()
+    const newReceiverUserToRoom = new UserToRoom()
 
-    newUserToRoom1.user = user1
-    newUserToRoom2.user = user2
+    newSenderUserToRoom.user = sender
+    newReceiverUserToRoom.user = receiver
+
+    newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
+    newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
 
     const newRoom = new RoomEntity()
-    newRoom.users = [newUserToRoom1, newUserToRoom2]
+    newRoom.users = [newSenderUserToRoom, newReceiverUserToRoom]
 
-    newUserToRoom1.room = newRoom
-    newUserToRoom2.room = newRoom
+    newSenderUserToRoom.room = newRoom
+    newReceiverUserToRoom.room = newRoom
 
     try {
-      const [roomEntity] = await Promise.all([
+      // TODO: use transactions here
+      const [roomEntity, senderUserToRoom, receiverUserToRoom] = await Promise.all([
         this.roomRepository.save(newRoom),
-        this.userToRoomRepository.save(newUserToRoom1),
-        this.userToRoomRepository.save(newUserToRoom2),
+        this.userToRoomRepository.save(newSenderUserToRoom),
+        this.userToRoomRepository.save(newReceiverUserToRoom),
       ])
-      return roomEntity.id
+      return [roomEntity, senderUserToRoom, receiverUserToRoom]
     } catch (error) {
       throw new InternalServerErrorException()
     }

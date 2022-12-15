@@ -14,7 +14,6 @@ export class UserToRoomService {
 
   async getUserToRoomEntity(authUserId: number, roomId: number): Promise<UserToRoom> {
     return this.userToRoomRepository.findOne({
-      select: { firstMsgTstamp: true },
       where: {
         user: { id: authUserId },
         room: { id: roomId },
@@ -38,7 +37,7 @@ export class UserToRoomService {
         user: { id: authUserId },
         room: { id: roomId },
       },
-      { firstMsgTstamp: newValue },
+      { firstMsgTstamp: new Date(newValue) },
     )
   }
   async clearChat(authUserId: number, roomId: number): Promise<void> {
