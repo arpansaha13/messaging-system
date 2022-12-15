@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, Post, UseGuards, UseInterceptors } from '@nestjs/common'
+import {
+  BadGatewayException,
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Service
 import { ContactService } from 'src/contacts/contact.service'
@@ -6,9 +16,9 @@ import { ContactService } from 'src/contacts/contact.service'
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // Interceptors
 import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.interceptor'
-// DTOs
+// DTO
 import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
-import { ContactIdParamDto, UserIdParamDto } from './dto/params.dto'
+import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
 import type { ContactEntity } from './contact.entity'
@@ -20,19 +30,20 @@ export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
   @Get()
-  getContacts(@GetPayload('user') authUser: UserEntity): Promise<ContactEntity[]> {
-    return this.contactService.getAllContactsOfUser(authUser)
-  }
-  @Get('/:contactId')
-  getContactById(@Param() params: ContactIdParamDto): Promise<ContactEntity> {
-    return this.contactService.getContactById(params.contactId)
-  }
-  @Get('/:userId')
-  getContactByUserId(
+  getContacts(
     @GetPayload('user') authUser: UserEntity,
-    @Param() params: UserIdParamDto,
-  ): Promise<ContactEntity> {
-    return this.contactService.getContactByUserId(authUser, params.userId)
+    @Query() query: GetContactsQueryDto,
+  ): Promise<ContactEntity | ContactEntity[]> {
+    if (query.contactId && query.userId) {
+      throw new BadGatewayException('Invalid query params.')
+    }
+    if (query.contactId) {
+      return this.contactService.getContactById(query.contactId)
+    }
+    if (query.userId) {
+      return this.contactService.getContactByUserId(authUser, query.userId)
+    }
+    return this.contactService.getAllContactsOfUser(authUser)
   }
 
   @Post()
