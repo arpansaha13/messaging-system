@@ -67,7 +67,7 @@ export function useSocketInit() {
   const addChat = useChatStore(state => state.add)
   const receive = useChatStore(state => state.receive)
   const updateStatus = useChatStore(state => state.updateStatus)
-  const activeChatInfo = useChatStore(state => state.activeChatInfo)
+  const getActiveChatInfo = useChatStore(state => state.getActiveChatInfo)
 
   const setProxyRoom = useChatListStore(state => state.setProxyRoom)
   const addNewItemToTop = useChatListStore(state => state.addNewItemToTop)
@@ -114,8 +114,8 @@ export function useSocketInit() {
       // Add a new item in chat-list
       const newChatListItem: ChatListItemType = {
         userToRoomId: data.userToRoomId,
-        contact: activeChatInfo!.contact,
-        user: activeChatInfo!.user,
+        contact: getActiveChatInfo()!.contact,
+        user: getActiveChatInfo()!.user,
         room: data.room,
         latestMsg: data.latestMsg,
       }

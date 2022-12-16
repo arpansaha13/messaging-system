@@ -38,6 +38,9 @@ interface ChatStoreType {
   /** Update the active chat-user when a new chat is opened. */
   setActiveChatInfo: (newChatInfo: ActiveChatInfo) => void
 
+  /* `activeChatInfo` will be null in functon scope because of closure. Access it through a function to get updated state. */
+  getActiveChatInfo: () => ActiveChatInfo
+
   clearChat: (roomId: number) => void
 }
 
@@ -108,6 +111,9 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
   },
   setActiveChatInfo(newChatInfo) {
     set({ activeChatInfo: newChatInfo })
+  },
+  getActiveChatInfo() {
+    return get().activeChatInfo
   },
   clearChat(roomId: number) {
     set(
