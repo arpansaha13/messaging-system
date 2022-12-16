@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
+import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
 import * as bcrypt from 'bcrypt'
 // Entity
@@ -10,17 +11,15 @@ import { SignInDto, SignUpDto } from './auth.dto'
 // Types
 import type { Repository } from 'typeorm'
 import type { JwtPayload, JwtToken } from './jwt.types'
-// Constants
-import { JWT_TOKEN_VALIDITY_SECONDS } from '../constants'
 
 @Injectable()
 export class AuthService {
   constructor(
-    private jwtService: JwtService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
 
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-
     @InjectRepository(AuthEntity)
     private authRepository: Repository<AuthEntity>,
   ) {}
@@ -28,7 +27,7 @@ export class AuthService {
   async #createAuthToken(userEntity: UserEntity): Promise<JwtToken> {
     const payload: JwtPayload = { user_id: userEntity.id }
     const authToken = this.jwtService.sign(payload)
-    const expiresAt = Date.now() /* milli-secs */ + JWT_TOKEN_VALIDITY_SECONDS * 1000
+    const expiresAt = Date.now() /* milli-secs */ + this.configService.get('JWT_TOKEN_VALIDITY_SECONDS') * 1000
     return { authToken, expiresAt }
   }
 

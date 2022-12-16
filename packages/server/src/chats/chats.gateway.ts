@@ -7,12 +7,12 @@ import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 import { Ws1to1MessageDto, WsTypingStateDto } from './dto/chatGateway.dto'
 // Enum
 import { MessageStatus } from '../messages/message.entity'
-// Constants
-import { CLIENT_ORIGIN } from 'src/constants'
 // Types
 import type { Server, Socket } from 'socket.io'
 import type { RoomEntity } from 'src/rooms/room.entity'
 import type { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
+
+const CLIENT_ORIGIN = 'http://localhost:3000'
 
 @WebSocketGateway({
   cors: {
