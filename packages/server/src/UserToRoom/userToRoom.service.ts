@@ -37,7 +37,7 @@ export class UserToRoomService {
         user: { id: authUserId },
         room: { id: roomId },
       },
-      { firstMsgTstamp: new Date(newValue) },
+      { firstMsgTstamp: newValue !== null ? new Date(newValue) : null },
     )
   }
   async clearChat(authUserId: number, roomId: number): Promise<void> {

@@ -15,8 +15,14 @@ import classNames from '../../utils/classNames'
 const ChatHeader = () => {
   const fetchHook = useFetch()
 
-  const [typingState, activeChatInfo, activeRoomId, updateChatListItem, clearChat] = useStore(
-    state => [state.typingState, state.activeChatInfo!, state.activeRoomId, state.updateChatListItem, state.clearChat],
+  const [typingState, activeChatInfo, activeRoomId, clearChatListItemLatestMsg, clearChat] = useStore(
+    state => [
+      state.typingState,
+      state.activeChatInfo!,
+      state.activeRoomId,
+      state.clearChatListItemLatestMsg,
+      state.clearChat,
+    ],
     shallow,
   )
 
@@ -57,10 +63,10 @@ const ChatHeader = () => {
         ? [
             {
               slot: 'Clear messages',
-              onClick() {
-                fetchHook(`chats/clear/${activeChatInfo.user.id}`)
+              async onClick() {
+                await fetchHook(`user-to-room/${activeRoomId}/clear-chat`, { method: 'Delete' })
                 clearChat(activeRoomId)
-                updateChatListItem(activeChatInfo.user.id, null)
+                clearChatListItemLatestMsg(activeRoomId)
               },
             },
           ]

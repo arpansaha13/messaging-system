@@ -28,6 +28,8 @@ export interface ChatListStoreType {
   searchRoomIdByUserId: (userId: number) => number | null
 
   addNewChatListItemToTop: (newItem: ChatListItemType) => void
+
+  clearChatListItemLatestMsg: (roomId: number) => void
 }
 
 export const useChatListStore: StateCreator<ChatListStoreType, [], [], ChatListStoreType> = (set, get) => ({
@@ -72,6 +74,15 @@ export const useChatListStore: StateCreator<ChatListStoreType, [], [], ChatListS
     set(
       produce((state: ChatListStoreType) => {
         state.chatList.unshift(newItem)
+      }),
+    )
+  },
+  clearChatListItemLatestMsg(roomId) {
+    set(
+      produce((state: ChatListStoreType) => {
+        const idx = state.chatList.findIndex(val => val.room.id === roomId)
+        if (idx === -1) return
+        state.chatList[idx].latestMsg = null
       }),
     )
   },
