@@ -22,22 +22,22 @@ export class UserToRoomController {
     return this.userToRoomService.getUserToRoomEntity(authUser.id, roomId)
   }
 
-  @Get()
+  @Get('/rooms/unarchived')
   getUnarchivedUserToRooms(@GetPayload('user') authUser: UserEntity): Promise<UserToRoom[]> {
     return this.userToRoomService.getRoomsOfUser(authUser.id)
   }
 
-  @Get('/archived')
+  @Get('/rooms/archived')
   getArchivedUserToRooms(@GetPayload('user') authUser: UserEntity): Promise<UserToRoom[]> {
     return this.userToRoomService.getRoomsOfUser(authUser.id, true)
   }
 
-  @Patch('/:roomId/archive')
+  @Patch('/archive/:roomId')
   archiveRoom(@GetPayload('user') authUser: UserEntity, @Param('roomId') roomId: number): Promise<void> {
     return this.userToRoomService.updateArchive(authUser.id, roomId, true)
   }
 
-  @Patch('/:roomId/unarchive')
+  @Patch('/unarchive/:roomId')
   unarchiveRoom(@GetPayload('user') authUser: UserEntity, @Param('roomId') roomId: number): Promise<void> {
     return this.userToRoomService.updateArchive(authUser.id, roomId, false)
   }

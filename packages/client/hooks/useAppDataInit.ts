@@ -32,22 +32,22 @@ export function useAppDataInit() {
     initContactStore(contactsRes)
 
     const initChatList: ChatListItemType[] = []
-    const userToRoomRes: UserToRoomResType[] = await fetchHook('user-to-room')
+    const unarchivedRoomRes: UserToRoomResType[] = await fetchHook('user-to-room/rooms/unarchived')
 
-    for (const userToRoom of userToRoomRes) {
+    for (const unarchivedRoom of unarchivedRoomRes) {
       const chatListItem = {} as ChatListItemType
 
-      chatListItem.userToRoomId = userToRoom.userToRoomId
+      chatListItem.userToRoomId = unarchivedRoom.userToRoomId
       chatListItem.room = {
-        id: userToRoom.room.id,
-        archived: userToRoom.archived,
-        deleted: userToRoom.deleted,
-        isGroup: userToRoom.room.isGroup,
-        muted: userToRoom.isMuted,
+        id: unarchivedRoom.room.id,
+        archived: unarchivedRoom.archived,
+        deleted: unarchivedRoom.deleted,
+        isGroup: unarchivedRoom.room.isGroup,
+        muted: unarchivedRoom.isMuted,
       }
-      chatListItem.latestMsg = (await fetchHook(`rooms/${userToRoom.room.id}/messages/latest`)) as MsgResType
+      chatListItem.latestMsg = (await fetchHook(`rooms/${unarchivedRoom.room.id}/messages/latest`)) as MsgResType
 
-      const usersInRoom = (await fetchHook(`rooms/${userToRoom.room.id}/users`)) as UserType[]
+      const usersInRoom = (await fetchHook(`rooms/${unarchivedRoom.room.id}/users`)) as UserType[]
       const receiverUser = usersInRoom.filter(user => user.id !== authUserRes.id)[0]
 
       chatListItem.user = receiverUser
