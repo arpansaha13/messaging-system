@@ -1,0 +1,135 @@
+import { memo, useEffect, useRef, useState } from 'react'
+import shallow from 'zustand/shallow'
+// Components
+import Avatar from '../Avatar'
+// Custom Hook
+import { useFetch } from '../../hooks/useFetch'
+// Icons
+import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
+// Stores
+import { useAuthStore } from '../../stores/useAuthStore'
+// Utils
+import classNames from '../../utils/classNames'
+// Types
+import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
+import type { AuthUserType } from '../../types/index.types'
+
+interface FieldProps {
+  heading: string
+  content: string
+  setContent: Dispatch<SetStateAction<string>>
+  editState: boolean
+  setEditState: Dispatch<SetStateAction<boolean>>
+}
+
+const Field = ({ heading, content, setContent, editState, setEditState }: FieldProps) => {
+  const contentRef = useRef<HTMLParagraphElement>(null)
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      setEditState(false)
+    }
+  }
+
+  useEffect(() => {
+    if (editState) {
+      contentRef.current?.focus()
+      return
+    }
+    const newContent = contentRef.current?.textContent
+    if (!editState && newContent && content !== newContent) {
+      setContent(newContent)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editState])
+
+  return (
+    <>
+      <h3 className="mb-5 text-sm text-emerald-600">{heading}</h3>
+      <div
+        className={classNames(
+          'mb-8 flex pb-1 shadow-[0_2px_0px_0px] transition-shadow',
+          editState ? 'shadow-emerald-600' : 'shadow-transparent',
+        )}
+      >
+        <p
+          ref={contentRef}
+          contentEditable={editState}
+          suppressContentEditableWarning={true}
+          className="flex-grow text-base text-gray-200 focus:border-none focus:outline-none"
+          onKeyDown={handleKeyDown}
+        >
+          {content}
+        </p>
+        <button onClick={() => setEditState(b => !b)}>
+          {editState ? (
+            <CheckIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          ) : (
+            <PencilIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+          )}
+        </button>
+      </div>
+    </>
+  )
+}
+
+const MemoisedField = memo(Field)
+
+const Profile = () => {
+  const fetchHook = useFetch()
+  const [authUser, setAuthUser] = useAuthStore(state => [state.authUser!, state.setAuthUser], shallow)
+
+  const [editingBio, setEditBio] = useState(false)
+  const [editingDisplayName, setEditDisplayName] = useState(false)
+  const [displayName, setDisplayName] = useState(authUser.displayName)
+  const [bio, setBio] = useState(authUser.bio)
+
+  useEffect(() => {
+    const data: Partial<Pick<AuthUserType, 'bio' | 'displayName'>> = {}
+
+    if (authUser.bio !== bio) data.bio = bio
+    if (authUser.displayName !== displayName) data.displayName = displayName
+    if (Object.keys(data).length === 0) return
+
+    fetchHook(`users/${authUser.id}`, {
+      body: JSON.stringify(data),
+      method: 'PATCH',
+    }).then((res: AuthUserType) => {
+      setAuthUser(res)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayName, bio, authUser])
+
+  return (
+    <div className="mx-8 py-6 space-y-10">
+      <div className="flex justify-center">
+        <Avatar src={authUser.dp} width={12.5} height={12.5} />
+      </div>
+
+      <div>
+        <MemoisedField
+          heading="Your name"
+          content={displayName}
+          setContent={setDisplayName}
+          editState={editingDisplayName}
+          setEditState={setEditDisplayName}
+        />
+        <p className="text-sm text-gray-400">
+          This is not your username or pin. This name will be visible to your WhatsApp contacts.
+        </p>
+      </div>
+
+      <div>
+        <MemoisedField
+          heading="About"
+          content={bio}
+          setContent={setBio}
+          editState={editingBio}
+          setEditState={setEditBio}
+        />
+      </div>
+    </div>
+  )
+}
+export default memo(Profile)

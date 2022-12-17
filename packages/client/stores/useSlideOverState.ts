@@ -36,9 +36,13 @@ export const useSlideOverState: StateCreator<SlideOverStateType, [], [], SlideOv
     )
   },
   setSlideOverState(newState) {
-    set(state => ({
-      ...state,
-      ...newState,
-    }))
+    set(
+      produce((state: SlideOverStateType) => {
+        state.slideOverState = {
+          ...state.slideOverState,
+          ...newState,
+        }
+      }),
+    )
   },
 })

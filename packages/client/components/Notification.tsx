@@ -14,7 +14,7 @@ const Notification = () => {
     <>
       <div
         aria-live="assertive"
-        className="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-start sm:p-6"
+        className="pointer-events-none fixed inset-0 z-10 flex items-end px-4 py-6 sm:items-start sm:p-6"
       >
         <div className="w-full flex flex-col items-center space-y-4">
           <Transition

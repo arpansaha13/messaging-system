@@ -1,11 +1,12 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 // Service
 import { UserService } from './user.service'
 // DTO
-import { GetUserByIdParamsDto } from './dto/GetUserByIdParams.dto'
+import { UserIdParam } from './dto/user-id-param.dto'
+import { UpdateUserInfoDto } from './dto/update-user-info.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
 
@@ -20,12 +21,17 @@ export class UserController {
   }
 
   @Get('/:userId')
-  async getUserById(@Param() params: GetUserByIdParamsDto): Promise<UserEntity> {
+  getUserById(@Param() params: UserIdParam): Promise<UserEntity> {
     return this.userService.getUserById(params.userId)
   }
 
   @Get('/:userId/room-ids')
-  async getRoomIdsOfUser(@Param() params: GetUserByIdParamsDto): Promise<UserEntity> {
+  getRoomIdsOfUser(@Param() params: UserIdParam): Promise<UserEntity> {
     return this.userService.getRoomIdsOfUser(params.userId)
+  }
+
+  @Patch('/:userId')
+  updateUserInfo(@GetPayload('user') authUser: UserEntity, @Body() data: UpdateUserInfoDto) {
+    return this.userService.updateUserInfo(authUser.id, data)
   }
 }

@@ -7,10 +7,11 @@ import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon } from '@heroicons
 import { useStore } from '../../stores/index.store'
 import { useAuthStore } from '../../stores/useAuthStore'
 // Components
+import Avatar from '../Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 
 const SidebarHeader = () => {
-  const resetAuthState = useAuthStore(state => state.resetAuthState)
+  const [authUser, resetAuthState] = useAuthStore(state => [state.authUser!, state.resetAuthState])
   const [toggleSlideOver, setSlideOverState, resetStore] = useStore(
     state => [state.toggleSlideOver, state.setSlideOverState, state.resetStore],
     shallow,
@@ -66,7 +67,6 @@ const SidebarHeader = () => {
       },
     },
   ]
-
   function openNewChatMenu() {
     setSlideOverState({
       title: 'New chat',
@@ -74,14 +74,19 @@ const SidebarHeader = () => {
     })
     toggleSlideOver(true)
   }
+  function openProfile() {
+    setSlideOverState({
+      title: 'Profile',
+      componentName: 'Profile',
+    })
+    toggleSlideOver(true)
+  }
 
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-800">
-      <img
-        className="h-10 w-10 rounded-full"
-        src="https://images.unsplash.com/photo-1491528323818-fdd1faba62cc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-        alt=""
-      />
+      <button onClick={openProfile}>
+        <Avatar src={authUser.dp} width={2.5} height={2.5} />
+      </button>
 
       <div className="flex items-center text-gray-400 space-x-2">
         <button className="p-2 btn-icon">

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { UserEntity } from 'src/users/user.entity'
 // Types
 import type { Repository } from 'typeorm'
+import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 
 @Injectable()
 export class UserService {
@@ -36,5 +37,12 @@ export class UserService {
     })
     if (userEntity === null) throw new NotFoundException('User could not be found.')
     return userEntity
+  }
+
+  async updateUserInfo(userId: number, data: UpdateUserInfoDto): Promise<UserEntity> {
+    const updateResult = await this.userRepository.update(userId, { ...data })
+
+    if (updateResult.affected) return this.getUserById(userId)
+    else throw new NotFoundException()
   }
 }
