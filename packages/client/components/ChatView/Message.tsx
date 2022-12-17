@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { format, parseISO } from 'date-fns'
 // Components
 import MsgStatusIcon from '../MsgStatusIcon'
-// Stores
+// Store
 import { useAuthStore } from '../../stores/useAuthStore'
 // Utils
 import classNames from '../../utils/classNames'

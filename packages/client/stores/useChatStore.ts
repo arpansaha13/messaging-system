@@ -1,4 +1,4 @@
-import create from 'zustand'
+import type { StateCreator } from 'zustand'
 import produce from 'immer'
 // Utils
 import { ISOToMilliSecs } from '../utils/ISODate'
@@ -12,7 +12,7 @@ import type { MessageType, ChatListItemType } from '../types/index.types'
 
 type ActiveChatInfo = null | Omit<ChatListItemType, 'latestMsg' | 'room' | 'userToRoomId'>
 
-interface ChatStoreType {
+export interface ChatStoreType {
   /**
    * List of all chats of the logged-in user, mapped with their respective room_id.
    * Each message in a chat is again mapped with their timestamps (for now).
@@ -22,32 +22,32 @@ interface ChatStoreType {
   activeChatInfo: ActiveChatInfo | null
 
   /** Add a new chat. */
-  add: (roomId: number, chat: MessageType[]) => void
+  addChat: (roomId: number, chat: MessageType[]) => void
 
   /** Append new messages to existing chat. This is meant to be used when an existing chat is re-opened with new unread messages. */
-  push: (roomId: number, messages: MessageType[]) => void
+  pushChat: (roomId: number, messages: MessageType[]) => void
 
   /** Append a newly sent message. This can be used during an ongoing chat. */
-  send: (roomId: number, senderId: number, content: string, ISOtime: string) => void
+  sendMsg: (roomId: number, senderId: number, content: string, ISOtime: string) => void
 
   /** Append the received messages to ongoing chat. */
-  receive: (roomId: number, content: string, senderId: number, ISOtime: string) => void
+  receiveMsg: (roomId: number, content: string, senderId: number, ISOtime: string) => void
 
-  updateStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
+  updateMsgStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
 
   /** Update the active chat-user when a new chat is opened. */
   setActiveChatInfo: (newChatInfo: ActiveChatInfo) => void
 
-  /* `activeChatInfo` will be null in functon scope because of closure. Access it through a function to get updated state. */
+  /* `activeChatInfo` will be null in functon scope (socket callback) because of closure. Access it through a function to get updated state. */
   getActiveChatInfo: () => ActiveChatInfo
 
   clearChat: (roomId: number) => void
 }
 
-export const useChatStore = create<ChatStoreType>()((set, get) => ({
+export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = (set, get) => ({
   chats: new Map<number, Map<number, MessageType>>(),
   activeChatInfo: null,
-  add(roomId: number, chat: MessageType[]) {
+  addChat(roomId: number, chat: MessageType[]) {
     // Update through `Immer`
     set(
       produce((state: ChatStoreType) => {
@@ -59,7 +59,7 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       }),
     )
   },
-  push(roomId: number, messages: MessageType[]) {
+  pushChat(roomId: number, messages: MessageType[]) {
     // Use `Immer` for nested updates
     set(
       produce((state: ChatStoreType) => {
@@ -67,7 +67,7 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
 
         // If this is a new chat, then it would not exist in the `chats` map. Add it first.
         if (typeof chat === 'undefined') {
-          get().add(roomId, [])
+          get().addChat(roomId, [])
           chat = get().chats.get(roomId)!
         }
         for (const message of messages) {
@@ -77,8 +77,8 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       }),
     )
   },
-  send(roomId: number, senderId: number, content: string, ISOtime: string) {
-    get().push(roomId, [
+  sendMsg(roomId: number, senderId: number, content: string, ISOtime: string) {
+    get().pushChat(roomId, [
       {
         content,
         senderId,
@@ -87,8 +87,8 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       },
     ])
   },
-  receive(roomId, content, senderId, ISOtime) {
-    get().push(roomId, [
+  receiveMsg(roomId, content, senderId, ISOtime) {
+    get().pushChat(roomId, [
       {
         content,
         senderId,
@@ -97,7 +97,7 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       },
     ])
   },
-  updateStatus(roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) {
+  updateMsgStatus(roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) {
     // Update through `Immer`
     set(
       produce((state: ChatStoreType) => {
@@ -122,4 +122,4 @@ export const useChatStore = create<ChatStoreType>()((set, get) => ({
       }),
     )
   },
-}))
+})

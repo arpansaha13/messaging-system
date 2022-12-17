@@ -1,18 +1,17 @@
-import create from 'zustand'
-
+import type { StateCreator } from 'zustand'
 import type { ContactResType, ContactType } from '../types/index.types'
 
-interface ContactStoreType {
+export interface ContactStoreType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */
   contacts: { [letter: string]: ContactType[] }
 
   /** Initialize the contacts map. */
-  init: (initContacts: ContactResType[]) => void
+  initContactStore: (initContacts: ContactResType[]) => void
 }
 
-export const useContactStore = create<ContactStoreType>()(set => ({
+export const useContactStore: StateCreator<ContactStoreType, [], [], ContactStoreType> = set => ({
   contacts: {},
-  init(initContacts) {
+  initContactStore(initContacts) {
     set(() => {
       const newContacts: ContactStoreType['contacts'] = {}
 
@@ -33,4 +32,4 @@ export const useContactStore = create<ContactStoreType>()(set => ({
       return { contacts: newContacts }
     })
   },
-}))
+})

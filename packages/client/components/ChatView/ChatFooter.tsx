@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
+import shallow from 'zustand/shallow'
 // Icons
 import { MicrophoneIcon } from '@heroicons/react/24/solid'
 import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
@@ -7,11 +8,9 @@ import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 import TextArea from './TextArea'
 // Custom Hooks
 import { useSocket } from '../../hooks/useSocket'
-// Stores
+// Store
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useChatStore } from '../../stores/useChatStore'
-import { useDraftStore } from '../../stores/useDraftStore'
-import { useChatListStore } from '../../stores/useChatListStore'
+import { useStore } from '../../stores/index.store'
 // Utils
 import { ISODateNow } from '../../utils/ISODate'
 // Enum
@@ -36,13 +35,18 @@ const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) =
 
 const ChatFooter = () => {
   const authUser = useAuthStore(state => state.authUser)!
-  const activeChatInfo = useChatStore(state => state.activeChatInfo)!
-  const send = useChatStore(state => state.send)
-  const addDraft = useDraftStore(state => state.add)
-  const drafts = useDraftStore(state => state.drafts)
-  const removeDraft = useDraftStore(state => state.remove)
-  const activeRoomId = useChatListStore(state => state.activeRoomId)
-  const updateChatListItem = useChatListStore(state => state.updateChatListItem)
+  const [activeChatInfo, send, addDraft, drafts, removeDraft, activeRoomId, updateChatListItem] = useStore(
+    state => [
+      state.activeChatInfo!,
+      state.sendMsg,
+      state.addDraft,
+      state.drafts,
+      state.removeDraft,
+      state.activeRoomId,
+      state.updateChatListItem,
+    ],
+    shallow,
+  )
 
   const { socket } = useSocket()
 

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import io from 'socket.io-client'
+import shallow from 'zustand/shallow'
 // Stores
+import { useStore } from '../stores/index.store'
 import { useAuthStore } from '../stores/useAuthStore'
-import { useChatStore } from '../stores/useChatStore'
-import { useTypingState } from '../stores/useTypingState'
-import { useChatListStore } from '../stores/useChatListStore'
 // Types
 import { MessageStatus } from '../types/message.types'
 import type { ChatListItemType } from '../types/index.types'
@@ -62,18 +61,32 @@ const socketWrapper = {
  */
 export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
-  const setTyping = useTypingState(state => state.setTyping)
-
-  const addChat = useChatStore(state => state.add)
-  const receive = useChatStore(state => state.receive)
-  const updateStatus = useChatStore(state => state.updateStatus)
-  const getActiveChatInfo = useChatStore(state => state.getActiveChatInfo)
-
-  const setProxyRoom = useChatListStore(state => state.setProxyRoom)
-  const addNewItemToTop = useChatListStore(state => state.addNewItemToTop)
-  const setActiveRoomId = useChatListStore(state => state.setActiveRoomId)
-  const updateChatListItem = useChatListStore(state => state.updateChatListItem)
-  const updateChatListItemStatus = useChatListStore(state => state.updateChatListItemStatus)
+  const [
+    setTyping,
+    addChat,
+    receive,
+    updateStatus,
+    getActiveChatInfo,
+    setProxyRoom,
+    addNewItemToTop,
+    setActiveRoomId,
+    updateChatListItem,
+    updateChatListItemStatus,
+  ] = useStore(
+    state => [
+      state.setTypingState,
+      state.addChat,
+      state.receiveMsg,
+      state.updateMsgStatus,
+      state.getActiveChatInfo,
+      state.setProxyRoom,
+      state.addNewChatListItemToTop,
+      state.setActiveRoomId,
+      state.updateChatListItem,
+      state.updateChatListItemStatus,
+    ],
+    shallow,
+  )
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)

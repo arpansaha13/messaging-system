@@ -1,15 +1,14 @@
+import shallow from 'zustand/shallow'
 // Components
 import ChatArea from './ChatArea'
 import ChatHeader from './ChatHeader'
 import ChatFooter from './ChatFooter'
-// Stores
-import { useChatStore } from '../../stores/useChatStore'
-import { useChatListStore } from '../../stores/useChatListStore'
+// Store
+import { useStore } from '../../stores/index.store'
 
 // Frequently updates on state change.
 export default function ChatView() {
-  const chats = useChatStore(state => state.chats)
-  const activeRoomId = useChatListStore(state => state.activeRoomId)
+  const [chats, activeRoomId] = useStore(state => [state.chats, state.activeRoomId], shallow)
 
   const messages = activeRoomId === null ? null : chats.get(activeRoomId) ?? null
 

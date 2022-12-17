@@ -1,9 +1,9 @@
-import create from 'zustand'
+import type { StateCreator } from 'zustand'
 import produce from 'immer'
 
 import type { ChatListItemType, MessageStatus } from '../types/index.types'
 
-interface ChatListStoreType {
+export interface ChatListStoreType {
   /** The currently active chat-room. */
   activeRoomId: number | null
   /** Set new room - can be used to open/change to a new chat. */
@@ -12,7 +12,7 @@ interface ChatListStoreType {
   /** The list of chats with different users displayed on the sidebar. */
   chatList: ChatListItemType[]
   /** Initialize the chat list. */
-  init: (initChatList: ChatListItemType[]) => void
+  initChatListStore: (initChatList: ChatListItemType[]) => void
 
   isProxyRoom: boolean
   setProxyRoom: (proxyRoomState: boolean) => void
@@ -27,16 +27,16 @@ interface ChatListStoreType {
    */
   searchRoomIdByUserId: (userId: number) => number | null
 
-  addNewItemToTop: (newItem: ChatListItemType) => void
+  addNewChatListItemToTop: (newItem: ChatListItemType) => void
 }
 
-export const useChatListStore = create<ChatListStoreType>()((set, get) => ({
+export const useChatListStore: StateCreator<ChatListStoreType, [], [], ChatListStoreType> = (set, get) => ({
   activeRoomId: null,
   setActiveRoomId(roomId) {
     set(() => ({ activeRoomId: roomId }))
   },
   chatList: [],
-  init(initChatList) {
+  initChatListStore(initChatList) {
     set(() => ({ chatList: initChatList }))
   },
   isProxyRoom: false,
@@ -68,11 +68,11 @@ export const useChatListStore = create<ChatListStoreType>()((set, get) => ({
     if (idx === -1) return null
     return chatList[idx].room.id
   },
-  addNewItemToTop(newItem) {
+  addNewChatListItemToTop(newItem) {
     set(
       produce((state: ChatListStoreType) => {
         state.chatList.unshift(newItem)
       }),
     )
   },
-}))
+})

@@ -1,42 +1,44 @@
-import create from 'zustand'
+import produce from 'immer'
+import type { StateCreator } from 'zustand'
 
 type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile'
 
-interface SlideOverStateType {
-  open: boolean
+export interface SlideOverStateType {
+  slideOverState: {
+    open: boolean
+    /** Panel title displayed on top of slide over panel. */
+    title: string
+    /** The name of the component to be rendered in the slide-over. */
+    componentName: SlideOverComponentNames
+  }
+  setSlideOverState: (newState: Partial<SlideOverStateType['slideOverState']>) => void
 
   /** Toggle the show/hide of the slide-over. */
-  toggle: (bool?: boolean) => void
-
-  /** Panel title displayed on top of slide over panel. */
-  title: string
-
-  /** Set the title of slide-over */
-  setTitle: (newTitle: string) => void
-
-  /** The name of the component to be rendered in the slide-over. */
-  componentName: SlideOverComponentNames
-
-  /** Set the name of the component to be rendered. */
-  setComponentName: (name: SlideOverComponentNames) => void
+  toggleSlideOver: (bool?: boolean) => void
 }
 
 /** The global notification component is used only in the auth layout (for now). The global notification will show or hide with content depending on the state of this store. */
-export const useSlideOverState = create<SlideOverStateType>()(set => ({
-  open: false,
-  toggle(bool) {
-    if (typeof bool !== 'undefined') {
-      set({ open: bool })
-    } else {
-      set(state => ({ open: !state.open }))
-    }
+export const useSlideOverState: StateCreator<SlideOverStateType, [], [], SlideOverStateType> = set => ({
+  slideOverState: {
+    open: false,
+    title: 'New Chat',
+    componentName: 'ContactList',
   },
-  title: '',
-  setTitle(newTitle) {
-    set({ title: newTitle })
+  toggleSlideOver(bool) {
+    set(
+      produce((state: SlideOverStateType) => {
+        if (typeof bool !== 'undefined') {
+          state.slideOverState.open = bool
+        } else {
+          state.slideOverState.open = !state.slideOverState.open
+        }
+      }),
+    )
   },
-  componentName: 'ContactList',
-  setComponentName(name) {
-    set({ componentName: name })
+  setSlideOverState(newState) {
+    set(state => ({
+      ...state,
+      ...newState,
+    }))
   },
-}))
+})

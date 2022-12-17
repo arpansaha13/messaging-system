@@ -1,10 +1,11 @@
 import Router from 'next/router'
 import { memo, useEffect, useState } from 'react'
+import shallow from 'zustand/shallow'
 // Custom Hooks
 import { useAppDataInit } from '../hooks/useAppDataInit'
 // Components
 import AsyncPage from '../components/AsyncPage' // Import this dynamically when needed
-// Stores
+// Store
 import { useAuthStore } from '../stores/useAuthStore'
 // Types
 import type { NextPage } from 'next'
@@ -12,8 +13,7 @@ import type { NextPage } from 'next'
 const Home: NextPage = () => {
   const { initAppData } = useAppDataInit()
 
-  const authToken = useAuthStore(state => state.authToken)
-  const expiresAt = useAuthStore(state => state.expiresAt)
+  const [authToken, expiresAt] = useAuthStore(state => [state.authToken, state.authExpiresAt], shallow)
 
   const [hasLoaded, setLoaded] = useState<boolean>(false)
   const isAuthorized = !(authToken === null || (expiresAt !== null && Date.now() >= expiresAt))

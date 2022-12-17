@@ -1,51 +1,60 @@
 import { memo } from 'react'
 import Router from 'next/router'
+import shallow from 'zustand/shallow'
 // Icons
 import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon } from '@heroicons/react/20/solid'
 // Stores
+import { useStore } from '../../stores/index.store'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useSlideOverState } from '../../stores/useSlideOverState'
 // Components
 import HeaderDropDown from '../HeaderDropDown'
 
 const SidebarHeader = () => {
   const resetAuthState = useAuthStore(state => state.resetAuthState)
-
-  const toggle = useSlideOverState(state => state.toggle)
-  const setTitle = useSlideOverState(state => state.setTitle)
-  const setComponentName = useSlideOverState(state => state.setComponentName)
+  const [toggleSlideOver, setSlideOverState] = useStore(
+    state => [state.toggleSlideOver, state.setSlideOverState],
+    shallow,
+  )
 
   const menuItems = [
     {
       slot: 'New group',
       onClick() {
-        setTitle('Add group participants')
-        // setComponentName('ContactList')
-        toggle(true)
+        setSlideOverState({
+          title: 'Add group participants',
+          // componentName: 'ContactList'
+        })
+        toggleSlideOver(true)
       },
     },
     {
       slot: 'Archived',
       onClick() {
-        setTitle('Archived')
-        // setComponentName('Archived')
-        toggle(true)
+        setSlideOverState({
+          title: 'Archived',
+          // componentName: 'Archived'
+        })
+        toggleSlideOver(true)
       },
     },
     {
       slot: 'Starred messages',
       onClick() {
-        setTitle('Starred messages')
-        // setComponentName('StarredMessages')
-        toggle(true)
+        setSlideOverState({
+          title: 'Starred messages',
+          // componentName: 'StarredMessages'
+        })
+        toggleSlideOver(true)
       },
     },
     {
       slot: 'Settings',
       onClick() {
-        setTitle('Settings')
-        // setComponentName('Settings')
-        toggle(true)
+        setSlideOverState({
+          title: 'Settings',
+          // componentName: 'Settings'
+        })
+        toggleSlideOver(true)
       },
     },
     {
@@ -58,9 +67,11 @@ const SidebarHeader = () => {
   ]
 
   function openNewChatMenu() {
-    setTitle('New chat')
-    setComponentName('ContactList')
-    toggle(true)
+    setSlideOverState({
+      title: 'New chat',
+      // componentName: 'ContactList'
+    })
+    toggleSlideOver(true)
   }
 
   return (

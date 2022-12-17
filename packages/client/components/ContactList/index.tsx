@@ -1,24 +1,29 @@
 import { memo } from 'react'
+import shallow from 'zustand/shallow'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Components
 import ContactListItem from './ContactListItem'
 // Stores
-import { useChatStore } from '../../stores/useChatStore'
-import { useContactStore } from '../../stores/useContactStore'
-import { useChatListStore } from '../../stores/useChatListStore'
+import { useStore } from '../../stores/index.store'
 // Types
 import type { ContactType, MessageType } from '../../types/index.types'
 
 export const ContactList = () => {
   const fetchHook = useFetch()
-  const add = useChatStore(state => state.add)
-  const chats = useChatStore(state => state.chats)
-  const setActiveChatInfo = useChatStore(state => state.setActiveChatInfo)
-  const contacts = useContactStore(state => state.contacts)
-  const setProxyRoom = useChatListStore(state => state.setProxyRoom)
-  const setActiveRoomId = useChatListStore(state => state.setActiveRoomId)
-  const searchRoomIdByUserId = useChatListStore(state => state.searchRoomIdByUserId)
+
+  const [add, chats, contacts, searchRoomIdByUserId, setActiveChatInfo, setActiveRoomId, setProxyRoom] = useStore(
+    state => [
+      state.addChat,
+      state.chats,
+      state.contacts,
+      state.searchRoomIdByUserId,
+      state.setActiveChatInfo,
+      state.setActiveRoomId,
+      state.setProxyRoom,
+    ],
+    shallow,
+  )
 
   async function handleClick(contact: ContactType) {
     setActiveChatInfo({

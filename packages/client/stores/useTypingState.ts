@@ -1,18 +1,18 @@
-import create from 'zustand'
+import type { StateCreator } from 'zustand'
 import produce from 'immer'
 
-interface TypingStateType {
+export interface TypingStateType {
   typingState: { [roomId: number]: boolean }
-  setTyping: (senderId: number, newState: boolean) => void
+  setTypingState: (senderId: number, newState: boolean) => void
 }
 
-export const useTypingState = create<TypingStateType>()(set => ({
+export const useTypingState: StateCreator<TypingStateType, [], [], TypingStateType> = set => ({
   typingState: {},
-  setTyping(roomId, newState) {
+  setTypingState(roomId, newState) {
     set(
       produce((state: TypingStateType) => {
         state.typingState[roomId] = newState
       }),
     )
   },
-}))
+})

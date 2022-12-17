@@ -1,3 +1,4 @@
+import shallow from 'zustand/shallow'
 // Custom Hooks
 import { useSocketInit } from '../hooks/useSocket'
 // Components
@@ -6,21 +7,21 @@ import SlideOver from './SlideOver'
 import ChatSidebar from './ChatSidebar'
 import ContactList from './ContactList'
 // Stores
-import { useChatListStore } from '../stores/useChatListStore'
-import { useSlideOverState } from '../stores/useSlideOverState'
+import { useStore } from '../stores/index.store'
 
 /** This is the main page to be shown for an **authorized** user */
 export default function AsyncPage() {
   useSocketInit()
 
-  const activeRoomId = useChatListStore(state => state.activeRoomId)
-  const isProxyRoom = useChatListStore(state => state.isProxyRoom)
-  const slideOverComponentName = useSlideOverState(state => state.componentName)
+  const [activeRoomId, isProxyRoom, slideOverState] = useStore(
+    state => [state.activeRoomId, state.isProxyRoom, state.slideOverState],
+    shallow,
+  )
 
   const showChatView = activeRoomId !== null || isProxyRoom
 
   function getSlideOverContent() {
-    switch (slideOverComponentName) {
+    switch (slideOverState.componentName) {
       case 'ContactList':
         return <ContactList />
       case 'Archived':

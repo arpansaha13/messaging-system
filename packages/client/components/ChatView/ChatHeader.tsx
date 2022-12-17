@@ -1,4 +1,5 @@
 import { memo } from 'react'
+import shallow from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from '../../hooks/useFetch'
 // Icons
@@ -7,19 +8,17 @@ import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Avatar from '../Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 // Stores
-import { useChatStore } from '../../stores/useChatStore'
-import { useChatListStore } from '../../stores/useChatListStore'
-import { useTypingState } from '../../stores/useTypingState'
+import { useStore } from '../../stores/index.store'
 // Utils
 import classNames from '../../utils/classNames'
 
 const ChatHeader = () => {
   const fetchHook = useFetch()
-  const typingState = useTypingState(state => state.typingState)
-  const activeChatInfo = useChatStore(state => state.activeChatInfo)!
-  const activeRoomId = useChatListStore(state => state.activeRoomId)
-  const updateChatListItem = useChatListStore(state => state.updateChatListItem)
-  const clearChat = useChatStore(state => state.clearChat)
+
+  const [typingState, activeChatInfo, activeRoomId, updateChatListItem, clearChat] = useStore(
+    state => [state.typingState, state.activeChatInfo!, state.activeRoomId, state.updateChatListItem, state.clearChat],
+    shallow,
+  )
 
   const chatMenuItems = [
     {

@@ -1,26 +1,31 @@
 import { memo } from 'react'
+import shallow from 'zustand/shallow'
 // Components
 import SearchBar from './SearchBar'
 import SidebarHeader from './SidebarHeader'
 import ChatSidebarItem from './ChatSidebarItem'
-// Stores
-import { useChatStore } from '../../stores/useChatStore'
-import { useChatListStore } from '../../stores/useChatListStore'
+// Store
+import { useStore } from '../../stores/index.store'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Types
-import { ChatListItemType, MessageType } from '../../types/index.types'
+import type { ChatListItemType, MessageType } from '../../types/index.types'
 
 const ChatSidebar = () => {
   const fetchHook = useFetch()
 
-  const add = useChatStore(state => state.add)
-  const chats = useChatStore(state => state.chats)
-  const chatList = useChatListStore(state => state.chatList)
-  const activeRoomId = useChatListStore(state => state.activeRoomId)
-  const setActiveChatInfo = useChatStore(state => state.setActiveChatInfo)
-  const setActiveRoomId = useChatListStore(state => state.setActiveRoomId)
-  const setProxyRoom = useChatListStore(state => state.setProxyRoom)
+  const [add, chats, chatList, activeRoomId, setActiveChatInfo, setActiveRoomId, setProxyRoom] = useStore(
+    state => [
+      state.addChat,
+      state.chats,
+      state.chatList,
+      state.activeRoomId,
+      state.setActiveChatInfo,
+      state.setActiveRoomId,
+      state.setProxyRoom,
+    ],
+    shallow,
+  )
 
   async function handleClick(listItem: ChatListItemType) {
     setActiveRoomId(listItem.room.id)

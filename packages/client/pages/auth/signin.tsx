@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import Router from 'next/router'
 import NextLink from 'next/link'
+import shallow from 'zustand/shallow'
 
 import { useEffect } from 'react'
 import { useMap } from 'react-use'
@@ -9,8 +10,8 @@ import { useFetch } from '../../hooks/useFetch'
 // Components
 import BaseInput from '../../components/base/BaseInput'
 // Stores
+import { useStore } from '../../stores/index.store'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useNotificationState } from '../../stores/useNotificationState'
 // Layout
 import AuthLayout from '../../layouts/auth'
 // Types
@@ -18,7 +19,7 @@ import type { FormEvent, ReactElement } from 'react'
 import type { JwtToken } from '../../types/index.types'
 
 const SignInPage = () => {
-  const expiresAt = useAuthStore(state => state.expiresAt)
+  const expiresAt = useAuthStore(state => state.authExpiresAt)
 
   useEffect(() => {
     if (expiresAt !== null && Date.now() < expiresAt) {
@@ -30,7 +31,10 @@ const SignInPage = () => {
 
   const fetchHook = useFetch()
   const setAuthState = useAuthStore(state => state.setAuthState)
-  const setNotification = useNotificationState(state => state.setNotification)
+  const [toggleNotification, setNotification] = useStore(
+    state => [state.toggleNotification, state.setNotification],
+    shallow,
+  )
 
   const [formData, { set }] = useMap({
     email: '',
@@ -45,17 +49,20 @@ const SignInPage = () => {
       body: JSON.stringify(formData),
     })
       .then((data: JwtToken) => {
-        setAuthState(data)
+        setAuthState({
+          authToken: data.authToken,
+          authExpiresAt: data.expiresAt,
+        })
         Router.replace('/')
-        setNotification({ show: false })
+        toggleNotification(false)
       })
       .catch(err => {
         setNotification({
-          show: true,
           status: 'error',
           title: 'Sign in failed!',
           description: err.message,
         })
+        toggleNotification(true)
       })
   }
 

@@ -1,7 +1,8 @@
 import { Fragment, memo } from 'react'
 import { Transition } from '@headlessui/react'
+import shallow from 'zustand/shallow'
 // Stores
-import { useSlideOverState } from '../stores/useSlideOverState'
+import { useStore } from '../stores/index.store'
 // Icons
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 // Types
@@ -12,12 +13,10 @@ interface SlideOverProps {
 }
 
 const SlideOver = ({ children }: SlideOverProps) => {
-  const open = useSlideOverState(state => state.open)
-  const title = useSlideOverState(state => state.title)
-  const toggle = useSlideOverState(state => state.toggle)
+  const [slideOverState, toggleSlideOver] = useStore(state => [state.slideOverState, state.toggleSlideOver], shallow)
 
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={slideOverState.open} as={Fragment}>
       <div className="pointer-events-none absolute inset-y-0 left-0 z-40 flex max-w-full">
         <Transition.Child
           as={Fragment}
@@ -33,12 +32,12 @@ const SlideOver = ({ children }: SlideOverProps) => {
               <header className="pt-12 dark:bg-gray-800 dark:text-gray-50">
                 <div className="flex items-center">
                   <button
-                    onClick={() => toggle(false)}
+                    onClick={() => toggleSlideOver(false)}
                     className="ml-3 mr-4 h-12 w-12 inline-flex items-center justify-center"
                   >
                     <ArrowLeftIcon className="h-6 w-6" aria-hidden="true" />
                   </button>
-                  <h2 className="inline-block text-xl font-medium">{title}</h2>
+                  <h2 className="inline-block text-xl font-medium">{slideOverState.title}</h2>
                 </div>
               </header>
               {children}

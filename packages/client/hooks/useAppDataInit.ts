@@ -1,9 +1,9 @@
+import shallow from 'zustand/shallow'
 // Custom Hooks
 import { useFetch } from './useFetch'
 // Stores
+import { useStore } from '../stores/index.store'
 import { useAuthStore } from '../stores/useAuthStore'
-import { useContactStore } from '../stores/useContactStore'
-import { useChatListStore } from '../stores/useChatListStore'
 // Types
 import type {
   AuthUserResType,
@@ -16,10 +16,11 @@ import type {
 
 export function useAppDataInit() {
   const fetchHook = useFetch()
-
   const setAuthUser = useAuthStore(state => state.setAuthUser)
-  const initContactStore = useContactStore(state => state.init)
-  const initChatListStore = useChatListStore(state => state.init)
+  const [initContactStore, initChatListStore] = useStore(
+    state => [state.initContactStore, state.initChatListStore],
+    shallow,
+  )
 
   async function initAppData() {
     const [authUserRes, contactsRes]: [AuthUserResType, ContactResType[]] = await Promise.all([

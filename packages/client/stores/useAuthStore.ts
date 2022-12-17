@@ -3,12 +3,14 @@ import { persist } from 'zustand/middleware'
 // Types
 import type { AuthUserType } from '../types/index.types'
 
+// TODO: clear all stores on log-out
+
 interface AuthStoreType {
   authToken: string | null
-  expiresAt: number | null
+  authExpiresAt: number | null
   authUser: AuthUserType | null
   setAuthUser: (authUser: AuthUserType | null) => void
-  setAuthState: (newState: Pick<AuthStoreType, 'authToken' | 'expiresAt'>) => void
+  setAuthState: (newState: Pick<AuthStoreType, 'authToken' | 'authExpiresAt'>) => void
   resetAuthState: () => void
 }
 /** Auth token will be stored/persisted in local storage and this AuthStore reads and updates the data in local storage. */
@@ -16,7 +18,7 @@ export const useAuthStore = create<AuthStoreType>()(
   persist(
     set => ({
       authToken: null,
-      expiresAt: null,
+      authExpiresAt: null,
       authUser: null,
       setAuthUser(authUser) {
         set({ authUser })
@@ -24,13 +26,13 @@ export const useAuthStore = create<AuthStoreType>()(
       setAuthState(newState) {
         set({
           authToken: newState.authToken,
-          expiresAt: newState.expiresAt,
+          authExpiresAt: newState.authExpiresAt,
         })
       },
       resetAuthState() {
         set({
           authToken: null,
-          expiresAt: null,
+          authExpiresAt: null,
         })
       },
     }),
