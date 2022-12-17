@@ -14,7 +14,7 @@ export interface ChatListItemType {
     id: number
     dp: string | null
     bio: string
-    displayName: string | null
+    displayName: string
   }
   /** Will be `null` if this user is not in contacts. */
   contact: null | {
@@ -33,7 +33,7 @@ export interface UserType {
   id: number
   bio: string
   dp: string | null
-  displayName: string | null
+  displayName: string
 }
 export interface AuthUserType extends UserType {
   email: string
@@ -48,7 +48,7 @@ export interface ContactType {
   alias: string
   bio: string
   dp: string | null
-  displayName: string | null
+  displayName: string
 }
 
 export interface JwtToken {

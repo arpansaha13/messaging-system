@@ -9,6 +9,11 @@ export class SignUpDto {
   @MinLength(8)
   @MaxLength(30)
   password: string
+
+  @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(20)
+  displayName: string
 }
 
 export class SignInDto {

@@ -34,6 +34,7 @@ export class AuthService {
   async signUp(credentials: SignUpDto): Promise<JwtToken> {
     const newUser = new UserEntity()
     newUser.email = credentials.email
+    newUser.displayName = credentials.displayName
 
     try {
       await this.userRepository.save(newUser)

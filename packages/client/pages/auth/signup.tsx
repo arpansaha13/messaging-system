@@ -39,15 +39,11 @@ const SignUpPage = () => {
   const [formData, { set }] = useMap({
     email: '',
     password: '',
-  })
-  const [validationErrors, { reset, set: setError }] = useMap<Record<string, string | null>>({
-    email: null,
-    password: null,
+    displayName: '',
   })
 
   function signUp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    reset()
 
     fetchHook('auth/sign-up', {
       method: 'POST',
@@ -62,17 +58,12 @@ const SignUpPage = () => {
         toggleNotification(false)
       })
       .catch(err => {
-        if (err.statusCode === 409) {
-          setError('email', err.message.email ?? null)
-          setError('username', err.message.username ?? null)
-        } else {
-          setNotification({
-            status: 'error',
-            title: 'Sign up failed!',
-            description: err.message,
-          })
-          toggleNotification(true)
-        }
+        setNotification({
+          status: 'error',
+          title: 'Sign up failed!',
+          description: err.message,
+        })
+        toggleNotification(true)
       })
   }
 
@@ -93,7 +84,6 @@ const SignUpPage = () => {
           required
           label="Email address"
           value={formData.email}
-          validationError={validationErrors.email}
           onChange={e => set('email', e.target.value)}
         />
 
@@ -101,14 +91,25 @@ const SignUpPage = () => {
           id="password"
           name="password"
           type="password"
-          autoComplete="current-password"
+          autoComplete="new-password"
           required
           minLength={8}
           maxLength={30}
           label="Password"
           value={formData.password}
-          validationError={validationErrors.password}
           onChange={e => set('password', e.target.value)}
+        />
+
+        <BaseInput
+          id="display-name"
+          name="display-name"
+          autoComplete="username"
+          required
+          minLength={1}
+          maxLength={20}
+          label="Display name"
+          value={formData.displayName}
+          onChange={e => set('displayName', e.target.value)}
         />
 
         <div className="flex items-center justify-end">
