@@ -11,8 +11,8 @@ import HeaderDropDown from '../HeaderDropDown'
 
 const SidebarHeader = () => {
   const resetAuthState = useAuthStore(state => state.resetAuthState)
-  const [toggleSlideOver, setSlideOverState] = useStore(
-    state => [state.toggleSlideOver, state.setSlideOverState],
+  const [toggleSlideOver, setSlideOverState, resetStore] = useStore(
+    state => [state.toggleSlideOver, state.setSlideOverState, state.resetStore],
     shallow,
   )
 
@@ -62,6 +62,7 @@ const SidebarHeader = () => {
       onClick() {
         Router.replace('/auth/signin')
         resetAuthState()
+        resetStore()
       },
     },
   ]
