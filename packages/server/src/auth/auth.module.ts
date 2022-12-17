@@ -25,7 +25,7 @@ import type { EnvironmentVariables } from 'src/env.types'
       useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
         secret: configService.get('JWT_SECRET'),
         signOptions: {
-          expiresIn: configService.get('JWT_TOKEN_VALIDITY_SECONDS'),
+          expiresIn: Number(configService.get('JWT_TOKEN_VALIDITY_SECONDS')),
         },
       }),
     }),
