@@ -33,7 +33,7 @@ const SidebarHeader = () => {
       onClick() {
         setSlideOverState({
           title: 'Archived',
-          // componentName: 'Archived'
+          componentName: 'Archived',
         })
         toggleSlideOver(true)
       },
@@ -70,7 +70,7 @@ const SidebarHeader = () => {
   function openNewChatMenu() {
     setSlideOverState({
       title: 'New chat',
-      // componentName: 'ContactList'
+      componentName: 'ContactList',
     })
     toggleSlideOver(true)
   }

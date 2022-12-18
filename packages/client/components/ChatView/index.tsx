@@ -8,9 +8,9 @@ import { useStore } from '../../stores/index.store'
 
 // Frequently updates on state change.
 export default function ChatView() {
-  const [chats, activeRoomId] = useStore(state => [state.chats, state.activeRoomId], shallow)
+  const [chats, activeRoom] = useStore(state => [state.chats, state.activeRoom], shallow)
 
-  const messages = activeRoomId === null ? null : chats.get(activeRoomId) ?? null
+  const messages = activeRoom === null ? null : chats.get(activeRoom.id) ?? null
 
   return (
     <div className="flex flex-col h-full">

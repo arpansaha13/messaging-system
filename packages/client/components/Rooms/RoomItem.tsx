@@ -1,29 +1,46 @@
 import { memo } from 'react'
-import { format, parseISO } from 'date-fns'
+import { format, parseISO, differenceInCalendarDays } from 'date-fns'
+import shallow from 'zustand/shallow'
 // Utils
 import classNames from '../../utils/classNames'
+// Custom Hooks
+import { useFetch } from '../../hooks/useFetch'
 // Components
 import Avatar from '../Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
-import ChatSidebarItemDropDown from './ChatSidebarItemDropDown'
-// Enum
-import { ChatListItemType } from '../../types/index.types'
+import RoomItemDropDown from './RoomItemDropDown'
+// Store
+import { useStore } from '../../stores/index.store'
+// Types
+import type { ChatListItemType } from '../../types/index.types'
 
-export interface StackedListItemProps {
+export interface RoomItemProps {
   roomId: number
   alias: string | null
-  active: number | null
   dp: string | null
   latestMsg: ChatListItemType['latestMsg']
+  archived?: boolean
   onClick: () => void
 }
 
-const ChatSidebarItem = ({ roomId, alias, active, dp, latestMsg, onClick }: StackedListItemProps) => {
+const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: RoomItemProps) => {
+  const fetchHook = useFetch()
+
+  const [activeRoom, archiveRoom, unarchiveRoom] = useStore(
+    state => [state.activeRoom, state.archiveRoom, state.unarchiveRoom],
+    shallow,
+  )
   const menuItems = [
     {
-      slot: 'Archive chat',
+      slot: !archived ? 'Archive chat' : 'Unarchive chat',
       onClick() {
-        console.log('clicked')
+        if (!archived) {
+          archiveRoom(roomId)
+          fetchHook(`user-to-room/archive/${roomId}`, { method: 'PATCH' })
+        } else {
+          unarchiveRoom(roomId)
+          fetchHook(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+        }
       },
     },
     {
@@ -38,12 +55,17 @@ const ChatSidebarItem = ({ roomId, alias, active, dp, latestMsg, onClick }: Stac
         console.log('clicked')
       },
     },
-    {
-      slot: 'Pin chat',
-      onClick() {
-        console.log('clicked')
-      },
-    },
+    ...(() =>
+      !archived
+        ? [
+            {
+              slot: 'Pin chat',
+              onClick() {
+                console.log('clicked')
+              },
+            },
+          ]
+        : [])(),
     {
       slot: 'Mark as unread',
       onClick() {
@@ -52,12 +74,21 @@ const ChatSidebarItem = ({ roomId, alias, active, dp, latestMsg, onClick }: Stac
     },
   ]
 
+  function getDateTime() {
+    // FIXME: relative time
+    const diff = differenceInCalendarDays(new Date(), new Date(latestMsg!.createdAt))
+
+    if (diff < 1) return format(parseISO(latestMsg!.createdAt), 'h:mm a')
+    if (diff === 1) return 'Yesterday'
+    return format(parseISO(latestMsg!.createdAt), 'h:mm a')
+  }
+
   return (
     <li>
       <div
         className={classNames(
           'px-3 w-full text-left flex items-center relative',
-          roomId === active ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
+          roomId === activeRoom?.id ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
         )}
         onClick={onClick}
       >
@@ -70,7 +101,7 @@ const ChatSidebarItem = ({ roomId, alias, active, dp, latestMsg, onClick }: Stac
             <p className="text-base text-gray-50">{alias ?? '[Unknown]'}</p>
             {latestMsg && (
               <p className="text-xs text-gray-400 flex items-end">
-                <span>{format(parseISO(latestMsg.createdAt), 'h:mm a')}</span>
+                <span>{getDateTime()}</span>
               </p>
             )}
           </div>
@@ -84,11 +115,11 @@ const ChatSidebarItem = ({ roomId, alias, active, dp, latestMsg, onClick }: Stac
               {latestMsg?.status && <MsgStatusIcon status={latestMsg.status} />}
               {latestMsg && <span>{latestMsg.content}</span>}
             </p>
-            <ChatSidebarItemDropDown menuItems={menuItems} />
+            <RoomItemDropDown menuItems={menuItems} />
           </div>
         </div>
       </div>
     </li>
   )
 }
-export default memo(ChatSidebarItem)
+export default memo(RoomItem)

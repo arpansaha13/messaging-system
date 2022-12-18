@@ -7,6 +7,7 @@ import ChatView from './ChatView'
 import SlideOver from './SlideOver'
 import ChatSidebar from './ChatSidebar'
 import ContactList from './ContactList'
+import Archived from './Rooms/Archived'
 // Stores
 import { useStore } from '../stores/index.store'
 // Types
@@ -17,7 +18,7 @@ function getSlideOverContent(componentName: SlideOverStateType['slideOverState']
     case 'ContactList':
       return <ContactList />
     case 'Archived':
-      return <ContactList /> /* for now */
+      return <Archived />
     case 'Profile':
       return <Profile />
     default:
@@ -30,12 +31,12 @@ export default function AsyncPage() {
   useSocketInit()
 
   // TODO: PERF: component rerenders even if slideover state is overidden with same value
-  const [activeRoomId, isProxyRoom, slideOverState] = useStore(
-    state => [state.activeRoomId, state.isProxyRoom, state.slideOverState],
+  const [activeRoom, isProxyRoom, slideOverState] = useStore(
+    state => [state.activeRoom, state.isProxyRoom, state.slideOverState],
     shallow,
   )
 
-  const showChatView = activeRoomId !== null || isProxyRoom
+  const showChatView = activeRoom !== null || isProxyRoom
 
   return (
     <main className="grid grid-cols-10 h-full">

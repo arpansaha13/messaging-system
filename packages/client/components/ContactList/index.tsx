@@ -12,14 +12,14 @@ import type { ContactType, MessageType } from '../../types/index.types'
 export const ContactList = () => {
   const fetchHook = useFetch()
 
-  const [add, chats, contacts, searchRoomIdByUserId, setActiveChatInfo, setActiveRoomId, setProxyRoom] = useStore(
+  const [add, chats, contacts, searchRoomByUserId, setActiveChatInfo, setActiveRoom, setProxyRoom] = useStore(
     state => [
       state.addChat,
       state.chats,
       state.contacts,
-      state.searchRoomIdByUserId,
+      state.searchRoomByUserId,
       state.setActiveChatInfo,
-      state.setActiveRoomId,
+      state.setActiveRoom,
       state.setProxyRoom,
     ],
     shallow,
@@ -38,13 +38,13 @@ export const ContactList = () => {
         displayName: contact.displayName,
       },
     })
-    const roomId = searchRoomIdByUserId(contact.userId)
-    setActiveRoomId(roomId)
-    setProxyRoom(roomId === null)
+    const room = searchRoomByUserId(contact.userId)
+    setActiveRoom(room)
+    setProxyRoom(room === null)
 
-    if (roomId && !chats.has(roomId)) {
-      const chatRes: MessageType[] = await fetchHook(`rooms/${roomId}/messages`)
-      add(roomId, chatRes)
+    if (room && !chats.has(room.id)) {
+      const chatRes: MessageType[] = await fetchHook(`rooms/${room.id}/messages`)
+      add(room.id, chatRes)
     }
   }
 

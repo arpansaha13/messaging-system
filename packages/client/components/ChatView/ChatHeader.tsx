@@ -15,11 +15,11 @@ import classNames from '../../utils/classNames'
 const ChatHeader = () => {
   const fetchHook = useFetch()
 
-  const [typingState, activeChatInfo, activeRoomId, clearChatListItemLatestMsg, clearChat] = useStore(
+  const [typingState, activeChatInfo, activeRoom, clearChatListItemLatestMsg, clearChat] = useStore(
     state => [
       state.typingState,
       state.activeChatInfo!,
-      state.activeRoomId,
+      state.activeRoom,
       state.clearChatListItemLatestMsg,
       state.clearChat,
     ],
@@ -59,14 +59,14 @@ const ChatHeader = () => {
     },
     // Show 'Clear messages' only if the room exists
     ...(() =>
-      activeRoomId !== null
+      activeRoom !== null
         ? [
             {
               slot: 'Clear messages',
               async onClick() {
-                await fetchHook(`user-to-room/${activeRoomId}/clear-chat`, { method: 'Delete' })
-                clearChat(activeRoomId)
-                clearChatListItemLatestMsg(activeRoomId)
+                await fetchHook(`user-to-room/${activeRoom.id}/clear-chat`, { method: 'Delete' })
+                clearChat(activeRoom.id)
+                clearChatListItemLatestMsg(activeRoom.id)
               },
             },
           ]
@@ -89,13 +89,13 @@ const ChatHeader = () => {
           <p
             className={classNames(
               'text-xs transition-[height] duration-200 overflow-hidden',
-              activeRoomId && typingState[activeRoomId] ? 'h-4' : 'h-0 delay-150',
+              activeRoom && typingState[activeRoom.id] ? 'h-4' : 'h-0 delay-150',
             )}
           >
             <span
               className={classNames(
                 'transition-opacity',
-                activeRoomId && typingState[activeRoomId] ? 'opacity-100 delay-200' : 'opacity-0',
+                activeRoom && typingState[activeRoom.id] ? 'opacity-100 delay-200' : 'opacity-0',
               )}
             >
               typing...

@@ -31,7 +31,7 @@ export const useStore = create<StoreType>()((...a) => ({
   resetStore() {
     a[0]({
       activeChatInfo: null,
-      activeRoomId: null,
+      activeRoom: null,
       chatList: [],
       isProxyRoom: false,
       chats: new Map<number, Map<number, MessageType>>(),

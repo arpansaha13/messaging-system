@@ -69,7 +69,7 @@ export function useSocketInit() {
     getActiveChatInfo,
     setProxyRoom,
     addNewItemToTop,
-    setActiveRoomId,
+    setActiveRoom,
     updateChatListItem,
     updateChatListItemStatus,
   ] = useStore(
@@ -81,7 +81,7 @@ export function useSocketInit() {
       state.getActiveChatInfo,
       state.setProxyRoom,
       state.addNewChatListItemToTop,
-      state.setActiveRoomId,
+      state.setActiveRoom,
       state.updateChatListItem,
       state.updateChatListItemStatus,
     ],
@@ -134,7 +134,7 @@ export function useSocketInit() {
       }
       addNewItemToTop(newChatListItem)
       addChat(data.room.id, [data.latestMsg])
-      setActiveRoomId(data.room.id)
+      setActiveRoom(data.room)
       setProxyRoom(false)
     })
 

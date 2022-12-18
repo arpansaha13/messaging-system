@@ -7,6 +7,7 @@ import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 // Components
 import TextArea from './TextArea'
 // Custom Hooks
+import { useFetch } from '../../hooks/useFetch'
 import { useSocket } from '../../hooks/useSocket'
 // Store
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -34,28 +35,30 @@ const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) =
 }
 
 const ChatFooter = () => {
+  const fetchHook = useFetch()
+  const { socket } = useSocket()
+
   const authUser = useAuthStore(state => state.authUser)!
-  const [activeChatInfo, send, addDraft, drafts, removeDraft, activeRoomId, updateChatListItem] = useStore(
+  const [activeChatInfo, send, addDraft, drafts, removeDraft, activeRoom, unarchiveRoom, updateChatListItem] = useStore(
     state => [
       state.activeChatInfo!,
       state.sendMsg,
       state.addDraft,
       state.drafts,
       state.removeDraft,
-      state.activeRoomId,
+      state.activeRoom,
+      state.unarchiveRoom,
       state.updateChatListItem,
     ],
     shallow,
   )
 
-  const { socket } = useSocket()
-
   const [value, setValue] = useState('')
-  const prevRoomId = useRef(activeRoomId)
+  const prevRoomId = useRef(activeRoom?.id ?? null)
 
   function typingStatePayload(isTyping: boolean): TypingStatePayloadType {
     return {
-      roomId: activeRoomId!,
+      roomId: activeRoom!.id,
       isTyping,
       receiverId: activeChatInfo.user.id,
     }
@@ -67,22 +70,26 @@ const ChatFooter = () => {
         isFirstRun.current = false
         return
       }
-      if (activeRoomId === null) return
-      socket.emit('typing-state', typingStatePayload(false))
+      if (activeRoom !== null) socket.emit('typing-state', typingStatePayload(false))
     },
     1000,
     [value],
   )
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (activeRoomId !== null && isReady() && isTypedCharGood(e)) {
+    if (activeRoom !== null && isReady() && isTypedCharGood(e)) {
       socket.emit('typing-state', typingStatePayload(true))
     }
     if (e.key === 'Enter' && value) {
       const ISOtimestamp = ISODateNow()
-      if (activeRoomId !== null) {
-        send(activeRoomId, authUser.id, value, ISOtimestamp)
-        updateChatListItem(activeRoomId, {
+      if (activeRoom !== null) {
+        if (activeRoom.archived) {
+          unarchiveRoom(activeRoom.id)
+          fetchHook(`user-to-room/unarchive/${activeRoom.id}`, { method: 'PATCH' })
+        }
+
+        send(activeRoom.id, authUser.id, value, ISOtimestamp)
+        updateChatListItem(activeRoom.id, {
           content: value,
           status: MessageStatus.SENDING,
           createdAt: ISOtimestamp,
@@ -93,7 +100,7 @@ const ChatFooter = () => {
       socket.emit('send-message', {
         content: value,
         ISOtime: ISOtimestamp,
-        roomId: activeRoomId,
+        roomId: activeRoom?.id ?? null,
         senderId: authUser.id,
         receiverId: activeChatInfo.user.id,
       })
@@ -101,19 +108,19 @@ const ChatFooter = () => {
   }
 
   useEffect(() => {
-    // Store the draft, if any, when `activeRoomId` changes
+    // Store the draft, if any, when `activeRoom` changes
     if (prevRoomId.current !== null && value) {
       addDraft(prevRoomId.current, value)
       setValue('')
     }
     // Retrieve the draft, if any
-    if (activeRoomId !== null && drafts.has(activeRoomId)) {
-      setValue(drafts.get(activeRoomId)!)
-      removeDraft(activeRoomId)
+    if (activeRoom !== null && drafts.has(activeRoom.id)) {
+      setValue(drafts.get(activeRoom.id)!)
+      removeDraft(activeRoom.id)
     }
-    prevRoomId.current = activeRoomId
+    prevRoomId.current = activeRoom?.id ?? null
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRoomId])
+  }, [activeRoom])
 
   return (
     <div className="px-4 py-2.5 w-full flex items-center text-gray-400 bg-gray-800 space-x-1">

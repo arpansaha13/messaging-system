@@ -15,7 +15,7 @@ interface DropDownProps {
   }[]
 }
 
-const ChatSidebarItemDropDown = ({ menuItems }: DropDownProps) => {
+const RoomItemDropDown = ({ menuItems }: DropDownProps) => {
   return (
     <Menu as="div" className="relative text-left">
       {({ open }) => (
@@ -74,4 +74,4 @@ const ChatSidebarItemDropDown = ({ menuItems }: DropDownProps) => {
   )
 }
 // Frequently updates when parent re-renders.
-export default ChatSidebarItemDropDown
+export default RoomItemDropDown

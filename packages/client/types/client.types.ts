@@ -1,12 +1,13 @@
 import { MessageStatus } from './message.types'
 
-export interface ChatListItemType {
+/** Generic type for chat-list item. A = archived, G = isGroup */
+export interface ChatListItemType<A = false, G = false> {
   userToRoomId: number
   room: {
     id: number
     muted: boolean
-    archived: false
-    isGroup: false
+    archived: A
+    isGroup: G
     deleted: boolean
   }
   /** The user with whom the chat is. */
