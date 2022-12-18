@@ -26,63 +26,59 @@ export function useAppDataInit() {
     const authUserRes: AuthUserResType = await fetchHook('users/me')
     setAuthUser(authUserRes)
 
-    const unarchivedRoomRes: UserToRoomResType[] = await fetchHook('user-to-room/rooms/unarchived')
-    const initChatList = await prepareChatList(unarchivedRoomRes, authUserRes.id, fetchHook)
-    initUnarchivedStore(initChatList)
+    const convoRes: any[] = await fetchHook('users/convo')
+    const { unarchivedList, archivedList } = prepareChatList(convoRes)
+    initUnarchivedStore(unarchivedList)
+    initArchivedStore(archivedList)
 
     /** Not awaiting for contacts */
     fetchHook('contacts').then((contactsRes: ContactResType[]) => initContactStore(contactsRes))
-
-    /** Not awaiting for archived data */
-    fetchHook('user-to-room/rooms/archived').then(async (archivedRoomRes: UserToRoomResType<true>[]) => {
-      const initChatList = await prepareChatList<true>(archivedRoomRes, authUserRes.id, fetchHook)
-      initArchivedStore(initChatList)
-    })
   }
 
   return { initAppData }
 }
 
 /** Generic type A = archived */
-async function prepareChatList<A = false>(
-  roomRes: ReadonlyArray<UserToRoomResType<A>>,
-  authUserId: number,
-  fetchHook: ReturnType<typeof useFetch>,
-): Promise<ChatListItemType<A>[]> {
-  const chatList: ChatListItemType<A>[] = []
+function prepareChatList(convoRes: any[]): {
+  unarchivedList: ChatListItemType[]
+  archivedList: ChatListItemType<true>[]
+} {
+  const archivedList: ChatListItemType<true>[] = []
+  const unarchivedList: ChatListItemType[] = []
 
-  for (const roomResItem of roomRes) {
-    const chatListItem = {} as ChatListItemType<A>
-
-    chatListItem.userToRoomId = roomResItem.userToRoomId
-    chatListItem.room = {
-      id: roomResItem.room.id,
-      archived: roomResItem.archived,
-      deleted: roomResItem.deleted,
-      isGroup: roomResItem.room.isGroup,
-      muted: roomResItem.isMuted,
+  for (const convoItem of convoRes) {
+    const template: ChatListItemType<boolean> = {
+      userToRoomId: convoItem.u2r_id,
+      room: {
+        id: convoItem.r_id,
+        archived: convoItem.u2r_archived,
+        deleted: convoItem.u2r_deleted,
+        muted: convoItem.u2r_muted,
+        isGroup: convoItem.r_is_group,
+      },
+      contact: convoItem.c_id
+        ? {
+            id: convoItem.c_id,
+            alias: convoItem.c_alias,
+          }
+        : null,
+      user: {
+        id: convoItem.u_id,
+        dp: convoItem.u_dp,
+        bio: convoItem.u_bio,
+        displayName: convoItem.u_display_name,
+      },
+      latestMsg: convoItem.msg_content
+        ? {
+            content: convoItem.msg_content,
+            createdAt: convoItem.msg_created_at,
+            senderId: convoItem.msg_sender_id,
+            status: convoItem.msg_status,
+          }
+        : null,
     }
-    chatListItem.latestMsg = (await fetchHook(`rooms/${roomResItem.room.id}/messages/latest`)) as MsgResType
-
-    const usersInRoom = (await fetchHook(`rooms/${roomResItem.room.id}/users`)) as UserType[]
-    const receiverUser = usersInRoom.filter(user => user.id !== authUserId)[0]
-
-    chatListItem.user = receiverUser
-
-    const queryString = new URLSearchParams({
-      userId: receiverUser.id.toString(),
-    })
-    const contact: ContactResType | null = await fetchHook(`contacts?${queryString}`).catch(() => null)
-
-    if (contact === null) {
-      chatListItem.contact = null
-    } else {
-      chatListItem.contact = {
-        id: contact.id,
-        alias: contact.alias,
-      }
-    }
-    chatList.push(chatListItem)
+    if (template.room.archived) archivedList.push(template as ChatListItemType<true>)
+    else unarchivedList.push(template as ChatListItemType<false>)
   }
-  return chatList
+  return { unarchivedList, archivedList }
 }

@@ -80,7 +80,7 @@ const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: R
 
     if (diff < 1) return format(parseISO(latestMsg!.createdAt), 'h:mm a')
     if (diff === 1) return 'Yesterday'
-    return format(parseISO(latestMsg!.createdAt), 'h:mm a')
+    return format(parseISO(latestMsg!.createdAt), 'dd/MM/yy')
   }
 
   return (

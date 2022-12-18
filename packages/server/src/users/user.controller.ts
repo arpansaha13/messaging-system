@@ -20,6 +20,11 @@ export class UserController {
     return authUser
   }
 
+  @Get('/convo')
+  getUserConvo(@GetPayload('user') authUser: UserEntity): Promise<any> {
+    return this.userService.getUserConvo(authUser.id)
+  }
+
   @Get('/:userId')
   getUserById(@Param() params: UserIdParam): Promise<UserEntity> {
     return this.userService.getUserById(params.userId)
