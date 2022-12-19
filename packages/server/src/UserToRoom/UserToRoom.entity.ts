@@ -28,6 +28,9 @@ export class UserToRoom {
   @Column({ name: 'archived', type: 'boolean', default: false, nullable: false })
   archived: boolean
 
+  @Column({ name: 'pinned', type: 'boolean', default: false, nullable: false })
+  pinned: boolean
+
   @Column({ name: 'deleted', type: 'boolean', default: false, nullable: false })
   deleted: boolean
 }

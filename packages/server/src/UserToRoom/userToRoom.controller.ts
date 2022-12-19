@@ -41,6 +41,16 @@ export class UserToRoomController {
     return this.userToRoomService.updateArchive(authUser.id, params.roomId, false)
   }
 
+  @Patch('/:roomId/pin-chat')
+  pinChat(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updatePin(authUser.id, params.roomId, true)
+  }
+
+  @Patch('/:roomId/unpin-chat')
+  unpinChat(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updatePin(authUser.id, params.roomId, false)
+  }
+
   @Delete('/:roomId/clear-chat')
   clearChat(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
     return this.userToRoomService.clearChat(authUser.id, params.roomId)

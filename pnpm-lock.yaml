@@ -14,6 +14,8 @@ importers:
     specifiers:
       '@headlessui/react': ^1.7.3
       '@heroicons/react': ^2.0.12
+      '@iconify-icons/mdi': ^1.2.36
+      '@iconify/react': ^4.0.1
       '@tailwindcss/forms': ^0.5.3
       '@tailwindcss/line-clamp': ^0.4.2
       '@types/node': ^16.11.68
@@ -40,6 +42,8 @@ importers:
     devDependencies:
       '@headlessui/react': 1.7.3_biqbaboplfbrettd7655fr4n2y
       '@heroicons/react': 2.0.12_react@18.2.0
+      '@iconify-icons/mdi': 1.2.36
+      '@iconify/react': 4.0.1_react@18.2.0
       '@tailwindcss/forms': 0.5.3_tailwindcss@3.2.1
       '@tailwindcss/line-clamp': 0.4.2_tailwindcss@3.2.1
       '@types/node': 16.11.68
@@ -684,6 +688,25 @@ packages:
 
   /@humanwhocodes/object-schema/1.2.1:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
+    dev: true
+
+  /@iconify-icons/mdi/1.2.36:
+    resolution: {integrity: sha512-3rx7Hr4wZrbPnpJh/f9uoZ8yHutyozXOnI8h96B3MyjE/lZmWqCx1fCxzDvAlRD6G09RN18zX9uPHd6HPZUtKA==}
+    dependencies:
+      '@iconify/types': 2.0.0
+    dev: true
+
+  /@iconify/react/4.0.1_react@18.2.0:
+    resolution: {integrity: sha512-/DBJqh5K7W4f+d4kpvyJa/OTpVa3GfgrE9bZFAKP0vIWDr0cvVU9MVvbbkek216w9nLQhpJY/FeJtc6izB1PHw==}
+    peerDependencies:
+      react: '>=16'
+    dependencies:
+      '@iconify/types': 2.0.0
+      react: 18.2.0
+    dev: true
+
+  /@iconify/types/2.0.0:
+    resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
     dev: true
 
   /@istanbuljs/load-nyc-config/1.1.0:

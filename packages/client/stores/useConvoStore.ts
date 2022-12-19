@@ -3,25 +3,6 @@ import produce from 'immer'
 
 import type { ConvoItemType, MessageStatus } from '../types/index.types'
 
-function sortedIndex(list: ReadonlyArray<ConvoItemType<boolean>>, item: Readonly<ConvoItemType<boolean>>) {
-  // FIXME: null messages get inserted at wrong positions
-  let low = 0
-  let high = list.length
-  if (item.latestMsg === null) return high
-
-  const insertDate = new Date(item.latestMsg.createdAt)
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2)
-    if (list[mid].latestMsg === null) return mid
-
-    const currDate = new Date(list[mid].latestMsg!.createdAt)
-    if (currDate > insertDate) low = mid + 1
-    else if (currDate < insertDate) high = mid - 1
-    else return mid
-  }
-  return low
-}
-
 export interface ConvoStoreType {
   /** The currently active chat-room. */
   activeRoom: Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
@@ -46,7 +27,7 @@ export interface ConvoStoreType {
    */
   searchConvoByUserId: (userId: number) => ConvoItemType<boolean>['room'] | null
 
-  addNewConvoItemToTop: (newItem: ConvoItemType) => void
+  addNewConvoItem: (newItem: ConvoItemType) => void
 
   clearConvoItemLatestMsg: (roomId: number) => void
 
@@ -58,6 +39,10 @@ export interface ConvoStoreType {
   archiveRoom: (roomId: number) => void
   unarchiveRoom: (roomId: number) => void
   deleteConvo: (roomId: number, archived?: boolean) => void
+  /** Used for pin-chat */
+  pinConvo: (roomId: number) => void
+  /** Used for unpin-chat */
+  unpinConvo: (roomId: number) => void
 }
 
 export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType> = (set, get) => ({
@@ -68,6 +53,10 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
   convo: [],
   initUnarchivedConvo(initConvo) {
     set(() => ({ convo: initConvo }))
+  },
+  archivedConvo: [],
+  initArchivedConvo(initConvo) {
+    set(() => ({ archivedConvo: initConvo }))
   },
   isProxyConvo: false,
   setProxyConvo(proxyConvoState) {
@@ -80,15 +69,24 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         if (idx === null) return null
         const convoItem = state.convo.splice(idx, 1)[0]
         convoItem.latestMsg = latestMsg
-        state.convo.unshift(convoItem)
+        pushAndSort(state.convo, convoItem)
       }),
     )
   },
   updateConvoItemStatus(roomId, latestMsgStatus) {
     set(
       produce((state: ConvoStoreType) => {
-        const idx = state.convo.findIndex(val => val.room.id === roomId)
+        const idx = findRoomIndex(roomId, state.convo)!
         state.convo[idx].latestMsg!.status = latestMsgStatus
+      }),
+    )
+  },
+  clearConvoItemLatestMsg(roomId) {
+    set(
+      produce((state: ConvoStoreType) => {
+        const idx = findRoomIndex(roomId, state.convo)
+        if (idx === null) return null
+        state.convo[idx].latestMsg = null
       }),
     )
   },
@@ -103,25 +101,12 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
 
     return null
   },
-  addNewConvoItemToTop(newItem) {
+  addNewConvoItem(newItem) {
     set(
       produce((state: ConvoStoreType) => {
-        state.convo.unshift(newItem)
+        pushAndSort(state.convo, newItem)
       }),
     )
-  },
-  clearConvoItemLatestMsg(roomId) {
-    set(
-      produce((state: ConvoStoreType) => {
-        const idx = findRoomIndex(roomId, state.convo)
-        if (idx === null) return null
-        state.convo[idx].latestMsg = null
-      }),
-    )
-  },
-  archivedConvo: [],
-  initArchivedConvo(initConvo) {
-    set(() => ({ archivedConvo: initConvo }))
   },
   archiveRoom(roomId) {
     set(
@@ -130,9 +115,8 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         if (idx === null) return null
         const convoItem = state.convo.splice(idx, 1)[0] as unknown as ConvoItemType<true>
         convoItem.room.archived = true
-
-        const insertAtIdx = sortedIndex(get().archivedConvo, convoItem)
-        state.archivedConvo.splice(insertAtIdx, 0, convoItem)
+        convoItem.room.pinned = false
+        pushAndSort(state.archivedConvo, convoItem)
       }),
     )
   },
@@ -143,9 +127,7 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         if (idx === null) return null
         const convoItem = state.archivedConvo.splice(idx, 1)[0] as unknown as ConvoItemType<false>
         convoItem.room.archived = false
-
-        const insertAtIdx = sortedIndex(get().convo, convoItem)
-        state.convo.splice(insertAtIdx, 0, convoItem)
+        pushAndSort(state.convo, convoItem)
       }),
     )
   },
@@ -159,6 +141,28 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
       }),
     )
   },
+  pinConvo(roomId) {
+    set(
+      produce((state: ConvoStoreType) => {
+        const idx = findRoomIndex(roomId, state.convo)
+        if (idx === null) return null
+        const convoItem = state.convo.splice(idx, 1)[0]
+        convoItem.room.pinned = true
+        pushAndSort(state.convo, convoItem)
+      }),
+    )
+  },
+  unpinConvo(roomId) {
+    set(
+      produce((state: ConvoStoreType) => {
+        const idx = findRoomIndex(roomId, state.convo)
+        if (idx === null) return null
+        const convoItem = state.convo.splice(idx, 1)[0]
+        convoItem.room.pinned = false
+        pushAndSort(state.convo, convoItem)
+      }),
+    )
+  },
 })
 
 function findRoomIndex(roomId: number, list: ReadonlyArray<ConvoItemType<boolean>>): number | null {
@@ -168,4 +172,22 @@ function findRoomIndex(roomId: number, list: ReadonlyArray<ConvoItemType<boolean
     return null
   }
   return idx
+}
+function pushAndSort(list: ConvoItemType<boolean>[], item: Readonly<ConvoItemType<boolean>>): void {
+  list.push(item)
+  list.sort((a: Readonly<ConvoItemType<boolean>>, b: Readonly<ConvoItemType<boolean>>) => {
+    // Pinned chats on top
+    if (a.room.pinned && !b.room.pinned) return -1
+    if (!a.room.pinned && b.room.pinned) return 1
+
+    // Cleared convos at bottom
+    if (a.latestMsg !== null && b.latestMsg === null) return -1
+    if (a.latestMsg === null && b.latestMsg !== null) return 1
+    if (a.latestMsg === null && b.latestMsg === null) return 0
+
+    // Latest convo on top
+    if (a.latestMsg!.createdAt > b.latestMsg!.createdAt) return -1
+    if (a.latestMsg!.createdAt < b.latestMsg!.createdAt) return 1
+    return 0
+  })
 }

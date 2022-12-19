@@ -45,6 +45,7 @@ function prepareConvo(convoRes: any[]): {
       room: {
         id: convoItem.r_id,
         archived: convoItem.u2r_archived,
+        pinned: convoItem.u2r_pinned,
         muted: convoItem.u2r_muted,
         isGroup: convoItem.r_is_group,
       },

@@ -80,7 +80,7 @@ export function useSocketInit() {
       state.updateMsgStatus,
       state.getActiveChatInfo,
       state.setProxyConvo,
-      state.addNewConvoItemToTop,
+      state.addNewConvoItem,
       state.setActiveRoom,
       state.updateConvoItem,
       state.updateConvoItemStatus,

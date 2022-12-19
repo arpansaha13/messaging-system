@@ -3,7 +3,7 @@ import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 // Entities
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
-import type { EntityManager, Repository } from 'typeorm'
+import type { EntityManager, Repository, UpdateResult } from 'typeorm'
 
 @Injectable()
 export class UserToRoomService {
@@ -52,48 +52,35 @@ export class UserToRoomService {
     return res.length > 0 ? res[0].room_id : null
   }
 
-  async updateFirstMsgTstamp(authUserId: number, roomId: number, newValue: string): Promise<void> {
-    await this.userToRoomRepository.update(
-      {
-        user: { id: authUserId },
-        room: { id: roomId },
-      },
-      { firstMsgTstamp: newValue !== null ? new Date(newValue) : null },
-    )
-  }
-  async clearChat(authUserId: number, roomId: number): Promise<void> {
-    // TODO: check if chat is already cleared - throw error in that case
-    // provide `ignoreException` option
-    await this.updateFirstMsgTstamp(authUserId, roomId, null)
-  }
-  async deleteChat(authUserId: number, roomId: number): Promise<void> {
-    // TODO: check if chat is already deleted - throw error in that case
-    await this.userToRoomRepository.update(
-      {
-        user: { id: authUserId },
-        room: { id: roomId },
-      },
-      { firstMsgTstamp: null, deleted: true },
-    )
-  }
-
-  async updateArchive(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
-    // TODO: check if chat is already archved/unarchved - throw error in that case
-    await this.userToRoomRepository.update(
-      {
-        user: { id: authUserId },
-        room: { id: roomId },
-      },
-      { archived: newValue },
-    )
-  }
-  async reviveRoomForUser(userId: number, roomId: number) {
-    await this.userToRoomRepository.update(
+  #updateUserToRoom(userId: number, roomId: number, partialEntity: Partial<UserToRoom>): Promise<UpdateResult> {
+    return this.userToRoomRepository.update(
       {
         user: { id: userId },
         room: { id: roomId },
       },
-      { deleted: false },
+      partialEntity,
     )
+  }
+  async updateFirstMsgTstamp(authUserId: number, roomId: number, newValue: string): Promise<void> {
+    await this.#updateUserToRoom(authUserId, roomId, { firstMsgTstamp: newValue !== null ? new Date(newValue) : null })
+  }
+  async clearChat(authUserId: number, roomId: number): Promise<void> {
+    // TODO: check if chat is already cleared - throw error in that case
+    await this.updateFirstMsgTstamp(authUserId, roomId, null)
+  }
+  async deleteChat(authUserId: number, roomId: number): Promise<void> {
+    // TODO: check if chat is already deleted - throw error in that case
+    await this.#updateUserToRoom(authUserId, roomId, { firstMsgTstamp: null, deleted: true })
+  }
+  async updatePin(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
+    // TODO: check if chat is already pinned - throw error in that case
+    await this.#updateUserToRoom(authUserId, roomId, { pinned: newValue })
+  }
+  async updateArchive(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
+    // TODO: check if chat is already archived/unarchived - throw error in that case
+    await this.#updateUserToRoom(authUserId, roomId, { archived: newValue, pinned: false })
+  }
+  async reviveRoomForUser(userId: number, roomId: number) {
+    await this.#updateUserToRoom(userId, roomId, { deleted: false })
   }
 }

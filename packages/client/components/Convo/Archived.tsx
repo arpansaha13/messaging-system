@@ -49,6 +49,7 @@ export default function Archived() {
             alias={convoItem.contact?.alias ?? null}
             latestMsg={convoItem.latestMsg}
             archived={true}
+            pinned={false}
             onClick={() => handleClick(convoItem)}
           />
         ))}

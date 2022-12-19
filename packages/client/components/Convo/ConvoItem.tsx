@@ -9,6 +9,9 @@ import { useFetch } from '../../hooks/useFetch'
 import Avatar from '../Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
 import RoomItemDropDown from './RoomItemDropDown'
+// Icons
+import { Icon } from '@iconify/react'
+import pinIcon from '@iconify-icons/mdi/pin'
 // Store
 import { useStore } from '../../stores/index.store'
 // Types
@@ -20,14 +23,25 @@ export interface ConvoItemProps {
   dp: string | null
   latestMsg: ConvoItemType['latestMsg']
   archived?: boolean
+  pinned?: boolean
   onClick: () => void
 }
 
-const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: ConvoItemProps) => {
+const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = false, onClick }: ConvoItemProps) => {
   const fetchHook = useFetch()
 
   // Initially no rooms would be active - so `activeRoom` may be null
-  const [activeRoom, setActiveRoom, setActiveChatInfo, archiveRoom, unarchiveRoom, deleteChat, deleteConvo] = useStore(
+  const [
+    activeRoom,
+    setActiveRoom,
+    setActiveChatInfo,
+    archiveRoom,
+    unarchiveRoom,
+    deleteChat,
+    deleteConvo,
+    pinConvo,
+    unpinConvo,
+  ] = useStore(
     state => [
       state.activeRoom,
       state.setActiveRoom,
@@ -36,6 +50,8 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: 
       state.unarchiveRoom,
       state.deleteChat,
       state.deleteConvo,
+      state.pinConvo,
+      state.unpinConvo,
     ],
     shallow,
   )
@@ -75,9 +91,15 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: 
       !archived
         ? [
             {
-              slot: 'Pin chat',
+              slot: !pinned ? 'Pin chat' : 'Unpin chat',
               onClick() {
-                console.log('clicked')
+                if (!pinned) {
+                  pinConvo(roomId)
+                  fetchHook(`user-to-room/${roomId}/pin-chat`, { method: 'PATCH' })
+                } else {
+                  unpinConvo(roomId)
+                  fetchHook(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+                }
               },
             },
           ]
@@ -130,7 +152,10 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: 
               {latestMsg?.status && <MsgStatusIcon status={latestMsg.status} />}
               {latestMsg && <span>{latestMsg.content}</span>}
             </p>
-            <RoomItemDropDown menuItems={menuItems} />
+            <div className="flex-shrink-0 flex items-center">
+              {pinned && <Icon icon={pinIcon} color="#9ca3af" width={20} height={20} />}
+              <RoomItemDropDown menuItems={menuItems} />
+            </div>
           </div>
         </div>
       </div>
