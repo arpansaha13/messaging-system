@@ -3,6 +3,25 @@ import produce from 'immer'
 
 import type { ConvoItemType, MessageStatus } from '../types/index.types'
 
+function sortedIndex(list: ReadonlyArray<ConvoItemType<boolean>>, item: Readonly<ConvoItemType<boolean>>) {
+  // FIXME: null messages get inserted at wrong positions
+  let low = 0
+  let high = list.length
+  if (item.latestMsg === null) return high
+
+  const insertDate = new Date(item.latestMsg.createdAt)
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2)
+    if (list[mid].latestMsg === null) return mid
+
+    const currDate = new Date(list[mid].latestMsg!.createdAt)
+    if (currDate > insertDate) low = mid + 1
+    else if (currDate < insertDate) high = mid - 1
+    else return mid
+  }
+  return low
+}
+
 export interface ConvoStoreType {
   /** The currently active chat-room. */
   activeRoom: Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
@@ -111,8 +130,8 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         const convoItem = state.convo.splice(idx, 1)[0] as unknown as ConvoItemType<true>
         convoItem.room.archived = true
 
-        // TODO: insert in sorted position
-        state.archivedConvo.push(convoItem)
+        const insertAtIdx = sortedIndex(get().archivedConvo, convoItem)
+        state.archivedConvo.splice(insertAtIdx, 0, convoItem)
       }),
     )
   },
@@ -124,8 +143,8 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         const convoItem = state.archivedConvo.splice(idx, 1)[0] as unknown as ConvoItemType<false>
         convoItem.room.archived = false
 
-        // TODO: insert in sorted position
-        state.convo.push(convoItem)
+        const insertAtIdx = sortedIndex(get().convo, convoItem)
+        state.convo.splice(insertAtIdx, 0, convoItem)
       }),
     )
   },
