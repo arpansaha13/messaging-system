@@ -57,7 +57,6 @@ export class UserService {
     else throw new NotFoundException()
   }
 
-  // FIXME: if latestMsg is `null`, then it ranks lower after sorting
   /** Dedicated api for convo list. */
   async getUserConvo(authUserId: number): Promise<any[]> {
     const userToRooms = await this.getRoomIdsOfUser(authUserId)
@@ -102,10 +101,11 @@ export class UserService {
       LEFT JOIN contacts AS contact ON contact.user_id_in_contact = u.id AND contact.user_id = ${authUserId}
     ) AS t1
     LEFT JOIN messages AS msg ON t1.msg_id = msg.id
-    ORDER BY msg_created_at DESC
+    ORDER BY CASE WHEN msg.created_at IS NULL THEN 1 ELSE 0 END, msg.created_at DESC
     `
     // Use LEFT JOIN for contacts, otherwise convo with unknown users won't load
     // Use LEFT JOIN for messages, otherwise convos with no messages won't load
+    // If latestMsg is `null`, then it ranks in the end
     return this.em.query(query)
   }
 }
