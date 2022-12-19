@@ -99,13 +99,13 @@ export class UserService {
       INNER JOIN rooms AS r ON r.id = u2r.u2r_room_id
       INNER JOIN user_to_room AS r2u ON r2u.room_id = r.id AND r2u.user_id != ${authUserId}
       INNER JOIN users AS u ON r2u.user_id = u.id
-      LEFT JOIN contacts AS contact ON contact.user_id_in_contact = u.id
+      LEFT JOIN contacts AS contact ON contact.user_id_in_contact = u.id AND contact.user_id = ${authUserId}
     ) AS t1
     LEFT JOIN messages AS msg ON t1.msg_id = msg.id
     ORDER BY msg_created_at DESC
     `
-    // Use LEFT JOIN for contacts
-    // otherwise convo with unknown users won't load
+    // Use LEFT JOIN for contacts, otherwise convo with unknown users won't load
+    // Use LEFT JOIN for messages, otherwise convos with no messages won't load
     return this.em.query(query)
   }
 }
