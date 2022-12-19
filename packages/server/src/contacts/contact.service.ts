@@ -1,16 +1,16 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 // Entities
-import { UserEntity } from 'src/users/user.entity'
+import { UserService } from 'src/users/user.service'
 import { ContactEntity } from './contact.entity'
 // Types
 import type { Repository } from 'typeorm'
+import type { UserEntity } from 'src/users/user.entity'
 
 @Injectable()
 export class ContactService {
   constructor(
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
+    private readonly userService: UserService,
 
     @InjectRepository(ContactEntity)
     private contactRepository: Repository<ContactEntity>,
@@ -65,9 +65,7 @@ export class ContactService {
     if (existing > 0) {
       throw new ConflictException('Given contact is already added.')
     }
-    const userToAdd = await this.userRepository.findOne({
-      where: { id: userIdToAdd },
-    })
+    const userToAdd = await this.userService.getUserById(userIdToAdd)
     if (userToAdd === null) {
       throw new BadRequestException('Invalid user id.')
     }
