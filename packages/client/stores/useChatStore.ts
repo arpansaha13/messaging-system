@@ -5,12 +5,12 @@ import { ISOToMilliSecs } from '../utils/ISODate'
 // Enum
 import { MessageStatus } from '../types/index.types'
 // Types
-import type { MessageType, ChatListItemType } from '../types/index.types'
+import type { MessageType, ConvoItemType } from '../types/index.types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 // TODO: Refactor senderId and receiverId variable names properly
 
-type ActiveChatInfo = null | Omit<ChatListItemType, 'latestMsg' | 'room' | 'userToRoomId'>
+type ActiveChatInfo = null | Omit<ConvoItemType, 'latestMsg' | 'room' | 'userToRoomId'>
 
 export interface ChatStoreType {
   /**

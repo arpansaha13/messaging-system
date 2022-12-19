@@ -1,10 +1,10 @@
 import { memo } from 'react'
-// Components
+
 import SearchBar from './SearchBar'
 import SidebarHeader from './SidebarHeader'
-import UnarchivedRooms from '../Rooms/Unarchived'
+import UnarchivedRooms from '../Convo/Unarchived'
 
-const ChatSidebar = () => {
+const Sidebar = () => {
   return (
     <div className="h-full space-y-2">
       <SidebarHeader />
@@ -13,4 +13,4 @@ const ChatSidebar = () => {
     </div>
   )
 }
-export default memo(ChatSidebar)
+export default memo(Sidebar)

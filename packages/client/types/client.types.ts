@@ -1,7 +1,7 @@
 import { MessageStatus } from './message.types'
 
 /** Generic type for chat-list item. A = archived, G = isGroup */
-export interface ChatListItemType<A = false, G = false> {
+export interface ConvoItemType<A = false, G = false> {
   userToRoomId: number
   room: {
     id: number

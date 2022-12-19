@@ -3,11 +3,11 @@ import shallow from 'zustand/shallow'
 import { useSocketInit } from '../hooks/useSocket'
 // Components
 import Profile from './Profile'
+import Sidebar from './Sidebar'
 import ChatView from './ChatView'
 import SlideOver from './SlideOver'
-import ChatSidebar from './ChatSidebar'
 import ContactList from './ContactList'
-import Archived from './Rooms/Archived'
+import Archived from './Convo/Archived'
 // Stores
 import { useStore } from '../stores/index.store'
 // Types
@@ -31,19 +31,19 @@ export default function AsyncPage() {
   useSocketInit()
 
   // TODO: PERF: component rerenders even if slideover state is overidden with same value
-  const [activeRoom, isProxyRoom, slideOverState] = useStore(
-    state => [state.activeRoom, state.isProxyRoom, state.slideOverState],
+  const [activeRoom, isProxyConvo, slideOverState] = useStore(
+    state => [state.activeRoom, state.isProxyConvo, state.slideOverState],
     shallow,
   )
 
-  const showChatView = activeRoom !== null || isProxyRoom
+  const showChatView = activeRoom !== null || isProxyConvo
 
   return (
     <main className="grid grid-cols-10 h-full">
       {/* 'overflow-x-visible' for the dropdown. */}
       <section className="col-span-3 h-full border-r border-gray-600/70 relative overflow-x-visible">
         <SlideOver>{getSlideOverContent(slideOverState.componentName)}</SlideOver>
-        <ChatSidebar />
+        <Sidebar />
       </section>
 
       <section className="col-span-7 h-full bg-gray-800">{showChatView && <ChatView />}</section>

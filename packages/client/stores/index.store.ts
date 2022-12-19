@@ -1,6 +1,6 @@
 import create from 'zustand'
 import { MessageType } from '../types/index.types'
-import { type ChatListStoreType, useChatListStore } from './useChatListStore'
+import { type ConvoStoreType, useConvoStore } from './useConvoStore'
 import { type ChatStoreType, useChatStore } from './useChatStore'
 import { type ContactStoreType, useContactStore } from './useContactStore'
 import { type DraftStoreType, useDraftStore } from './useDraftStore'
@@ -9,7 +9,7 @@ import { type SlideOverStateType, useSlideOverState } from './useSlideOverState'
 import { type TypingStateType, useTypingState } from './useTypingState'
 
 export interface StoreType
-  extends ChatListStoreType,
+  extends ConvoStoreType,
     ChatStoreType,
     ContactStoreType,
     DraftStoreType,
@@ -20,7 +20,7 @@ export interface StoreType
 }
 
 export const useStore = create<StoreType>()((...a) => ({
-  ...useChatListStore(...a),
+  ...useConvoStore(...a),
   ...useChatStore(...a),
   ...useContactStore(...a),
   ...useDraftStore(...a),
@@ -32,8 +32,8 @@ export const useStore = create<StoreType>()((...a) => ({
     a[0]({
       activeChatInfo: null,
       activeRoom: null,
-      chatList: [],
-      isProxyRoom: false,
+      convo: [],
+      isProxyConvo: false,
       chats: new Map<number, Map<number, MessageType>>(),
       contacts: {},
       drafts: new Map<number, string>(),

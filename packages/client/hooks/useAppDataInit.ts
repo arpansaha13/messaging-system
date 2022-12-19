@@ -5,20 +5,13 @@ import { useFetch } from './useFetch'
 import { useStore } from '../stores/index.store'
 import { useAuthStore } from '../stores/useAuthStore'
 // Types
-import type {
-  AuthUserResType,
-  ContactResType,
-  UserToRoomResType,
-  ChatListItemType,
-  MsgResType,
-  UserType,
-} from '../types/index.types'
+import type { AuthUserResType, ContactResType, ConvoItemType } from '../types/index.types'
 
 export function useAppDataInit() {
   const fetchHook = useFetch()
   const setAuthUser = useAuthStore(state => state.setAuthUser)
-  const [initContactStore, initUnarchivedStore, initArchivedStore] = useStore(
-    state => [state.initContactStore, state.initUnarchivedStore, state.initArchivedStore],
+  const [initContactStore, initUnarchivedConvo, initArchivedConvo] = useStore(
+    state => [state.initContactStore, state.initUnarchivedConvo, state.initArchivedConvo],
     shallow,
   )
 
@@ -27,9 +20,9 @@ export function useAppDataInit() {
     setAuthUser(authUserRes)
 
     const convoRes: any[] = await fetchHook('users/convo')
-    const { unarchivedList, archivedList } = prepareChatList(convoRes)
-    initUnarchivedStore(unarchivedList)
-    initArchivedStore(archivedList)
+    const { unarchivedList, archivedList } = prepareConvo(convoRes)
+    initUnarchivedConvo(unarchivedList)
+    initArchivedConvo(archivedList)
 
     /** Not awaiting for contacts */
     fetchHook('contacts').then((contactsRes: ContactResType[]) => initContactStore(contactsRes))
@@ -39,15 +32,15 @@ export function useAppDataInit() {
 }
 
 /** Generic type A = archived */
-function prepareChatList(convoRes: any[]): {
-  unarchivedList: ChatListItemType[]
-  archivedList: ChatListItemType<true>[]
+function prepareConvo(convoRes: any[]): {
+  unarchivedList: ConvoItemType[]
+  archivedList: ConvoItemType<true>[]
 } {
-  const archivedList: ChatListItemType<true>[] = []
-  const unarchivedList: ChatListItemType[] = []
+  const archivedList: ConvoItemType<true>[] = []
+  const unarchivedList: ConvoItemType[] = []
 
   for (const convoItem of convoRes) {
-    const template: ChatListItemType<boolean> = {
+    const template: ConvoItemType<boolean> = {
       userToRoomId: convoItem.u2r_id,
       room: {
         id: convoItem.r_id,
@@ -77,8 +70,8 @@ function prepareChatList(convoRes: any[]): {
           }
         : null,
     }
-    if (template.room.archived) archivedList.push(template as ChatListItemType<true>)
-    else unarchivedList.push(template as ChatListItemType<false>)
+    if (template.room.archived) archivedList.push(template as ConvoItemType<true>)
+    else unarchivedList.push(template as ConvoItemType<false>)
   }
   return { unarchivedList, archivedList }
 }

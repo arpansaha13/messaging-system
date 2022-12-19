@@ -39,7 +39,7 @@ const ChatFooter = () => {
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
-  const [activeChatInfo, send, addDraft, drafts, removeDraft, activeRoom, unarchiveRoom, updateChatListItem] = useStore(
+  const [activeChatInfo, send, addDraft, drafts, removeDraft, activeRoom, unarchiveRoom, updateConvoItem] = useStore(
     state => [
       state.activeChatInfo!,
       state.sendMsg,
@@ -48,7 +48,7 @@ const ChatFooter = () => {
       state.removeDraft,
       state.activeRoom,
       state.unarchiveRoom,
-      state.updateChatListItem,
+      state.updateConvoItem,
     ],
     shallow,
   )
@@ -89,7 +89,7 @@ const ChatFooter = () => {
         }
 
         send(activeRoom.id, authUser.id, value, ISOtimestamp)
-        updateChatListItem(activeRoom.id, {
+        updateConvoItem(activeRoom.id, {
           content: value,
           status: MessageStatus.SENDING,
           createdAt: ISOtimestamp,

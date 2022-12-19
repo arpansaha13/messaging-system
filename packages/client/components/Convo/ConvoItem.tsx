@@ -12,18 +12,18 @@ import RoomItemDropDown from './RoomItemDropDown'
 // Store
 import { useStore } from '../../stores/index.store'
 // Types
-import type { ChatListItemType } from '../../types/index.types'
+import type { ConvoItemType } from '../../types/index.types'
 
-export interface RoomItemProps {
+export interface ConvoItemProps {
   roomId: number
   alias: string | null
   dp: string | null
-  latestMsg: ChatListItemType['latestMsg']
+  latestMsg: ConvoItemType['latestMsg']
   archived?: boolean
   onClick: () => void
 }
 
-const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: RoomItemProps) => {
+const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: ConvoItemProps) => {
   const fetchHook = useFetch()
 
   const [activeRoom, archiveRoom, unarchiveRoom] = useStore(
@@ -75,7 +75,6 @@ const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: R
   ]
 
   function getDateTime() {
-    // FIXME: relative time
     const diff = differenceInCalendarDays(new Date(), new Date(latestMsg!.createdAt))
 
     if (diff < 1) return format(parseISO(latestMsg!.createdAt), 'h:mm a')

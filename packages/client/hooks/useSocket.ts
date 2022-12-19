@@ -6,7 +6,7 @@ import { useStore } from '../stores/index.store'
 import { useAuthStore } from '../stores/useAuthStore'
 // Types
 import { MessageStatus } from '../types/message.types'
-import type { ChatListItemType } from '../types/index.types'
+import type { ConvoItemType } from '../types/index.types'
 
 interface ReceiveMsgType {
   roomId: number
@@ -20,9 +20,9 @@ interface MsgStatusUpdateType {
   status: Exclude<MessageStatus, MessageStatus.SENDING>
 }
 type SendMsgNewRoomType = {
-  userToRoomId: ChatListItemType['userToRoomId']
-  room: ChatListItemType['room']
-  latestMsg: NonNullable<ChatListItemType['latestMsg']>
+  userToRoomId: ConvoItemType['userToRoomId']
+  room: ConvoItemType['room']
+  latestMsg: NonNullable<ConvoItemType['latestMsg']>
 }
 export interface TypingStateType {
   roomId: number
@@ -67,11 +67,11 @@ export function useSocketInit() {
     receive,
     updateStatus,
     getActiveChatInfo,
-    setProxyRoom,
+    setProxyConvo,
     addNewItemToTop,
     setActiveRoom,
-    updateChatListItem,
-    updateChatListItemStatus,
+    updateConvoItem,
+    updateConvoItemStatus,
   ] = useStore(
     state => [
       state.setTypingState,
@@ -79,11 +79,11 @@ export function useSocketInit() {
       state.receiveMsg,
       state.updateMsgStatus,
       state.getActiveChatInfo,
-      state.setProxyRoom,
-      state.addNewChatListItemToTop,
+      state.setProxyConvo,
+      state.addNewConvoItemToTop,
       state.setActiveRoom,
-      state.updateChatListItem,
-      state.updateChatListItemStatus,
+      state.updateConvoItem,
+      state.updateConvoItemStatus,
     ],
     shallow,
   )
@@ -115,7 +115,7 @@ export function useSocketInit() {
 
     socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
       receive(data.roomId, data.content, data.senderId, data.ISOtime)
-      updateChatListItem(data.roomId, {
+      updateConvoItem(data.roomId, {
         content: data.content,
         createdAt: data.ISOtime,
         senderId: data.senderId,
@@ -125,22 +125,22 @@ export function useSocketInit() {
 
     socketWrapper.on('send-message-new-room', (data: SendMsgNewRoomType) => {
       // Add a new item in chat-list
-      const newChatListItem: ChatListItemType = {
+      const newConvoItem: ConvoItemType = {
         userToRoomId: data.userToRoomId,
         contact: getActiveChatInfo()!.contact,
         user: getActiveChatInfo()!.user,
         room: data.room,
         latestMsg: data.latestMsg,
       }
-      addNewItemToTop(newChatListItem)
+      addNewItemToTop(newConvoItem)
       addChat(data.room.id, [data.latestMsg])
       setActiveRoom(data.room)
-      setProxyRoom(false)
+      setProxyConvo(false)
     })
 
     socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
       updateStatus(data.roomId, data.ISOtime, data.status)
-      updateChatListItemStatus(data.roomId, data.status)
+      updateConvoItemStatus(data.roomId, data.status)
     })
 
     socketWrapper.on('typing-state', (data: TypingStateType) => {
