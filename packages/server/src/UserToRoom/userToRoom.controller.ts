@@ -6,6 +6,8 @@ import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
+// DTO
+import { RoomIdParam } from 'src/rooms/dto/room-id-param.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
 
@@ -15,10 +17,7 @@ export class UserToRoomController {
   constructor(private readonly userToRoomService: UserToRoomService) {}
 
   @Get('/:roomId')
-  async getUserToRoomById(
-    @GetPayload('user') authUser: UserEntity,
-    @Param('roomId') roomId: number,
-  ): Promise<UserToRoom> {
+  getUserToRoomById(@GetPayload('user') authUser: UserEntity, @Param('roomId') roomId: number): Promise<UserToRoom> {
     return this.userToRoomService.getUserToRoomEntity(authUser.id, roomId)
   }
 
@@ -28,22 +27,27 @@ export class UserToRoomController {
   }
 
   @Get('/rooms/archived')
-  getArchivedUserToRooms(@GetPayload('user') authUser: UserEntity): Promise<UserToRoom[]> {
+  async getArchivedUserToRooms(@GetPayload('user') authUser: UserEntity): Promise<UserToRoom[]> {
     return this.userToRoomService.getRoomsOfUser(authUser.id, true)
   }
 
   @Patch('/archive/:roomId')
-  archiveRoom(@GetPayload('user') authUser: UserEntity, @Param('roomId') roomId: number): Promise<void> {
-    return this.userToRoomService.updateArchive(authUser.id, roomId, true)
+  archiveRoom(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updateArchive(authUser.id, params.roomId, true)
   }
 
   @Patch('/unarchive/:roomId')
-  unarchiveRoom(@GetPayload('user') authUser: UserEntity, @Param('roomId') roomId: number): Promise<void> {
-    return this.userToRoomService.updateArchive(authUser.id, roomId, false)
+  unarchiveRoom(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updateArchive(authUser.id, params.roomId, false)
   }
 
   @Delete('/:roomId/clear-chat')
-  clearChat(@GetPayload('user') authUser: UserEntity, @Param('roomId') roomId: number): Promise<void> {
-    return this.userToRoomService.clearChat(authUser.id, roomId)
+  clearChat(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.clearChat(authUser.id, params.roomId)
+  }
+
+  @Delete('/:roomId/delete-chat')
+  deleteChat(@GetPayload('user') authUser: UserEntity, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.deleteChat(authUser.id, params.roomId)
   }
 }

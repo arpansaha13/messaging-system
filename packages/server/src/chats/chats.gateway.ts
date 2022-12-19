@@ -58,6 +58,7 @@ export class ChatsGateway {
   async handleEvent(@MessageBody() data: Ws1to1MessageDto, @ConnectedSocket() senderSocket: Socket) {
     const receiverSocketId = this.clients.get(data.receiverId)
     let isNewRoom = false
+    let isRevivedRoom = false
     let roomEntity: RoomEntity = null
     let senderUserToRoom: UserToRoom = null
     let receiverUserToRoom: UserToRoom | null = null
@@ -66,13 +67,23 @@ export class ChatsGateway {
 
     // Create new room if it is to be a new one
     if (isNewRoom) {
-      const createRoomRes = await this.roomService.create1to1Room(data)
-      roomEntity = createRoomRes[0]
-      senderUserToRoom = createRoomRes[1]
-      data.roomId = roomEntity.id
+      // First check if a room exists between the two users but is deleted for the sender
+      // If yes, then revive that room for the sender
+      const roomIdOrNull = await this.userToRoomService.get1to1RoomIdOfUsers(data.senderId, data.receiverId)
+      if (roomIdOrNull !== null) {
+        data.roomId = roomIdOrNull
+        await this.userToRoomService.reviveRoomForUser(data.senderId, data.roomId)
+        isNewRoom = false
+        isRevivedRoom = true
+      } else {
+        const createRoomRes = await this.roomService.create1to1Room(data)
+        roomEntity = createRoomRes[0]
+        senderUserToRoom = createRoomRes[1]
+        data.roomId = roomEntity.id
+      }
     }
-    // If the room already exists, update the `firstMsgTstamp`s
-    if (!isNewRoom) {
+    // If the room already exists or is revived, update the `firstMsgTstamp`s
+    if (!isNewRoom || isRevivedRoom) {
       senderUserToRoom = await this.userToRoomService.getUserToRoomEntity(data.senderId, data.roomId)
       receiverUserToRoom = await this.userToRoomService.getUserToRoomEntity(data.receiverId, data.roomId)
 
@@ -82,9 +93,13 @@ export class ChatsGateway {
       if (receiverUserToRoom.firstMsgTstamp === null) {
         await this.userToRoomService.updateFirstMsgTstamp(data.receiverId, data.roomId, data.ISOtime)
       }
+      // If receiver has deleted the room, then revive it for the receiver
+      if (receiverUserToRoom.deleted) {
+        await this.userToRoomService.reviveRoomForUser(data.receiverId, data.roomId)
+      }
     }
     // Fetch the already existing room
-    if (!isNewRoom) {
+    if (!isNewRoom || isRevivedRoom) {
       roomEntity = await this.roomService.getRoomById(data.roomId)
     }
     // Store message in db
@@ -98,11 +113,12 @@ export class ChatsGateway {
         ISOtime: data.ISOtime,
       })
     }
-    if (!isNewRoom) {
+    if (!isNewRoom && !isRevivedRoom) {
       emitMsgStatus.bind(this)(MessageStatus.SENT)
     } else {
-      // If it is a new room then send this message back to sender along with other details
-      this.server.to(senderSocket.id).emit('send-message-new-room', {
+      // In case of a *new* or *revived* room, the details of the room are absent/removed at the client
+      // So send this message back to sender along with other details
+      this.server.to(senderSocket.id).emit('message-to-new-or-revived-room', {
         userToRoomId: senderUserToRoom.userToRoomId,
         room: {
           id: roomEntity.id,

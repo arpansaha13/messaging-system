@@ -73,7 +73,7 @@ export class UserService {
       msg.status AS msg_status
     FROM (
       SELECT
-        u2r.u2r_id, u2r.u2r_archived, u2r.u2r_deleted, u2r.u2r_muted,
+        u2r.u2r_id, u2r.u2r_archived, u2r.u2r_muted,
         r.id AS r_id, r.is_group AS r_is_group,
         u.id AS u_id, u.dp AS u_dp, u.bio AS u_bio, u.display_name AS u_display_name,
         contact.id AS c_id, contact.alias AS c_alias,
@@ -88,12 +88,11 @@ export class UserService {
         SELECT
           u2r.user_to_room_id AS u2r_id,
           u2r.archived AS u2r_archived,
-          u2r.deleted AS u2r_deleted,
           u2r.is_muted AS u2r_muted,
           u2r.room_id AS u2r_room_id,
           u2r.first_msg_tstamp AS u2r_first_msg_tstamp
         FROM user_to_room AS u2r
-        WHERE u2r.user_id = ${authUserId}
+        WHERE u2r.user_id = ${authUserId} AND u2r.deleted = FALSE
       ) AS u2r
       INNER JOIN rooms AS r ON r.id = u2r.u2r_room_id
       INNER JOIN user_to_room AS r2u ON r2u.room_id = r.id AND r2u.user_id != ${authUserId}

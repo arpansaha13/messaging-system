@@ -8,7 +8,6 @@ export interface ConvoItemType<A = false, G = false> {
     muted: boolean
     archived: A
     isGroup: G
-    deleted: boolean
   }
   /** The user with whom the chat is. */
   user: {

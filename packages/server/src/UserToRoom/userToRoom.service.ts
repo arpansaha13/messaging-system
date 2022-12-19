@@ -1,18 +1,21 @@
 import { Injectable } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
+import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 // Entities
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
-import type { Repository } from 'typeorm'
+import type { EntityManager, Repository } from 'typeorm'
 
 @Injectable()
 export class UserToRoomService {
   constructor(
+    @InjectEntityManager()
+    private em: EntityManager,
+
     @InjectRepository(UserToRoom)
     private userToRoomRepository: Repository<UserToRoom>,
   ) {}
 
-  async getUserToRoomEntity(authUserId: number, roomId: number): Promise<UserToRoom> {
+  getUserToRoomEntity(authUserId: number, roomId: number): Promise<UserToRoom> {
     return this.userToRoomRepository.findOne({
       where: {
         user: { id: authUserId },
@@ -21,7 +24,7 @@ export class UserToRoomService {
     })
   }
 
-  async getRoomsOfUser(authUserId: number, archived = false): Promise<UserToRoom[]> {
+  getRoomsOfUser(authUserId: number, archived = false): Promise<UserToRoom[]> {
     return this.userToRoomRepository.find({
       where: {
         user: { id: authUserId },
@@ -29,6 +32,24 @@ export class UserToRoomService {
       },
       relations: { room: true },
     })
+  }
+
+  /**
+   * Finds the room_id of a one-to-one chat-room for the two given user_id's.
+   * Returns `null` if no such room exists.
+   */
+  async get1to1RoomIdOfUsers(userId1: number, userId2: number): Promise<number | null> {
+    const query = `
+    SELECT u2r.room_id
+    FROM (
+      SELECT u2r.user_id, u2r.room_id
+      FROM user_to_room AS u2r
+      WHERE u2r.user_id = ${userId1}
+    ) AS u2r
+    INNER JOIN user_to_room AS r2u ON u2r.room_id = r2u.room_id AND r2u.user_id = ${userId2}
+    `
+    const res = await this.em.query(query)
+    return res.length > 0 ? res[0].room_id : null
   }
 
   async updateFirstMsgTstamp(authUserId: number, roomId: number, newValue: string): Promise<void> {
@@ -41,15 +62,38 @@ export class UserToRoomService {
     )
   }
   async clearChat(authUserId: number, roomId: number): Promise<void> {
+    // TODO: check if chat is already cleared - throw error in that case
+    // provide `ignoreException` option
     await this.updateFirstMsgTstamp(authUserId, roomId, null)
   }
+  async deleteChat(authUserId: number, roomId: number): Promise<void> {
+    // TODO: check if chat is already deleted - throw error in that case
+    await this.userToRoomRepository.update(
+      {
+        user: { id: authUserId },
+        room: { id: roomId },
+      },
+      { firstMsgTstamp: null, deleted: true },
+    )
+  }
+
   async updateArchive(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
+    // TODO: check if chat is already archved/unarchved - throw error in that case
     await this.userToRoomRepository.update(
       {
         user: { id: authUserId },
         room: { id: roomId },
       },
       { archived: newValue },
+    )
+  }
+  async reviveRoomForUser(userId: number, roomId: number) {
+    await this.userToRoomRepository.update(
+      {
+        user: { id: userId },
+        room: { id: roomId },
+      },
+      { deleted: false },
     )
   }
 }

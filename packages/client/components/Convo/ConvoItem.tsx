@@ -23,11 +23,20 @@ export interface ConvoItemProps {
   onClick: () => void
 }
 
-const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: ConvoItemProps) => {
+const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: ConvoItemProps) => {
   const fetchHook = useFetch()
 
-  const [activeRoom, archiveRoom, unarchiveRoom] = useStore(
-    state => [state.activeRoom, state.archiveRoom, state.unarchiveRoom],
+  // Initially no rooms would be active - so `activeRoom` may be null
+  const [activeRoom, setActiveRoom, setActiveChatInfo, archiveRoom, unarchiveRoom, deleteChat, deleteConvo] = useStore(
+    state => [
+      state.activeRoom,
+      state.setActiveRoom,
+      state.setActiveChatInfo,
+      state.archiveRoom,
+      state.unarchiveRoom,
+      state.deleteChat,
+      state.deleteConvo,
+    ],
     shallow,
   )
   const menuItems = [
@@ -52,7 +61,14 @@ const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: C
     {
       slot: 'Delete chat',
       onClick() {
-        console.log('clicked')
+        deleteChat(roomId)
+        deleteConvo(roomId, archived)
+        // If active room is being deleted
+        if (activeRoom && activeRoom.id === roomId) {
+          setActiveRoom(null)
+          setActiveChatInfo(null)
+        }
+        fetchHook(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
       },
     },
     ...(() =>
@@ -121,4 +137,4 @@ const RoomItem = ({ roomId, alias, dp, latestMsg, archived = false, onClick }: C
     </li>
   )
 }
-export default memo(RoomItem)
+export default memo(ConvoItem)

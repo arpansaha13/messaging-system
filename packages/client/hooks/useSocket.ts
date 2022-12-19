@@ -35,7 +35,7 @@ type SocketOnEvents =
   | 'receive-message'
   | 'message-status'
   | 'typing-state'
-  | 'send-message-new-room'
+  | 'message-to-new-or-revived-room'
 type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state'
 
 const socket = io('http://localhost:4000', { autoConnect: true })
@@ -123,7 +123,7 @@ export function useSocketInit() {
       })
     })
 
-    socketWrapper.on('send-message-new-room', (data: SendMsgNewRoomType) => {
+    socketWrapper.on('message-to-new-or-revived-room', (data: SendMsgNewRoomType) => {
       // Add a new item in chat-list
       const newConvoItem: ConvoItemType = {
         userToRoomId: data.userToRoomId,
@@ -153,7 +153,7 @@ export function useSocketInit() {
       socketWrapper.off('receive-message')
       socketWrapper.off('message-status')
       socketWrapper.off('typing-state')
-      socketWrapper.off('send-message-new-room')
+      socketWrapper.off('message-to-new-or-revived-room')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

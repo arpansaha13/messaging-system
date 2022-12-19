@@ -57,6 +57,7 @@ export interface ConvoStoreType {
 
   archiveRoom: (roomId: number) => void
   unarchiveRoom: (roomId: number) => void
+  deleteConvo: (roomId: number, archived?: boolean) => void
 }
 
 export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType> = (set, get) => ({
@@ -145,6 +146,16 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
 
         const insertAtIdx = sortedIndex(get().convo, convoItem)
         state.convo.splice(insertAtIdx, 0, convoItem)
+      }),
+    )
+  },
+  deleteConvo(roomId, archived = false) {
+    set(
+      produce((state: ConvoStoreType) => {
+        const list = archived ? state.archivedConvo : state.convo
+        const idx = findRoomIndex(roomId, list)
+        if (idx === null) return null
+        list.splice(idx, 1)
       }),
     )
   },

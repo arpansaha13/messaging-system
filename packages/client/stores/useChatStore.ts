@@ -36,12 +36,13 @@ export interface ChatStoreType {
   updateMsgStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
 
   /** Update the active chat-user when a new chat is opened. */
-  setActiveChatInfo: (newChatInfo: ActiveChatInfo) => void
+  setActiveChatInfo: (newChatInfo: ActiveChatInfo | null) => void
 
   /* `activeChatInfo` will be null in functon scope (socket callback) because of closure. Access it through a function to get updated state. */
   getActiveChatInfo: () => ActiveChatInfo
 
   clearChat: (roomId: number) => void
+  deleteChat: (roomId: number) => void
 }
 
 export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = (set, get) => ({
@@ -119,6 +120,13 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
     set(
       produce((state: ChatStoreType) => {
         state.chats.set(roomId, new Map<number, MessageType>())
+      }),
+    )
+  },
+  deleteChat(roomId: number) {
+    set(
+      produce((state: ChatStoreType) => {
+        state.chats.delete(roomId)
       }),
     )
   },
