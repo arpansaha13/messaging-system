@@ -31,7 +31,7 @@ export class MessageService {
    * Update status of **all received** messages from SENT to DELIVERED.
    * This should be done whenever a user comes online.
    * @param authUserId user_id of authorized user
-   * @param roomEntities All chat entities of given user
+   * @param roomEntities All rooms of given user
    */
   // TODO: Update msg status when receiver comes online while sender is already online (real-time)
   async updateDeliveredStatus(authUserId: number, roomEntities: RoomEntity[]): Promise<void> {

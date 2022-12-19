@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
+// Services
+import { MessageService } from 'src/messages/message.service'
 // Types
 import type { EntityManager, Repository } from 'typeorm'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
@@ -9,19 +11,26 @@ import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
     @InjectEntityManager()
     private em: EntityManager,
+
+    @InjectRepository(UserEntity)
+    private userRepository: Repository<UserEntity>,
+
+    private readonly messageService: MessageService,
   ) {}
+
+  #userNotFound() {
+    throw new NotFoundException('User could not be found.')
+  }
 
   async getUserById(userId: number): Promise<UserEntity> {
     const userEntity = await this.userRepository.findOneBy({ id: userId })
-    if (userEntity === null) throw new NotFoundException('User could not be found.')
+    if (userEntity === null) this.#userNotFound()
     return userEntity
   }
 
-  async getRoomIdsOfUser(userId: number): Promise<UserEntity> {
+  async getRoomIdsOfUser(userId: number): Promise<UserEntity['rooms']> {
     const userEntity = await this.userRepository.findOne({
       select: {
         id: true,
@@ -37,8 +46,8 @@ export class UserService {
         },
       },
     })
-    if (userEntity === null) throw new NotFoundException('User could not be found.')
-    return userEntity
+    if (userEntity === null) this.#userNotFound()
+    return userEntity.rooms
   }
 
   async updateUserInfo(userId: number, data: UpdateUserInfoDto): Promise<UserEntity> {
@@ -50,7 +59,13 @@ export class UserService {
 
   // FIXME: if latestMsg is `null`, then it ranks lower after sorting
   /** Dedicated api for convo list. */
-  getUserConvo(authUserId: number): Promise<any[]> {
+  async getUserConvo(authUserId: number): Promise<any[]> {
+    const userToRooms = await this.getRoomIdsOfUser(authUserId)
+    await this.messageService.updateDeliveredStatus(
+      authUserId,
+      userToRooms.map(u2r => u2r.room),
+    )
+
     const query = `SELECT
       t1.*,
       msg.content AS msg_content,

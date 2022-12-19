@@ -31,7 +31,7 @@ export class UserController {
   }
 
   @Get('/:userId/room-ids')
-  getRoomIdsOfUser(@Param() params: UserIdParam): Promise<UserEntity> {
+  getRoomIdsOfUser(@Param() params: UserIdParam): Promise<UserEntity['rooms']> {
     return this.userService.getRoomIdsOfUser(params.userId)
   }
 
