@@ -1,11 +1,11 @@
 import type { StateCreator } from 'zustand'
 import produce from 'immer'
 // Utils
-import { ISOToMilliSecs } from '../utils/ISODate'
+import { ISOToMilliSecs } from '../../utils/ISODate'
 // Enum
-import { MessageStatus } from '../types/index.types'
+import { MessageStatus } from '../../types/index.types'
 // Types
-import type { MessageType, ConvoItemType } from '../types/index.types'
+import type { MessageType, ConvoItemType } from '../../types/index.types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 

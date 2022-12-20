@@ -1,12 +1,12 @@
 import create from 'zustand'
 import { MessageType } from '../types/index.types'
-import { type ConvoStoreType, useConvoStore } from './useConvoStore'
-import { type ChatStoreType, useChatStore } from './useChatStore'
-import { type ContactStoreType, useContactStore } from './useContactStore'
-import { type DraftStoreType, useDraftStore } from './useDraftStore'
-import { type NotificationStateType, useNotificationState } from './useNotificationState'
-import { type SlideOverStateType, useSlideOverState } from './useSlideOverState'
-import { type TypingStateType, useTypingState } from './useTypingState'
+import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
+import { type ChatStoreType, useChatStore } from './slices/useChatStore'
+import { type ContactStoreType, useContactStore } from './slices/useContactStore'
+import { type DraftStoreType, useDraftStore } from './slices/useDraftStore'
+import { type NotificationStateType, useNotificationState } from './slices/useNotificationState'
+import { type SlideOverStateType, useSlideOverState } from './slices/useSlideOverState'
+import { type TypingStateType, useTypingState } from './slices/useTypingState'
 
 export interface StoreType
   extends ConvoStoreType,
