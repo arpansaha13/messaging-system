@@ -3,7 +3,7 @@ import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 // Entities
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
-import type { EntityManager, Repository, UpdateResult } from 'typeorm'
+import { EntityManager, Not, Repository, UpdateResult } from 'typeorm'
 
 @Injectable()
 export class UserToRoomService {
@@ -15,12 +15,13 @@ export class UserToRoomService {
     private userToRoomRepository: Repository<UserToRoom>,
   ) {}
 
-  getUserToRoomEntity(authUserId: number, roomId: number): Promise<UserToRoom> {
+  getUserToRoomEntity(authUserId: number, roomId: number, loadRelationIds = false): Promise<UserToRoom> {
     return this.userToRoomRepository.findOne({
       where: {
         user: { id: authUserId },
         room: { id: roomId },
       },
+      loadRelationIds,
     })
   }
 
@@ -50,6 +51,15 @@ export class UserToRoomService {
     `
     const res = await this.em.query(query)
     return res.length > 0 ? res[0].room_id : null
+  }
+  getReceiverIn1to1Room(authUserId: number, roomId: number, loadRelationIds = false): Promise<UserToRoom> {
+    return this.userToRoomRepository.findOne({
+      where: {
+        user: { id: Not(authUserId) },
+        room: { id: roomId },
+      },
+      loadRelationIds,
+    })
   }
 
   #updateUserToRoom(userId: number, roomId: number, partialEntity: Partial<UserToRoom>): Promise<UpdateResult> {

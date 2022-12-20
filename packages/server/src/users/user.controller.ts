@@ -2,8 +2,9 @@ import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
-// Service
+// Services
 import { UserService } from './user.service'
+import { MessageService } from 'src/messages/message.service'
 // DTO
 import { UserIdParam } from './dto/user-id-param.dto'
 import { UpdateUserInfoDto } from './dto/update-user-info.dto'
@@ -13,7 +14,7 @@ import type { UserEntity } from 'src/users/user.entity'
 @Controller('users')
 @UseGuards(AuthGuard())
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService, private readonly messageService: MessageService) {}
 
   @Get('/me')
   async getAuthUserInfo(@GetPayload('user') authUser: UserEntity): Promise<UserEntity> {
@@ -21,7 +22,12 @@ export class UserController {
   }
 
   @Get('/convo')
-  getUserConvo(@GetPayload('user') authUser: UserEntity): Promise<any> {
+  async getUserConvo(@GetPayload('user') authUser: UserEntity): Promise<any> {
+    const userToRooms = await this.userService.getRoomIdsOfUser(authUser.id)
+    await this.messageService.updateDeliveredStatus(
+      authUser.id,
+      userToRooms.map(u2r => u2r.room),
+    )
     return this.userService.getUserConvo(authUser.id)
   }
 

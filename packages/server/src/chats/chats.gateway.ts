@@ -4,7 +4,7 @@ import { RoomService } from 'src/rooms/room.service'
 import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // DTOs
-import { Ws1to1MessageDto, WsTypingStateDto } from './dto/chatGateway.dto'
+import { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
 // Enum
 import { MessageStatus } from '../messages/message.entity'
 // Types
@@ -52,6 +52,23 @@ export class ChatsGateway {
   handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
     const disconnectedUserId = this.#getMapKeyByValue(this.clients, senderSocket.id)
     this.clients.delete(disconnectedUserId)
+  }
+
+  @SubscribeMessage('opened-or-read-chat')
+  async handleReadStatus(@MessageBody() data: WsOpenedOrReadChatDto, @ConnectedSocket() readerSocket: Socket) {
+    const senderSocketId = this.clients.get(data.senderId)
+    await this.messageService.updateReadStatus(data.senderId, data.roomId)
+
+    // If the sender is not online
+    if (typeof senderSocketId === 'undefined') return
+
+    const payload: any = {
+      roomId: data.roomId,
+      status: MessageStatus.READ,
+    }
+    if (data.ISOtime) payload.ISOtime = data.ISOtime
+    const event = data.ISOtime ? 'message-status' : 'all-message-status'
+    this.server.to(senderSocketId).emit(event, payload)
   }
 
   @SubscribeMessage('send-message')

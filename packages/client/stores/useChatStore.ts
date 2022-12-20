@@ -8,9 +8,8 @@ import { MessageStatus } from '../types/index.types'
 import type { MessageType, ConvoItemType } from '../types/index.types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
-// TODO: Refactor senderId and receiverId variable names properly
 
-type ActiveChatInfo = null | Omit<ConvoItemType, 'latestMsg' | 'room' | 'userToRoomId'>
+type ActiveChatInfo = Omit<ConvoItemType, 'latestMsg' | 'room' | 'userToRoomId'> | null
 
 export interface ChatStoreType {
   /**
@@ -18,8 +17,11 @@ export interface ChatStoreType {
    * Each message in a chat is again mapped with their timestamps (for now).
    */
   chats: Map<number, Map<number, MessageType>>
+  getChats: () => ChatStoreType['chats']
 
-  activeChatInfo: ActiveChatInfo | null
+  activeChatInfo: ActiveChatInfo
+  getActiveChatInfo: () => ActiveChatInfo
+  setActiveChatInfo: (newChatInfo: ActiveChatInfo) => void
 
   /** Add a new chat. */
   addChat: (roomId: number, chat: MessageType[]) => void
@@ -34,12 +36,10 @@ export interface ChatStoreType {
   receiveMsg: (roomId: number, content: string, senderId: number, ISOtime: string) => void
 
   updateMsgStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
-
-  /** Update the active chat-user when a new chat is opened. */
-  setActiveChatInfo: (newChatInfo: ActiveChatInfo | null) => void
-
-  /* `activeChatInfo` will be null in functon scope (socket callback) because of closure. Access it through a function to get updated state. */
-  getActiveChatInfo: () => ActiveChatInfo
+  updateAllMsgStatus: (
+    roomId: number,
+    newStatus: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>,
+  ) => void
 
   clearChat: (roomId: number) => void
   deleteChat: (roomId: number) => void
@@ -47,7 +47,16 @@ export interface ChatStoreType {
 
 export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = (set, get) => ({
   chats: new Map<number, Map<number, MessageType>>(),
+  getChats() {
+    return get().chats
+  },
   activeChatInfo: null,
+  setActiveChatInfo(newChatInfo) {
+    set({ activeChatInfo: newChatInfo })
+  },
+  getActiveChatInfo() {
+    return get().activeChatInfo
+  },
   addChat(roomId: number, chat: MessageType[]) {
     // Update through `Immer`
     set(
@@ -98,8 +107,7 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
       },
     ])
   },
-  updateMsgStatus(roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) {
-    // Update through `Immer`
+  updateMsgStatus(roomId, ISOtime, newStatus) {
     set(
       produce((state: ChatStoreType) => {
         const timeMilliSecs = ISOToMilliSecs(ISOtime)
@@ -110,11 +118,22 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
       }),
     )
   },
-  setActiveChatInfo(newChatInfo) {
-    set({ activeChatInfo: newChatInfo })
-  },
-  getActiveChatInfo() {
-    return get().activeChatInfo
+  updateAllMsgStatus(roomId, newStatus) {
+    set(
+      produce((state: ChatStoreType) => {
+        const chat = state.chats.get(roomId)
+        if (!chat) {
+          console.error('Chat not found. Invalid `roomId`')
+          return
+        }
+        const iter = chat.values()
+        let iterRes = iter.next()
+        while (!iterRes.done) {
+          iterRes.value.status = newStatus
+          iterRes = iter.next()
+        }
+      }),
+    )
   },
   clearChat(roomId: number) {
     set(

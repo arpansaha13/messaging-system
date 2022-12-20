@@ -3,11 +3,14 @@ import produce from 'immer'
 
 import type { ConvoItemType, MessageStatus } from '../types/index.types'
 
+type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
+
 export interface ConvoStoreType {
   /** The currently active chat-room. */
-  activeRoom: Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
+  activeRoom: ActiveRoom
   /** Set new room - can be used to open/change to a new chat. */
-  setActiveRoom: (room: ConvoStoreType['activeRoom'] | null) => void
+  setActiveRoom: (room: ActiveRoom) => void
+  getActiveRoom: () => ActiveRoom
 
   /** The list of unarchived chats with different users displayed on the sidebar. */
   convo: ConvoItemType[]
@@ -49,6 +52,9 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
   activeRoom: null,
   setActiveRoom(room) {
     set({ activeRoom: room })
+  },
+  getActiveRoom() {
+    return get().activeRoom
   },
   convo: [],
   initUnarchivedConvo(initConvo) {

@@ -2,8 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
-// Services
-import { MessageService } from 'src/messages/message.service'
 // Types
 import type { EntityManager, Repository } from 'typeorm'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
@@ -16,8 +14,6 @@ export class UserService {
 
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
-
-    private readonly messageService: MessageService,
   ) {}
 
   #userNotFound() {
@@ -58,13 +54,7 @@ export class UserService {
   }
 
   /** Dedicated api for convo list. */
-  async getUserConvo(authUserId: number): Promise<any[]> {
-    const userToRooms = await this.getRoomIdsOfUser(authUserId)
-    await this.messageService.updateDeliveredStatus(
-      authUserId,
-      userToRooms.map(u2r => u2r.room),
-    )
-
+  getUserConvo(authUserId: number): Promise<any[]> {
     const query = `SELECT
       t1.*,
       msg.content AS msg_content,

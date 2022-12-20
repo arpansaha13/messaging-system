@@ -35,8 +35,8 @@ export class RoomController {
     @GetPayload('user') authUser: UserEntity,
     @Param('roomId') roomId: number,
   ): Promise<MessageEntity[]> {
-    const userToRoomEntity = await this.userToRoomService.getUserToRoomEntity(authUser.id, roomId)
-    return this.messageService.getMessagesByRoomId(roomId, userToRoomEntity.firstMsgTstamp)
+    const authUserToRoom = await this.userToRoomService.getUserToRoomEntity(authUser.id, roomId)
+    return this.messageService.getMessagesByRoomId(roomId, authUserToRoom.firstMsgTstamp)
   }
 
   @Get('/:roomId/messages/latest')

@@ -3,8 +3,6 @@ import { persist } from 'zustand/middleware'
 // Types
 import type { AuthUserType } from '../types/index.types'
 
-// TODO: clear all stores on log-out
-
 interface AuthStoreType {
   authToken: string | null
   authExpiresAt: number | null

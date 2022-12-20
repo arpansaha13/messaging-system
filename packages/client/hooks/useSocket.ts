@@ -19,6 +19,10 @@ interface MsgStatusUpdateType {
   ISOtime: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
 }
+interface AllMsgStatusUpdateType {
+  roomId: number
+  status: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>
+}
 type SendMsgNewRoomType = {
   userToRoomId: ConvoItemType['userToRoomId']
   room: ConvoItemType['room']
@@ -34,9 +38,10 @@ type SocketOnEvents =
   | 'disconnect'
   | 'receive-message'
   | 'message-status'
+  | 'all-message-status'
   | 'typing-state'
   | 'message-to-new-or-revived-room'
-type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state'
+type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state' | 'opened-or-read-chat'
 
 const socket = io('http://localhost:4000', { autoConnect: true })
 
@@ -62,31 +67,50 @@ const socketWrapper = {
 export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
   const [
-    setTyping,
-    addChat,
-    receive,
-    updateStatus,
+    activeRoom,
+    getChats,
+    getActiveRoom,
     getActiveChatInfo,
+    setTyping,
     setProxyConvo,
-    addNewItemToTop,
     setActiveRoom,
+    addChat,
+    receiveMsg,
+    updateMsgStatus,
+    updateAllMsgStatus,
+    addNewItemToTop,
     updateConvoItem,
     updateConvoItemStatus,
   ] = useStore(
     state => [
+      state.activeRoom,
+      state.getChats,
+      state.getActiveRoom,
+      state.getActiveChatInfo,
       state.setTypingState,
+      state.setProxyConvo,
+      state.setActiveRoom,
       state.addChat,
       state.receiveMsg,
       state.updateMsgStatus,
-      state.getActiveChatInfo,
-      state.setProxyConvo,
+      state.updateAllMsgStatus,
       state.addNewConvoItem,
-      state.setActiveRoom,
       state.updateConvoItem,
       state.updateConvoItemStatus,
     ],
     shallow,
   )
+
+  // TODO: refactor the store - combine activeRoom and activeChatInfo
+
+  useEffect(() => {
+    if (activeRoom === null) return
+    const activeChatInfo = getActiveChatInfo()!
+    socketWrapper.emit('opened-or-read-chat', {
+      roomId: activeRoom.id,
+      senderId: activeChatInfo.user.id,
+    })
+  }, [activeRoom])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
@@ -114,13 +138,28 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
-      receive(data.roomId, data.content, data.senderId, data.ISOtime)
       updateConvoItem(data.roomId, {
         content: data.content,
         createdAt: data.ISOtime,
         senderId: data.senderId,
         status: null,
       })
+      // No need to update status if the chat has never been fetched
+      // Because they will arrive with proper data whenever fetched (updated on server)
+      const updatedChats = getChats()
+      if (updatedChats.has(data.roomId)) {
+        receiveMsg(data.roomId, data.content, data.senderId, data.ISOtime)
+
+        const updatedActiveRoom = getActiveRoom()!
+        if (updatedActiveRoom && updatedActiveRoom.id === data.roomId) {
+          const activeChatInfo = getActiveChatInfo()!
+          socketWrapper.emit('opened-or-read-chat', {
+            roomId: updatedActiveRoom.id,
+            ISOtime: data.ISOtime,
+            senderId: activeChatInfo.user.id,
+          })
+        }
+      }
     })
 
     socketWrapper.on('message-to-new-or-revived-room', (data: SendMsgNewRoomType) => {
@@ -139,7 +178,12 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
-      updateStatus(data.roomId, data.ISOtime, data.status)
+      updateMsgStatus(data.roomId, data.ISOtime, data.status)
+      updateConvoItemStatus(data.roomId, data.status)
+    })
+
+    socketWrapper.on('all-message-status', (data: AllMsgStatusUpdateType) => {
+      updateAllMsgStatus(data.roomId, data.status)
       updateConvoItemStatus(data.roomId, data.status)
     })
 
@@ -154,6 +198,7 @@ export function useSocketInit() {
       socketWrapper.off('message-status')
       socketWrapper.off('typing-state')
       socketWrapper.off('message-to-new-or-revived-room')
+      socketWrapper.off('all-message-status')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

@@ -33,7 +33,6 @@ export class MessageService {
    * @param authUserId user_id of authorized user
    * @param roomEntities All rooms of given user
    */
-  // TODO: Update msg status when receiver comes online while sender is already online (real-time)
   async updateDeliveredStatus(authUserId: number, roomEntities: RoomEntity[]): Promise<void> {
     await this.messageRepository.update(
       {
@@ -46,6 +45,22 @@ export class MessageService {
       },
     )
   }
+  /**
+   * Update status of **delivered** messages from DELIVERED to READ.
+   * This should be done whenever the receiver opens the chat with unread messages.
+   * @param senderId user_id whose messages are read
+   * @param roomId
+   */
+  async updateReadStatus(senderId: number, roomId: number): Promise<void> {
+    await this.messageRepository.update(
+      {
+        room: { id: roomId },
+        senderId,
+        status: MessageStatus.DELIVERED,
+      },
+      { status: MessageStatus.READ },
+    )
+  }
 
   /**
    * @param firstMsgTstamp the timestamp before which the messages were cleared
@@ -54,6 +69,14 @@ export class MessageService {
     if (firstMsgTstamp === null) return []
     // `firstMsgTstamp` is received as a Date number in milliseconds
     return this.messageRepository.find({
+      select: {
+        id: true,
+        content: true,
+        createdAt: true,
+        senderId: true,
+        // TODO: return status as `null` if the message is not created by auth-user
+        status: true,
+      },
       where: { room: { id: roomId }, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
       order: { createdAt: 'ASC' },
     })

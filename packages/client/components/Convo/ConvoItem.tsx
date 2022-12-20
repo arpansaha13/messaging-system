@@ -142,10 +142,10 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
               </p>
             )}
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center text-gray-400">
             <p
               className={classNames(
-                'flex items-center text-sm text-gray-400 space-x-1 line-clamp-1',
+                'flex items-center text-sm space-x-1 line-clamp-1',
                 latestMsg === null ? 'h-5' : '', // same as line-height of 'text-sm'
               )}
             >
@@ -153,7 +153,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
               {latestMsg && <span>{latestMsg.content}</span>}
             </p>
             <div className="flex-shrink-0 flex items-center">
-              {pinned && <Icon icon={pinIcon} color="#9ca3af" width={20} height={20} />}
+              {pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
               <RoomItemDropDown menuItems={menuItems} />
             </div>
           </div>
