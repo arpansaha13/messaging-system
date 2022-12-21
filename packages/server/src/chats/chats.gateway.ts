@@ -69,6 +69,8 @@ export class ChatsGateway {
     if (data.ISOtime) payload.ISOtime = data.ISOtime
     const event = data.ISOtime ? 'message-status' : 'all-message-status'
     this.server.to(senderSocketId).emit(event, payload)
+    // Send the msg status update to reader also for updating unread state
+    this.server.to(readerSocket.id).emit(event, payload)
   }
 
   @SubscribeMessage('send-message')
@@ -162,6 +164,7 @@ export class ChatsGateway {
       senderId: data.senderId,
       content: data.content,
       ISOtime: data.ISOtime,
+      status: MessageStatus.DELIVERED,
     })
 
     this.messageService.updateMsgStatus(msgId, MessageStatus.DELIVERED)

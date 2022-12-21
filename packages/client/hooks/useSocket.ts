@@ -13,6 +13,7 @@ interface ReceiveMsgType {
   senderId: number
   content: string
   ISOtime: string
+  status: MessageStatus.DELIVERED
 }
 interface MsgStatusUpdateType {
   roomId: number
@@ -106,6 +107,8 @@ export function useSocketInit() {
   useEffect(() => {
     if (activeRoom === null) return
     const activeChatInfo = getActiveChatInfo()!
+    // TODO: Emit this event only when there are unread messages which have been read
+    // Currently this event gets emitted whenever a user changes room
     socketWrapper.emit('opened-or-read-chat', {
       roomId: activeRoom.id,
       senderId: activeChatInfo.user.id,
@@ -138,17 +141,20 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
-      updateConvoItem(data.roomId, {
+      const msg = {
         content: data.content,
         createdAt: data.ISOtime,
         senderId: data.senderId,
-        status: null,
+      }
+      updateConvoItem(data.roomId, {
+        ...msg,
+        status: MessageStatus.DELIVERED,
       })
       // No need to update status if the chat has never been fetched
       // Because they will arrive with proper data whenever fetched (updated on server)
       const updatedChats = getChats()
       if (updatedChats.has(data.roomId)) {
-        receiveMsg(data.roomId, data.content, data.senderId, data.ISOtime)
+        receiveMsg(data.roomId, msg)
 
         const updatedActiveRoom = getActiveRoom()!
         if (updatedActiveRoom && updatedActiveRoom.id === data.roomId) {

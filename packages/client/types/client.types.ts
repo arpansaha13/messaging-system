@@ -25,7 +25,7 @@ export interface ConvoItemType<A = false, G = false> {
   latestMsg: null | {
     content: string
     senderId: number
-    status: MessageStatus | null
+    status: MessageStatus
     createdAt: string
   }
 }

@@ -39,7 +39,7 @@ const ChatFooter = () => {
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
-  const [activeChatInfo, send, addDraft, drafts, removeDraft, activeRoom, unarchiveRoom, updateConvoItem] = useStore(
+  const [activeChatInfo, sendMsg, addDraft, drafts, removeDraft, activeRoom, unarchiveRoom, updateConvoItem] = useStore(
     state => [
       state.activeChatInfo!,
       state.sendMsg,
@@ -87,13 +87,15 @@ const ChatFooter = () => {
           unarchiveRoom(activeRoom.id)
           fetchHook(`user-to-room/unarchive/${activeRoom.id}`, { method: 'PATCH' })
         }
-
-        send(activeRoom.id, authUser.id, value, ISOtimestamp)
-        updateConvoItem(activeRoom.id, {
+        const msg = {
           content: value,
-          status: MessageStatus.SENDING,
           createdAt: ISOtimestamp,
           senderId: authUser.id,
+        }
+        sendMsg(activeRoom.id, msg)
+        updateConvoItem(activeRoom.id, {
+          ...msg,
+          status: MessageStatus.SENDING,
         })
       }
       setValue('')

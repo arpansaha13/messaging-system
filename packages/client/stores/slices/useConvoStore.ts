@@ -1,7 +1,7 @@
 import type { StateCreator } from 'zustand'
 import produce from 'immer'
 
-import type { ConvoItemType, MessageStatus } from '../types/index.types'
+import type { ConvoItemType, MessageStatus } from '../../types/index.types'
 
 type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
 

@@ -74,7 +74,8 @@ export class MessageService {
         content: true,
         createdAt: true,
         senderId: true,
-        // TODO: return status as `null` if the message is not created by auth-user
+        // Send status of all messages irrespective of whether it belongs to auth-user or not
+        // This is used to show read receipts
         status: true,
       },
       where: { room: { id: roomId }, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },

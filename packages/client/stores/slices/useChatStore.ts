@@ -2,10 +2,9 @@ import type { StateCreator } from 'zustand'
 import produce from 'immer'
 // Utils
 import { ISOToMilliSecs } from '../../utils/ISODate'
-// Enum
-import { MessageStatus } from '../../types/index.types'
 // Types
-import type { MessageType, ConvoItemType } from '../../types/index.types'
+import { MessageStatus } from '../../types/index.types'
+import type { MessageType, ConvoItemType, MsgReceivedType } from '../../types/index.types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
@@ -30,10 +29,10 @@ export interface ChatStoreType {
   pushChat: (roomId: number, messages: MessageType[]) => void
 
   /** Append a newly sent message. This can be used during an ongoing chat. */
-  sendMsg: (roomId: number, senderId: number, content: string, ISOtime: string) => void
+  sendMsg: (roomId: number, msg: Omit<MsgReceivedType, 'status'>) => void
 
   /** Append the received messages to ongoing chat. */
-  receiveMsg: (roomId: number, content: string, senderId: number, ISOtime: string) => void
+  receiveMsg: (roomId: number, msg: Omit<MsgReceivedType, 'status'>) => void
 
   updateMsgStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
   updateAllMsgStatus: (
@@ -87,25 +86,17 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
       }),
     )
   },
-  sendMsg(roomId: number, senderId: number, content: string, ISOtime: string) {
-    get().pushChat(roomId, [
-      {
-        content,
-        senderId,
-        createdAt: ISOtime,
-        status: MessageStatus.SENDING,
-      },
-    ])
+  sendMsg(roomId, msg) {
+    get().pushChat(roomId, [{
+      ...msg,
+      status: MessageStatus.SENT,
+    }])
   },
-  receiveMsg(roomId, content, senderId, ISOtime) {
-    get().pushChat(roomId, [
-      {
-        content,
-        senderId,
-        createdAt: ISOtime,
-        status: null,
-      },
-    ])
+  receiveMsg(roomId, msg) {
+    get().pushChat(roomId, [{
+      ...msg,
+      status: MessageStatus.DELIVERED,
+    }])
   },
   updateMsgStatus(roomId, ISOtime, newStatus) {
     set(

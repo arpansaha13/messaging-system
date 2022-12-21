@@ -12,9 +12,11 @@ import RoomItemDropDown from './RoomItemDropDown'
 // Icons
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
-// Store
+// Stores
+import { useAuthStore } from '../../stores/useAuthStore'
 import { useStore } from '../../stores/index.store'
 // Types
+import { MessageStatus } from '../../types/index.types'
 import type { ConvoItemType } from '../../types/index.types'
 
 export interface ConvoItemProps {
@@ -30,6 +32,7 @@ export interface ConvoItemProps {
 const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = false, onClick }: ConvoItemProps) => {
   const fetchHook = useFetch()
 
+  const authUser = useAuthStore(state => state.authUser)!
   // Initially no rooms would be active - so `activeRoom` may be null
   const [
     activeRoom,
@@ -55,6 +58,12 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
     ],
     shallow,
   )
+  let authUserIsSender = false
+  let isUnread = false
+  if (latestMsg) {
+    authUserIsSender = authUser.id === latestMsg.senderId
+    isUnread = !authUserIsSender && latestMsg.status !== MessageStatus.READ
+  }
   const menuItems = [
     {
       slot: !archived ? 'Archive chat' : 'Unarchive chat',
@@ -126,6 +135,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
         className={classNames(
           'px-3 w-full text-left flex items-center relative',
           roomId === activeRoom?.id ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
+          isUnread ? 'font-semibold' : '',
         )}
         onClick={onClick}
       >
@@ -137,7 +147,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
             {/* If the user, with whom the chat is, is not in contacts, then show [Unknown] */}
             <p className="text-base text-gray-50">{alias ?? '[Unknown]'}</p>
             {latestMsg && (
-              <p className="text-xs text-gray-400 flex items-end">
+              <p className={classNames('text-xs flex items-end', isUnread ? 'text-emerald-600' : 'text-gray-400')}>
                 <span>{getDateTime()}</span>
               </p>
             )}
@@ -149,7 +159,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
                 latestMsg === null ? 'h-5' : '', // same as line-height of 'text-sm'
               )}
             >
-              {latestMsg?.status && <MsgStatusIcon status={latestMsg.status} />}
+              {latestMsg && authUserIsSender && <MsgStatusIcon status={latestMsg.status} />}
               {latestMsg && <span>{latestMsg.content}</span>}
             </p>
             <div className="flex-shrink-0 flex items-center">
