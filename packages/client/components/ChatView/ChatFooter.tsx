@@ -84,8 +84,7 @@ const ChatFooter = () => {
       const ISOtimestamp = ISODateNow()
       if (activeRoom !== null) {
         if (activeRoom.archived) {
-          unarchiveRoom(activeRoom.id)
-          fetchHook(`user-to-room/unarchive/${activeRoom.id}`, { method: 'PATCH' })
+          unarchiveRoom(activeRoom.id, fetchHook)
         }
         const msg = {
           content: value,

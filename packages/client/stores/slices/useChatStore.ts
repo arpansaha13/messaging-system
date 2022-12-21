@@ -9,6 +9,7 @@ import type { MessageType, ConvoItemType, MsgReceivedType } from '../../types/in
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
 type ActiveChatInfo = Omit<ConvoItemType, 'latestMsg' | 'room' | 'userToRoomId'> | null
+type FetchHook = (url: string, options?: RequestInit) => Promise<any>
 
 export interface ChatStoreType {
   /**
@@ -40,8 +41,8 @@ export interface ChatStoreType {
     newStatus: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>,
   ) => void
 
-  clearChat: (roomId: number) => void
-  deleteChat: (roomId: number) => void
+  clearChat: (roomId: number, fetchHook: FetchHook) => void
+  deleteChat: (roomId: number, fetchHook: FetchHook) => void
 }
 
 export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = (set, get) => ({
@@ -87,16 +88,20 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
     )
   },
   sendMsg(roomId, msg) {
-    get().pushChat(roomId, [{
-      ...msg,
-      status: MessageStatus.SENT,
-    }])
+    get().pushChat(roomId, [
+      {
+        ...msg,
+        status: MessageStatus.SENT,
+      },
+    ])
   },
   receiveMsg(roomId, msg) {
-    get().pushChat(roomId, [{
-      ...msg,
-      status: MessageStatus.DELIVERED,
-    }])
+    get().pushChat(roomId, [
+      {
+        ...msg,
+        status: MessageStatus.DELIVERED,
+      },
+    ])
   },
   updateMsgStatus(roomId, ISOtime, newStatus) {
     set(
@@ -126,16 +131,18 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
       }),
     )
   },
-  clearChat(roomId: number) {
+  clearChat(roomId, fetchHook) {
     set(
       produce((state: ChatStoreType) => {
+        fetchHook(`user-to-room/${roomId}/clear-chat`, { method: 'Delete' })
         state.chats.set(roomId, new Map<number, MessageType>())
       }),
     )
   },
-  deleteChat(roomId: number) {
+  deleteChat(roomId, fetchHook) {
     set(
       produce((state: ChatStoreType) => {
+        fetchHook(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
         state.chats.delete(roomId)
       }),
     )

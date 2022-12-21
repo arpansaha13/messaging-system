@@ -79,7 +79,7 @@ export function useSocketInit() {
     receiveMsg,
     updateMsgStatus,
     updateAllMsgStatus,
-    addNewItemToTop,
+    addNewConvoItem,
     updateConvoItem,
     updateConvoItemStatus,
   ] = useStore(
@@ -113,6 +113,7 @@ export function useSocketInit() {
       roomId: activeRoom.id,
       senderId: activeChatInfo.user.id,
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeRoom])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
@@ -170,14 +171,15 @@ export function useSocketInit() {
 
     socketWrapper.on('message-to-new-or-revived-room', (data: SendMsgNewRoomType) => {
       // Add a new item in chat-list
+      const activeChatInfo = getActiveChatInfo()!
       const newConvoItem: ConvoItemType = {
         userToRoomId: data.userToRoomId,
-        contact: getActiveChatInfo()!.contact,
-        user: getActiveChatInfo()!.user,
+        contact: activeChatInfo.contact,
+        user: activeChatInfo.user,
         room: data.room,
         latestMsg: data.latestMsg,
       }
-      addNewItemToTop(newConvoItem)
+      addNewConvoItem(newConvoItem)
       addChat(data.room.id, [data.latestMsg])
       setActiveRoom(data.room)
       setProxyConvo(false)

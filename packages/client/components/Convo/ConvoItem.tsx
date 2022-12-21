@@ -42,8 +42,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
     unarchiveRoom,
     deleteChat,
     deleteConvo,
-    pinConvo,
-    unpinConvo,
+    updateConvoPin,
   ] = useStore(
     state => [
       state.activeRoom,
@@ -53,8 +52,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
       state.unarchiveRoom,
       state.deleteChat,
       state.deleteConvo,
-      state.pinConvo,
-      state.unpinConvo,
+      state.updateConvoPin,
     ],
     shallow,
   )
@@ -69,11 +67,9 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
       slot: !archived ? 'Archive chat' : 'Unarchive chat',
       onClick() {
         if (!archived) {
-          archiveRoom(roomId)
-          fetchHook(`user-to-room/archive/${roomId}`, { method: 'PATCH' })
+          archiveRoom(roomId, fetchHook)
         } else {
-          unarchiveRoom(roomId)
-          fetchHook(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+          unarchiveRoom(roomId, fetchHook)
         }
       },
     },
@@ -86,14 +82,13 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
     {
       slot: 'Delete chat',
       onClick() {
-        deleteChat(roomId)
+        deleteChat(roomId, fetchHook)
         deleteConvo(roomId, archived)
         // If active room is being deleted
         if (activeRoom && activeRoom.id === roomId) {
           setActiveRoom(null)
           setActiveChatInfo(null)
         }
-        fetchHook(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
       },
     },
     ...(() =>
@@ -103,11 +98,9 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
               slot: !pinned ? 'Pin chat' : 'Unpin chat',
               onClick() {
                 if (!pinned) {
-                  pinConvo(roomId)
-                  fetchHook(`user-to-room/${roomId}/pin-chat`, { method: 'PATCH' })
+                  updateConvoPin(roomId, true, fetchHook)
                 } else {
-                  unpinConvo(roomId)
-                  fetchHook(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+                  updateConvoPin(roomId, false, fetchHook)
                 }
               },
             },

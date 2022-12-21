@@ -4,6 +4,7 @@ import produce from 'immer'
 import type { ConvoItemType, MessageStatus } from '../../types/index.types'
 
 type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
+type FetchHook = (url: string, options?: RequestInit) => Promise<any>
 
 export interface ConvoStoreType {
   /** The currently active chat-room. */
@@ -14,8 +15,8 @@ export interface ConvoStoreType {
 
   /** The list of unarchived chats with different users displayed on the sidebar. */
   convo: ConvoItemType[]
-
-  initUnarchivedConvo: (initConvo: ConvoItemType[]) => void
+  archivedConvo: ConvoItemType<true>[]
+  initConvo(fetchHook: FetchHook): Promise<void>
 
   isProxyConvo: boolean
   setProxyConvo: (proxyConvoState: boolean) => void
@@ -28,24 +29,16 @@ export interface ConvoStoreType {
    * Search if a room exists with the given user.
    * @returns the room if the room exists, else `null`.
    */
-  searchConvoByUserId: (userId: number) => ConvoItemType<boolean>['room'] | null
+  searchConvoRoomByUserId: (userId: number) => ConvoItemType<boolean>['room'] | null
 
   addNewConvoItem: (newItem: ConvoItemType) => void
 
   clearConvoItemLatestMsg: (roomId: number) => void
 
-  archivedConvo: ConvoItemType<true>[]
-
-  /** Initialize the archived chat list. */
-  initArchivedConvo: (initConvo: ConvoItemType<true>[]) => void
-
-  archiveRoom: (roomId: number) => void
-  unarchiveRoom: (roomId: number) => void
+  archiveRoom: (roomId: number, fetchHook: FetchHook) => void
+  unarchiveRoom: (roomId: number, fetchHook: FetchHook) => void
   deleteConvo: (roomId: number, archived?: boolean) => void
-  /** Used for pin-chat */
-  pinConvo: (roomId: number) => void
-  /** Used for unpin-chat */
-  unpinConvo: (roomId: number) => void
+  updateConvoPin: (roomId: number, pinned: boolean, fetchHook: FetchHook) => void
 }
 
 export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType> = (set, get) => ({
@@ -57,12 +50,11 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
     return get().activeRoom
   },
   convo: [],
-  initUnarchivedConvo(initConvo) {
-    set(() => ({ convo: initConvo }))
-  },
   archivedConvo: [],
-  initArchivedConvo(initConvo) {
-    set(() => ({ archivedConvo: initConvo }))
+  async initConvo(fetchHook) {
+    const convoRes: any[] = await fetchHook('users/convo')
+    const { unarchivedList, archivedList } = prepareConvo(convoRes)
+    set(() => ({ convo: unarchivedList, archivedConvo: archivedList }))
   },
   isProxyConvo: false,
   setProxyConvo(proxyConvoState) {
@@ -96,7 +88,7 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
       }),
     )
   },
-  searchConvoByUserId(userId) {
+  searchConvoRoomByUserId(userId) {
     const convo = get().convo
     let idx = convo.findIndex(item => item.user.id === userId)
     if (idx !== -1) return convo[idx].room
@@ -114,7 +106,7 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
       }),
     )
   },
-  archiveRoom(roomId) {
+  archiveRoom(roomId, fetchHook) {
     set(
       produce((state: ConvoStoreType) => {
         const idx = findRoomIndex(roomId, state.convo)
@@ -123,10 +115,11 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         convoItem.room.archived = true
         convoItem.room.pinned = false
         pushAndSort(state.archivedConvo, convoItem)
+        fetchHook(`user-to-room/archive/${roomId}`, { method: 'PATCH' })
       }),
     )
   },
-  unarchiveRoom(roomId) {
+  unarchiveRoom(roomId, fetchHook) {
     set(
       produce((state: ConvoStoreType) => {
         const idx = findRoomIndex(roomId, state.archivedConvo)
@@ -134,6 +127,7 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
         const convoItem = state.archivedConvo.splice(idx, 1)[0] as unknown as ConvoItemType<false>
         convoItem.room.archived = false
         pushAndSort(state.convo, convoItem)
+        fetchHook(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
       }),
     )
   },
@@ -147,25 +141,16 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
       }),
     )
   },
-  pinConvo(roomId) {
+  updateConvoPin(roomId, pinned, fetchHook) {
     set(
       produce((state: ConvoStoreType) => {
         const idx = findRoomIndex(roomId, state.convo)
         if (idx === null) return null
-        const convoItem = state.convo.splice(idx, 1)[0]
-        convoItem.room.pinned = true
-        pushAndSort(state.convo, convoItem)
-      }),
-    )
-  },
-  unpinConvo(roomId) {
-    set(
-      produce((state: ConvoStoreType) => {
-        const idx = findRoomIndex(roomId, state.convo)
-        if (idx === null) return null
-        const convoItem = state.convo.splice(idx, 1)[0]
-        convoItem.room.pinned = false
-        pushAndSort(state.convo, convoItem)
+        const convoItem = state.convo[idx]
+        convoItem.room.pinned = pinned
+        state.convo.sort(sortConvoCompareFn)
+        if (pinned) fetchHook(`user-to-room/${roomId}/pin-chat`, { method: 'PATCH' })
+        else fetchHook(`user-to-room/${roomId}/unpin-chat`, { method: 'PATCH' })
       }),
     )
   },
@@ -181,19 +166,64 @@ function findRoomIndex(roomId: number, list: ReadonlyArray<ConvoItemType<boolean
 }
 function pushAndSort(list: ConvoItemType<boolean>[], item: Readonly<ConvoItemType<boolean>>): void {
   list.push(item)
-  list.sort((a: Readonly<ConvoItemType<boolean>>, b: Readonly<ConvoItemType<boolean>>) => {
-    // Pinned chats on top
-    if (a.room.pinned && !b.room.pinned) return -1
-    if (!a.room.pinned && b.room.pinned) return 1
+  list.sort(sortConvoCompareFn)
+}
+const sortConvoCompareFn = (a: Readonly<ConvoItemType<boolean>>, b: Readonly<ConvoItemType<boolean>>) => {
+  // Pinned chats on top
+  if (a.room.pinned && !b.room.pinned) return -1
+  if (!a.room.pinned && b.room.pinned) return 1
 
-    // Cleared convos at bottom
-    if (a.latestMsg !== null && b.latestMsg === null) return -1
-    if (a.latestMsg === null && b.latestMsg !== null) return 1
-    if (a.latestMsg === null && b.latestMsg === null) return 0
+  // Cleared convos at bottom
+  if (a.latestMsg !== null && b.latestMsg === null) return -1
+  if (a.latestMsg === null && b.latestMsg !== null) return 1
+  if (a.latestMsg === null && b.latestMsg === null) return 0
 
-    // Latest convo on top
-    if (a.latestMsg!.createdAt > b.latestMsg!.createdAt) return -1
-    if (a.latestMsg!.createdAt < b.latestMsg!.createdAt) return 1
-    return 0
-  })
+  // Latest convo on top
+  if (a.latestMsg!.createdAt > b.latestMsg!.createdAt) return -1
+  if (a.latestMsg!.createdAt < b.latestMsg!.createdAt) return 1
+  return 0
+}
+/** Generic type A = archived */
+function prepareConvo(convoRes: any[]): {
+  unarchivedList: ConvoItemType[]
+  archivedList: ConvoItemType<true>[]
+} {
+  const archivedList: ConvoItemType<true>[] = []
+  const unarchivedList: ConvoItemType[] = []
+
+  for (const convoItem of convoRes) {
+    const template: ConvoItemType<boolean> = {
+      userToRoomId: convoItem.u2r_id,
+      room: {
+        id: convoItem.r_id,
+        archived: convoItem.u2r_archived,
+        pinned: convoItem.u2r_pinned,
+        muted: convoItem.u2r_muted,
+        isGroup: convoItem.r_is_group,
+      },
+      contact: convoItem.c_id
+        ? {
+            id: convoItem.c_id,
+            alias: convoItem.c_alias,
+          }
+        : null,
+      user: {
+        id: convoItem.u_id,
+        dp: convoItem.u_dp,
+        bio: convoItem.u_bio,
+        displayName: convoItem.u_display_name,
+      },
+      latestMsg: convoItem.msg_content
+        ? {
+            content: convoItem.msg_content,
+            createdAt: convoItem.msg_created_at,
+            senderId: convoItem.msg_sender_id,
+            status: convoItem.msg_status,
+          }
+        : null,
+    }
+    if (template.room.archived) archivedList.push(template as ConvoItemType<true>)
+    else unarchivedList.push(template as ConvoItemType<false>)
+  }
+  return { unarchivedList, archivedList }
 }

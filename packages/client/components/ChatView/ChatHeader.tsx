@@ -64,8 +64,7 @@ const ChatHeader = () => {
             {
               slot: 'Clear messages',
               async onClick() {
-                await fetchHook(`user-to-room/${activeRoom.id}/clear-chat`, { method: 'Delete' })
-                clearChat(activeRoom.id)
+                clearChat(activeRoom.id, fetchHook)
                 clearConvoItemLatestMsg(activeRoom.id)
               },
             },
