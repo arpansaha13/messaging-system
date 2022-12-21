@@ -1,7 +1,7 @@
 import type { StateCreator } from 'zustand'
 import produce from 'immer'
 // Utils
-import { ISOToMilliSecs } from '../../utils/ISODate'
+import { ISOToMilliSecs } from '../../utils'
 // Types
 import { MessageStatus } from '../../types/index.types'
 import type { MessageType, ConvoItemType, MsgReceivedType } from '../../types/index.types'
@@ -39,6 +39,7 @@ export interface ChatStoreType {
   updateAllMsgStatus: (
     roomId: number,
     newStatus: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>,
+    senderId: number,
   ) => void
 
   clearChat: (roomId: number, fetchHook: FetchHook) => void
@@ -91,7 +92,7 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
     get().pushChat(roomId, [
       {
         ...msg,
-        status: MessageStatus.SENT,
+        status: MessageStatus.SENDING,
       },
     ])
   },
@@ -114,7 +115,7 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
       }),
     )
   },
-  updateAllMsgStatus(roomId, newStatus) {
+  updateAllMsgStatus(roomId, newStatus, senderId) {
     set(
       produce((state: ChatStoreType) => {
         const chat = state.chats.get(roomId)
@@ -125,7 +126,7 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
         const iter = chat.values()
         let iterRes = iter.next()
         while (!iterRes.done) {
-          iterRes.value.status = newStatus
+          if (iterRes.value.senderId === senderId) iterRes.value.status = newStatus
           iterRes = iter.next()
         }
       }),

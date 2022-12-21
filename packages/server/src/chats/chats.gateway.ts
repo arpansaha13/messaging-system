@@ -54,25 +54,12 @@ export class ChatsGateway {
     this.clients.delete(disconnectedUserId)
   }
 
-  @SubscribeMessage('opened-or-read-chat')
-  async handleReadStatus(@MessageBody() data: WsOpenedOrReadChatDto, @ConnectedSocket() readerSocket: Socket) {
-    const senderSocketId = this.clients.get(data.senderId)
-    await this.messageService.updateReadStatus(data.senderId, data.roomId)
-
-    // If the sender is not online
-    if (typeof senderSocketId === 'undefined') return
-
-    const payload: any = {
-      roomId: data.roomId,
-      status: MessageStatus.READ,
-    }
-    if (data.ISOtime) payload.ISOtime = data.ISOtime
-    const event = data.ISOtime ? 'message-status' : 'all-message-status'
-    this.server.to(senderSocketId).emit(event, payload)
-    // Send the msg status update to reader also for updating unread state
-    this.server.to(readerSocket.id).emit(event, payload)
-  }
-
+  /**
+   * `sender` is the user who sent the message.
+   * `receiver` is the user who has received or will receive the message.
+   *
+   * This event will come from the sender's side.
+   */
   @SubscribeMessage('send-message')
   async handleEvent(@MessageBody() data: Ws1to1MessageDto, @ConnectedSocket() senderSocket: Socket) {
     const receiverSocketId = this.clients.get(data.receiverId)
@@ -129,6 +116,7 @@ export class ChatsGateway {
       this.server.to(senderSocket.id).emit('message-status', {
         roomId: roomEntity.id,
         status,
+        senderId: data.senderId,
         ISOtime: data.ISOtime,
       })
     }
@@ -164,11 +152,34 @@ export class ChatsGateway {
       senderId: data.senderId,
       content: data.content,
       ISOtime: data.ISOtime,
-      status: MessageStatus.DELIVERED,
     })
 
     this.messageService.updateMsgStatus(msgId, MessageStatus.DELIVERED)
     emitMsgStatus.bind(this)(MessageStatus.DELIVERED)
+  }
+
+  /**
+   * `sender` is the user who has or had sent the message.
+   * `reader` is the user who is has read the message.
+   *
+   * This event will come from the reader's side.
+   */
+  @SubscribeMessage('opened-or-read-chat')
+  async handleReadStatus(@MessageBody() data: WsOpenedOrReadChatDto, @ConnectedSocket() readerSocket: Socket) {
+    const senderSocketId = this.clients.get(data.senderId)
+    await this.messageService.updateReadStatus(data.senderId, data.roomId)
+
+    // If the sender is not online
+    if (typeof senderSocketId === 'undefined') return
+
+    const payload: any = {
+      roomId: data.roomId,
+      senderId: data.senderId,
+      status: MessageStatus.READ,
+    }
+    if (data.ISOtime) payload.ISOtime = data.ISOtime
+    const event = data.ISOtime ? 'message-status' : 'all-message-status'
+    this.server.to(senderSocketId).emit(event, payload)
   }
 
   @SubscribeMessage('typing-state')

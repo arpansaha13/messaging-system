@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { format, parseISO, differenceInCalendarDays } from 'date-fns'
 import shallow from 'zustand/shallow'
 // Utils
-import classNames from '../../utils/classNames'
+import { classNames, isUnread } from '../../utils'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Components
@@ -56,12 +56,9 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
     ],
     shallow,
   )
-  let authUserIsSender = false
-  let isUnread = false
-  if (latestMsg) {
-    authUserIsSender = authUser.id === latestMsg.senderId
-    isUnread = !authUserIsSender && latestMsg.status !== MessageStatus.READ
-  }
+  let authUserIsSender = authUser.id === latestMsg?.senderId
+  let unread = isUnread(authUser.id, latestMsg)
+
   const menuItems = [
     {
       slot: !archived ? 'Archive chat' : 'Unarchive chat',
@@ -128,7 +125,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
         className={classNames(
           'px-3 w-full text-left flex items-center relative',
           roomId === activeRoom?.id ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
-          isUnread ? 'font-semibold' : '',
+          unread ? 'font-semibold' : '',
         )}
         onClick={onClick}
       >
@@ -140,7 +137,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
             {/* If the user, with whom the chat is, is not in contacts, then show [Unknown] */}
             <p className="text-base text-gray-50">{alias ?? '[Unknown]'}</p>
             {latestMsg && (
-              <p className={classNames('text-xs flex items-end', isUnread ? 'text-emerald-600' : 'text-gray-400')}>
+              <p className={classNames('text-xs flex items-end', unread ? 'text-emerald-600' : 'text-gray-400')}>
                 <span>{getDateTime()}</span>
               </p>
             )}

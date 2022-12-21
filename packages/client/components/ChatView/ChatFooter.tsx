@@ -13,7 +13,7 @@ import { useSocket } from '../../hooks/useSocket'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useStore } from '../../stores/index.store'
 // Utils
-import { ISODateNow } from '../../utils/ISODate'
+import { ISODateNow } from '../../utils'
 // Enum
 import { MessageStatus } from '../../types/index.types'
 // Types
@@ -92,10 +92,14 @@ const ChatFooter = () => {
           senderId: authUser.id,
         }
         sendMsg(activeRoom.id, msg)
-        updateConvoItem(activeRoom.id, {
-          ...msg,
-          status: MessageStatus.SENDING,
-        })
+        updateConvoItem(
+          activeRoom.id,
+          {
+            ...msg,
+            status: MessageStatus.SENDING,
+          },
+          fetchHook,
+        )
       }
       setValue('')
       socket.emit('send-message', {

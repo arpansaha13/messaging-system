@@ -5,7 +5,7 @@ import MsgStatusIcon from '../MsgStatusIcon'
 // Store
 import { useAuthStore } from '../../stores/useAuthStore'
 // Utils
-import classNames from '../../utils/classNames'
+import { classNames } from '../../utils'
 // Types
 import type { MessageType } from '../../types/index.types'
 

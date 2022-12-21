@@ -4,7 +4,7 @@ import { Menu, Transition } from '@headlessui/react'
 // Icons
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid'
 // Utils
-import classNames from '../utils/classNames'
+import { classNames } from '../utils'
 // Types
 import type { ReactNode } from 'react'
 

@@ -2,7 +2,7 @@ import { memo, useRef, useState } from 'react'
 // Icons
 import { ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/solid'
 import { FunnelIcon } from '@heroicons/react/24/outline'
-import classNames from '../../utils/classNames'
+import { classNames } from '../../utils'
 
 const SearchBar = () => {
   const [value, setValue] = useState('')

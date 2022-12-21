@@ -21,15 +21,15 @@ export interface ConvoStoreType {
   isProxyConvo: boolean
   setProxyConvo: (proxyConvoState: boolean) => void
 
-  updateConvoItem: (roomId: number, latestMsg: ConvoItemType['latestMsg']) => void
+  updateConvoItem: (roomId: number, latestMsg: ConvoItemType['latestMsg'], fetchHook: FetchHook) => void
 
-  updateConvoItemStatus: (roomId: number, latestMsgStatus: MessageStatus) => void
+  updateConvoItemStatus: (roomId: number, latestMsgStatus: MessageStatus, senderId: number) => void
 
   /**
    * Search if a room exists with the given user.
    * @returns the room if the room exists, else `null`.
    */
-  searchConvoRoomByUserId: (userId: number) => ConvoItemType<boolean>['room'] | null
+  searchConvoByUserId: (userId: number) => ConvoItemType<boolean> | null
 
   addNewConvoItem: (newItem: ConvoItemType) => void
 
@@ -60,22 +60,39 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
   setProxyConvo(proxyConvoState) {
     set(() => ({ isProxyConvo: proxyConvoState }))
   },
-  updateConvoItem(roomId, latestMsg) {
+  updateConvoItem(roomId, latestMsg, fetchHook) {
     set(
       produce((state: ConvoStoreType) => {
-        const idx = findRoomIndex(roomId, state.convo)
-        if (idx === null) return null
-        const convoItem = state.convo.splice(idx, 1)[0]
-        convoItem.latestMsg = latestMsg
-        pushAndSort(state.convo, convoItem)
+        let idx = findRoomIndex(roomId, state.archivedConvo)
+        let convoItem: ConvoItemType<boolean> | null = null
+        if (idx !== null) {
+          convoItem = state.archivedConvo.splice(idx, 1)[0] as unknown as ConvoItemType<false>
+          convoItem.room.archived = false
+          convoItem.latestMsg = latestMsg
+          pushAndSort(state.convo, convoItem)
+          fetchHook(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+          return
+        }
+        idx = findRoomIndex(roomId, state.convo)
+        if (idx !== null) {
+          convoItem = state.convo.splice(idx, 1)[0]
+          convoItem.latestMsg = latestMsg
+          pushAndSort(state.convo, convoItem)
+        }
       }),
     )
   },
-  updateConvoItemStatus(roomId, latestMsgStatus) {
+  updateConvoItemStatus(roomId, latestMsgStatus, senderId) {
     set(
       produce((state: ConvoStoreType) => {
-        const idx = findRoomIndex(roomId, state.convo)!
-        state.convo[idx].latestMsg!.status = latestMsgStatus
+        let idx = findRoomIndex(roomId, state.convo)
+        if (idx !== null) {
+          const latestMsg = state.convo[idx].latestMsg!
+          if (latestMsg.senderId === senderId) latestMsg.status = latestMsgStatus
+          return
+        }
+        idx = findRoomIndex(roomId, state.archivedConvo)!
+        state.archivedConvo[idx].latestMsg!.status = latestMsgStatus
       }),
     )
   },
@@ -88,14 +105,14 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
       }),
     )
   },
-  searchConvoRoomByUserId(userId) {
+  searchConvoByUserId(userId) {
     const convo = get().convo
     let idx = convo.findIndex(item => item.user.id === userId)
-    if (idx !== -1) return convo[idx].room
+    if (idx !== -1) return convo[idx]
 
     const archivedConvo = get().archivedConvo
     idx = archivedConvo.findIndex(item => item.user.id === userId)
-    if (idx !== -1) return archivedConvo[idx].room
+    if (idx !== -1) return archivedConvo[idx]
 
     return null
   },
