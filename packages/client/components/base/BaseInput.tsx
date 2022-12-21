@@ -1,13 +1,14 @@
 // Types
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes, RefObject } from 'react'
 
 interface BaseInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string
+  innerRef?: RefObject<HTMLInputElement>
   validationError?: string | null
 }
 
 export default function BaseInput(props: BaseInputProps) {
-  const { label, validationError = null, ...inputAttrs } = props
+  const { label, innerRef, validationError = null, ...inputAttrs } = props
 
   return (
     <div className="relative">
@@ -16,6 +17,7 @@ export default function BaseInput(props: BaseInputProps) {
       </label>
       <div className="mt-1">
         <input
+          ref={innerRef}
           {...inputAttrs}
           className="block w-full appearance-none rounded-md border border-gray-300 dark:bg-gray-800/70 px-3 py-2 text placeholder-gray-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
         />
