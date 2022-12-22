@@ -4,7 +4,8 @@ import shallow from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from '../hooks/useFetch'
 // Components
-import AsyncPage from '../components/AsyncPage' // Import this dynamically when needed
+import Loading from '../components/Loading'
+import AsyncPage from '../components/AsyncPage' // TODO: Import this dynamically when needed
 // Store
 import { useAuthStore } from '../stores/useAuthStore'
 import { useStore } from '../stores/index.store'
@@ -30,7 +31,9 @@ const Home: NextPage = () => {
     } else {
       fetchHook('users/me').then((authUserRes: AuthUserResType) => {
         setAuthUser(authUserRes)
-        Promise.all([initConvo(fetchHook), initContactStore(fetchHook)]).then(() => setLoaded(true))
+        Promise.all([initConvo(fetchHook), initContactStore(fetchHook)]).then(() =>
+          setTimeout(() => setLoaded(true), 2000),
+        )
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,8 +42,7 @@ const Home: NextPage = () => {
   if (hasLoaded) {
     return <AsyncPage />
   } else {
-    // TODO: make a component for 'loading'
-    return <p> Loading...</p>
+    return <Loading />
   }
 }
 
