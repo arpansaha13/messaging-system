@@ -1,3 +1,4 @@
+import { InjectRepository } from '@nestjs/typeorm'
 import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 // Services
 import { RoomService } from 'src/rooms/room.service'
@@ -5,12 +6,13 @@ import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 // DTOs
 import { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
-// Enum
-import { MessageStatus } from '../messages/message.entity'
+// Entity
+import { MessageEntity, MessageStatus } from '../messages/message.entity'
 // Types
 import type { Server, Socket } from 'socket.io'
 import type { RoomEntity } from 'src/rooms/room.entity'
 import type { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
+import type { Repository } from 'typeorm'
 
 const CLIENT_ORIGIN = 'http://localhost:3000'
 
@@ -24,6 +26,9 @@ export class ChatsGateway {
     private readonly roomService: RoomService,
     private readonly messageService: MessageService,
     private readonly userToRoomService: UserToRoomService,
+
+    @InjectRepository(MessageEntity)
+    private messageRepository: Repository<MessageEntity>,
   ) {}
 
   @WebSocketServer()
@@ -41,13 +46,39 @@ export class ChatsGateway {
   // FIXME: DTOs are not working with websocket event payloads
 
   @SubscribeMessage('session-connect')
-  addSession(@MessageBody('userId') userId: number, @ConnectedSocket() senderSocket: Socket) {
+  async addSession(@MessageBody('userId') userId: number, @ConnectedSocket() socket: Socket) {
     // If the same user connects again it will overwrite previous data in map.
     // Which means multiple connections are not possible currently.
     // TODO: support multiple connections
-    this.clients.set(userId, senderSocket.id)
-  }
+    const userToRooms = await this.userToRoomService.getRoomsOfUser(userId)
+    const rooms = userToRooms.map(u2r => u2r.room)
 
+    // Get the userIds of those who had sent a message
+    const res: { sender_id: number; room_id: number }[] = await this.messageRepository
+      .createQueryBuilder('msg')
+      .select(['msg.sender_id', 'msg.room_id'])
+      .distinctOn(['msg.sender_id'])
+      .where("msg.room_id IN (:...rooms) AND msg.status = 'SENT' AND msg.sender_id != :userId", {
+        rooms: rooms.map(room => room.id),
+        userId,
+      })
+      .getRawMany()
+
+    // Out of these userIds, send DELIVERED status to the **online** userIds
+    for (const resItem of res) {
+      const socketId = this.clients.get(resItem.sender_id)
+      if (socketId) {
+        this.server.to(socketId).emit('all-message-status', {
+          roomId: resItem.room_id,
+          senderId: resItem.sender_id,
+          status: MessageStatus.DELIVERED,
+        })
+      }
+    }
+    this.clients.set(userId, socket.id)
+    this.messageService.updateDeliveredStatus(userId, rooms)
+  }
+  // TODO: check if room is unarchived if the receiver is offline
   @SubscribeMessage('disconnect')
   handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
     const disconnectedUserId = this.#getMapKeyByValue(this.clients, senderSocket.id)
