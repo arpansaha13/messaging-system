@@ -2,7 +2,7 @@ import { memo } from 'react'
 import Router from 'next/router'
 import shallow from 'zustand/shallow'
 // Icons
-import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon } from '@heroicons/react/20/solid'
+import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon, UserPlusIcon } from '@heroicons/react/20/solid'
 // Stores
 import { useStore } from '../../stores/index.store'
 import { useAuthStore } from '../../stores/useAuthStore'
@@ -81,6 +81,13 @@ const SidebarHeader = () => {
     })
     toggleSlideOver(true)
   }
+  function openAddContactMenu() {
+    setSlideOverState({
+      title: 'Add new contact',
+      componentName: 'AddContact',
+    })
+    toggleSlideOver(true)
+  }
 
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-800">
@@ -89,6 +96,9 @@ const SidebarHeader = () => {
       </button>
 
       <div className="flex items-center text-gray-400 space-x-2">
+        <button className="p-2 btn-icon" onClick={openAddContactMenu}>
+          <UserPlusIcon className="w-6 h-6 flex-shrink-0" />
+        </button>
         <button className="p-2 btn-icon">
           <ViewfinderCircleIcon className="w-6 h-6 flex-shrink-0" />
         </button>

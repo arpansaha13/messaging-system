@@ -59,11 +59,11 @@ const SignUpPage = () => {
       })
       .catch(err => {
         setNotification({
+          show: true,
           status: 'error',
           title: 'Sign up failed!',
           description: err.message,
         })
-        toggleNotification(true)
       })
   }
 

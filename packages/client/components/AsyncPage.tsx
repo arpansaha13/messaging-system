@@ -8,10 +8,12 @@ import ChatView from './ChatView'
 import SlideOver from './SlideOver'
 import ContactList from './ContactList'
 import Archived from './Convo/Archived'
+import Notification from './common/Notification'
+import AddContact from './ContactList/AddContact'
 // Stores
 import { useStore } from '../stores/index.store'
 // Types
-import type { SlideOverStateType } from '../stores/useSlideOverState'
+import type { SlideOverStateType } from '../stores/slices/useSlideOverState'
 
 function getSlideOverContent(componentName: SlideOverStateType['slideOverState']['componentName']) {
   switch (componentName) {
@@ -21,6 +23,8 @@ function getSlideOverContent(componentName: SlideOverStateType['slideOverState']
       return <Archived />
     case 'Profile':
       return <Profile />
+    case 'AddContact':
+      return <AddContact />
     default:
       return null
   }
@@ -40,6 +44,7 @@ export default function AsyncPage() {
 
   return (
     <main className="grid grid-cols-10 h-full">
+      <Notification />
       {/* 'overflow-x-visible' for the dropdown. */}
       <section className="col-span-3 h-full border-r border-gray-600/70 relative overflow-x-visible">
         <SlideOver>{getSlideOverContent(slideOverState.componentName)}</SlideOver>

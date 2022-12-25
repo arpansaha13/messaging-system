@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 // Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
@@ -6,6 +6,7 @@ import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 import { UserService } from './user.service'
 // DTO
 import { UserIdParam } from './dto/user-id-param.dto'
+import { UserSearchQuery } from './dto/user-search-query.dto'
 import { UpdateUserInfoDto } from './dto/update-user-info.dto'
 // Types
 import type { UserEntity } from 'src/users/user.entity'
@@ -21,8 +22,13 @@ export class UserController {
   }
 
   @Get('/convo')
-  async getUserConvo(@GetPayload('user') authUser: UserEntity): Promise<any> {
+  getUserConvo(@GetPayload('user') authUser: UserEntity): Promise<any> {
     return this.userService.getUserConvo(authUser.id)
+  }
+
+  @Get('/search')
+  findUsers(@GetPayload('user') authUser: UserEntity, @Query() query: UserSearchQuery): Promise<UserEntity> {
+    return this.userService.findUsers(authUser.id, query.search)
   }
 
   @Get('/:userId')

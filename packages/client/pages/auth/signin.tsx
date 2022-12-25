@@ -58,11 +58,11 @@ const SignInPage = () => {
       })
       .catch(err => {
         setNotification({
+          show: true,
           status: 'error',
           title: 'Sign in failed!',
           description: err.message,
         })
-        toggleNotification(true)
       })
   }
 

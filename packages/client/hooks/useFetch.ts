@@ -34,10 +34,15 @@ export function useFetch() {
     }).then(async res => {
       // Handle empty responses
       const textData = await res.text()
-      const jsonData = textData ? JSON.parse(textData) : null
-      if (res.status >= 400) {
-        throw jsonData
+      let jsonData: any = null
+      if (textData) {
+        try {
+          jsonData = JSON.parse(textData)
+        } catch {
+          jsonData = { message: textData }
+        }
       }
+      if (res.status >= 400) throw jsonData
       return jsonData
     })
   }

@@ -2,6 +2,7 @@
 import type { InputHTMLAttributes, RefObject } from 'react'
 
 interface BaseInputProps extends InputHTMLAttributes<HTMLInputElement> {
+  id: string
   label: string
   innerRef?: RefObject<HTMLInputElement>
   validationError?: string | null

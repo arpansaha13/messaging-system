@@ -1,6 +1,6 @@
 import Image from 'next/image'
 // Components
-import Notification from '../components/Notification'
+import Notification from '../components/common/Notification'
 // Types
 import type { ReactNode } from 'react'
 

@@ -1,7 +1,7 @@
 import produce from 'immer'
 import type { StateCreator } from 'zustand'
 
-type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile'
+type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile' | 'AddContact'
 
 export interface SlideOverStateType {
   slideOverState: {

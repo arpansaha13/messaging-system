@@ -13,7 +13,7 @@ export interface NotificationStateType {
   notification: NotificationType
 
   /** Update the show or hide state of notification. */
-  setNotification: (notification: Omit<NotificationType, 'show'>) => void
+  setNotification: (notification: NotificationType) => void
 
   toggleNotification: (bool?: boolean) => void
 }
@@ -27,7 +27,7 @@ export const useNotificationState: StateCreator<NotificationStateType, [], [], N
     show: false,
   },
   setNotification(newState) {
-    set(state => ({ notification: { show: state.notification.show, ...newState } }))
+    set({ notification: { ...newState } })
   },
   toggleNotification(bool) {
     set(

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer'
-import { IsNotEmpty, IsNumber } from 'class-validator'
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator'
 
 export class AddToContactDto {
   @IsNotEmpty()
@@ -8,5 +8,7 @@ export class AddToContactDto {
   userIdToAdd: number
 
   @IsNotEmpty()
+  @Type(() => String)
+  @IsString()
   alias: string
 }

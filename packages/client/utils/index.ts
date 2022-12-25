@@ -4,7 +4,7 @@ export function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ')
 }
 export function isNullOrUndefined(v: any): v is null | undefined {
-  return v === null && typeof v === 'undefined'
+  return v === null || typeof v === 'undefined'
 }
 export function ISODateNow() {
   return new Date(Date.now()).toISOString()

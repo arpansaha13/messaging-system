@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
+import { Like, Not } from 'typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 // Types
@@ -100,5 +101,9 @@ export class UserService {
     // Use LEFT JOIN for messages, otherwise convos with no messages won't load
     // If latestMsg is `null`, then it ranks in the end
     return this.em.query(query)
+  }
+  async findUsers(authUserId: number, searchUserId: number): Promise<UserEntity> {
+    if (authUserId === searchUserId) return null
+    return this.userRepository.findOneBy({ id: searchUserId })
   }
 }

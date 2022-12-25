@@ -5,7 +5,7 @@ import shallow from 'zustand/shallow'
 import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
 // Store
-import { useStore } from '../stores/index.store'
+import { useStore } from '../../stores/index.store'
 
 const Notification = () => {
   const [notification, toggleNotification] = useStore(state => [state.notification, state.toggleNotification], shallow)
@@ -14,7 +14,7 @@ const Notification = () => {
     <>
       <div
         aria-live="assertive"
-        className="pointer-events-none fixed inset-0 z-10 flex items-end px-4 py-6 sm:items-start sm:p-6"
+        className="pointer-events-none fixed inset-0 z-40 flex items-end px-4 py-6 sm:items-start sm:p-6"
       >
         <div className="w-full flex flex-col items-center space-y-4">
           <Transition

@@ -102,9 +102,17 @@ const Profile = () => {
   }, [displayName, bio, authUser])
 
   return (
-    <div className="mx-8 py-6 space-y-10">
+    <div className="px-8 py-6 space-y-10 h-full overflow-auto scrollbar">
       <div className="flex justify-center">
         <Avatar src={authUser.dp} width={12.5} height={12.5} />
+      </div>
+
+      <div>
+        <h3 className="mb-5 text-sm text-emerald-600">User id</h3>
+        <div className="mb-8 pb-1">
+          <p className="text-base text-gray-200">{authUser.id}</p>
+        </div>
+        <p className="text-sm text-gray-400">Other users can find and add you to their contacts usng ths user-id.</p>
       </div>
 
       <div>
