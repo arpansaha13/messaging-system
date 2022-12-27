@@ -1,7 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import shallow from 'zustand/shallow'
 // Components
-import Avatar from '../Avatar'
+import Avatar from '../common/Avatar'
 // Custom Hook
 import { useFetch } from '../../hooks/useFetch'
 // Icons

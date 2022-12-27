@@ -5,9 +5,9 @@ import shallow from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from '../../hooks/useFetch'
 // Components
-import BaseInput from '../base/BaseInput'
-import Avatar from '../Avatar'
 import Modal from '../common/Modal'
+import Avatar from '../common/Avatar'
+import BaseInput from '../base/BaseInput'
 import SearchBar from '../common/SearchBar'
 import ContactListItem from './ContactListItem'
 // Store

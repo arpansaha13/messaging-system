@@ -1,6 +1,6 @@
 import { memo } from 'react'
 // Components
-import Avatar from '../Avatar'
+import Avatar from '../common/Avatar'
 // Types
 import { ContactType } from '../../types/index.types'
 

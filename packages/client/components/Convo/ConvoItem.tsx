@@ -6,7 +6,7 @@ import { classNames, isUnread } from '../../utils'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Components
-import Avatar from '../Avatar'
+import Avatar from '../common/Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
 import RoomItemDropDown from './RoomItemDropDown'
 // Icons

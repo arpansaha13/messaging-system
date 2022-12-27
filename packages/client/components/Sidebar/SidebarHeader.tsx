@@ -3,12 +3,12 @@ import Router from 'next/router'
 import shallow from 'zustand/shallow'
 // Icons
 import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon, UserPlusIcon } from '@heroicons/react/20/solid'
+// Components
+import Avatar from '../common/Avatar'
+import HeaderDropDown from '../HeaderDropDown'
 // Stores
 import { useStore } from '../../stores/index.store'
 import { useAuthStore } from '../../stores/useAuthStore'
-// Components
-import Avatar from '../Avatar'
-import HeaderDropDown from '../HeaderDropDown'
 
 const SidebarHeader = () => {
   const [authUser, resetAuthState] = useAuthStore(state => [state.authUser!, state.resetAuthState])

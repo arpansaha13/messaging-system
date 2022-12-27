@@ -5,7 +5,7 @@ import { useFetch } from '../../hooks/useFetch'
 // Icons
 import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 // Components
-import Avatar from '../Avatar'
+import Avatar from '../common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 // Stores
 import { useStore } from '../../stores/index.store'
