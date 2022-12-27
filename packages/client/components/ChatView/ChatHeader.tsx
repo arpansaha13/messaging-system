@@ -84,7 +84,9 @@ const ChatHeader = () => {
         <Avatar src={activeChatInfo.user.dp} height={2.5} width={2.5} />
 
         <div>
-          <p className="text-gray-50 font-semibold">{activeChatInfo.contact?.alias ?? '[Unknown]'}</p>
+          <p className="text-gray-50 font-semibold">
+            {activeChatInfo.contact?.alias ?? <span className="italic">{`~${activeChatInfo.user.displayName}`}</span>}
+          </p>
           <p
             className={classNames(
               'text-xs transition-[height] duration-200 overflow-hidden',

@@ -16,24 +16,32 @@ import pinIcon from '@iconify-icons/mdi/pin'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useStore } from '../../stores/index.store'
 // Types
-import { MessageStatus } from '../../types/index.types'
 import type { ConvoItemType } from '../../types/index.types'
 
 export interface ConvoItemProps {
   roomId: number
   alias: string | null
   dp: string | null
+  displayName: string
   latestMsg: ConvoItemType['latestMsg']
   archived?: boolean
   pinned?: boolean
   onClick: () => void
 }
 
-const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = false, onClick }: ConvoItemProps) => {
+const ConvoItem = ({
+  roomId,
+  alias,
+  dp,
+  displayName,
+  latestMsg,
+  archived = false,
+  pinned = false,
+  onClick,
+}: ConvoItemProps) => {
   const fetchHook = useFetch()
 
   const authUser = useAuthStore(state => state.authUser)!
-  // Initially no rooms would be active - so `activeRoom` may be null
   const [
     activeRoom,
     setActiveRoom,
@@ -45,6 +53,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
     updateConvoPin,
   ] = useStore(
     state => [
+      // Initially no rooms would be active - so `activeRoom` may be null
       state.activeRoom,
       state.setActiveRoom,
       state.setActiveChatInfo,
@@ -134,8 +143,7 @@ const ConvoItem = ({ roomId, alias, dp, latestMsg, archived = false, pinned = fa
 
         <div className="ml-4 py-3 w-full border-b border-gray-700">
           <div className="flex justify-between items-center">
-            {/* If the user, with whom the chat is, is not in contacts, then show [Unknown] */}
-            <p className="text-base text-gray-50">{alias ?? '[Unknown]'}</p>
+            <p className="text-base text-gray-50">{alias ?? <span className="italic">{`~${displayName}`}</span>}</p>
             {latestMsg && (
               <p className={classNames('text-xs flex items-end', unread ? 'text-emerald-600' : 'text-gray-400')}>
                 <span>{getDateTime()}</span>

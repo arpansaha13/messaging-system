@@ -46,6 +46,7 @@ export default function Archived() {
             key={convoItem.room.id}
             roomId={convoItem.room.id}
             dp={convoItem.user.dp}
+            displayName={convoItem.user.displayName}
             alias={convoItem.contact?.alias ?? null}
             latestMsg={convoItem.latestMsg}
             archived={true}

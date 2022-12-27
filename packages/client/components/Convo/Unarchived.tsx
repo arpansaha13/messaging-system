@@ -46,6 +46,7 @@ export default function UnarchivedRooms() {
             key={convoItem.room.id}
             roomId={convoItem.room.id}
             dp={convoItem.user.dp}
+            displayName={convoItem.user.displayName}
             pinned={convoItem.room.pinned}
             alias={convoItem.contact?.alias ?? null}
             latestMsg={convoItem.latestMsg}
