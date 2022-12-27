@@ -27,36 +27,36 @@ const ChatHeader = () => {
   )
 
   const chatMenuItems = [
-    {
-      slot: 'Contact info',
-      onClick() {
-        console.log('clicked')
-      },
-    },
-    {
-      slot: 'Select Messages',
-      onClick() {
-        console.log('clicked')
-      },
-    },
-    {
-      slot: 'Close chat',
-      onClick() {
-        console.log('clicked')
-      },
-    },
-    {
-      slot: 'Mute notifications',
-      onClick() {
-        console.log('clicked')
-      },
-    },
-    {
-      slot: 'Disappearing messages',
-      onClick() {
-        console.log('clicked')
-      },
-    },
+    // {
+    //   slot: 'Contact info',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
+    // {
+    //   slot: 'Select Messages',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
+    // {
+    //   slot: 'Close chat',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
+    // {
+    //   slot: 'Mute notifications',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
+    // {
+    //   slot: 'Disappearing messages',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
     // Show 'Clear messages' only if the room exists
     ...(() =>
       activeRoom !== null
@@ -70,12 +70,12 @@ const ChatHeader = () => {
             },
           ]
         : [])(),
-    {
-      slot: 'Delete chat',
-      onClick() {
-        console.log('clicked')
-      },
-    },
+    // {
+    //   slot: 'Delete chat',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
   ]
 
   return (
@@ -106,9 +106,9 @@ const ChatHeader = () => {
       </div>
 
       <div className="flex items-center text-gray-400 space-x-2">
-        <button className="p-2 btn-icon">
+        {/* <button className="p-2 btn-icon">
           <MagnifyingGlassIcon className="w-6 h-6 flex-shrink-0" />
-        </button>
+        </button> */}
 
         <HeaderDropDown menuItems={chatMenuItems} width={14.5} />
       </div>

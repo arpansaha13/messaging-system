@@ -4,7 +4,7 @@ import shallow from 'zustand/shallow'
 // Icons
 import { Icon } from '@iconify/react'
 import githubIcon from '@iconify-icons/mdi/github'
-import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon, UserPlusIcon } from '@heroicons/react/20/solid'
+import { ChatBubbleBottomCenterTextIcon, UserPlusIcon } from '@heroicons/react/20/solid'
 // Components
 import Avatar from '../common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
@@ -20,16 +20,16 @@ const SidebarHeader = () => {
   )
 
   const menuItems = [
-    {
-      slot: 'New group',
-      onClick() {
-        setSlideOverState({
-          title: 'Add group participants',
-          // componentName: 'ContactList'
-        })
-        toggleSlideOver(true)
-      },
-    },
+    // {
+    //   slot: 'New group',
+    //   onClick() {
+    //     setSlideOverState({
+    //       title: 'Add group participants',
+    //       // componentName: 'ContactList'
+    //     })
+    //     toggleSlideOver(true)
+    //   },
+    // },
     {
       slot: 'Archived',
       onClick() {
@@ -40,26 +40,26 @@ const SidebarHeader = () => {
         toggleSlideOver(true)
       },
     },
-    {
-      slot: 'Starred messages',
-      onClick() {
-        setSlideOverState({
-          title: 'Starred messages',
-          // componentName: 'StarredMessages'
-        })
-        toggleSlideOver(true)
-      },
-    },
-    {
-      slot: 'Settings',
-      onClick() {
-        setSlideOverState({
-          title: 'Settings',
-          // componentName: 'Settings'
-        })
-        toggleSlideOver(true)
-      },
-    },
+    // {
+    //   slot: 'Starred messages',
+    //   onClick() {
+    //     setSlideOverState({
+    //       title: 'Starred messages',
+    //       // componentName: 'StarredMessages'
+    //     })
+    //     toggleSlideOver(true)
+    //   },
+    // },
+    // {
+    //   slot: 'Settings',
+    //   onClick() {
+    //     setSlideOverState({
+    //       title: 'Settings',
+    //       // componentName: 'Settings'
+    //     })
+    //     toggleSlideOver(true)
+    //   },
+    // },
     {
       slot: 'Log out',
       onClick() {
@@ -109,9 +109,9 @@ const SidebarHeader = () => {
         <button className="p-2 btn-icon" onClick={openAddContactMenu}>
           <UserPlusIcon className="w-6 h-6 flex-shrink-0" />
         </button>
-        <button className="p-2 btn-icon">
+        {/* <button className="p-2 btn-icon">
           <ViewfinderCircleIcon className="w-6 h-6 flex-shrink-0" />
-        </button>
+        </button> */}
         <button className="p-2 btn-icon" onClick={openNewChatMenu}>
           <ChatBubbleBottomCenterTextIcon className="w-6 h-6 flex-shrink-0" />
         </button>

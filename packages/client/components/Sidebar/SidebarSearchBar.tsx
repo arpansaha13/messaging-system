@@ -1,7 +1,7 @@
-import { memo, useRef, useState } from 'react'
+import { memo, useState } from 'react'
 // Components
 import SearchBar from '../common/SearchBar'
-import { FunnelIcon } from '@heroicons/react/24/outline'
+// import { FunnelIcon } from '@heroicons/react/24/outline'
 
 const SidebarSearchBar = () => {
   const [value, setValue] = useState('')
@@ -19,9 +19,9 @@ const SidebarSearchBar = () => {
             setValue={setValue}
           />
         </div>
-        <button className="mr-1.5 px-1.5 py-0.5 btn-icon">
+        {/* <button className="mr-1.5 px-1.5 py-0.5 btn-icon">
           <FunnelIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-        </button>
+        </button> */}
       </div>
     </div>
   )

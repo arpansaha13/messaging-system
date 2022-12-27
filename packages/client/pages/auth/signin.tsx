@@ -97,13 +97,13 @@ const SignInPage = () => {
           onChange={e => set('password', e.target.value)}
         />
 
-        <div className="flex items-center justify-end">
+        {/* <div className="flex items-center justify-end">
           <div className="text-sm">
             <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
               Forgot your password?
             </a>
           </div>
-        </div>
+        </div> */}
 
         <div>
           <button

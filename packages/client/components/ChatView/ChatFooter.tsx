@@ -2,8 +2,8 @@ import { memo, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import shallow from 'zustand/shallow'
 // Icons
-import { MicrophoneIcon } from '@heroicons/react/24/solid'
-import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
+// import { MicrophoneIcon } from '@heroicons/react/24/solid'
+// import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 // Components
 import TextArea from './TextArea'
 // Custom Hooks
@@ -129,21 +129,21 @@ const ChatFooter = () => {
 
   return (
     <div className="px-4 py-2.5 w-full flex items-center text-gray-400 bg-gray-800 space-x-1">
-      <button className="p-1 btn-icon">
+      {/* <button className="p-1 btn-icon">
         <FaceSmileIcon className="w-7 h-7 flex-shrink-0" />
       </button>
 
       <button className="p-2 rounded-full hover:bg-gray-700/70 btn-icon">
         <PaperClipIcon className="w-6 h-6 flex-shrink-0" />
-      </button>
+      </button> */}
 
       <div className="px-1 flex-grow">
         <TextArea value={value} setValue={setValue} handleKeyDown={handleKeyDown} />
       </div>
 
-      <button className="p-2 btn-icon">
+      {/* <button className="p-2 btn-icon">
         <MicrophoneIcon className="w-6 h-6 flex-shrink-0" />
-      </button>
+      </button> */}
     </div>
   )
 }

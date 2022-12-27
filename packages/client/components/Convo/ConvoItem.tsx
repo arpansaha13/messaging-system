@@ -8,7 +8,7 @@ import { useFetch } from '../../hooks/useFetch'
 // Components
 import Avatar from '../common/Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
-import RoomItemDropDown from './RoomItemDropDown'
+import ConvoItemDropDown from './ConvoItemDropDown'
 // Icons
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
@@ -79,12 +79,12 @@ const ConvoItem = ({
         }
       },
     },
-    {
-      slot: 'Mute notifications',
-      onClick() {
-        console.log('clicked')
-      },
-    },
+    // {
+    //   slot: 'Mute notifications',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
     {
       slot: 'Delete chat',
       onClick() {
@@ -112,12 +112,12 @@ const ConvoItem = ({
             },
           ]
         : [])(),
-    {
-      slot: 'Mark as unread',
-      onClick() {
-        console.log('clicked')
-      },
-    },
+    // {
+    //   slot: 'Mark as unread',
+    //   onClick() {
+    //     console.log('clicked')
+    //   },
+    // },
   ]
 
   function getDateTime() {
@@ -162,7 +162,7 @@ const ConvoItem = ({
             </p>
             <div className="flex-shrink-0 flex items-center">
               {pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
-              <RoomItemDropDown menuItems={menuItems} />
+              <ConvoItemDropDown menuItems={menuItems} />
             </div>
           </div>
         </div>
