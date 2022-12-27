@@ -1,9 +1,13 @@
 {
-  "name": "react-nest-monorepo",
+  "name": "whatsapp-clone-monorepo",
+  "description": "A Whatsapp Clone project made with NextJs (React) in the client and NestJs on the server.",
+  "version": "0.1.0",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@7.11.0",
+  "packageManager": "pnpm@7.20.0",
+  "license": "MIT",
   "scripts": {
+    "preinstall": "npx -y only-allow pnpm",
     "client": "esno scripts/client.ts",
     "nest": "esno scripts/server.ts"
   },
