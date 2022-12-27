@@ -1,4 +1,7 @@
 import Image from 'next/image'
+// Icons
+import { Icon } from '@iconify/react'
+import githubIcon from '@iconify-icons/mdi/github'
 // Components
 import Notification from '../components/common/Notification'
 // Types
@@ -27,6 +30,15 @@ export default function AuthLayout({ children, heading }: AuthLayoutProps) {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-gray-900/90 py-8 px-4 shadow sm:rounded-lg sm:px-10">{children}</div>
         </div>
+
+        <a
+          href="https://github.com/arpansaha13/whatsapp-clone"
+          target="_blank"
+          rel="noreferrer"
+          className="block p-4 fixed right-8 bottom-6 rounded-full bg-gray-900 cursor-pointer"
+        >
+          <Icon icon={githubIcon} className="flex-shrink-0" color="inherit" width={28} height={28} />
+        </a>
       </div>
     </div>
   )

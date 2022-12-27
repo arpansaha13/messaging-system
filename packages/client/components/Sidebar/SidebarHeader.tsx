@@ -2,6 +2,8 @@ import { memo } from 'react'
 import Router from 'next/router'
 import shallow from 'zustand/shallow'
 // Icons
+import { Icon } from '@iconify/react'
+import githubIcon from '@iconify-icons/mdi/github'
 import { ChatBubbleBottomCenterTextIcon, ViewfinderCircleIcon, UserPlusIcon } from '@heroicons/react/20/solid'
 // Components
 import Avatar from '../common/Avatar'
@@ -96,6 +98,14 @@ const SidebarHeader = () => {
       </button>
 
       <div className="flex items-center text-gray-400 space-x-2">
+        <a
+          href="https://github.com/arpansaha13/whatsapp-clone"
+          target="_blank"
+          rel="noreferrer"
+          className="block p-2 btn-icon cursor-pointer"
+        >
+          <Icon icon={githubIcon} className="flex-shrink-0" color="inherit" width={24} height={24} />
+        </a>
         <button className="p-2 btn-icon" onClick={openAddContactMenu}>
           <UserPlusIcon className="w-6 h-6 flex-shrink-0" />
         </button>
