@@ -116,7 +116,7 @@ const SignInPage = () => {
 
         <div className="flex items-center justify-start">
           <div className="text-sm">
-            <span className="text-gray-100">Don&apos;t have an account?</span>{' '}
+            <span className="text-gray-800 dark:text-gray-100">Don&apos;t have an account?</span>{' '}
             <NextLink href="/auth/signup">
               <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Sign up</span>
             </NextLink>

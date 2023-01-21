@@ -45,5 +45,4 @@ const Home: NextPage = () => {
     return <Loading />
   }
 }
-
 export default memo(Home)

@@ -133,7 +133,9 @@ const ConvoItem = ({
       <div
         className={classNames(
           'px-3 w-full text-left flex items-center relative',
-          roomId === activeRoom?.id ? 'bg-gray-700/90' : 'hover:bg-gray-600/40',
+          roomId === activeRoom?.id
+            ? 'bg-gray-300/60 dark:bg-gray-700/90'
+            : 'hover:bg-gray-200/60 dark:hover:bg-gray-600/40',
           unread ? 'font-semibold' : '',
         )}
         onClick={onClick}
@@ -141,16 +143,23 @@ const ConvoItem = ({
         <span className="absolute inset-0" />
         <Avatar src={dp} />
 
-        <div className="ml-4 py-3 w-full border-b border-gray-700">
+        <div className="ml-4 py-3 w-full border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
-            <p className="text-base text-gray-50">{alias ?? <span className="italic">{`~${displayName}`}</span>}</p>
+            <p className="text-base text-black dark:text-gray-50">
+              {alias ?? <span className="italic">{`~${displayName}`}</span>}
+            </p>
             {latestMsg && (
-              <p className={classNames('text-xs flex items-end', unread ? 'text-emerald-600' : 'text-gray-400')}>
+              <p
+                className={classNames(
+                  'text-xs flex items-end',
+                  unread ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-400',
+                )}
+              >
                 <span>{getDateTime()}</span>
               </p>
             )}
           </div>
-          <div className="flex justify-between items-center text-gray-400">
+          <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
             <p
               className={classNames(
                 'flex items-center text-sm space-x-1 line-clamp-1',
@@ -160,7 +169,7 @@ const ConvoItem = ({
               {latestMsg && authUserIsSender && <MsgStatusIcon status={latestMsg.status} />}
               {latestMsg && <span>{latestMsg.content}</span>}
             </p>
-            <div className="flex-shrink-0 flex items-center">
+            <div className="flex-shrink-0 flex items-center text-gray-500 dark:text-gray-400">
               {pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
               <ConvoItemDropDown menuItems={menuItems} />
             </div>

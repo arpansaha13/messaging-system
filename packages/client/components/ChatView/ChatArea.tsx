@@ -33,7 +33,7 @@ export default function ChatArea({ messages }: ChatAreaProps) {
   })
 
   const HEADER_HEIGHT_PX = 60
-  const FOOTER_HEIGHT_PX = 64
+  const FOOTER_HEIGHT_PX = 60
   const LAYOUT_Y_PADDING_REM = 2
 
   return (

@@ -5,10 +5,10 @@ import type { ChangeEvent, Dispatch, KeyboardEvent, SetStateAction } from 'react
 interface TextAreaProps {
   value: string
   setValue: Dispatch<SetStateAction<string>>
-  handleKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void
+  onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void
 }
 
-const TextArea = ({ value, setValue, handleKeyDown }: TextAreaProps) => {
+const TextArea = ({ value, setValue, onKeyDown }: TextAreaProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
@@ -31,11 +31,11 @@ const TextArea = ({ value, setValue, handleKeyDown }: TextAreaProps) => {
           type="text"
           id="type-area"
           name="type-area"
-          className="block w-full rounded-lg bg-gray-700/70 text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
+          className="block w-full rounded-lg bg-white dark:bg-gray-700/70 text-sm text-gray-500 dark:text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none shadow-sm shadow-gray-300/30 dark:shadow-none"
           placeholder="Type a message"
           value={value}
           onChange={handleChange}
-          onKeyDown={handleKeyDown}
+          onKeyDown={onKeyDown}
         />
       </div>
     </div>

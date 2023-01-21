@@ -79,12 +79,12 @@ const ChatHeader = () => {
   ]
 
   return (
-    <header className="px-4 py-2.5 flex items-center justify-between bg-gray-800">
-      <div className="flex items-center text-gray-400 space-x-3">
+    <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none relative z-10">
+      <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-3">
         <Avatar src={activeChatInfo.user.dp} height={2.5} width={2.5} />
 
         <div>
-          <p className="text-gray-50 font-semibold">
+          <p className="text-gray-800 dark:text-gray-50 font-semibold">
             {activeChatInfo.contact?.alias ?? <span className="italic">{`~${activeChatInfo.user.displayName}`}</span>}
           </p>
           <p
@@ -105,7 +105,7 @@ const ChatHeader = () => {
         </div>
       </div>
 
-      <div className="flex items-center text-gray-400 space-x-2">
+      <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-2">
         {/* <button className="p-2 btn-icon">
           <MagnifyingGlassIcon className="w-6 h-6 flex-shrink-0" />
         </button> */}

@@ -29,7 +29,7 @@ const SlideOver = ({ children }: SlideOverProps) => {
         >
           <div className="pointer-events-auto w-screen max-w-md">
             <div className="flex h-full flex-col bg-gray-50 dark:bg-gray-900 shadow-xl">
-              <header className="pt-14 pb-2 dark:bg-gray-800 dark:text-gray-50">
+              <header className="pt-14 pb-2 bg-emerald-600 text-gray-100 dark:bg-gray-800 dark:text-gray-50">
                 <div className="flex items-center">
                   <button
                     onClick={() => toggleSlideOver(false)}

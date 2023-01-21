@@ -15,7 +15,7 @@ export default function ChatView() {
   return (
     <div className="flex flex-col h-full">
       <ChatHeader />
-      <div className="flex-grow flex flex-col justify-end bg-gray-900">
+      <div className="flex-grow flex flex-col justify-end bg-slate-200/50 dark:bg-gray-900">
         <ChatArea messages={messages} />
       </div>
       <ChatFooter />

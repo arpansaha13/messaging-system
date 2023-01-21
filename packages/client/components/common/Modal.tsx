@@ -4,8 +4,8 @@ import type { Dispatch, SetStateAction, ReactNode, MutableRefObject } from 'reac
 
 interface ModalProps {
   open: boolean
-  initialFocusRef: MutableRefObject<HTMLElement | null>
   setOpen: Dispatch<SetStateAction<boolean>>
+  initialFocusRef?: MutableRefObject<HTMLElement | null>
   children: ReactNode
 }
 

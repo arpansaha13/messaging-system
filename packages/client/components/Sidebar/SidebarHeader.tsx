@@ -92,12 +92,12 @@ const SidebarHeader = () => {
   }
 
   return (
-    <header className="px-4 py-2.5 flex items-center justify-between bg-gray-800">
+    <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none">
       <button onClick={openProfile}>
         <Avatar src={authUser.dp} width={2.5} height={2.5} />
       </button>
 
-      <div className="flex items-center text-gray-400 space-x-2">
+      <div className="flex items-center text-gray-500 dark:text-gray-400 space-x-2">
         <a
           href="https://github.com/arpansaha13/whatsapp-clone"
           target="_blank"

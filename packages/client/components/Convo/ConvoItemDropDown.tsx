@@ -25,7 +25,7 @@ const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
               className="inline-flex items-center justify-center focus:outline-none"
               onClick={(e: MouseEvent) => e.stopPropagation()}
             >
-              <ChevronDownIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <ChevronDownIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
             </Menu.Button>
           </div>
 
@@ -39,7 +39,7 @@ const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
             leaveTo="transform opacity-0 scale-95"
           >
             <Menu.Items
-              className="absolute z-10 mt-2 origin-top-left rounded-md bg-gray-800 text-gray-100 shadow shadow-black focus:outline-none"
+              className="absolute z-10 mt-2 origin-top-left rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow shadow-gray-700 dark:shadow-black focus:outline-none"
               style={{ width: `12rem` }}
             >
               <div className="py-2">
@@ -49,7 +49,7 @@ const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
                       {({ active }) => (
                         <button
                           className={classNames(
-                            active ? 'bg-gray-900' : '',
+                            active ? 'bg-gray-200 dark:bg-gray-900' : '',
                             'block w-full px-6 py-2.5 text-sm text-left',
                           )}
                           onClick={e => {

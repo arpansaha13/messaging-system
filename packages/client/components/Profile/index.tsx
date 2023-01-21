@@ -46,27 +46,27 @@ const Field = ({ heading, content, setContent, editState, setEditState }: FieldP
 
   return (
     <>
-      <h3 className="mb-5 text-sm text-emerald-600">{heading}</h3>
+      <h3 className="mb-5 text-sm text-emerald-700">{heading}</h3>
       <div
         className={classNames(
           'mb-8 flex pb-1 shadow-[0_2px_0px_0px] transition-shadow',
-          editState ? 'shadow-emerald-600' : 'shadow-transparent',
+          editState ? 'shadow-emerald-700' : 'shadow-transparent',
         )}
       >
         <p
           ref={contentRef}
           contentEditable={editState}
           suppressContentEditableWarning={true}
-          className="flex-grow text-base text-gray-200 focus:border-none focus:outline-none"
+          className="flex-grow text-base text-gray-900 dark:text-gray-200 focus:border-none focus:outline-none"
           onKeyDown={handleKeyDown}
         >
           {content}
         </p>
         <button onClick={() => setEditState(b => !b)}>
           {editState ? (
-            <CheckIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <CheckIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
           ) : (
-            <PencilIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <PencilIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
           )}
         </button>
       </div>
@@ -110,9 +110,11 @@ const Profile = () => {
       <div>
         <h3 className="mb-5 text-sm text-emerald-600">User id</h3>
         <div className="mb-8 pb-1">
-          <p className="text-base text-gray-200">{authUser.id}</p>
+          <p className="text-base text-gray-900 dark:text-gray-200">{authUser.id}</p>
         </div>
-        <p className="text-sm text-gray-400">Other users can find and add you to their contacts usng ths user-id.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Other users can find and add you to their contacts using this user-id.
+        </p>
       </div>
 
       <div>
@@ -123,7 +125,7 @@ const Profile = () => {
           editState={editingDisplayName}
           setEditState={setEditDisplayName}
         />
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           This is not your username or pin. This name will be visible to your WhatsApp contacts.
         </p>
       </div>
