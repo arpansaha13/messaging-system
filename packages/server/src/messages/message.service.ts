@@ -40,9 +40,7 @@ export class MessageService {
         senderId: Not(authUserId), // Those messages where this user is not the sender, i.e receiver.
         status: MessageStatus.SENT,
       },
-      {
-        status: MessageStatus.DELIVERED,
-      },
+      { status: MessageStatus.DELIVERED },
     )
   }
   /**

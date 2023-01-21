@@ -4,7 +4,7 @@ import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSo
 import { RoomService } from 'src/rooms/room.service'
 import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-// DTOs
+// DTO
 import { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
 // Entity
 import { MessageEntity, MessageStatus } from '../messages/message.entity'

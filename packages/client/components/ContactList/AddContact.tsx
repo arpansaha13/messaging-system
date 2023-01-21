@@ -78,7 +78,7 @@ const AddContact = () => {
   }
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     // Prevent focus from returning to previous input field on undo
-    // Happens when focus is changed programatically
+    // Happens when focus is changed programmatically
     if (e.ctrlKey && e.key === 'z') e.preventDefault()
   }
   function addToContacts(e: FormEvent<HTMLFormElement>) {

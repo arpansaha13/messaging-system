@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
-import { Like, Not } from 'typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 // Types
@@ -98,7 +97,7 @@ export class UserService {
       msg.created_at DESC
     `
     // Use LEFT JOIN for contacts, otherwise convo with unknown users won't load
-    // Use LEFT JOIN for messages, otherwise convos with no messages won't load
+    // Use LEFT JOIN for messages, otherwise convo's with no messages won't load
     // If latestMsg is `null`, then it ranks in the end
     return this.em.query(query)
   }

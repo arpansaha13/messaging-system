@@ -190,7 +190,7 @@ const sortConvoCompareFn = (a: Readonly<ConvoItemType<boolean>>, b: Readonly<Con
   if (a.room.pinned && !b.room.pinned) return -1
   if (!a.room.pinned && b.room.pinned) return 1
 
-  // Cleared convos at bottom
+  // Cleared convo's at bottom
   if (a.latestMsg !== null && b.latestMsg === null) return -1
   if (a.latestMsg === null && b.latestMsg !== null) return 1
   if (a.latestMsg === null && b.latestMsg === null) return 0
