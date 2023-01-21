@@ -3,7 +3,7 @@ import { useDark } from '../hooks/useDark'
 // Immer
 import { enableMapSet } from 'immer'
 // Types
-import type { ReactElement, ReactNode } from 'react'
+import { ReactElement, ReactNode } from 'react'
 import type { NextPage } from 'next'
 import type { AppProps } from 'next/app'
 // Styles
@@ -22,7 +22,7 @@ type AppPropsWithLayout = AppProps & {
 }
 
 function MyApp({ Component, pageProps }: AppPropsWithLayout) {
-  useDark()
+  useDark({ default: 'dark' })
 
   // Enable Maps for `Immer`
   enableMapSet()

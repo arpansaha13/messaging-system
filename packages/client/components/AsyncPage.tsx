@@ -5,6 +5,7 @@ import { useSocketInit } from '../hooks/useSocket'
 import Profile from './Profile'
 import Sidebar from './Sidebar'
 import ChatView from './ChatView'
+import Settings from './Settings'
 import SlideOver from './SlideOver'
 import ContactList from './ContactList'
 import Archived from './Convo/Archived'
@@ -25,6 +26,8 @@ function getSlideOverContent(componentName: SlideOverStateType['slideOverState']
       return <Profile />
     case 'AddContact':
       return <AddContact />
+    case 'Settings':
+      return <Settings />
     default:
       return null
   }

@@ -50,16 +50,16 @@ const SidebarHeader = () => {
     //     toggleSlideOver(true)
     //   },
     // },
-    // {
-    //   slot: 'Settings',
-    //   onClick() {
-    //     setSlideOverState({
-    //       title: 'Settings',
-    //       // componentName: 'Settings'
-    //     })
-    //     toggleSlideOver(true)
-    //   },
-    // },
+    {
+      slot: 'Settings',
+      onClick() {
+        setSlideOverState({
+          title: 'Settings',
+          componentName: 'Settings',
+        })
+        toggleSlideOver(true)
+      },
+    },
     {
       slot: 'Log out',
       onClick() {

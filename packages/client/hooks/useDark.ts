@@ -1,32 +1,30 @@
-import { useEffect, useRef } from 'react'
-import { useMount } from 'react-use'
+import { useEffect, useRef, useState } from 'react'
 import create from 'zustand'
+import { persist } from 'zustand/middleware'
 
 interface DarkState {
-  preferredDark: boolean
-  isDark: boolean
+  isDark: boolean | null
   toggleDark: (newState?: boolean) => void
-  setPreferredDark: (newState?: boolean) => void
 }
 
-export const useDarkState = create<DarkState>(set => ({
-  preferredDark: false,
-  isDark: false,
-  toggleDark(newState?: boolean) {
-    if (typeof newState !== 'undefined') {
-      set(() => ({ isDark: newState }))
-    } else {
-      set(state => ({ isDark: !state.isDark }))
-    }
-  },
-  setPreferredDark(newState?: boolean) {
-    if (typeof newState !== 'undefined') {
-      set(() => ({ preferredDark: newState }))
-    } else {
-      set(state => ({ preferredDark: !state.isDark }))
-    }
-  },
-}))
+export const useDarkState = create<DarkState>()(
+  persist(
+    set => ({
+      isDark: null,
+      toggleDark(newState?: boolean) {
+        if (typeof newState !== 'undefined') {
+          set(() => ({ isDark: newState }))
+        } else {
+          set(state => ({ isDark: !state.isDark }))
+        }
+      },
+    }),
+    {
+      name: 'wp-clone-color-mode',
+      getStorage: () => localStorage,
+    },
+  ),
+)
 
 /**
  * Reactive color scheme preference. This hook does not manipulate the DOM.
@@ -34,8 +32,7 @@ export const useDarkState = create<DarkState>(set => ({
  * This hook will cause a rerender whenever system theme preference change.
  */
 export function usePreferredDark() {
-  const preferredDark = useDarkState(state => state.preferredDark)
-  const setPreferredDark = useDarkState(state => state.setPreferredDark)
+  const [preferredDark, setPreferredDark] = useState(false)
 
   const colorSchemeMedia = useRef<MediaQueryList | null>(null)
 
@@ -60,26 +57,31 @@ export function usePreferredDark() {
   return preferredDark
 }
 
+interface UseDarkOptions {
+  /**
+   * Default color mode.
+   * @default 'light'
+   */
+  default?: 'light' | 'dark'
+}
+
 /**
  * Adds the 'dark' class in the `html` tag. This hook paired with the `darkMode: 'class'` config of Tailwind can be used to toggle between light and dark modes.
  *
- * Initial value will be set to the default system theme preference. This hook will **not** cause a rerender when system theme preference change.
+ * The selected state will be persisted in local storage.
+ *
+ * This hook will **not** cause a rerender when system theme preference change.
  */
-export function useDark() {
-  const isDark = useDarkState(state => state.isDark)
-  const toggleDark = useDarkState(state => state.toggleDark)
-  const setPreferredDark = useDarkState(state => state.setPreferredDark)
-
+export function useDark(options?: UseDarkOptions) {
+  const [isDark, toggleDark] = useDarkState(state => [state.isDark, state.toggleDark])
   const selector = useRef<HTMLElement | null>(null)
 
-  useMount(() => {
+  useEffect(() => {
     selector.current = document.querySelector('html')
-
-    // Set initial value will be set to the default system theme preference.
-    const defaultPreference = window.matchMedia('(prefers-color-scheme: dark)').matches
-    toggleDark(defaultPreference)
-    setPreferredDark(defaultPreference)
-  })
+    if (isDark === null) toggleDark((options?.default ?? 'light') === 'dark')
+    else toggleDark(isDark)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (isDark) {
@@ -93,5 +95,5 @@ export function useDark() {
     }
   }, [isDark])
 
-  return [isDark, toggleDark] as const
+  return [isDark!, toggleDark] as const
 }
