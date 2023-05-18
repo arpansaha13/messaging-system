@@ -47,9 +47,12 @@ type SocketOnEvents =
   | 'all-message-status'
   | 'typing-state'
   | 'message-to-new-or-revived-room'
+
 type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state' | 'opened-or-read-chat'
 
-const socket = io('http://localhost:4000', { autoConnect: true })
+const SOCKET_URL = process.env.NODE_ENV === 'development' ? 'http://localhost:4000/' : process.env.NEXT_PUBLIC_BASE_URL!
+
+const socket = io(SOCKET_URL, { autoConnect: true })
 
 /** A socket wrapper to allow type security. */
 const socketWrapper = {
