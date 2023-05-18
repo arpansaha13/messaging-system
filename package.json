@@ -1,5 +1,6 @@
 {
   "name": "whatsapp-clone-monorepo",
+  "author": "Arpan Saha <https://github.com/arpansaha13>",
   "description": "A Whatsapp Clone project made with NextJs (React) in the client and NestJs on the server.",
   "version": "0.1.0",
   "type": "module",

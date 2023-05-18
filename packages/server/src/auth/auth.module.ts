@@ -12,17 +12,18 @@ import { UserEntity } from 'src/users/user.entity'
 import { AuthEntity } from './auth.entity'
 import { JwtStrategy } from './jwt.strategy'
 // Types
-import type { EnvironmentVariables } from 'src/env.types'
+import type { JwtEnvVariables } from '../../env/env.types'
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity, AuthEntity]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
+
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
+      useFactory: (configService: ConfigService<JwtEnvVariables>) => ({
         secret: configService.get('JWT_SECRET'),
         signOptions: {
           expiresIn: Number(configService.get('JWT_TOKEN_VALIDITY_SECONDS')),
@@ -32,6 +33,7 @@ import type { EnvironmentVariables } from 'src/env.types'
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, ConfigService],
+
   // Export so that any module that imports this module is able to use the auth mechanism.
   exports: [JwtStrategy, PassportModule],
 })

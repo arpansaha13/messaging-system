@@ -9,7 +9,11 @@ import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
 import { UserToRoomModule } from './UserToRoom/userToRoom.module'
 
-import type { EnvironmentVariables } from 'src/env.types'
+import { dbConfigDev, dbConfigProd } from './typeorm.config'
+
+// TODO: add pagination in api results
+
+const envFilePath = process.env.NODE_ENV === 'development' ? `${process.cwd()}/env/dev.env` : `../env/prod.env`
 
 @Module({
   imports: [
@@ -20,22 +24,16 @@ import type { EnvironmentVariables } from 'src/env.types'
     ContactModule,
     UserToRoomModule,
 
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath,
+    }),
 
     // DB Connection
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService<EnvironmentVariables>) => ({
-        type: 'postgres',
-        host: configService.get('DB_HOST'),
-        port: configService.get('DB_PORT'),
-        username: configService.get('DB_USER'),
-        password: configService.get('DB_PWD'),
-        database: configService.get('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true, // TODO: remove in production
-      }),
+      useFactory: process.env.NODE_ENV === 'development' ? dbConfigDev : dbConfigProd,
     }),
   ],
 })

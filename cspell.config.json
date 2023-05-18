@@ -15,16 +15,21 @@
     }
   ],
   "words": [
+    "Arpan",
     "convo",
     "esno",
     "headlessui",
     "heroicons",
     "iconify",
     "immer",
+    "nestjs",
     "preinstall",
+    "Saha",
     "tailwindcss",
     "tstamp",
+    "typeorm",
     "unarchived",
+    "websockets",
     "zustand"
   ],
   "patterns": [
@@ -80,7 +85,9 @@
   ],
   "ignorePaths": [
     ".prettierrc",
-    "pnpm-lock.yaml"
+    "pnpm-lock.yaml",
+    "*.env",
+    ".env.default.*"
   ],
   "useGitignore": true,
   "caseSensitive": false,

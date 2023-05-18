@@ -24,7 +24,8 @@ dist
 
 # local env files
 .env*.local
-.env
+*.env
+*.crt
 
 # vercel
 .vercel
