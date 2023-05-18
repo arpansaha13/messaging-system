@@ -11,6 +11,11 @@ export class SignUpDto {
   password: string
 
   @IsNotEmpty()
+  @MinLength(8)
+  @MaxLength(30)
+  confirmPassword: string
+
+  @IsNotEmpty()
   @MinLength(1)
   @MaxLength(20)
   displayName: string

@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
-import { InjectRepository } from '@nestjs/typeorm'
+import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 import * as bcrypt from 'bcryptjs'
 // Entity
 import { AuthEntity } from './auth.entity'
@@ -9,7 +9,7 @@ import { UserEntity } from 'src/users/user.entity'
 // DTO
 import { SignInDto, SignUpDto } from './auth.dto'
 // Types
-import type { Repository } from 'typeorm'
+import type { Repository, EntityManager } from 'typeorm'
 import type { JwtPayload, JwtToken } from './jwt.types'
 
 @Injectable()
@@ -18,6 +18,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
 
+    @InjectEntityManager()
+    private entityManager: EntityManager,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectRepository(AuthEntity)
@@ -32,20 +34,29 @@ export class AuthService {
   }
 
   async signUp(credentials: SignUpDto): Promise<JwtToken> {
-    const newUser = new UserEntity()
-    newUser.email = credentials.email
-    newUser.displayName = credentials.displayName
+    if (credentials.password !== credentials.confirmPassword) {
+      throw new UnauthorizedException('Password and confirm password do not match.')
+    }
 
     try {
-      await this.userRepository.save(newUser)
+      const newUser = await this.entityManager.transaction(async transactionalEntityManager => {
+        const userEntity = transactionalEntityManager.create(UserEntity, {
+          email: credentials.email,
+          displayName: credentials.displayName,
+        })
+        await transactionalEntityManager.save(userEntity)
 
-      // Save encrypted password
-      const hash = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
-      const authEntity = this.authRepository.create({
-        userId: newUser.id,
-        password: hash,
+        // Save encrypted password
+        const hash = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
+        const authEntity = transactionalEntityManager.create(AuthEntity, {
+          userId: userEntity.id,
+          password: hash,
+        })
+
+        await transactionalEntityManager.save(authEntity)
+        return userEntity
       })
-      await this.authRepository.save(authEntity)
+
       return this.#createAuthToken(newUser)
     } catch (error) {
       if (error.code === '23505') {

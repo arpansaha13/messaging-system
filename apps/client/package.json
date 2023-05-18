@@ -9,12 +9,15 @@
     "pretty": "prettier --write \"./**/*.{js,jsx,ts,tsx,css}\" \"!**/.next/**\""
   },
   "dependencies": {
+    "@arpansaha13/utils": "^0.2.2",
     "@headlessui/react": "^1.7.7",
     "@heroicons/react": "^2.0.13",
     "@iconify-icons/mdi": "^1.2.36",
     "@iconify/react": "^4.0.1",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/line-clamp": "^0.4.2",
+    "@types/react": "18.0.21",
+    "@types/react-dom": "18.0.6",
     "autoprefixer": "^10.4.13",
     "date-fns": "^2.29.3",
     "immer": "^9.0.16",
@@ -29,8 +32,6 @@
   },
   "devDependencies": {
     "@types/node": "^16.18.10",
-    "@types/react": "18.0.21",
-    "@types/react-dom": "18.0.6",
     "cross-env": "^7.0.3",
     "eslint": "^8.30.0",
     "eslint-config-next": "12.3.1",

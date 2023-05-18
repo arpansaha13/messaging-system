@@ -176,7 +176,7 @@ export const useConvoStore: StateCreator<ConvoStoreType, [], [], ConvoStoreType>
 function findRoomIndex(roomId: number, list: ReadonlyArray<ConvoItemType<boolean>>): number | null {
   const idx = list.findIndex(val => val.room.id === roomId)
   if (idx === -1) {
-    console.error('Room does not exist.')
+    console.warn('Room does not exist.')
     return null
   }
   return idx
