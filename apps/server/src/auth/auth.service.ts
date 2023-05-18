@@ -2,7 +2,7 @@ import { ConflictException, Injectable, InternalServerErrorException, Unauthoriz
 import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository } from '@nestjs/typeorm'
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcryptjs'
 // Entity
 import { AuthEntity } from './auth.entity'
 import { UserEntity } from 'src/users/user.entity'
