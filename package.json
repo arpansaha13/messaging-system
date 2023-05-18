@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@7.20.0",
+  "packageManager": "pnpm@8.5.1",
   "license": "MIT",
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
@@ -13,7 +13,7 @@
     "nest": "esno scripts/server.ts"
   },
   "engines": {
-    "node": "^16.15.0"
+    "node": "^18.14.0"
   },
   "devDependencies": {
     "esno": "^0.16.3",
