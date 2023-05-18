@@ -10,15 +10,13 @@ import { existsSync } from 'node:fs'
  * ```
  */
 
-if (!existsSync('packages/server')) {
-  console.error("Could not find server package in 'packages' directory.")
+if (!existsSync('apps/server')) {
+  console.error("Could not find server package in 'apps' directory.")
   process.exit(1)
 }
 
 // Check whether the given command exists in server/package.json scripts
-const validCommands = await import('../packages/server/package.json').then(
-  (pkg) => Object.keys(pkg.scripts),
-)
+const validCommands = await import('../apps/server/package.json').then(pkg => Object.keys(pkg.scripts))
 
 const args = mri(process.argv)
 args._.splice(0, 2)
@@ -34,7 +32,7 @@ if (!validCommands.includes(cmd)) {
   process.exit(1)
 }
 
-spawn('pnpm', [`-F ./packages/server ${cmd}`], {
+spawn('pnpm', [`-F ./apps/server ${cmd}`], {
   stdio: 'inherit',
   shell: true,
 })

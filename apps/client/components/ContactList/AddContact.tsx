@@ -19,14 +19,8 @@ import type { ContactResType, UserType } from '../../types/index.types'
 
 const AddContact = () => {
   const fetchHook = useFetch()
-  const [notification, toggleNotification, setNotification, toggleSlideOver, initContactStore] = useStore(
-    state => [
-      state.notification,
-      state.toggleNotification,
-      state.setNotification,
-      state.toggleSlideOver,
-      state.initContactStore,
-    ],
+  const [toggleNotification, setNotification, toggleSlideOver, initContactStore] = useStore(
+    state => [state.toggleNotification, state.setNotification, state.toggleSlideOver, state.initContactStore],
     shallow,
   )
 

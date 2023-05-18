@@ -10,13 +10,13 @@ import { existsSync } from 'node:fs'
  * ```
  */
 
-if (!existsSync('packages/client')) {
-  console.error("Could not find client package in 'packages' directory.")
+if (!existsSync('apps/client')) {
+  console.error("Could not find client package in 'apps' directory.")
   process.exit(1)
 }
 
 // Check whether the given command exists in client/package.json scripts
-const validCommands = await import('../packages/client/package.json').then(
+const validCommands = await import('../apps/client/package.json').then(
   (pkg) => Object.keys(pkg.scripts),
 )
 
@@ -34,7 +34,7 @@ if (!validCommands.includes(cmd)) {
   process.exit(1)
 }
 
-spawn('pnpm', [`-F ./packages/client ${cmd}`], {
+spawn('pnpm', [`-F ./apps/client ${cmd}`], {
   stdio: 'inherit',
   shell: true,
 })
