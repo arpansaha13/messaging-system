@@ -49,7 +49,6 @@ const SignUpPage = () => {
   const [loading, setLoading] = useState<boolean>(false)
   function signUp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setLoading(true)
 
     const formData = getFormData(formRef.current!, { format: 'object' })
 
@@ -64,6 +63,8 @@ const SignUpPage = () => {
 
     setError('password', null)
     setError('confirmPassword', null)
+
+    setLoading(true)
 
     fetchHook('auth/sign-up', {
       method: 'POST',
