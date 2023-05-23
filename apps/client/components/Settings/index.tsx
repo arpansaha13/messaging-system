@@ -11,7 +11,7 @@ import themeIcon from '@iconify-icons/mdi/brightness-6'
 // Stores
 import { useStore } from '../../stores/index.store'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { isNullOrUndefined } from '../../utils'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 
 const Settings = () => {
   const [themeModalOpen, setThemeModal] = useState(false)

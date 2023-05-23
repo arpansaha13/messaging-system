@@ -9,7 +9,7 @@ import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 // Stores
 import { useAuthStore } from '../../stores/useAuthStore'
 // Utils
-import { classNames } from '../../utils'
+import { classNames } from '@arpansaha13/utils'
 // Types
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import type { AuthUserType } from '../../types/index.types'

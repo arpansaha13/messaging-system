@@ -4,7 +4,7 @@ import { Menu, Transition } from '@headlessui/react'
 // Icons
 import { ChevronDownIcon } from '@heroicons/react/24/solid'
 // Utils
-import { classNames } from '../../utils'
+import { classNames } from '@arpansaha13/utils'
 // Types
 import type { ReactNode, MouseEvent } from 'react'
 

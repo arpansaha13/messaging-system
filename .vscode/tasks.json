@@ -21,6 +21,7 @@
       },
       // Try start the task on folder open
       "runOptions": {
+        "instanceLimit": 1,
         "runOn": "folderOpen"
       }
     },
@@ -29,12 +30,15 @@
       "label": "Server",
       // The task will launch a shell
       "type": "shell",
-      "command": "pnpm nest start:dev",
+      "command": "pnpm",
+      "args": [
+        "nest",
+        "start:dev"
+      ],
       // Set the shell type
       "options": {
         "shell": {
           "executable": "cmd.exe",
-          "args": []
         }
       },
       // Mark as a background task to avoid the spinner animation on the terminal tab
@@ -48,11 +52,14 @@
     {
       "label": "Client",
       "type": "shell",
-      "command": "",
+      "command": "pnpm",
+      "args": [
+        "clent",
+        "dev"
+      ],
       "options": {
         "shell": {
           "executable": "cmd.exe",
-          "args": []
         }
       },
       "isBackground": true,

@@ -1,7 +1,7 @@
 import { InputHTMLAttributes, memo, useRef, type Dispatch, type SetStateAction } from 'react'
 // Icons
 import { ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/solid'
-import { classNames } from '../../utils'
+import { classNames } from '@arpansaha13/utils'
 
 interface SearchBarProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string

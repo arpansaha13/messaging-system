@@ -10,7 +10,7 @@ import HeaderDropDown from '../HeaderDropDown'
 // Stores
 import { useStore } from '../../stores/index.store'
 // Utils
-import { classNames } from '../../utils'
+import { classNames } from '@arpansaha13/utils'
 
 const ChatHeader = () => {
   const fetchHook = useFetch()

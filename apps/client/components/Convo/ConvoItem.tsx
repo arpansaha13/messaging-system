@@ -2,7 +2,8 @@ import { memo } from 'react'
 import { format, parseISO, differenceInCalendarDays } from 'date-fns'
 import shallow from 'zustand/shallow'
 // Utils
-import { classNames, isUnread } from '../../utils'
+import { classNames } from '@arpansaha13/utils'
+import isUnread from '../../utils/isUnread'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Components

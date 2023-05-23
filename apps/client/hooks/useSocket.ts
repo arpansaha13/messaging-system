@@ -7,7 +7,7 @@ import { useFetch } from './useFetch'
 import { useStore } from '../stores/index.store'
 import { useAuthStore } from '../stores/useAuthStore'
 // Utils
-import { isUnread } from '../utils'
+import isUnread from '../utils/isUnread'
 // Types
 import { MessageStatus } from '../types/message.types'
 import type { ConvoItemType } from '../types/index.types'

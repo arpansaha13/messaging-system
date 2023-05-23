@@ -13,7 +13,7 @@ import ContactListItem from './ContactListItem'
 // Store
 import { useStore } from '../../stores/index.store'
 // Utils
-import { isNullOrUndefined } from '../../utils'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 // Types
 import type { ContactResType, UserType } from '../../types/index.types'
 
