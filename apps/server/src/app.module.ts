@@ -9,6 +9,8 @@ import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
 import { UserToRoomModule } from './UserToRoom/userToRoom.module'
 
+import { AppController } from './app.controller'
+
 import { dbConfigDev, dbConfigProd } from './typeorm.config'
 
 // TODO: add pagination in api results
@@ -36,5 +38,6 @@ const envFilePath = process.env.NODE_ENV === 'development' ? `${process.cwd()}/e
       useFactory: process.env.NODE_ENV === 'development' ? dbConfigDev : dbConfigProd,
     }),
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
