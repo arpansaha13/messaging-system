@@ -1,16 +1,18 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
-import { InjectRepository } from '@nestjs/typeorm'
+import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
 // Entities
 import { UserEntity } from 'src/users/user.entity'
 import { RoomEntity } from './room.entity'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 // Types
-import type { Repository } from 'typeorm'
+import type { EntityManager, Repository } from 'typeorm'
 import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
 @Injectable()
 export class RoomService {
   constructor(
+    @InjectEntityManager()
+    private entityManager: EntityManager,
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     @InjectRepository(RoomEntity)
@@ -75,28 +77,33 @@ export class RoomService {
     ])
     if (sender === null || receiver === null) throw new BadRequestException('Invalid user_id.')
 
-    const newSenderUserToRoom = new UserToRoom()
-    const newReceiverUserToRoom = new UserToRoom()
-
-    newSenderUserToRoom.user = sender
-    newReceiverUserToRoom.user = receiver
-
-    newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
-    newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
-
-    const newRoom = new RoomEntity()
-    newRoom.users = [newSenderUserToRoom, newReceiverUserToRoom]
-
-    newSenderUserToRoom.room = newRoom
-    newReceiverUserToRoom.room = newRoom
-
     try {
-      // TODO: use transactions here
-      const [roomEntity, senderUserToRoom, receiverUserToRoom] = await Promise.all([
-        this.roomRepository.save(newRoom),
-        this.userToRoomRepository.save(newSenderUserToRoom),
-        this.userToRoomRepository.save(newReceiverUserToRoom),
-      ])
+      const [roomEntity, senderUserToRoom, receiverUserToRoom] = await this.entityManager.transaction(
+        async transactionalEntityManager => {
+          const newSenderUserToRoom = new UserToRoom()
+          const newReceiverUserToRoom = new UserToRoom()
+
+          newSenderUserToRoom.user = sender
+          newReceiverUserToRoom.user = receiver
+
+          newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
+          newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
+
+          const newRoom = new RoomEntity()
+          newRoom.users = [newSenderUserToRoom, newReceiverUserToRoom]
+
+          newSenderUserToRoom.room = newRoom
+          newReceiverUserToRoom.room = newRoom
+
+          const response = await Promise.all([
+            transactionalEntityManager.save(newRoom),
+            transactionalEntityManager.save(newSenderUserToRoom),
+            transactionalEntityManager.save(newReceiverUserToRoom),
+          ])
+
+          return response
+        },
+      )
       return [roomEntity, senderUserToRoom, receiverUserToRoom]
     } catch (error) {
       throw new InternalServerErrorException()

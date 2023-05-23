@@ -53,6 +53,10 @@ export class ChatsGateway {
     const userToRooms = await this.userToRoomService.getRoomsOfUser(userId)
     const rooms = userToRooms.map(u2r => u2r.room)
 
+    this.clients.set(userId, socket.id)
+
+    if (rooms.length === 0) return
+
     // Get the userIds of those who had sent a message
     const res: { sender_id: number; room_id: number }[] = await this.messageRepository
       .createQueryBuilder('msg')
@@ -75,7 +79,7 @@ export class ChatsGateway {
         })
       }
     }
-    this.clients.set(userId, socket.id)
+
     this.messageService.updateDeliveredStatus(userId, rooms)
   }
   // TODO: check if room is unarchived if the receiver is offline
