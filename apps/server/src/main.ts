@@ -15,7 +15,11 @@ async function bootstrap() {
     }),
   )
 
-  app.enableCors()
+  app.enableCors({
+    origin: [process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.ALLOWED_ORIGIN],
+  })
+
   await app.listen(process.env.SERVER_PORT ?? DEFAULT_NEST_SERVER_PORT)
 }
+
 bootstrap()

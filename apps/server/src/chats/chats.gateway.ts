@@ -14,7 +14,7 @@ import type { RoomEntity } from 'src/rooms/room.entity'
 import type { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import type { Repository } from 'typeorm'
 
-const CLIENT_ORIGIN = 'http://localhost:3000'
+const CLIENT_ORIGIN = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.ALLOWED_ORIGIN
 
 @WebSocketGateway({
   cors: {
