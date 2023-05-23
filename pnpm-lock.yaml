@@ -14,8 +14,8 @@ importers:
   apps/client:
     dependencies:
       '@arpansaha13/utils':
-        specifier: ^0.2.2
-        version: 0.2.2
+        specifier: ^0.2.4
+        version: 0.2.4
       '@headlessui/react':
         specifier: ^1.7.7
         version: 1.7.7(react-dom@18.2.0)(react@18.2.0)
@@ -306,8 +306,8 @@ packages:
       - chokidar
     dev: false
 
-  /@arpansaha13/utils@0.2.2:
-    resolution: {integrity: sha512-A6kc0W1k/ZUakji8meAIJJOXSs89EeBDDTWLtsUffaL2iuSh9aoCM9fkvJLVXyoFW6OPzD2Z81x24uurS2PeKg==}
+  /@arpansaha13/utils@0.2.4:
+    resolution: {integrity: sha512-JTnh7hc8lPbeSQxRoi8nRDJ2zVzmWtZh2K0CHoTbfjAtMb0NcA3N28o+MMIIraPCkFCnnqTT0kARYc3EP2df3A==}
     engines: {node: ^16.0.0 || ^18.0.0}
     requiresBuild: true
     dev: false
