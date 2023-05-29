@@ -66,7 +66,8 @@ interface UseDarkOptions {
 }
 
 /**
- * Adds the 'dark' class in the `html` tag. This hook paired with the `darkMode: 'class'` config of Tailwind can be used to toggle between light and dark modes.
+ * Adds the 'dark' class in the `html` tag.
+ * This hook paired with the `darkMode: 'class'` config of Tailwind can be used to toggle between light and dark modes.
  *
  * The selected state will be persisted in local storage.
  *

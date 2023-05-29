@@ -1,5 +1,3 @@
-// Custom Hooks
-import { useDark } from '../hooks/useDark'
 // Immer
 import { enableMapSet } from 'immer'
 // Types
@@ -22,8 +20,6 @@ type AppPropsWithLayout = AppProps & {
 }
 
 function MyApp({ Component, pageProps }: AppPropsWithLayout) {
-  useDark({ default: 'dark' })
-
   // Enable Maps for `Immer`
   enableMapSet()
 
