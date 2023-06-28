@@ -1,4 +1,4 @@
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Components
 import ConvoItem from './ConvoItem'
 // Store

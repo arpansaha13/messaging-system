@@ -1,4 +1,4 @@
-import create from 'zustand'
+import { create } from 'zustand'
 import { MessageType } from '../types/index.types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'

@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import Router from 'next/router'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Icons
 import { Icon } from '@iconify/react'
 import githubIcon from '@iconify-icons/mdi/github'

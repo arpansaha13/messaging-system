@@ -1,4 +1,4 @@
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Custom Hooks
 import { useSocketInit } from '../hooks/useSocket'
 // Components

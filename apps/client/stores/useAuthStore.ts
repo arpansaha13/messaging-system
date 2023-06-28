@@ -1,5 +1,5 @@
-import create from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 // Types
 import type { AuthUserType } from '../types/index.types'
 
@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthStoreType>()(
     }),
     {
       name: 'auth-store',
-      getStorage: () => localStorage,
+      storage: createJSONStorage(() => localStorage)
     },
   ),
 )

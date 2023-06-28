@@ -1,6 +1,6 @@
 import { Fragment, memo } from 'react'
 import { Transition } from '@headlessui/react'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Stores
 import { useStore } from '../stores/index.store'
 // Icons

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import io from 'socket.io-client'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from './useFetch'
 // Stores

@@ -15,7 +15,6 @@
     "@iconify-icons/mdi": "^1.2.46",
     "@iconify/react": "^4.1.1",
     "@tailwindcss/forms": "^0.5.3",
-    "@tailwindcss/line-clamp": "^0.4.4",
     "@types/react": "18.0.21",
     "@types/react-dom": "18.0.6",
     "autoprefixer": "^10.4.14",

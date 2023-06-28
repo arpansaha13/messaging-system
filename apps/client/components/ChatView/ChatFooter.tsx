@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Icons
 // import { MicrophoneIcon } from '@heroicons/react/24/solid'
 // import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'

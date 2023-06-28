@@ -1,5 +1,5 @@
 import { type FormEventHandler, memo, useRef, useState } from 'react'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Custom Hook
 import { useDark } from '../../hooks/useDark'
 // Components

@@ -1,7 +1,7 @@
 import { type ChangeEvent, useRef, useState, KeyboardEvent, type FormEvent } from 'react'
 import { Dialog } from '@headlessui/react'
 import { useDebounce } from 'react-use'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from '../../hooks/useFetch'
 // Components

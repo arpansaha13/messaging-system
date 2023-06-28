@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Components
 import Avatar from '../common/Avatar'
 // Custom Hook

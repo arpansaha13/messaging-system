@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Router from 'next/router'
 import NextLink from 'next/link'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 
 import { useEffect, useState, useRef } from 'react'
 import { useMap } from 'react-use'

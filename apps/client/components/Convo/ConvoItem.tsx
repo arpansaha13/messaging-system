@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { format, parseISO, differenceInCalendarDays } from 'date-fns'
-import shallow from 'zustand/shallow'
+import { shallow } from 'zustand/shallow'
 // Utils
 import { classNames } from '@arpansaha13/utils'
 import isUnread from '../../utils/isUnread'
@@ -163,12 +163,12 @@ const ConvoItem = ({
           <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
             <p
               className={classNames(
-                'flex items-center text-sm space-x-1 line-clamp-1',
+                'flex items-center text-sm space-x-1',
                 latestMsg === null ? 'h-5' : '', // same as line-height of 'text-sm'
               )}
             >
               {latestMsg && authUserIsSender && <MsgStatusIcon status={latestMsg.status} />}
-              {latestMsg && <span>{latestMsg.content}</span>}
+              {latestMsg && <span className="line-clamp-1">{latestMsg.content}</span>}
             </p>
             <div className="flex-shrink-0 flex items-center text-gray-500 dark:text-gray-400">
               {pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}

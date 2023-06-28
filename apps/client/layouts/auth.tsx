@@ -20,7 +20,7 @@ export default function AuthLayout({ children, heading }: AuthLayoutProps) {
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-200 dark:bg-gray-800">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="mx-auto w-auto h-16 relative">
-            <Image src="/react-logo.svg" alt="Whatsapp Clone" layout="fill" objectFit="contain" />
+            <Image src="/react-logo.svg" alt="React logo" priority={true} fill={true} className="object-contain" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
             {heading}
