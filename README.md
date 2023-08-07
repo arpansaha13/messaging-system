@@ -3,13 +3,13 @@
 </h1>
 
 <p align="center">
-  A Whatsapp Clone project made with NextJs (React) in the client and NestJs on the server.
+  A Whatsapp Clone project made with NextJs and NestJs.
 </p>
 
 <div align="center">
   <img
     src="https://user-images.githubusercontent.com/82361490/214864461-1ebb652f-8d96-4fac-bf0f-3bd8fb52b461.png"
-    alt="Snip of WhatsApp-Clone project in dark mode"
+    alt="Snip of the WhatsApp-Clone project in dark mode"
    />
 </div>
 
@@ -24,6 +24,9 @@
 
 - Real-time one-to-one chat.
 - Real-time message status updates and read receipts.
-- Light and dark mode switching.
+- Pin and unpin chat.
+- Archive and unarchive chat.
+- Clear messages and delete chat.
+- Light and dark mode.
 
 > This project is a WIP and more features will be added soon.
