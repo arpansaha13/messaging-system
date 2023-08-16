@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthStoreType>()(
         set({
           authToken: null,
           authExpiresAt: null,
+          authUser: null,
         })
       },
     }),
