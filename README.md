@@ -20,6 +20,8 @@
 ![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
 
+> This demo site uses a fake authentication without email verification so that no real email is required to view the website.
+
 ## Features
 
 - Real-time one-to-one chat.
@@ -30,3 +32,4 @@
 - Light and dark mode.
 
 > This project is a WIP and more features will be added soon.
+
