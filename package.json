@@ -1,7 +1,7 @@
 {
   "name": "whatsapp-clone-monorepo",
   "author": "Arpan Saha <https://github.com/arpansaha13>",
-  "description": "A Whatsapp Clone project made with NextJs (React) in the client and NestJs on the server.",
+  "description": "A Whatsapp Clone project.",
   "version": "0.1.0",
   "type": "module",
   "private": true,
@@ -13,7 +13,7 @@
     "nest": "esno scripts/server.ts"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   },
   "devDependencies": {
     "esno": "^0.16.3",
