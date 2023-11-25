@@ -2,7 +2,7 @@
   "name": "whatsapp-clone-monorepo",
   "author": "Arpan Saha <https://github.com/arpansaha13>",
   "description": "A Whatsapp Clone project.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "private": true,
   "packageManager": "pnpm@8.5.1",
