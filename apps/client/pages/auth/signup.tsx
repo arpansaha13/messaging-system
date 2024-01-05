@@ -50,7 +50,7 @@ const SignUpPage = () => {
   function signUp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    const formData = getFormData(formRef.current!, { format: 'object' })
+    const formData = getFormData(formRef.current!)
 
     if (formData.password !== formData.confirmPassword) {
       const msg = 'Password and confirm password do not match'
@@ -68,7 +68,7 @@ const SignUpPage = () => {
 
     fetchHook('auth/sign-up', {
       method: 'POST',
-      body: JSON.stringify(formData),
+      body: formData,
     })
       .then((data: JwtToken) => {
         setAuthState({

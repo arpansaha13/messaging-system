@@ -1,12 +1,11 @@
 import { ISOToMilliSecs } from '../../utils'
 import { MessageStatus } from '../../types'
-import type { Slice } from '../types.store'
+import type { FetchHook, Slice } from '../types.store'
 import type { MessageType, ConvoItemType, MsgReceivedType } from '../../types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
 type ActiveChatInfo = Omit<ConvoItemType, 'latestMsg' | 'room' | 'userToRoomId'> | null
-type FetchHook = (url: string, options?: RequestInit) => Promise<any>
 
 export interface ChatStoreType {
   /**
@@ -123,7 +122,7 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
   },
   clearChat(roomId, fetchHook) {
     set((state: ChatStoreType) => {
-      fetchHook(`user-to-room/${roomId}/clear-chat`, { method: 'Delete' })
+      fetchHook(`user-to-room/${roomId}/clear-chat`, { method: 'DELETE' })
       state.chats.set(roomId, new Map<number, MessageType>())
     })
   },

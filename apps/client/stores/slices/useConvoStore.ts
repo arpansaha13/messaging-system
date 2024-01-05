@@ -1,8 +1,7 @@
-import type { Slice } from '../types.store'
+import type { FetchHook, Slice } from '../types.store'
 import type { ConvoItemType, MessageStatus } from '../../types'
 
 type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
-type FetchHook = (url: string, options?: RequestInit) => Promise<any>
 
 export interface ConvoStoreType {
   /** The currently active chat-room. */

@@ -47,11 +47,11 @@ const SignInPage = () => {
     e.preventDefault()
     setLoading(true)
 
-    const formData = getFormData(formRef.current!, { format: 'object' })
+    const formData = getFormData(formRef.current!)
 
     fetchHook('auth/sign-in', {
       method: 'POST',
-      body: JSON.stringify(formData),
+      body: formData,
     })
       .then((data: JwtToken) => {
         setAuthState({

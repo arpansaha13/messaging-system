@@ -1,5 +1,12 @@
 import { useAuthStore } from '../stores/useAuthStore'
 
+export interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
+  /** @default 'GET' */
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT'
+
+  body?: Record<string, any>
+}
+
 const FETCH_BASE_URL =
   process.env.NODE_ENV === 'development' ? 'http://localhost:4000/' : process.env.NEXT_PUBLIC_BASE_URL!
 
@@ -10,23 +17,21 @@ const FETCH_BASE_URL =
  *
  * 2) Adds the `Content-type` header as `application/x-www-form-urlencoded`.
  *
- * 3) Converts the JSON-stringified body-data to url-encoded form.
+ * 3) Converts the JSON body to url-encoded form.
  *
  * 4) Extracts and returns the json response so that the json data is directly available in the then() block.
  *
  * Note:
- *
- * 1) Body data (if provided) must be a stringified JSON.
  *
  * 2) This hook does not check if auth token is expired or not.
  */
 export function useFetch() {
   const authToken = useAuthStore(state => state.authToken)
 
-  const fecthHook = (url: string, options?: RequestInit) => {
+  const fecthHook = (url: string, options?: RequestOptions) => {
     return fetch(`${FETCH_BASE_URL}${url}`, {
       ...options,
-      body: options?.body ? new URLSearchParams(JSON.parse(options?.body as string)) : null,
+      body: options?.body ? new URLSearchParams(options?.body) : null,
       headers: {
         ...(options?.headers ?? {}),
         'Content-Type': 'application/x-www-form-urlencoded',

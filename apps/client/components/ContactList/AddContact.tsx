@@ -79,7 +79,7 @@ const AddContact = () => {
     e.preventDefault()
     fetchHook('contacts', {
       method: 'POST',
-      body: JSON.stringify({ userIdToAdd: modalContent.id, alias: modalContent.alias }),
+      body: { userIdToAdd: modalContent.id, alias: modalContent.alias },
     }).then((res: { message: string }) => {
       setOpen(false)
       setNotification({

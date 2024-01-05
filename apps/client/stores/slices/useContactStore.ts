@@ -1,7 +1,6 @@
 import type { StateCreator } from 'zustand'
+import type { FetchHook } from '../types.store'
 import type { ContactResType, ContactType } from '../../types'
-
-type FetchHook = (url: string, options?: RequestInit) => Promise<any>
 
 export interface ContactStoreType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */

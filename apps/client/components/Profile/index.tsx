@@ -93,7 +93,7 @@ const Profile = () => {
     if (Object.keys(data).length === 0) return
 
     fetchHook(`users/${authUser.id}`, {
-      body: JSON.stringify(data),
+      body: data,
       method: 'PATCH',
     }).then((res: AuthUserType) => {
       setAuthUser(res)
