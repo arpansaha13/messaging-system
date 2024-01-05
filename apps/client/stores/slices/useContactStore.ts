@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand'
-import type { ContactResType, ContactType } from '../../types/index.types'
+import type { ContactResType, ContactType } from '../../types'
 
 type FetchHook = (url: string, options?: RequestInit) => Promise<any>
 

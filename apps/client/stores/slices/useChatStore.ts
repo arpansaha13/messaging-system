@@ -1,10 +1,7 @@
-import type { StateCreator } from 'zustand'
-import produce from 'immer'
-// Utils
 import { ISOToMilliSecs } from '../../utils'
-// Types
-import { MessageStatus } from '../../types/index.types'
-import type { MessageType, ConvoItemType, MsgReceivedType } from '../../types/index.types'
+import { MessageStatus } from '../../types'
+import type { Slice } from '../types.store'
+import type { MessageType, ConvoItemType, MsgReceivedType } from '../../types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
@@ -46,7 +43,7 @@ export interface ChatStoreType {
   deleteChat: (roomId: number, fetchHook: FetchHook) => void
 }
 
-export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = (set, get) => ({
+export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
   chats: new Map<number, Map<number, MessageType>>(),
   getChats() {
     return get().chats
@@ -60,33 +57,29 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
   },
   addChat(roomId: number, chat: MessageType[]) {
     // Update through `Immer`
-    set(
-      produce((state: ChatStoreType) => {
-        const newChat = new Map<number, MessageType>()
-        for (const message of chat) {
-          newChat.set(ISOToMilliSecs(message.createdAt), message)
-        }
-        state.chats.set(roomId, newChat)
-      }),
-    )
+    set((state: ChatStoreType) => {
+      const newChat = new Map<number, MessageType>()
+      for (const message of chat) {
+        newChat.set(ISOToMilliSecs(message.createdAt), message)
+      }
+      state.chats.set(roomId, newChat)
+    })
   },
   pushChat(roomId: number, messages: MessageType[]) {
     // Use `Immer` for nested updates
-    set(
-      produce((state: ChatStoreType) => {
-        let chat = state.chats.get(roomId)
+    set((state: ChatStoreType) => {
+      let chat = state.chats.get(roomId)
 
-        // If this is a new chat, then it would not exist in the `chats` map. Add it first.
-        if (typeof chat === 'undefined') {
-          get().addChat(roomId, [])
-          chat = get().chats.get(roomId)!
-        }
-        for (const message of messages) {
-          chat.set(ISOToMilliSecs(message.createdAt), message)
-        }
-        state.chats.set(roomId, chat)
-      }),
-    )
+      // If this is a new chat, then it would not exist in the `chats` map. Add it first.
+      if (typeof chat === 'undefined') {
+        get().addChat(roomId, [])
+        chat = get().chats.get(roomId)!
+      }
+      for (const message of messages) {
+        chat.set(ISOToMilliSecs(message.createdAt), message)
+      }
+      state.chats.set(roomId, chat)
+    })
   },
   sendMsg(roomId, msg) {
     get().pushChat(roomId, [
@@ -105,47 +98,39 @@ export const useChatStore: StateCreator<ChatStoreType, [], [], ChatStoreType> = 
     ])
   },
   updateMsgStatus(roomId, ISOtime, newStatus) {
-    set(
-      produce((state: ChatStoreType) => {
-        const timeMilliSecs = ISOToMilliSecs(ISOtime)
-        const chat = state.chats.get(roomId)!
-        const msgToUpdate = chat.get(timeMilliSecs)!
-        const updatedMsg = { ...msgToUpdate, status: newStatus }
-        chat.set(timeMilliSecs, updatedMsg)
-      }),
-    )
+    set((state: ChatStoreType) => {
+      const timeMilliSecs = ISOToMilliSecs(ISOtime)
+      const chat = state.chats.get(roomId)!
+      const msgToUpdate = chat.get(timeMilliSecs)!
+      const updatedMsg = { ...msgToUpdate, status: newStatus }
+      chat.set(timeMilliSecs, updatedMsg)
+    })
   },
   updateAllMsgStatus(roomId, newStatus, senderId) {
-    set(
-      produce((state: ChatStoreType) => {
-        const chat = state.chats.get(roomId)
-        if (!chat) {
-          console.error('Chat not found. Invalid `roomId`')
-          return
-        }
-        const iter = chat.values()
-        let iterRes = iter.next()
-        while (!iterRes.done) {
-          if (iterRes.value.senderId === senderId) iterRes.value.status = newStatus
-          iterRes = iter.next()
-        }
-      }),
-    )
+    set((state: ChatStoreType) => {
+      const chat = state.chats.get(roomId)
+      if (!chat) {
+        console.error('Chat not found. Invalid `roomId`')
+        return
+      }
+      const iter = chat.values()
+      let iterRes = iter.next()
+      while (!iterRes.done) {
+        if (iterRes.value.senderId === senderId) iterRes.value.status = newStatus
+        iterRes = iter.next()
+      }
+    })
   },
   clearChat(roomId, fetchHook) {
-    set(
-      produce((state: ChatStoreType) => {
-        fetchHook(`user-to-room/${roomId}/clear-chat`, { method: 'Delete' })
-        state.chats.set(roomId, new Map<number, MessageType>())
-      }),
-    )
+    set((state: ChatStoreType) => {
+      fetchHook(`user-to-room/${roomId}/clear-chat`, { method: 'Delete' })
+      state.chats.set(roomId, new Map<number, MessageType>())
+    })
   },
   deleteChat(roomId, fetchHook) {
-    set(
-      produce((state: ChatStoreType) => {
-        fetchHook(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
-        state.chats.delete(roomId)
-      }),
-    )
+    set((state: ChatStoreType) => {
+      fetchHook(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
+      state.chats.delete(roomId)
+    })
   },
 })

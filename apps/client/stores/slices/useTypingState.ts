@@ -1,18 +1,15 @@
-import type { StateCreator } from 'zustand'
-import produce from 'immer'
+import type { Slice } from '../types.store'
 
 export interface TypingStateType {
   typingState: { [roomId: number]: boolean }
   setTypingState: (senderId: number, newState: boolean) => void
 }
 
-export const useTypingState: StateCreator<TypingStateType, [], [], TypingStateType> = set => ({
+export const useTypingState: Slice<TypingStateType> = set => ({
   typingState: {},
   setTypingState(roomId, newState) {
-    set(
-      produce((state: TypingStateType) => {
-        state.typingState[roomId] = newState
-      }),
-    )
+    set((state: TypingStateType) => {
+      state.typingState[roomId] = newState
+    })
   },
 })

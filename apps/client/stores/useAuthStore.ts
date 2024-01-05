@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-// Types
-import type { AuthUserType } from '../types/index.types'
+import type { AuthUserType } from '../types'
 
 interface AuthStoreType {
   authToken: string | null
@@ -37,7 +36,7 @@ export const useAuthStore = create<AuthStoreType>()(
     }),
     {
       name: 'auth-store',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 )

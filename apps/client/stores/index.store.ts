@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { MessageType } from '../types/index.types'
+import { immer } from 'zustand/middleware/immer'
+import type { MessageType } from '../types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'
 import { type ContactStoreType, useContactStore } from './slices/useContactStore'
@@ -19,36 +20,38 @@ export interface StoreType
   resetStore: () => void
 }
 
-export const useStore = create<StoreType>()((...a) => ({
-  ...useConvoStore(...a),
-  ...useChatStore(...a),
-  ...useContactStore(...a),
-  ...useDraftStore(...a),
-  ...useNotificationState(...a),
-  ...useSlideOverState(...a),
-  ...useTypingState(...a),
+export const useStore = create<StoreType>()(
+  immer((...a) => ({
+    ...useConvoStore(...a),
+    ...useChatStore(...a),
+    ...useContactStore(...a),
+    ...useDraftStore(...a),
+    ...useNotificationState(...a),
+    ...useSlideOverState(...a),
+    ...useTypingState(...a),
 
-  resetStore() {
-    a[0]({
-      activeChatInfo: null,
-      activeRoom: null,
-      convo: [],
-      isProxyConvo: false,
-      chats: new Map<number, Map<number, MessageType>>(),
-      contacts: {},
-      drafts: new Map<number, string>(),
-      notification: {
-        status: 'success',
-        title: '',
-        description: '',
-        show: false,
-      },
-      typingState: {},
-      slideOverState: {
-        open: false,
-        title: 'New Chat',
-        componentName: 'ContactList',
-      },
-    })
-  },
-}))
+    resetStore() {
+      a[0]({
+        activeChatInfo: null,
+        activeRoom: null,
+        convo: [],
+        isProxyConvo: false,
+        chats: new Map<number, Map<number, MessageType>>(),
+        contacts: {},
+        drafts: new Map<number, string>(),
+        notification: {
+          status: 'success',
+          title: '',
+          description: '',
+          show: false,
+        },
+        typingState: {},
+        slideOverState: {
+          open: false,
+          title: 'New Chat',
+          componentName: 'ContactList',
+        },
+      })
+    },
+  })),
+)

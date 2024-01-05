@@ -1,5 +1,4 @@
-import produce from 'immer'
-import type { StateCreator } from 'zustand'
+import type { Slice } from '../types.store'
 
 type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile' | 'AddContact'
 
@@ -18,31 +17,27 @@ export interface SlideOverStateType {
 }
 
 /** The global notification component is used only in the auth layout (for now). The global notification will show or hide with content depending on the state of this store. */
-export const useSlideOverState: StateCreator<SlideOverStateType, [], [], SlideOverStateType> = set => ({
+export const useSlideOverState: Slice<SlideOverStateType> = set => ({
   slideOverState: {
     open: false,
     title: 'New Chat',
     componentName: 'ContactList',
   },
   toggleSlideOver(bool) {
-    set(
-      produce((state: SlideOverStateType) => {
-        if (typeof bool !== 'undefined') {
-          state.slideOverState.open = bool
-        } else {
-          state.slideOverState.open = !state.slideOverState.open
-        }
-      }),
-    )
+    set((state: SlideOverStateType) => {
+      if (typeof bool !== 'undefined') {
+        state.slideOverState.open = bool
+      } else {
+        state.slideOverState.open = !state.slideOverState.open
+      }
+    })
   },
   setSlideOverState(newState) {
-    set(
-      produce((state: SlideOverStateType) => {
-        state.slideOverState = {
-          ...state.slideOverState,
-          ...newState,
-        }
-      }),
-    )
+    set((state: SlideOverStateType) => {
+      state.slideOverState = {
+        ...state.slideOverState,
+        ...newState,
+      }
+    })
   },
 })

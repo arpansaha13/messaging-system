@@ -1,5 +1,4 @@
-import produce from 'immer'
-import type { StateCreator } from 'zustand'
+import type { Slice } from '../types.store'
 
 interface NotificationType {
   status: 'success' | 'error'
@@ -19,7 +18,7 @@ export interface NotificationStateType {
 }
 
 /** The global notification component is used only in the auth layout (for now). The global notification will show or hide with content depending on the state of this store. */
-export const useNotificationState: StateCreator<NotificationStateType, [], [], NotificationStateType> = set => ({
+export const useNotificationState: Slice<NotificationStateType> = set => ({
   notification: {
     status: 'success',
     title: '',
@@ -30,14 +29,12 @@ export const useNotificationState: StateCreator<NotificationStateType, [], [], N
     set({ notification: { ...newState } })
   },
   toggleNotification(bool) {
-    set(
-      produce((state: NotificationStateType) => {
-        if (typeof bool !== 'undefined') {
-          state.notification.show = bool
-        } else {
-          state.notification.show = !state.notification.show
-        }
-      }),
-    )
+    set((state: NotificationStateType) => {
+      if (typeof bool !== 'undefined') {
+        state.notification.show = bool
+      } else {
+        state.notification.show = !state.notification.show
+      }
+    })
   },
 })
