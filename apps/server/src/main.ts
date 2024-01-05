@@ -2,8 +2,6 @@ import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module'
 
-const DEFAULT_NEST_SERVER_PORT = 4000
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
@@ -19,7 +17,7 @@ async function bootstrap() {
     origin: [process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.ALLOWED_ORIGIN],
   })
 
-  await app.listen(process.env.SERVER_PORT ?? DEFAULT_NEST_SERVER_PORT)
+  await app.listen(process.env.API_PORT ?? 4000)
 }
 
 bootstrap()

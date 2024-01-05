@@ -23,6 +23,7 @@
     "env/*.ts",
     "db/**/*.ts",
     "src/**/*.ts",
+    "src/env.types.ts",
   ],
   "exclude": [
     "node_modules"

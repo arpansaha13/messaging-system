@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { TypeOrmModule } from '@nestjs/typeorm'
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 
 import { RoomModule } from './rooms/room.module'
@@ -10,12 +10,9 @@ import { ContactModule } from './contacts/contact.module'
 import { UserToRoomModule } from './UserToRoom/userToRoom.module'
 
 import { AppController } from './app.controller'
-
-import { dbConfigDev, dbConfigProd } from './typeorm.config'
+import type { TypeormEnvVariables } from 'src/env.types'
 
 // TODO: add pagination in api results
-
-const envFilePath = process.env.NODE_ENV === 'development' ? `${process.cwd()}/env/dev.env` : `../env/prod.env`
 
 @Module({
   imports: [
@@ -28,14 +25,23 @@ const envFilePath = process.env.NODE_ENV === 'development' ? `${process.cwd()}/e
 
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath,
     }),
 
     // DB Connection
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: process.env.NODE_ENV === 'development' ? dbConfigDev : dbConfigProd,
+      useFactory: (configService: ConfigService<TypeormEnvVariables>) => ({
+        type: 'postgres',
+        host: configService.get('TYPEORM_HOST'),
+        port: configService.get('TYPEORM_PORT'),
+        username: configService.get('TYPEORM_USERNAME'),
+        password: configService.get('TYPEORM_PASSWORD'),
+        database: configService.get('TYPEORM_DATABASE'),
+        url: configService.get('TYPEORM_DATABASE_URL'),
+        autoLoadEntities: process.env.NODE_ENV === 'development',
+        synchronize: process.env.NODE_ENV === 'development', // Do not use in production
+      }),
     }),
   ],
   controllers: [AppController],

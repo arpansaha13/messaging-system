@@ -12,7 +12,7 @@ import { UserEntity } from 'src/users/user.entity'
 import { AuthEntity } from './auth.entity'
 import { JwtStrategy } from './jwt.strategy'
 // Types
-import type { JwtEnvVariables } from '../../env/env.types'
+import type { JwtEnvVariables } from '../env.types'
 
 @Module({
   imports: [
