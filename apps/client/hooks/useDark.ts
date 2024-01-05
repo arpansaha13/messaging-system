@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { create } from 'zustand'
+import { createWithEqualityFn } from 'zustand/traditional'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface DarkState {
@@ -7,7 +7,7 @@ interface DarkState {
   toggleDark: (newState?: boolean) => void
 }
 
-export const useDarkState = create<DarkState>()(
+export const useDarkState = createWithEqualityFn<DarkState>()(
   persist(
     set => ({
       isDark: null,
@@ -21,7 +21,7 @@ export const useDarkState = create<DarkState>()(
     }),
     {
       name: 'wp-clone-color-mode',
-      storage: createJSONStorage(() => localStorage)
+      storage: createJSONStorage(() => localStorage),
     },
   ),
 )

@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { createWithEqualityFn } from 'zustand/traditional'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { AuthUserType } from '../types'
 
@@ -11,7 +11,7 @@ interface AuthStoreType {
   resetAuthState: () => void
 }
 /** Auth token will be stored/persisted in local storage and this AuthStore reads and updates the data in local storage. */
-export const useAuthStore = create<AuthStoreType>()(
+export const useAuthStore = createWithEqualityFn<AuthStoreType>()(
   persist(
     set => ({
       authToken: null,

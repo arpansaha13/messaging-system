@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { createWithEqualityFn } from 'zustand/traditional'
 import { immer } from 'zustand/middleware/immer'
 import type { MessageType } from '../types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
@@ -20,7 +20,7 @@ export interface StoreType
   resetStore: () => void
 }
 
-export const useStore = create<StoreType>()(
+export const useStore = createWithEqualityFn<StoreType>()(
   immer((...a) => ({
     ...useConvoStore(...a),
     ...useChatStore(...a),
