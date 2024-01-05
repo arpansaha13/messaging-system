@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 // Components
 import Message from './Message'
 // Types
-import type { MessageType } from '../../types/index.types'
+import type { MessageType } from '../../types'
 
 interface ChatAreaProps {
   messages: Map<number, MessageType> | null

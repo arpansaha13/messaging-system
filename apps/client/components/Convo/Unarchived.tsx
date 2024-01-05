@@ -6,7 +6,7 @@ import { useStore } from '../../stores/index.store'
 // Custom Hooks
 import { useFetch } from '../../hooks/useFetch'
 // Types
-import type { ConvoItemType, MessageType } from '../../types/index.types'
+import type { ConvoItemType, MessageType } from '../../types'
 
 export default function UnarchivedRooms() {
   const fetchHook = useFetch()

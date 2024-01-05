@@ -11,7 +11,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import { useStore } from '../stores/index.store'
 // Types
 import type { NextPage } from 'next'
-import type { AuthUserResType } from '../types/index.types'
+import type { AuthUserResType } from '../types'
 
 const Home: NextPage = () => {
   const fetchHook = useFetch()

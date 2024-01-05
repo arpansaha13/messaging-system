@@ -19,7 +19,7 @@ import AuthLayout from '../../layouts/auth'
 import getFormData from '../../utils/getFormData'
 // Types
 import type { FormEvent, ReactElement } from 'react'
-import type { JwtToken } from '../../types/index.types'
+import type { JwtToken } from '../../types'
 
 const SignInPage = () => {
   const expiresAt = useAuthStore(state => state.authExpiresAt)

@@ -10,7 +10,7 @@ import { useAuthStore } from '../stores/useAuthStore'
 import isUnread from '../utils/isUnread'
 // Types
 import { MessageStatus } from '../types/message.types'
-import type { ConvoItemType } from '../types/index.types'
+import type { ConvoItemType } from '../types'
 
 interface ReceiveMsgType {
   roomId: number

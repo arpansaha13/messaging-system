@@ -7,7 +7,7 @@ import ContactListItem from './ContactListItem'
 // Stores
 import { useStore } from '../../stores/index.store'
 // Types
-import type { ContactType, MessageType } from '../../types/index.types'
+import type { ContactType, MessageType } from '../../types'
 
 export const ContactList = () => {
   const fetchHook = useFetch()

@@ -12,7 +12,7 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { classNames } from '@arpansaha13/utils'
 // Types
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
-import type { AuthUserType } from '../../types/index.types'
+import type { AuthUserType } from '../../types'
 
 interface FieldProps {
   heading: string

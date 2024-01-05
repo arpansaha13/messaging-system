@@ -15,7 +15,7 @@ import { useStore } from '../../stores/index.store'
 // Utils
 import { ISODateNow } from '../../utils'
 // Enum
-import { MessageStatus } from '../../types/index.types'
+import { MessageStatus } from '../../types'
 // Types
 import type { KeyboardEvent } from 'react'
 import type { TypingStateType } from '../../hooks/useSocket'

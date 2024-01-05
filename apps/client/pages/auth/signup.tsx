@@ -18,7 +18,7 @@ import AuthLayout from '../../layouts/auth'
 import getFormData from '../../utils/getFormData'
 // Types
 import type { FormEvent, ReactElement } from 'react'
-import type { JwtToken } from '../../types/index.types'
+import type { JwtToken } from '../../types'
 import { useMap } from 'react-use'
 
 const SignUpPage = () => {

@@ -2,7 +2,7 @@ import { memo } from 'react'
 // Components
 import Avatar from '../common/Avatar'
 // Types
-import { ContactType } from '../../types/index.types'
+import { ContactType } from '../../types'
 
 export interface ContactListItemProps extends ContactType {
   onClick: () => void

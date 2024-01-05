@@ -17,7 +17,7 @@ import pinIcon from '@iconify-icons/mdi/pin'
 import { useAuthStore } from '../../stores/useAuthStore'
 import { useStore } from '../../stores/index.store'
 // Types
-import type { ConvoItemType } from '../../types/index.types'
+import type { ConvoItemType } from '../../types'
 
 export interface ConvoItemProps {
   roomId: number

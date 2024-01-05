@@ -15,7 +15,7 @@ import { useStore } from '../../stores/index.store'
 // Utils
 import { isNullOrUndefined } from '@arpansaha13/utils'
 // Types
-import type { ContactResType, UserType } from '../../types/index.types'
+import type { ContactResType, UserType } from '../../types'
 
 const AddContact = () => {
   const fetchHook = useFetch()
