@@ -1,19 +1,15 @@
 import { shallow } from 'zustand/shallow'
-// Custom Hooks
 import { useSocketInit } from '../hooks/useSocket'
-// Components
+import Chat from './Chat'
 import Profile from './Profile'
 import Sidebar from './Sidebar'
-import ChatView from './ChatView'
 import Settings from './Settings'
 import SlideOver from './SlideOver'
 import ContactList from './ContactList'
 import Archived from './Convo/Archived'
 import Notification from './common/Notification'
 import AddContact from './ContactList/AddContact'
-// Stores
 import { useStore } from '../stores/index.store'
-// Types
 import type { SlideOverStateType } from '../stores/slices/useSlideOverState'
 
 function getSlideOverContent(componentName: SlideOverStateType['slideOverState']['componentName']) {
@@ -56,7 +52,7 @@ export default function AsyncPage() {
           <Sidebar />
         </section>
 
-        <section className="col-span-7 h-full bg-gray-100 dark:bg-gray-800">{showChatView && <ChatView />}</section>
+        <section className="col-span-7 h-full bg-gray-100 dark:bg-gray-800">{showChatView && <Chat />}</section>
       </main>
     </>
   )

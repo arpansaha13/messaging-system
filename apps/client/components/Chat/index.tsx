@@ -1,9 +1,7 @@
 import { shallow } from 'zustand/shallow'
-// Components
-import ChatArea from './ChatArea'
+import ChatBody from './ChatBody'
 import ChatHeader from './ChatHeader'
 import ChatFooter from './ChatFooter'
-// Store
 import { useStore } from '../../stores/index.store'
 
 // Frequently updates on state change.
@@ -16,7 +14,7 @@ export default function ChatView() {
     <div className="flex flex-col h-full">
       <ChatHeader />
       <div className="flex-grow flex flex-col justify-end bg-slate-200/50 dark:bg-gray-900">
-        <ChatArea messages={messages} />
+        <ChatBody messages={messages} />
       </div>
       <ChatFooter />
     </div>

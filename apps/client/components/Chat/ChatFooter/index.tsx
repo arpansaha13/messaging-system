@@ -1,24 +1,17 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
-// Icons
 // import { MicrophoneIcon } from '@heroicons/react/24/solid'
 // import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
-// Components
 import TextArea from './TextArea'
-// Custom Hooks
-import { useFetch } from '../../hooks/useFetch'
-import { useSocket } from '../../hooks/useSocket'
-// Store
-import { useAuthStore } from '../../stores/useAuthStore'
-import { useStore } from '../../stores/index.store'
-// Utils
-import { ISODateNow } from '../../utils'
-// Enum
-import { MessageStatus } from '../../types'
-// Types
+import { useFetch } from '../../../hooks/useFetch'
+import { useSocket } from '../../../hooks/useSocket'
+import { useAuthStore } from '../../../stores/useAuthStore'
+import { useStore } from '../../../stores/index.store'
+import { ISODateNow } from '../../../utils'
+import { MessageStatus } from '../../../types'
 import type { KeyboardEvent } from 'react'
-import type { TypingStateType } from '../../hooks/useSocket'
+import type { TypingStateType } from '../../../hooks/useSocket'
 
 interface TypingStatePayloadType extends TypingStateType {
   receiverId: number

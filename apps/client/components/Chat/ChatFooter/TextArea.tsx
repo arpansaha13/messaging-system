@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-// Types
 import type { ChangeEvent, Dispatch, KeyboardEvent, SetStateAction } from 'react'
 
 interface TextAreaProps {

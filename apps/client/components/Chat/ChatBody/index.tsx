@@ -1,14 +1,12 @@
 import { useEffect, useRef } from 'react'
-// Components
 import Message from './Message'
-// Types
-import type { MessageType } from '../../types'
+import type { MessageType } from '../../../types'
 
-interface ChatAreaProps {
+interface ChatBodyProps {
   messages: Map<number, MessageType> | null
 }
 
-export default function ChatArea({ messages }: ChatAreaProps) {
+export default function ChatBody({ messages }: ChatBodyProps) {
   const elRef = useRef<HTMLDivElement>(null)
   const mapItr = messages?.entries() ?? null
 
