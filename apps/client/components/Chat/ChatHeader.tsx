@@ -5,7 +5,7 @@ import { useFetch } from '~/hooks/useFetch'
 // import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
-import { useStore } from '~/stores'
+import { useStore } from '~/store'
 
 const ChatHeader = () => {
   const fetchHook = useFetch()

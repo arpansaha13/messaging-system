@@ -5,7 +5,7 @@ import { Transition } from '@headlessui/react'
 import { shallow } from 'zustand/shallow'
 import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
-import { useStore } from '~/stores'
+import { useStore } from '~/store'
 
 const Notification = () => {
   const [notification, toggleNotification] = useStore(state => [state.notification, state.toggleNotification], shallow)

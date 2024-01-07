@@ -9,8 +9,8 @@ import ContactList from './ContactList'
 import Archived from './Convo/Archived'
 import Notification from './common/Notification'
 import AddContact from './ContactList/AddContact'
-import { useStore } from '~/stores'
-import type { SlideOverStateType } from '~/stores/slices/useSlideOverState'
+import { useStore } from '~/store'
+import type { SlideOverStateType } from '~/store/slices/useSlideOverState'
 
 function getSlideOverContent(componentName: SlideOverStateType['slideOverState']['componentName']) {
   switch (componentName) {

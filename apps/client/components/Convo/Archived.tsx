@@ -2,7 +2,7 @@ import { shallow } from 'zustand/shallow'
 // Components
 import ConvoItem from './ConvoItem'
 // Store
-import { useStore } from '~/stores'
+import { useStore } from '~/store'
 // Custom Hooks
 import { useFetch } from '~/hooks/useFetch'
 // Types
