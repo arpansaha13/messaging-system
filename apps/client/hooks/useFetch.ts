@@ -1,4 +1,4 @@
-import { useAuthStore } from '../stores/useAuthStore'
+import { useAuthStore } from '~/stores/useAuthStore'
 
 export interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
   /** @default 'GET' */

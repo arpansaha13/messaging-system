@@ -6,11 +6,11 @@ import { Icon } from '@iconify/react'
 import githubIcon from '@iconify-icons/mdi/github'
 import { ChatBubbleBottomCenterTextIcon, UserPlusIcon } from '@heroicons/react/20/solid'
 // Components
-import Avatar from '../common/Avatar'
+import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 // Stores
-import { useStore } from '../../stores/index.store'
-import { useAuthStore } from '../../stores/useAuthStore'
+import { useStore } from '~/stores'
+import { useAuthStore } from '~/stores/useAuthStore'
 
 const SidebarHeader = () => {
   const [authUser, resetAuthState] = useAuthStore(state => [state.authUser!, state.resetAuthState])
@@ -93,9 +93,11 @@ const SidebarHeader = () => {
 
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none">
-      {authUser !== null && <button onClick={openProfile}>
-        <Avatar src={authUser.dp} width={2.5} height={2.5} />
-      </button>}
+      {authUser !== null && (
+        <button onClick={openProfile}>
+          <Avatar src={authUser.dp} width={2.5} height={2.5} />
+        </button>
+      )}
 
       <div className="flex items-center text-gray-500 dark:text-gray-400 space-x-2">
         <a

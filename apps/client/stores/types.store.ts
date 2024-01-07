@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand'
-import type { RequestOptions } from '../hooks/useFetch'
+import type { RequestOptions } from '~/hooks/useFetch'
 
 export type Slice<T> = StateCreator<T, [['zustand/immer', never]], []>
 

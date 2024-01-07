@@ -9,7 +9,7 @@ import '../styles/globals.css'
 // Layout
 import DefaultLayout from '../layouts/default'
 // Component
-import WIP from '../components/WIP'
+import WIP from '~/components/WIP'
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode

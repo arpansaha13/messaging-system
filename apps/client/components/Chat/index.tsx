@@ -2,7 +2,7 @@ import { shallow } from 'zustand/shallow'
 import ChatBody from './ChatBody'
 import ChatHeader from './ChatHeader'
 import ChatFooter from './ChatFooter'
-import { useStore } from '../../stores/index.store'
+import { useStore } from '~/stores'
 
 // Frequently updates on state change.
 export default function ChatView() {

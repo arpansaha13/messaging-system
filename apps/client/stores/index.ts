@@ -1,6 +1,6 @@
 import { createWithEqualityFn } from 'zustand/traditional'
 import { immer } from 'zustand/middleware/immer'
-import type { MessageType } from '../types'
+import type { MessageType } from '~/types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'
 import { type ContactStoreType, useContactStore } from './slices/useContactStore'

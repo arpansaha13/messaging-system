@@ -4,13 +4,13 @@ import { shallow } from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from './useFetch'
 // Stores
-import { useStore } from '../stores/index.store'
-import { useAuthStore } from '../stores/useAuthStore'
+import { useStore } from '~/stores'
+import { useAuthStore } from '~/stores/useAuthStore'
 // Utils
-import isUnread from '../utils/isUnread'
+import isUnread from '~/utils/isUnread'
 // Types
-import { MessageStatus } from '../types/message.types'
-import type { ConvoItemType } from '../types'
+import { MessageStatus } from '~/types'
+import type { ConvoItemType } from '~/types'
 
 interface ReceiveMsgType {
   roomId: number

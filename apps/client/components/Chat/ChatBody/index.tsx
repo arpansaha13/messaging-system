@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import Message from './Message'
-import type { MessageType } from '../../../types'
+import type { MessageType } from '~/types'
 
 interface ChatBodyProps {
   messages: Map<number, MessageType> | null

@@ -3,19 +3,19 @@ import { Dialog } from '@headlessui/react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
 // Custom Hook
-import { useFetch } from '../../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // Components
-import Modal from '../common/Modal'
-import Avatar from '../common/Avatar'
-import BaseInput from '../base/BaseInput'
-import SearchBar from '../common/SearchBar'
+import Modal from '~common/Modal'
+import Avatar from '~common/Avatar'
+import BaseInput from '~base/BaseInput'
+import SearchBar from '~common/SearchBar'
 import ContactListItem from './ContactListItem'
 // Store
-import { useStore } from '../../stores/index.store'
+import { useStore } from '~/stores'
 // Utils
 import { isNullOrUndefined } from '@arpansaha13/utils'
 // Types
-import type { ContactResType, UserType } from '../../types'
+import type { ContactResType, UserType } from '~/types'
 
 const AddContact = () => {
   const fetchHook = useFetch()

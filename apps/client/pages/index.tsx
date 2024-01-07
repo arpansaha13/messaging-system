@@ -2,16 +2,16 @@ import Router from 'next/router'
 import { memo, useEffect, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 // Custom Hook
-import { useFetch } from '../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // Components
-import Loading from '../components/Loading'
-import AsyncPage from '../components/AsyncPage' // TODO: Import this dynamically when needed
+import Loading from '~/components/Loading'
+import AsyncPage from '~/components/AsyncPage' // TODO: Import this dynamically when needed
 // Store
-import { useAuthStore } from '../stores/useAuthStore'
-import { useStore } from '../stores/index.store'
+import { useAuthStore } from '~/stores/useAuthStore'
+import { useStore } from '~/stores'
 // Types
 import type { NextPage } from 'next'
-import type { AuthUserResType } from '../types'
+import type { AuthUserResType } from '~/types'
 
 const Home: NextPage = () => {
   const fetchHook = useFetch()

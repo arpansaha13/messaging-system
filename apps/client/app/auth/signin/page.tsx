@@ -7,14 +7,14 @@ import { useRouter } from 'next/navigation'
 import { shallow } from 'zustand/shallow'
 
 import { useEffect, useState, useRef } from 'react'
-import { useFetch } from '../../../hooks/useFetch'
-import BaseInput from '../../../components/base/BaseInput'
-import BaseButton from '../../../components/base/BaseButton'
-import { useStore } from '../../../stores/index.store'
-import { useAuthStore } from '../../../stores/useAuthStore'
-import getFormData from '../../../utils/getFormData'
+import { useFetch } from '~/hooks/useFetch'
+import BaseInput from '~base/BaseInput'
+import BaseButton from '~base/BaseButton'
+import { useStore } from '~/stores'
+import { useAuthStore } from '~/stores/useAuthStore'
+import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
-import type { JwtToken } from '../../../types'
+import type { JwtToken } from '~/types'
 
 // export const metadata: Metadata = {
 //   title: 'WhatsApp Clone | Sign in',
