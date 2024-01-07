@@ -1,4 +1,4 @@
-import type { FetchHook, Slice } from '~/stores/types.store'
+import type { FetchHook, Slice } from '~/store/types.store'
 import type { ConvoItemType, MessageStatus } from '~/types'
 
 type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null

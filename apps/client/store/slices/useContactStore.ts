@@ -1,5 +1,5 @@
 import type { StateCreator } from 'zustand'
-import type { FetchHook } from '~/stores/types.store'
+import type { FetchHook } from '~/store/types.store'
 import type { ContactResType, ContactType } from '~/types'
 
 export interface ContactStoreType {

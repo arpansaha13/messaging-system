@@ -14,8 +14,8 @@ import ConvoItemDropDown from './ConvoItemDropDown'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 // Stores
-import { useAuthStore } from '~/stores/useAuthStore'
-import { useStore } from '~/stores'
+import { useAuthStore } from '~/store/useAuthStore'
+import { useStore } from '~/store'
 // Types
 import type { ConvoItemType } from '~/types'
 

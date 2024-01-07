@@ -5,7 +5,7 @@ import { useFetch } from '~/hooks/useFetch'
 // Components
 import ContactListItem from './ContactListItem'
 // Stores
-import { useStore } from '~/stores'
+import { useStore } from '~/store'
 // Types
 import type { ContactType, MessageType } from '~/types'
 

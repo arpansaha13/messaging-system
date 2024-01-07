@@ -7,7 +7,7 @@ import { useFetch } from '~/hooks/useFetch'
 // Icons
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 // Stores
-import { useAuthStore } from '~/stores/useAuthStore'
+import { useAuthStore } from '~/store/useAuthStore'
 // Utils
 import { classNames } from '@arpansaha13/utils'
 // Types

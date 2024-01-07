@@ -4,8 +4,8 @@ import { shallow } from 'zustand/shallow'
 // Custom Hook
 import { useFetch } from './useFetch'
 // Stores
-import { useStore } from '~/stores'
-import { useAuthStore } from '~/stores/useAuthStore'
+import { useStore } from '~/store'
+import { useAuthStore } from '~/store/useAuthStore'
 // Utils
 import isUnread from '~/utils/isUnread'
 // Types

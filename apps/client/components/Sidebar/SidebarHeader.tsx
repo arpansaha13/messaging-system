@@ -9,8 +9,8 @@ import { ChatBubbleBottomCenterTextIcon, UserPlusIcon } from '@heroicons/react/2
 import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 // Stores
-import { useStore } from '~/stores'
-import { useAuthStore } from '~/stores/useAuthStore'
+import { useStore } from '~/store'
+import { useAuthStore } from '~/store/useAuthStore'
 
 const SidebarHeader = () => {
   const router = useRouter()

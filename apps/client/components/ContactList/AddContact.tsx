@@ -11,7 +11,7 @@ import BaseInput from '~base/BaseInput'
 import SearchBar from '~common/SearchBar'
 import ContactListItem from './ContactListItem'
 // Store
-import { useStore } from '~/stores'
+import { useStore } from '~/store'
 // Utils
 import { isNullOrUndefined } from '@arpansaha13/utils'
 // Types

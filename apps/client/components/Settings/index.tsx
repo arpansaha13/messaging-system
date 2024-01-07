@@ -9,8 +9,8 @@ import Avatar from '~common/Avatar'
 import { Icon } from '@iconify/react'
 import themeIcon from '@iconify-icons/mdi/brightness-6'
 // Stores
-import { useStore } from '~/stores'
-import { useAuthStore } from '~/stores/useAuthStore'
+import { useStore } from '~/store'
+import { useAuthStore } from '~/store/useAuthStore'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 
 const Settings = () => {
