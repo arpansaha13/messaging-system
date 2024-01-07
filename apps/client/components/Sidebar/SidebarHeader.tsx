@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import Router from 'next/router'
+import { useRouter } from 'next/navigation'
 import { shallow } from 'zustand/shallow'
 // Icons
 import { Icon } from '@iconify/react'
@@ -13,6 +13,7 @@ import { useStore } from '~/stores'
 import { useAuthStore } from '~/stores/useAuthStore'
 
 const SidebarHeader = () => {
+  const router = useRouter()
   const [authUser, resetAuthState] = useAuthStore(state => [state.authUser!, state.resetAuthState])
   const [toggleSlideOver, setSlideOverState, resetStore] = useStore(
     state => [state.toggleSlideOver, state.setSlideOverState, state.resetStore],
@@ -63,7 +64,7 @@ const SidebarHeader = () => {
     {
       slot: 'Log out',
       onClick() {
-        Router.replace('/auth/signin')
+        router.replace('/auth/signin')
         resetAuthState()
         resetStore()
       },

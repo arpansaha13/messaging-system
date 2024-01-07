@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import '../styles/globals.css'
+import '~/styles/globals.css'
 
 export const metadata: Metadata = {
   title: 'WhatsApp Clone',
@@ -7,10 +7,13 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+
   return (
     <html lang="en">
       {/* Browser extensions like grammarly will add attributes on body causing hydration warnings */}
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <div className="w-screen h-screen relative">{children}</div>
+      </body>
     </html>
   )
 }

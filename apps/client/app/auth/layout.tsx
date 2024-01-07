@@ -9,7 +9,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="w-screen h-screen">
+    <>
       <Notification />
 
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 bg-gray-200 dark:bg-gray-800">
@@ -24,6 +24,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           <GithubIcon width={28} height={28} />
         </Link>
       </div>
-    </div>
+    </>
   )
 }

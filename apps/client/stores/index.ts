@@ -1,5 +1,6 @@
-import { createWithEqualityFn } from 'zustand/traditional'
+import { enableMapSet } from 'immer'
 import { immer } from 'zustand/middleware/immer'
+import { createWithEqualityFn } from 'zustand/traditional'
 import type { MessageType } from '~/types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'
@@ -19,6 +20,8 @@ export interface StoreType
     TypingStateType {
   resetStore: () => void
 }
+
+enableMapSet()
 
 export const useStore = createWithEqualityFn<StoreType>()(
   immer((...a) => ({
