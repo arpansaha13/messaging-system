@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import GithubIcon from '../components/common/GithubIcon'
-import Notification from '../components/common/Notification'
+import GithubIcon from '~common/GithubIcon'
+import Notification from '~common/Notification'
 import type { ReactNode } from 'react'
 
 interface AuthLayoutProps {

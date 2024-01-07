@@ -1,10 +1,10 @@
+'use client'
+
 import { Fragment, memo } from 'react'
 import { Transition } from '@headlessui/react'
 import { shallow } from 'zustand/shallow'
-// Icons
 import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
-// Store
 import { useStore } from '~/stores'
 
 const Notification = () => {
