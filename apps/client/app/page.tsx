@@ -1,19 +1,18 @@
-import Router from 'next/router'
+'use client'
+
+import { useRouter } from 'next/navigation'
 import { memo, useEffect, useState } from 'react'
 import { shallow } from 'zustand/shallow'
-// Custom Hook
 import { useFetch } from '~/hooks/useFetch'
-// Components
 import Loading from '~/components/Loading'
-import AsyncPage from '~/components/AsyncPage' // TODO: Import this dynamically when needed
-// Store
+import AsyncPage from '~/components/AsyncPage'
 import { useAuthStore } from '~/stores/useAuthStore'
 import { useStore } from '~/stores'
-// Types
 import type { NextPage } from 'next'
 import type { AuthUserResType } from '~/types'
 
 const Home: NextPage = () => {
+  const router = useRouter()
   const fetchHook = useFetch()
   const [authToken, expiresAt, setAuthUser] = useAuthStore(
     state => [state.authToken, state.authExpiresAt, state.setAuthUser],
@@ -25,9 +24,8 @@ const Home: NextPage = () => {
   const isAuthorized = !(authToken === null || (expiresAt !== null && Date.now() >= expiresAt))
 
   useEffect(() => {
-    // Redirects to sign-in page if unauthorized or if auth token expires.
     if (!isAuthorized) {
-      Router.replace('/auth/signin')
+      router.replace('/auth/signin')
     } else {
       fetchHook('users/me').then((authUserRes: AuthUserResType) => {
         setAuthUser(authUserRes)
