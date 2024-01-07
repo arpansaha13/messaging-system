@@ -1,6 +1,6 @@
 import { createWithEqualityFn } from 'zustand/traditional'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { AuthUserType } from '../types'
+import type { AuthUserType } from '~/types'
 
 interface AuthStoreType {
   authToken: string | null

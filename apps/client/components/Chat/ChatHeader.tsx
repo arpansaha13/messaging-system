@@ -1,11 +1,11 @@
 import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
-import { useFetch } from '../../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
-import Avatar from '../common/Avatar'
+import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
-import { useStore } from '../../stores/index.store'
+import { useStore } from '~/stores'
 
 const ChatHeader = () => {
   const fetchHook = useFetch()

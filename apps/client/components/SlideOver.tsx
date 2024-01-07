@@ -2,7 +2,7 @@ import { Fragment, memo } from 'react'
 import { Transition } from '@headlessui/react'
 import { shallow } from 'zustand/shallow'
 // Stores
-import { useStore } from '../stores/index.store'
+import { useStore } from '~/stores'
 // Icons
 import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 // Types

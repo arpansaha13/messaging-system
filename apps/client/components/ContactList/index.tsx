@@ -1,13 +1,13 @@
 import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
 // Custom Hooks
-import { useFetch } from '../../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // Components
 import ContactListItem from './ContactListItem'
 // Stores
-import { useStore } from '../../stores/index.store'
+import { useStore } from '~/stores'
 // Types
-import type { ContactType, MessageType } from '../../types'
+import type { ContactType, MessageType } from '~/types'
 
 export const ContactList = () => {
   const fetchHook = useFetch()

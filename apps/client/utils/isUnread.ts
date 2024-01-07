@@ -1,5 +1,5 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { type ConvoItemType, MessageStatus } from '../types'
+import { type ConvoItemType, MessageStatus } from '~/types'
 
 export default function isUnread(authUserId: number, latestMsg: ConvoItemType['latestMsg']) {
   let unread = false

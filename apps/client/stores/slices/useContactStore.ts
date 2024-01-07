@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand'
-import type { FetchHook } from '../types.store'
-import type { ContactResType, ContactType } from '../../types'
+import type { FetchHook } from '~/stores/types.store'
+import type { ContactResType, ContactType } from '~/types'
 
 export interface ContactStoreType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 // Components
-import SearchBar from '../common/SearchBar'
+import SearchBar from '~common/SearchBar'
 // import { FunnelIcon } from '@heroicons/react/24/outline'
 
 const SidebarSearchBar = () => {

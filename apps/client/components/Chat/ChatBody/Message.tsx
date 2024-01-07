@@ -2,8 +2,8 @@ import { memo } from 'react'
 import { format, parseISO } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '../../MsgStatusIcon'
-import { useAuthStore } from '../../../stores/useAuthStore'
-import type { MessageType } from '../../../types'
+import { useAuthStore } from '~/stores/useAuthStore'
+import type { MessageType } from '~/types'
 
 interface MessageProps {
   message: MessageType

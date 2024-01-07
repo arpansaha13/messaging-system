@@ -1,18 +1,18 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 // Components
-import Avatar from '../common/Avatar'
+import Avatar from '~common/Avatar'
 // Custom Hook
-import { useFetch } from '../../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // Icons
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 // Stores
-import { useAuthStore } from '../../stores/useAuthStore'
+import { useAuthStore } from '~/stores/useAuthStore'
 // Utils
 import { classNames } from '@arpansaha13/utils'
 // Types
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
-import type { AuthUserType } from '../../types'
+import type { AuthUserType } from '~/types'
 
 interface FieldProps {
   heading: string

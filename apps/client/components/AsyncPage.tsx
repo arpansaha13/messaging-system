@@ -1,5 +1,5 @@
 import { shallow } from 'zustand/shallow'
-import { useSocketInit } from '../hooks/useSocket'
+import { useSocketInit } from '~/hooks/useSocket'
 import Chat from './Chat'
 import Profile from './Profile'
 import Sidebar from './Sidebar'
@@ -9,8 +9,8 @@ import ContactList from './ContactList'
 import Archived from './Convo/Archived'
 import Notification from './common/Notification'
 import AddContact from './ContactList/AddContact'
-import { useStore } from '../stores/index.store'
-import type { SlideOverStateType } from '../stores/slices/useSlideOverState'
+import { useStore } from '~/stores'
+import type { SlideOverStateType } from '~/stores/slices/useSlideOverState'
 
 function getSlideOverContent(componentName: SlideOverStateType['slideOverState']['componentName']) {
   switch (componentName) {

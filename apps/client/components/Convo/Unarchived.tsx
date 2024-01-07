@@ -2,11 +2,11 @@ import { shallow } from 'zustand/shallow'
 // Components
 import ConvoItem from './ConvoItem'
 // Store
-import { useStore } from '../../stores/index.store'
+import { useStore } from '~/stores'
 // Custom Hooks
-import { useFetch } from '../../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // Types
-import type { ConvoItemType, MessageType } from '../../types'
+import type { ConvoItemType, MessageType } from '~/types'
 
 export default function UnarchivedRooms() {
   const fetchHook = useFetch()

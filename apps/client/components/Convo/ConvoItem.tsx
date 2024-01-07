@@ -3,21 +3,21 @@ import { format, parseISO, differenceInCalendarDays } from 'date-fns'
 import { shallow } from 'zustand/shallow'
 // Utils
 import { classNames } from '@arpansaha13/utils'
-import isUnread from '../../utils/isUnread'
+import isUnread from '~/utils/isUnread'
 // Custom Hooks
-import { useFetch } from '../../hooks/useFetch'
+import { useFetch } from '~/hooks/useFetch'
 // Components
-import Avatar from '../common/Avatar'
+import Avatar from '~common/Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
 import ConvoItemDropDown from './ConvoItemDropDown'
 // Icons
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 // Stores
-import { useAuthStore } from '../../stores/useAuthStore'
-import { useStore } from '../../stores/index.store'
+import { useAuthStore } from '~/stores/useAuthStore'
+import { useStore } from '~/stores'
 // Types
-import type { ConvoItemType } from '../../types'
+import type { ConvoItemType } from '~/types'
 
 export interface ConvoItemProps {
   roomId: number

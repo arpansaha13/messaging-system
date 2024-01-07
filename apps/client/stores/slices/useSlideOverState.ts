@@ -1,4 +1,4 @@
-import type { Slice } from '../types.store'
+import type { Slice } from '~/stores/types.store'
 
 type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile' | 'AddContact'
 

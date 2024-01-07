@@ -1,4 +1,4 @@
-import type { Slice } from '../types.store'
+import type { Slice } from '~/stores/types.store'
 
 export interface TypingStateType {
   typingState: { [roomId: number]: boolean }
