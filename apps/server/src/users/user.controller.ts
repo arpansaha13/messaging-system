@@ -9,7 +9,7 @@ import { UserIdParam } from './dto/user-id-param.dto'
 import { UserSearchQuery } from './dto/user-search-query.dto'
 import { UpdateUserInfoDto } from './dto/update-user-info.dto'
 // Types
-import type { UserEntity } from 'src/users/user.entity'
+import type { User } from 'src/users/user.entity'
 
 @Controller('users')
 @UseGuards(AuthGuard())
@@ -17,32 +17,32 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/me')
-  async getAuthUserInfo(@GetPayload('user') authUser: UserEntity): Promise<UserEntity> {
+  async getAuthUserInfo(@GetPayload('user') authUser: User): Promise<User> {
     return authUser
   }
 
   @Get('/convo')
-  getUserConvo(@GetPayload('user') authUser: UserEntity): Promise<any> {
+  getUserConvo(@GetPayload('user') authUser: User): Promise<any> {
     return this.userService.getUserConvo(authUser.id)
   }
 
   @Get('/search')
-  findUsers(@GetPayload('user') authUser: UserEntity, @Query() query: UserSearchQuery): Promise<UserEntity> {
+  findUsers(@GetPayload('user') authUser: User, @Query() query: UserSearchQuery): Promise<User> {
     return this.userService.findUsers(authUser.id, query.search)
   }
 
   @Get('/:userId')
-  getUserById(@Param() params: UserIdParam): Promise<UserEntity> {
+  getUserById(@Param() params: UserIdParam): Promise<User> {
     return this.userService.getUserById(params.userId)
   }
 
   @Get('/:userId/room-ids')
-  getRoomIdsOfUser(@Param() params: UserIdParam): Promise<UserEntity['rooms']> {
+  getRoomIdsOfUser(@Param() params: UserIdParam): Promise<User['rooms']> {
     return this.userService.getRoomIdsOfUser(params.userId)
   }
 
   @Patch('/:userId')
-  updateUserInfo(@GetPayload('user') authUser: UserEntity, @Body() data: UpdateUserInfoDto) {
+  updateUserInfo(@GetPayload('user') authUser: User, @Body() data: UpdateUserInfoDto) {
     return this.userService.updateUserInfo(authUser.id, data)
   }
 }

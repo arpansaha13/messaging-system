@@ -20,8 +20,8 @@ import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.int
 import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
 import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
 // Types
-import type { UserEntity } from 'src/users/user.entity'
-import type { ContactEntity } from './contact.entity'
+import type { User } from 'src/users/user.entity'
+import type { Contact } from './contact.entity'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())
@@ -30,10 +30,7 @@ export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
   @Get()
-  getContacts(
-    @GetPayload('user') authUser: UserEntity,
-    @Query() query: GetContactsQueryDto,
-  ): Promise<ContactEntity | ContactEntity[]> {
+  getContacts(@GetPayload('user') authUser: User, @Query() query: GetContactsQueryDto): Promise<Contact | Contact[]> {
     if (query.contactId && query.userId) {
       throw new BadGatewayException('Invalid query params.')
     }
@@ -47,7 +44,7 @@ export class ContactController {
   }
 
   @Post()
-  addToContacts(@GetPayload('user') authUser: UserEntity, @Body() contact: AddToContactDto): Promise<string> {
+  addToContacts(@GetPayload('user') authUser: User, @Body() contact: AddToContactDto): Promise<string> {
     return this.contactService.addToContactsOfUser(authUser, contact.userIdToAdd, contact.alias)
   }
 }

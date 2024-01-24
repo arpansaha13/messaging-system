@@ -1,20 +1,20 @@
 import { Column, ManyToOne, Entity, PrimaryGeneratedColumn, JoinColumn } from 'typeorm'
 
-import { UserEntity } from 'src/users/user.entity'
-import { RoomEntity } from 'src/rooms/room.entity'
+import { User } from 'src/users/user.entity'
+import { Room } from 'src/rooms/room.entity'
 
 @Entity({ name: 'user_to_room' })
 export class UserToRoom {
   @PrimaryGeneratedColumn({ name: 'user_to_room_id' })
   userToRoomId: number
 
-  @ManyToOne(() => UserEntity, user => user.rooms)
+  @ManyToOne(() => User, user => user.rooms)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: UserEntity
+  user: User
 
-  @ManyToOne(() => RoomEntity, room => room.users)
+  @ManyToOne(() => Room, room => room.users)
   @JoinColumn({ name: 'room_id', referencedColumnName: 'id' })
-  room: RoomEntity
+  room: Room
 
   /**
    * Timestamp of the first message of this chat for a user. If a user performs "clear-chat", this timestamp will help to identify which messages to show. If this field is `null`, then the user does not have any messages in this chat, either because the user has cleared the chat, or they never chatted.

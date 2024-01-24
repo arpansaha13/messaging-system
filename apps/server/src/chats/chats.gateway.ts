@@ -1,16 +1,12 @@
 import { InjectRepository } from '@nestjs/typeorm'
 import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
-// Services
 import { RoomService } from 'src/rooms/room.service'
 import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-// DTO
 import { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
-// Entity
-import { MessageEntity, MessageStatus } from '../messages/message.entity'
-// Types
+import { Message, MessageStatus } from '../messages/message.entity'
 import type { Server, Socket } from 'socket.io'
-import type { RoomEntity } from 'src/rooms/room.entity'
+import type { Room } from 'src/rooms/room.entity'
 import type { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import type { Repository } from 'typeorm'
 
@@ -27,8 +23,8 @@ export class ChatsGateway {
     private readonly messageService: MessageService,
     private readonly userToRoomService: UserToRoomService,
 
-    @InjectRepository(MessageEntity)
-    private messageRepository: Repository<MessageEntity>,
+    @InjectRepository(Message)
+    private messageRepository: Repository<Message>,
   ) {}
 
   @WebSocketServer()
@@ -100,7 +96,7 @@ export class ChatsGateway {
     const receiverSocketId = this.clients.get(data.receiverId)
     let isNewRoom = false
     let isRevivedRoom = false
-    let roomEntity: RoomEntity = null
+    let room: Room = null
     let senderUserToRoom: UserToRoom = null
     let receiverUserToRoom: UserToRoom | null = null
 
@@ -118,15 +114,15 @@ export class ChatsGateway {
         isRevivedRoom = true
       } else {
         const createRoomRes = await this.roomService.create1to1Room(data)
-        roomEntity = createRoomRes[0]
+        room = createRoomRes[0]
         senderUserToRoom = createRoomRes[1]
-        data.roomId = roomEntity.id
+        data.roomId = room.id
       }
     }
     // If the room already exists or is revived, update the `firstMsgTstamp`s
     if (!isNewRoom || isRevivedRoom) {
-      senderUserToRoom = await this.userToRoomService.getUserToRoomEntity(data.senderId, data.roomId)
-      receiverUserToRoom = await this.userToRoomService.getUserToRoomEntity(data.receiverId, data.roomId)
+      senderUserToRoom = await this.userToRoomService.getUserToRoom(data.senderId, data.roomId)
+      receiverUserToRoom = await this.userToRoomService.getUserToRoom(data.receiverId, data.roomId)
 
       if (senderUserToRoom.firstMsgTstamp === null) {
         await this.userToRoomService.updateFirstMsgTstamp(data.senderId, data.roomId, data.ISOtime)
@@ -141,15 +137,15 @@ export class ChatsGateway {
     }
     // Fetch the already existing room
     if (!isNewRoom || isRevivedRoom) {
-      roomEntity = await this.roomService.getRoomById(data.roomId)
+      room = await this.roomService.getRoomById(data.roomId)
     }
     // Store message in db
-    const msgId = await this.messageService.create1to1ChatMsg(roomEntity, data.senderId, data.receiverId, data.content)
+    const msgId = await this.messageService.create1to1ChatMsg(room, data.senderId, data.receiverId, data.content)
 
     /** Inform the sender about the new message status. */
     function emitMsgStatus(status: MessageStatus) {
       this.server.to(senderSocket.id).emit('message-status', {
-        roomId: roomEntity.id,
+        roomId: room.id,
         status,
         senderId: data.senderId,
         ISOtime: data.ISOtime,
@@ -163,10 +159,10 @@ export class ChatsGateway {
       this.server.to(senderSocket.id).emit('message-to-new-or-revived-room', {
         userToRoomId: senderUserToRoom.userToRoomId,
         room: {
-          id: roomEntity.id,
+          id: room.id,
           archived: senderUserToRoom.archived,
           deleted: senderUserToRoom.deleted,
-          isGroup: roomEntity.isGroup,
+          isGroup: room.isGroup,
           muted: senderUserToRoom.isMuted,
         },
         latestMsg: {
@@ -183,7 +179,7 @@ export class ChatsGateway {
 
     // Send the message to receiver
     this.server.to(receiverSocketId).emit('receive-message', {
-      roomId: roomEntity.id,
+      roomId: room.id,
       senderId: data.senderId,
       content: data.content,
       ISOtime: data.ISOtime,

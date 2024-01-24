@@ -2,18 +2,18 @@ import { BadRequestException, ConflictException, Injectable, InternalServerError
 import { InjectRepository } from '@nestjs/typeorm'
 // Entities
 import { UserService } from 'src/users/user.service'
-import { ContactEntity } from './contact.entity'
+import { Contact } from './contact.entity'
 // Types
 import type { Repository } from 'typeorm'
-import type { UserEntity } from 'src/users/user.entity'
+import type { User } from 'src/users/user.entity'
 
 @Injectable()
 export class ContactService {
   constructor(
     private readonly userService: UserService,
 
-    @InjectRepository(ContactEntity)
-    private contactRepository: Repository<ContactEntity>,
+    @InjectRepository(Contact)
+    private contactRepository: Repository<Contact>,
   ) {}
 
   #contactSelect: {
@@ -27,7 +27,7 @@ export class ContactService {
     }
   }
 
-  async getAllContactsOfUser(authUser: UserEntity): Promise<ContactEntity[]> {
+  async getAllContactsOfUser(authUser: User): Promise<Contact[]> {
     return this.contactRepository.find({
       select: this.#contactSelect,
       where: { user: { id: authUser.id } },
@@ -37,14 +37,14 @@ export class ContactService {
   }
 
   // TODO: Add validation - if the contact is not of the user, then throe Unauthorized error
-  async getContactById(contactId: number): Promise<ContactEntity> {
+  async getContactById(contactId: number): Promise<Contact> {
     return this.contactRepository.findOne({
       select: this.#contactSelect,
       where: { id: contactId },
       relations: { userInContact: true },
     })
   }
-  async getContactByUserId(authUser: UserEntity, userId: number): Promise<ContactEntity> {
+  async getContactByUserId(authUser: User, userId: number): Promise<Contact> {
     return this.contactRepository.findOne({
       select: this.#contactSelect,
       where: { user: { id: authUser.id }, userInContact: { id: userId } },
@@ -52,7 +52,7 @@ export class ContactService {
     })
   }
 
-  async addToContactsOfUser(authUser: UserEntity, userIdToAdd: number, alias: string): Promise<string> {
+  async addToContactsOfUser(authUser: User, userIdToAdd: number, alias: string): Promise<string> {
     if (authUser.id === userIdToAdd) {
       throw new BadRequestException('Invalid user ids.')
     }
@@ -69,7 +69,7 @@ export class ContactService {
     if (userToAdd === null) {
       throw new BadRequestException('Invalid user id.')
     }
-    const newContact = new ContactEntity()
+    const newContact = new Contact()
     newContact.user = authUser
     newContact.userInContact = userToAdd
     newContact.alias = alias

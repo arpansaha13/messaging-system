@@ -1,16 +1,16 @@
 import { IsOptional, IsString } from 'class-validator'
-import { UserEntity } from '../user.entity'
+import { User } from '../user.entity'
 
 export class UpdateUserInfoDto {
   @IsOptional()
   @IsString()
-  bio?: UserEntity['bio']
+  bio?: User['bio']
 
   @IsOptional()
   @IsString()
-  dp?: UserEntity['dp']
+  dp?: User['dp']
 
   @IsOptional()
   @IsString()
-  displayName?: UserEntity['displayName']
+  displayName?: User['displayName']
 }

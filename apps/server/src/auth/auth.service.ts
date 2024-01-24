@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 import * as bcrypt from 'bcryptjs'
-import { UserEntity } from 'src/users/user.entity'
+import { User } from 'src/users/user.entity'
 import { SignInDto, SignUpDto } from './auth.dto'
 import type { Repository, EntityManager } from 'typeorm'
 import type { JwtPayload, JwtToken } from './jwt.types'
@@ -16,11 +16,11 @@ export class AuthService {
 
     @InjectEntityManager()
     private entityManager: EntityManager,
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
-  async #createAuthToken(user: UserEntity): Promise<JwtToken> {
+  async #createAuthToken(user: User): Promise<JwtToken> {
     const payload: JwtPayload = { user_id: user.id }
     const authToken = this.jwtService.sign(payload)
     const expiresAt = Date.now() /* milli-secs */ + this.configService.get('JWT_TOKEN_VALIDITY_SECONDS') * 1000
@@ -36,7 +36,7 @@ export class AuthService {
       const newUser = await this.entityManager.transaction(async txnEntityManager => {
         const hash = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
 
-        const user = txnEntityManager.create(UserEntity, {
+        const user = txnEntityManager.create(User, {
           email: credentials.email,
           displayName: credentials.displayName,
           password: hash,

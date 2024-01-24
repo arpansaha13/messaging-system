@@ -1,10 +1,8 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
-// Entities
-import { UserEntity } from 'src/users/user.entity'
-import { RoomEntity } from './room.entity'
+import { Room } from './room.entity'
+import { User } from 'src/users/user.entity'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
-// Types
 import type { EntityManager, Repository } from 'typeorm'
 import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
@@ -13,10 +11,10 @@ export class RoomService {
   constructor(
     @InjectEntityManager()
     private entityManager: EntityManager,
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
-    @InjectRepository(RoomEntity)
-    private roomRepository: Repository<RoomEntity>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    @InjectRepository(Room)
+    private roomRepository: Repository<Room>,
     @InjectRepository(UserToRoom)
     private userToRoomRepository: Repository<UserToRoom>,
   ) {}
@@ -28,14 +26,14 @@ export class RoomService {
     throw new NotFoundException('Room could not be found.')
   }
 
-  async getRoomById(roomId: number): Promise<RoomEntity> {
-    const roomEntity = this.roomRepository.findOneBy({ id: roomId })
-    if (roomEntity === null) this.#roomNotFound()
-    return roomEntity
+  async getRoomById(roomId: number): Promise<Room> {
+    const room = this.roomRepository.findOneBy({ id: roomId })
+    if (room === null) this.#roomNotFound()
+    return room
   }
 
-  async getUsersOfRoomById(roomId: number): Promise<UserEntity[]> {
-    const roomEntity = await this.roomRepository.findOne({
+  async getUsersOfRoomById(roomId: number): Promise<User[]> {
+    const room = await this.roomRepository.findOne({
       select: {
         id: true,
         users: {
@@ -56,8 +54,8 @@ export class RoomService {
       },
       relationLoadStrategy: 'query',
     })
-    if (roomEntity === null) this.#roomNotFound()
-    return roomEntity.users.map(e => e.user)
+    if (room === null) this.#roomNotFound()
+    return room.users.map(e => e.user)
   }
 
   /**
@@ -65,7 +63,7 @@ export class RoomService {
    * @param firstMsg The first message of this chat-room received through web-sockets.
    * @returns the id of the newly created room entity.
    */
-  async create1to1Room(firstMsg: Ws1to1MessageDto): Promise<[RoomEntity, UserToRoom, UserToRoom]> {
+  async create1to1Room(firstMsg: Ws1to1MessageDto): Promise<[Room, UserToRoom, UserToRoom]> {
     const senderId = firstMsg.senderId
     const receiverId = firstMsg.receiverId
 
@@ -78,8 +76,8 @@ export class RoomService {
     if (sender === null || receiver === null) throw new BadRequestException('Invalid user_id.')
 
     try {
-      const [roomEntity, senderUserToRoom, receiverUserToRoom] = await this.entityManager.transaction(
-        async transactionalEntityManager => {
+      const [room, senderUserToRoom, receiverUserToRoom] = await this.entityManager.transaction(
+        async txnEntityManager => {
           const newSenderUserToRoom = new UserToRoom()
           const newReceiverUserToRoom = new UserToRoom()
 
@@ -89,22 +87,22 @@ export class RoomService {
           newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
           newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
 
-          const newRoom = new RoomEntity()
+          const newRoom = new Room()
           newRoom.users = [newSenderUserToRoom, newReceiverUserToRoom]
 
           newSenderUserToRoom.room = newRoom
           newReceiverUserToRoom.room = newRoom
 
           const response = await Promise.all([
-            transactionalEntityManager.save(newRoom),
-            transactionalEntityManager.save(newSenderUserToRoom),
-            transactionalEntityManager.save(newReceiverUserToRoom),
+            txnEntityManager.save(newRoom),
+            txnEntityManager.save(newSenderUserToRoom),
+            txnEntityManager.save(newReceiverUserToRoom),
           ])
 
           return response
         },
       )
-      return [roomEntity, senderUserToRoom, receiverUserToRoom]
+      return [room, senderUserToRoom, receiverUserToRoom]
     } catch (error) {
       throw new InternalServerErrorException()
     }

@@ -6,10 +6,10 @@ import { UserModule } from 'src/users/user.module'
 
 import { ContactController } from 'src/contacts/contact.controller'
 import { ContactService } from 'src/contacts/contact.service'
-import { ContactEntity } from './contact.entity'
+import { Contact } from './contact.entity'
 
 @Module({
-  imports: [AuthModule, UserModule, TypeOrmModule.forFeature([ContactEntity])],
+  imports: [AuthModule, UserModule, TypeOrmModule.forFeature([Contact])],
   controllers: [ContactController],
   providers: [ContactService],
 })

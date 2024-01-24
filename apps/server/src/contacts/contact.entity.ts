@@ -8,20 +8,20 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
-import { UserEntity } from '../users/user.entity'
+import { User } from '../users/user.entity'
 
 @Entity({ name: 'contacts' })
-export class ContactEntity {
+export class Contact {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ManyToOne(() => UserEntity, user => user.contacts)
+  @ManyToOne(() => User, user => user.contacts)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: UserEntity
+  user: User
 
-  @ManyToOne(() => UserEntity)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id_in_contact', referencedColumnName: 'id' })
-  userInContact: UserEntity
+  userInContact: User
 
   /** Alias or name by which the user has saved this contact. */
   @Column({ nullable: false })

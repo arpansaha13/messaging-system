@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 // Entities
-import { UserEntity } from 'src/users/user.entity'
+import { User } from 'src/users/user.entity'
 // Types
 import type { EntityManager, Repository } from 'typeorm'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
@@ -12,22 +12,22 @@ export class UserService {
     @InjectEntityManager()
     private em: EntityManager,
 
-    @InjectRepository(UserEntity)
-    private userRepository: Repository<UserEntity>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   #userNotFound() {
     throw new NotFoundException('User could not be found.')
   }
 
-  async getUserById(userId: number): Promise<UserEntity> {
-    const userEntity = await this.userRepository.findOneBy({ id: userId })
-    if (userEntity === null) this.#userNotFound()
-    return userEntity
+  async getUserById(userId: number): Promise<User> {
+    const User = await this.userRepository.findOneBy({ id: userId })
+    if (User === null) this.#userNotFound()
+    return User
   }
 
-  async getRoomIdsOfUser(userId: number): Promise<UserEntity['rooms']> {
-    const userEntity = await this.userRepository.findOne({
+  async getRoomIdsOfUser(userId: number): Promise<User['rooms']> {
+    const User = await this.userRepository.findOne({
       select: {
         id: true,
         rooms: {
@@ -42,11 +42,11 @@ export class UserService {
         },
       },
     })
-    if (userEntity === null) this.#userNotFound()
-    return userEntity.rooms
+    if (User === null) this.#userNotFound()
+    return User.rooms
   }
 
-  async updateUserInfo(userId: number, data: UpdateUserInfoDto): Promise<UserEntity> {
+  async updateUserInfo(userId: number, data: UpdateUserInfoDto): Promise<User> {
     const updateResult = await this.userRepository.update(userId, { ...data })
 
     if (updateResult.affected) return this.getUserById(userId)
@@ -101,7 +101,7 @@ export class UserService {
     // If latestMsg is `null`, then it ranks in the end
     return this.em.query(query)
   }
-  async findUsers(authUserId: number, searchUserId: number): Promise<UserEntity> {
+  async findUsers(authUserId: number, searchUserId: number): Promise<User> {
     if (authUserId === searchUserId) return null
     return this.userRepository.findOneBy({ id: searchUserId })
   }

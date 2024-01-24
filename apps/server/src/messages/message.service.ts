@@ -2,16 +2,16 @@ import { BadRequestException, Injectable, InternalServerErrorException, NotFound
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Not, MoreThanOrEqual } from 'typeorm'
 // Entities
-import { RoomEntity } from 'src/rooms/room.entity'
-import { MessageEntity, MessageStatus } from './message.entity'
+import { Room } from 'src/rooms/room.entity'
+import { Message, MessageStatus } from './message.entity'
 // Types
 import type { Repository } from 'typeorm'
 
 @Injectable()
 export class MessageService {
   constructor(
-    @InjectRepository(MessageEntity)
-    private messageRepository: Repository<MessageEntity>,
+    @InjectRepository(Message)
+    private messageRepository: Repository<Message>,
   ) {}
 
   #sameParticipantError() {
@@ -21,10 +21,10 @@ export class MessageService {
     throw new NotFoundException('Message could not be found.')
   }
 
-  async getMessageById(messageId: number): Promise<MessageEntity> {
-    const messageEntity = await this.messageRepository.findOneBy({ id: messageId })
-    if (messageEntity === null) this.#messageNotFound()
-    return messageEntity
+  async getMessageById(messageId: number): Promise<Message> {
+    const message = await this.messageRepository.findOneBy({ id: messageId })
+    if (message === null) this.#messageNotFound()
+    return message
   }
 
   /**
@@ -33,7 +33,7 @@ export class MessageService {
    * @param authUserId user_id of authorized user
    * @param roomEntities All rooms of given user
    */
-  async updateDeliveredStatus(authUserId: number, roomEntities: RoomEntity[]): Promise<void> {
+  async updateDeliveredStatus(authUserId: number, roomEntities: Room[]): Promise<void> {
     await this.messageRepository.update(
       {
         room: In(roomEntities.map(room => room.id)),
@@ -63,7 +63,7 @@ export class MessageService {
   /**
    * @param firstMsgTstamp the timestamp before which the messages were cleared
    */
-  getMessagesByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<MessageEntity[]> | [] {
+  getMessagesByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<Message[]> | [] {
     if (firstMsgTstamp === null) return []
     // `firstMsgTstamp` is received as a Date number in milliseconds
     return this.messageRepository.find({
@@ -85,7 +85,7 @@ export class MessageService {
    * @param firstMsgTstamp the timestamp before which the messages were cleared
    * @returns The latest message entity. If no message is found, returns `null`.
    */
-  async getLatestMsgByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<MessageEntity> | null {
+  async getLatestMsgByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<Message> | null {
     // `firstMsgTstamp` is a Date number in milliseconds
     if (firstMsgTstamp === null) return null
 
@@ -98,10 +98,10 @@ export class MessageService {
   /**
    * @returns the msg_id of the newly created chat message.
    */
-  async create1to1ChatMsg(room: RoomEntity, senderId: number, receiverId: number, content: string): Promise<number> {
+  async create1to1ChatMsg(room: Room, senderId: number, receiverId: number, content: string): Promise<number> {
     if (senderId === receiverId) this.#sameParticipantError()
 
-    const newMessage = new MessageEntity()
+    const newMessage = new Message()
     newMessage.room = room
     newMessage.content = content
     newMessage.deletedBy = {
@@ -112,8 +112,8 @@ export class MessageService {
     newMessage.status = MessageStatus.SENT
 
     try {
-      const messageEntity = await this.messageRepository.save(newMessage)
-      return messageEntity.id
+      const message = await this.messageRepository.save(newMessage)
+      return message.id
     } catch (error) {
       throw new InternalServerErrorException()
     }

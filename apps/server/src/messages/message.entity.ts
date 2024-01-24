@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm'
 
-import { RoomEntity } from 'src/rooms/room.entity'
+import { Room } from 'src/rooms/room.entity'
 
 export enum MessageStatus {
   SENT = 'SENT',
@@ -17,13 +17,13 @@ export enum MessageStatus {
 }
 
 @Entity({ name: 'messages' })
-export class MessageEntity {
+export class Message {
   @PrimaryGeneratedColumn()
   id: number
 
-  @ManyToOne(() => RoomEntity, room => room.messages)
+  @ManyToOne(() => Room, room => room.messages)
   @JoinColumn({ name: 'room_id' })
-  room: RoomEntity
+  room: Room
 
   @Column({ nullable: false })
   content: string

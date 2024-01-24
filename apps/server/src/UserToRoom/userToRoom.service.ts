@@ -15,7 +15,7 @@ export class UserToRoomService {
     private userToRoomRepository: Repository<UserToRoom>,
   ) {}
 
-  getUserToRoomEntity(authUserId: number, roomId: number, loadRelationIds = false): Promise<UserToRoom> {
+  getUserToRoom(authUserId: number, roomId: number, loadRelationIds = false): Promise<UserToRoom> {
     return this.userToRoomRepository.findOne({
       where: {
         user: { id: authUserId },

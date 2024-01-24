@@ -1,10 +1,9 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
-
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
-import { MessageEntity } from 'src/messages/message.entity'
+import { Message } from 'src/messages/message.entity'
 
 @Entity({ name: 'rooms' })
-export class RoomEntity {
+export class Room {
   @PrimaryGeneratedColumn()
   id: number
 
@@ -14,8 +13,8 @@ export class RoomEntity {
   @OneToMany(() => UserToRoom, userToRoom => userToRoom.room)
   users: UserToRoom[]
 
-  @OneToMany(() => MessageEntity, message => message.room)
-  messages: MessageEntity[]
+  @OneToMany(() => Message, message => message.room)
+  messages: Message[]
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date
