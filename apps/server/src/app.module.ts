@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common'
-import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'
+import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 
+import { MailModule } from './mail/mail.module'
 import { RoomModule } from './rooms/room.module'
 import { UserModule } from './users/user.module'
 import { ChatsModule } from './chats/chats.module'
 import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
 import { UserToRoomModule } from './UserToRoom/userToRoom.module'
-
 import { AppController } from './app.controller'
 import type { TypeormEnvVariables } from 'src/env.types'
 
@@ -16,6 +16,7 @@ import type { TypeormEnvVariables } from 'src/env.types'
 
 @Module({
   imports: [
+    MailModule,
     UserModule,
     RoomModule,
     ChatsModule,
@@ -27,7 +28,6 @@ import type { TypeormEnvVariables } from 'src/env.types'
       isGlobal: true,
     }),
 
-    // DB Connection
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

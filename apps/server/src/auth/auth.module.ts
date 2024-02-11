@@ -3,15 +3,19 @@ import { JwtModule } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { PassportModule } from '@nestjs/passport'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { AuthController } from './auth.controller'
+import { UnverifiedUser } from './auth.entity'
 import { AuthService } from './auth.service'
+import { AuthController } from './auth.controller'
+import { MailModule } from 'src/mail/mail.module'
 import { User } from 'src/users/user.entity'
 import { JwtStrategy } from './jwt.strategy'
 import type { JwtEnvVariables } from '../env.types'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    MailModule,
+
+    TypeOrmModule.forFeature([User, UnverifiedUser]),
 
     PassportModule.register({ defaultStrategy: 'jwt' }),
 

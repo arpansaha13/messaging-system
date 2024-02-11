@@ -1,6 +1,5 @@
 'use client'
 
-import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -13,7 +12,6 @@ import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
-import type { JwtToken } from '~/types'
 import { useMap } from 'react-use'
 
 // export const metadata: Metadata = {
@@ -28,25 +26,20 @@ export default function SignUpPage() {
     if (expiresAt !== null && Date.now() < expiresAt) {
       router.replace('/')
     }
-    router.prefetch('/')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchHook = useFetch()
-  const setAuthState = useAuthStore(state => state.setAuthState)
-  const [toggleNotification, setNotification] = useStore(
-    state => [state.toggleNotification, state.setNotification],
-    shallow,
-  )
+  const [setNotification] = useStore(state => [state.setNotification], shallow)
 
   const formRef = useRef<HTMLFormElement>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
   const [validationErrors, { set: setError }] = useMap<Record<string, string | null>>({
     password: null,
     confirmPassword: null,
   })
 
-  const [loading, setLoading] = useState<boolean>(false)
   function signUp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
@@ -70,13 +63,13 @@ export default function SignUpPage() {
       method: 'POST',
       body: formData,
     })
-      .then((data: JwtToken) => {
-        setAuthState({
-          authToken: data.authToken,
-          authExpiresAt: data.expiresAt,
+      .then((res: any) => {
+        setNotification({
+          show: true,
+          status: 'success',
+          title: 'Account created!',
+          description: res.message,
         })
-        router.replace('/')
-        toggleNotification(false)
       })
       .catch(err => {
         setNotification({

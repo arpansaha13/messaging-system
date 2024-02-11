@@ -1,9 +1,6 @@
 import { CreateDateColumn, DeleteDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm'
 
-export abstract class BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number
-
+export abstract class BaseEntityNoPk {
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date
 
@@ -12,4 +9,9 @@ export abstract class BaseEntity {
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true, type: 'timestamptz' })
   deletedAt: Date
+}
+
+export abstract class BaseEntity extends BaseEntityNoPk {
+  @PrimaryGeneratedColumn()
+  id: number
 }

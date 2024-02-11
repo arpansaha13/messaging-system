@@ -29,3 +29,13 @@ export class SignInDto {
   @IsNotEmpty()
   password: string
 }
+
+export class VerifyAccountDto {
+  @IsNotEmpty()
+  otp: string
+}
+
+export class VerifyAccountParams {
+  @IsNotEmpty()
+  hash: string
+}

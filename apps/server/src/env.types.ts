@@ -12,6 +12,8 @@ export interface JwtEnvVariables {
   JWT_TOKEN_VALIDITY_SECONDS: number
 }
 
-export interface EnvVariables {
+export interface EnvVariables extends TypeormEnvVariables, JwtEnvVariables {
   API_PORT: number
+  CLIENT_DOMAIN: string
+  OTP_VALIDATION_SECONDS: number
 }
