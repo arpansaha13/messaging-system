@@ -1,4 +1,4 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, Param } from '@nestjs/common'
+import { Body, Controller, Post, HttpCode, HttpStatus, Param, Get } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { SignInDto, SignUpDto, VerifyAccountDto, VerifyAccountParams } from './auth.dto'
 import type { JwtToken } from './jwt.types'
@@ -15,6 +15,11 @@ export class AuthController {
   @Post('/sign-in')
   login(@Body() credentials: SignInDto): Promise<JwtToken> {
     return this.authService.login(credentials)
+  }
+
+  @Get('/validate-link/account/:hash')
+  validateVerificationLink(@Param() params: VerifyAccountParams) {
+    return this.authService.validateVerificationLink(params.hash)
   }
 
   @HttpCode(HttpStatus.CREATED)

@@ -22,6 +22,8 @@ export class AuthService {
     private entityManager: EntityManager,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(UnverifiedUser)
+    private unverifiedUserRepository: Repository<UnverifiedUser>,
   ) {}
 
   #PASSWORD_MISMATCH_EXCEPTION_MESSAGE = 'Password and confirm-password do not match.'
@@ -101,6 +103,11 @@ export class AuthService {
       return this.#createAuthToken(user)
     }
     throw new UnauthorizedException('Invalid email or password.')
+  }
+
+  async validateVerificationLink(hash: string) {
+    const isValid = await this.unverifiedUserRepository.exists({ where: { hash } })
+    return { valid: isValid }
   }
 
   async verifyAccount(hash: string, otp: string): Promise<string> {
