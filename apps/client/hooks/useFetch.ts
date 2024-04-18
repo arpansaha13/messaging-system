@@ -1,14 +1,5 @@
 import { useAuthStore } from '~/store/useAuthStore'
-
-export interface RequestOptions extends Omit<RequestInit, 'body' | 'method'> {
-  /** @default 'GET' */
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT'
-
-  body?: Record<string, any>
-}
-
-const FETCH_BASE_URL =
-  process.env.NODE_ENV === 'development' ? 'http://localhost:4000/' : process.env.NEXT_PUBLIC_BASE_URL!
+import type { RequestOptions } from '~/types'
 
 /**
  * Returns a wrapper over the Fetch API.
@@ -29,7 +20,7 @@ export function useFetch() {
   const authToken = useAuthStore(state => state.authToken)
 
   const fecthHook = (url: string, options?: RequestOptions) => {
-    return fetch(`${FETCH_BASE_URL}${url}`, {
+    return fetch(process.env.NEXT_PUBLIC_API_BASE_URL! + url, {
       ...options,
       body: options?.body ? new URLSearchParams(options?.body) : null,
       headers: {
