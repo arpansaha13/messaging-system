@@ -1,17 +1,16 @@
 'use client'
 
-import { Metadata } from 'next'
+// import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { shallow } from 'zustand/shallow'
-
 import { useEffect, useState, useRef } from 'react'
-import { useFetch } from '~/hooks/useFetch'
+import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
+import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
 import type { JwtToken } from '~/types'
@@ -32,7 +31,6 @@ export default function SignInPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const fetchHook = useFetch()
   const setAuthState = useAuthStore(state => state.setAuthState)
   const [toggleNotification, setNotification] = useStore(
     state => [state.toggleNotification, state.setNotification],
@@ -49,7 +47,7 @@ export default function SignInPage() {
 
     const formData = getFormData(formRef.current!)
 
-    fetchHook('auth/sign-in', {
+    _fetch('auth/sign-in', {
       method: 'POST',
       body: formData,
     })

@@ -3,13 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { shallow } from 'zustand/shallow'
 import { useEffect, useRef, useState } from 'react'
-import { useFetch } from '~/hooks/useFetch'
+import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
+import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
 import { useMap } from 'react-use'
@@ -29,7 +29,6 @@ export default function SignUpPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const fetchHook = useFetch()
   const [setNotification] = useStore(state => [state.setNotification], shallow)
 
   const formRef = useRef<HTMLFormElement>(null)
@@ -59,7 +58,7 @@ export default function SignUpPage() {
 
     setLoading(true)
 
-    fetchHook('auth/sign-up', {
+    _fetch('auth/sign-up', {
       method: 'POST',
       body: formData,
     })

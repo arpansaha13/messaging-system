@@ -2,10 +2,10 @@ import { useParams } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import { useStore } from '~/store'
-import { useFetch } from '~/hooks/useFetch'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import BaseButtonLink from '~base/BaseButtonLink'
+import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
 
 enum VerificationStatus {
@@ -28,7 +28,6 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
   const params = useParams()
   const formRef = useRef<HTMLFormElement>(null)
   const [loading, setLoading] = useState<boolean>(false)
-  const fetchHook = useFetch()
   const [toggleNotification, setNotification] = useStore(
     state => [state.toggleNotification, state.setNotification],
     shallow,
@@ -41,7 +40,7 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
 
     setLoading(true)
 
-    fetchHook(`auth/verification/${params.hash}`, {
+    _fetch(`auth/verification/${params.hash}`, {
       method: 'POST',
       body: formData,
     })
