@@ -14,9 +14,9 @@ import type { JwtEnvVariables } from '../env.types'
 @Module({
   imports: [
     MailModule,
+    ConfigModule,
 
     TypeOrmModule.forFeature([User, UnverifiedUser]),
-
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
     JwtModule.registerAsync({

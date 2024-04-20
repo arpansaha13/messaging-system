@@ -1,4 +1,4 @@
-export interface TypeormEnvVariables {
+interface TypeormEnvVariables {
   TYPEORM_HOST?: string
   TYPEORM_PORT?: number
   TYPEORM_USERNAME?: string
@@ -13,7 +13,9 @@ export interface JwtEnvVariables {
 }
 
 export interface EnvVariables extends TypeormEnvVariables, JwtEnvVariables {
+  NODE_ENV: 'development' | 'production'
   API_PORT: number
   CLIENT_DOMAIN: string
+  CORS_ORIGINS: string
   OTP_VALIDATION_SECONDS: number
 }

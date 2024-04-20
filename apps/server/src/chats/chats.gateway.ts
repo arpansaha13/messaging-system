@@ -4,19 +4,13 @@ import { RoomService } from 'src/rooms/room.service'
 import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
 import { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
-import { Message, MessageStatus } from '../messages/message.entity'
+import { Message, MessageStatus } from 'src/messages/message.entity'
 import type { Server, Socket } from 'socket.io'
 import type { Room } from 'src/rooms/room.entity'
 import type { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import type { Repository } from 'typeorm'
 
-const CLIENT_ORIGIN = process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : process.env.CLIENT_DOMAIN
-
-@WebSocketGateway({
-  cors: {
-    origin: CLIENT_ORIGIN,
-  },
-})
+@WebSocketGateway()
 export class ChatsGateway {
   constructor(
     private readonly roomService: RoomService,
@@ -31,6 +25,7 @@ export class ChatsGateway {
   server: Server
 
   /** A map of all clients (user_id's) to their client socket id's. */
+  // TODO: Move this to an external cache
   clients = new Map<number, string>()
 
   #getMapKeyByValue(map: Map<number, string>, searchValue: string): number {
