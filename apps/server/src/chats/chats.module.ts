@@ -11,9 +11,10 @@ import { Message } from 'src/messages/message.entity'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 
 import { ChatsGateway } from './chats.gateway'
+import { ChatsService } from './chats.service';
 
 @Module({
   imports: [RoomModule, MessageModule, UserToRoomModule, TypeOrmModule.forFeature([User, Room, Message, UserToRoom])],
-  providers: [ChatsGateway],
+  providers: [ChatsGateway, ChatsService],
 })
 export class ChatsModule {}
