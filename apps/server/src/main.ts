@@ -20,7 +20,7 @@ async function bootstrap() {
     }),
   )
 
-  app.setGlobalPrefix('/api')
+  app.setGlobalPrefix('/api', { exclude: ['/'] })
 
   const corsOrigins = configService.get('CORS_ORIGINS').split(',')
   app.enableCors({
