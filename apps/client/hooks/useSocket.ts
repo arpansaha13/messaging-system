@@ -50,7 +50,7 @@ type SocketOnEvents =
 
 type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state' | 'opened-or-read-chat'
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_BASE_URL!
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_IO_BASE_URL!
 
 const socket = io(SOCKET_URL, { autoConnect: true })
 
