@@ -20,9 +20,8 @@
     "esModuleInterop": true,
   },
   "include": [
-    "env/*.ts",
-    "db/**/*.ts",
     "src/**/*.ts",
+    "src/**/*.d.ts",
     "src/env.types.ts",
   ],
   "exclude": [

@@ -1,10 +1,9 @@
-import { Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import { Controller, Delete, Get, Param, Patch, Req, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-import { GetPayload } from 'src/common/decorators/getPayload.decorator'
 import { RoomIdParam } from 'src/rooms/dto/room-id-param.dto'
-import type { User } from 'src/users/user.entity'
+import type { Request } from 'express'
 
 @Controller('user-to-room')
 @UseGuards(AuthGuard())
@@ -12,47 +11,47 @@ export class UserToRoomController {
   constructor(private readonly userToRoomService: UserToRoomService) {}
 
   @Get('/:roomId')
-  getUserToRoomById(@GetPayload('user') authUser: User, @Param('roomId') roomId: number): Promise<UserToRoom> {
-    return this.userToRoomService.getUserToRoom(authUser.id, roomId)
+  getUserToRoomById(@Req() request: Request, @Param('roomId') roomId: number): Promise<UserToRoom> {
+    return this.userToRoomService.getUserToRoom(request.user.id, roomId)
   }
 
   @Get('/rooms/unarchived')
-  getUnarchivedUserToRooms(@GetPayload('user') authUser: User): Promise<UserToRoom[]> {
-    return this.userToRoomService.getRoomsOfUser(authUser.id)
+  getUnarchivedUserToRooms(@Req() request: Request): Promise<UserToRoom[]> {
+    return this.userToRoomService.getRoomsOfUser(request.user.id)
   }
 
   @Get('/rooms/archived')
-  async getArchivedUserToRooms(@GetPayload('user') authUser: User): Promise<UserToRoom[]> {
-    return this.userToRoomService.getRoomsOfUser(authUser.id, true)
+  async getArchivedUserToRooms(@Req() request: Request): Promise<UserToRoom[]> {
+    return this.userToRoomService.getRoomsOfUser(request.user.id, true)
   }
 
   @Patch('/archive/:roomId')
-  archiveRoom(@GetPayload('user') authUser: User, @Param() params: RoomIdParam): Promise<void> {
-    return this.userToRoomService.updateArchive(authUser.id, params.roomId, true)
+  archiveRoom(@Req() request: Request, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updateArchive(request.user.id, params.roomId, true)
   }
 
   @Patch('/unarchive/:roomId')
-  unarchiveRoom(@GetPayload('user') authUser: User, @Param() params: RoomIdParam): Promise<void> {
-    return this.userToRoomService.updateArchive(authUser.id, params.roomId, false)
+  unarchiveRoom(@Req() request: Request, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updateArchive(request.user.id, params.roomId, false)
   }
 
   @Patch('/:roomId/pin-chat')
-  pinChat(@GetPayload('user') authUser: User, @Param() params: RoomIdParam): Promise<void> {
-    return this.userToRoomService.updatePin(authUser.id, params.roomId, true)
+  pinChat(@Req() request: Request, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updatePin(request.user.id, params.roomId, true)
   }
 
   @Patch('/:roomId/unpin-chat')
-  unpinChat(@GetPayload('user') authUser: User, @Param() params: RoomIdParam): Promise<void> {
-    return this.userToRoomService.updatePin(authUser.id, params.roomId, false)
+  unpinChat(@Req() request: Request, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.updatePin(request.user.id, params.roomId, false)
   }
 
   @Delete('/:roomId/clear-chat')
-  clearChat(@GetPayload('user') authUser: User, @Param() params: RoomIdParam): Promise<void> {
-    return this.userToRoomService.clearChat(authUser.id, params.roomId)
+  clearChat(@Req() request: Request, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.clearChat(request.user.id, params.roomId)
   }
 
   @Delete('/:roomId/delete-chat')
-  deleteChat(@GetPayload('user') authUser: User, @Param() params: RoomIdParam): Promise<void> {
-    return this.userToRoomService.deleteChat(authUser.id, params.roomId)
+  deleteChat(@Req() request: Request, @Param() params: RoomIdParam): Promise<void> {
+    return this.userToRoomService.deleteChat(request.user.id, params.roomId)
   }
 }

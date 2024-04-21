@@ -1,14 +1,10 @@
-import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, Query, Req, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-// Custom Decorator
-import { GetPayload } from 'src/common/decorators/getPayload.decorator'
-// Services
 import { UserService } from './user.service'
-// DTO
 import { UserIdParam } from './dto/user-id-param.dto'
 import { UserSearchQuery } from './dto/user-search-query.dto'
 import { UpdateUserInfoDto } from './dto/update-user-info.dto'
-// Types
+import type { Request } from 'express'
 import type { User } from 'src/users/user.entity'
 
 @Controller('users')
@@ -17,18 +13,18 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/me')
-  async getAuthUserInfo(@GetPayload('user') authUser: User): Promise<User> {
-    return authUser
+  async getAuthUserInfo(@Req() request: Request): Promise<User> {
+    return request.user
   }
 
   @Get('/convo')
-  getUserConvo(@GetPayload('user') authUser: User): Promise<any> {
-    return this.userService.getUserConvo(authUser.id)
+  getUserConvo(@Req() request: Request): Promise<any> {
+    return this.userService.getUserConvo(request.user.id)
   }
 
   @Get('/search')
-  findUsers(@GetPayload('user') authUser: User, @Query() query: UserSearchQuery): Promise<User> {
-    return this.userService.findUsers(authUser.id, query.search)
+  findUsers(@Req() request: Request, @Query() query: UserSearchQuery): Promise<User> {
+    return this.userService.findUsers(request.user.id, query.search)
   }
 
   @Get('/:userId')
@@ -42,7 +38,7 @@ export class UserController {
   }
 
   @Patch('/:userId')
-  updateUserInfo(@GetPayload('user') authUser: User, @Body() data: UpdateUserInfoDto) {
-    return this.userService.updateUserInfo(authUser.id, data)
+  updateUserInfo(@Req() request: Request, @Body() data: UpdateUserInfoDto) {
+    return this.userService.updateUserInfo(request.user.id, data)
   }
 }
