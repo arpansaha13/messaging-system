@@ -1,9 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-// Entities
 import { UserService } from 'src/users/user.service'
 import { Contact } from './contact.entity'
-// Types
 import type { Repository } from 'typeorm'
 import type { User } from 'src/users/user.entity'
 

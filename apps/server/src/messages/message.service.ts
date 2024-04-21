@@ -1,10 +1,8 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { In, Not, MoreThanOrEqual } from 'typeorm'
-// Entities
 import { Room } from 'src/rooms/room.entity'
 import { Message, MessageStatus } from './message.entity'
-// Types
 import type { Repository } from 'typeorm'
 
 @Injectable()

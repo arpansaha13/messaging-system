@@ -16,26 +16,26 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-    private mailService: MailService,
+    private readonly mailService: MailService,
 
     @InjectEntityManager()
-    private entityManager: EntityManager,
+    private manager: EntityManager,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(UnverifiedUser)
     private unverifiedUserRepository: Repository<UnverifiedUser>,
   ) {}
 
-  #PASSWORD_MISMATCH_EXCEPTION_MESSAGE = 'Password and confirm-password do not match.'
+  private PASSWORD_MISMATCH_EXCEPTION_MESSAGE = 'Password and confirm-password do not match.'
 
-  async #createAuthToken(user: User): Promise<JwtToken> {
+  private async createAuthToken(user: User): Promise<JwtToken> {
     const payload: JwtPayload = { user_id: user.id }
     const authToken = this.jwtService.sign(payload)
     const expiresAt = Date.now() /* milli-secs */ + this.config.get('JWT_TOKEN_VALIDITY_SECONDS') * 1000
     return { authToken, expiresAt }
   }
 
-  #generateHash(length = 8) {
+  private generateHash(length = 8) {
     let result = ''
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     const charactersLength = characters.length
@@ -47,7 +47,7 @@ export class AuthService {
     return result
   }
 
-  #generateOtp(length = 4) {
+  private generateOtp(length = 4) {
     let result = ''
     const characters = '0123456789'
     const charactersLength = characters.length
@@ -61,25 +61,27 @@ export class AuthService {
 
   async signUp(credentials: SignUpDto): Promise<string> {
     if (credentials.password !== credentials.confirmPassword) {
-      throw new UnauthorizedException(this.#PASSWORD_MISMATCH_EXCEPTION_MESSAGE)
+      throw new UnauthorizedException(this.PASSWORD_MISMATCH_EXCEPTION_MESSAGE)
     }
 
-    const hash = this.#generateHash()
-    const otp = this.#generateOtp()
+    // TODO: Verify if the hash already exists in db
+    const hash = this.generateHash()
+    const otp = this.generateOtp()
     let unverifiedUser: UnverifiedUser = null!
 
     try {
-      await this.entityManager.transaction(async txnEntityManager => {
+      // TODO: Retry if failed
+      await this.manager.transaction(async txnManager => {
         const hashedPwd = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
 
-        unverifiedUser = txnEntityManager.create(UnverifiedUser, {
+        unverifiedUser = txnManager.create(UnverifiedUser, {
           hash,
           otp,
           email: credentials.email,
           displayName: credentials.displayName,
           password: hashedPwd,
         })
-        await txnEntityManager.save(unverifiedUser)
+        await txnManager.save(unverifiedUser)
       })
 
       await this.mailService.sendVerificationMail(unverifiedUser, hash, otp)
@@ -100,7 +102,7 @@ export class AuthService {
       where: { email: credentials.email },
     })
     if (user !== null && (await bcrypt.compare(credentials.password, user.password))) {
-      return this.#createAuthToken(user)
+      return this.createAuthToken(user)
     }
     throw new UnauthorizedException('Invalid email or password.')
   }
@@ -112,8 +114,8 @@ export class AuthService {
 
   async verifyAccount(hash: string, otp: string): Promise<string> {
     try {
-      await this.entityManager.transaction(async txnEntityManager => {
-        const unverifiedUser = await txnEntityManager.findOne(UnverifiedUser, {
+      await this.manager.transaction(async txnManager => {
+        const unverifiedUser = await txnManager.findOne(UnverifiedUser, {
           where: { hash },
         })
 
@@ -123,14 +125,14 @@ export class AuthService {
 
         verifyOtpAge.call(this, unverifiedUser)
 
-        const newUser = txnEntityManager.create(User, {
+        const newUser = txnManager.create(User, {
           email: unverifiedUser.email,
           displayName: unverifiedUser.displayName,
           password: unverifiedUser.password,
         })
 
-        await txnEntityManager.save(newUser)
-        await txnEntityManager.delete(UnverifiedUser, { hash })
+        await txnManager.save(newUser)
+        await txnManager.delete(UnverifiedUser, { hash })
       })
 
       return 'Account verification successful.'

@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-
 import { MailModule } from './mail/mail.module'
 import { RoomModule } from './rooms/room.module'
 import { UserModule } from './users/user.module'

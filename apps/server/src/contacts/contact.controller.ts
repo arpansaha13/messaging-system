@@ -10,16 +10,11 @@ import {
   UseInterceptors,
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-// Service
 import { ContactService } from 'src/contacts/contact.service'
-// Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
-// Interceptors
 import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.interceptor'
-// DTO
 import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
 import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
-// Types
 import type { User } from 'src/users/user.entity'
 import type { Contact } from './contact.entity'
 

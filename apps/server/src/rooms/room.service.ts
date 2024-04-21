@@ -10,13 +10,11 @@ import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 export class RoomService {
   constructor(
     @InjectEntityManager()
-    private entityManager: EntityManager,
+    private manager: EntityManager,
     @InjectRepository(User)
     private userRepository: Repository<User>,
     @InjectRepository(Room)
     private roomRepository: Repository<Room>,
-    @InjectRepository(UserToRoom)
-    private userToRoomRepository: Repository<UserToRoom>,
   ) {}
 
   #sameParticipantError() {
@@ -76,32 +74,30 @@ export class RoomService {
     if (sender === null || receiver === null) throw new BadRequestException('Invalid user_id.')
 
     try {
-      const [room, senderUserToRoom, receiverUserToRoom] = await this.entityManager.transaction(
-        async txnEntityManager => {
-          const newSenderUserToRoom = new UserToRoom()
-          const newReceiverUserToRoom = new UserToRoom()
+      const [room, senderUserToRoom, receiverUserToRoom] = await this.manager.transaction(async txnManager => {
+        const newSenderUserToRoom = new UserToRoom()
+        const newReceiverUserToRoom = new UserToRoom()
 
-          newSenderUserToRoom.user = sender
-          newReceiverUserToRoom.user = receiver
+        newSenderUserToRoom.user = sender
+        newReceiverUserToRoom.user = receiver
 
-          newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
-          newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
+        newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
+        newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
 
-          const newRoom = new Room()
-          newRoom.users = [newSenderUserToRoom, newReceiverUserToRoom]
+        const newRoom = new Room()
+        newRoom.users = [newSenderUserToRoom, newReceiverUserToRoom]
 
-          newSenderUserToRoom.room = newRoom
-          newReceiverUserToRoom.room = newRoom
+        newSenderUserToRoom.room = newRoom
+        newReceiverUserToRoom.room = newRoom
 
-          const response = await Promise.all([
-            txnEntityManager.save(newRoom),
-            txnEntityManager.save(newSenderUserToRoom),
-            txnEntityManager.save(newReceiverUserToRoom),
-          ])
+        const response = await Promise.all([
+          txnManager.save(newRoom),
+          txnManager.save(newSenderUserToRoom),
+          txnManager.save(newReceiverUserToRoom),
+        ])
 
-          return response
-        },
-      )
+        return response
+      })
       return [room, senderUserToRoom, receiverUserToRoom]
     } catch (error) {
       throw new InternalServerErrorException()

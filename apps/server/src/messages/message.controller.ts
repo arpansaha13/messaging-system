@@ -1,8 +1,6 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-
 import { MessageService } from './message.service'
-
 import type { Message } from './message.entity'
 
 @Controller('messages')

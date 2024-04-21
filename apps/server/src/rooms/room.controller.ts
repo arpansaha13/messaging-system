@@ -1,12 +1,9 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-// Services
 import { RoomService } from 'src/rooms/room.service'
 import { MessageService } from 'src/messages/message.service'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-// Custom Decorator
 import { GetPayload } from 'src/common/decorators/getPayload.decorator'
-// Types
 import type { Room } from './room.entity'
 import type { User } from 'src/users/user.entity'
 import type { Message } from 'src/messages/message.entity'

@@ -1,6 +1,6 @@
+import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MailerService } from '@nestjs-modules/mailer'
-import { Injectable } from '@nestjs/common'
 import { UnverifiedUser } from 'src/auth/auth.entity'
 
 @Injectable()
