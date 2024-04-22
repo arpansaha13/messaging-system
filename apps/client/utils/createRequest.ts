@@ -1,6 +1,6 @@
 import type { RequestOptions } from '~/types'
 
-export default function createRequest(url: string, options: RequestOptions) {
+export default function createRequest(url: string, options?: RequestOptions) {
   const headers = {
     ...(options?.headers ?? {}),
     'Content-Type': 'application/x-www-form-urlencoded',
@@ -18,5 +18,6 @@ export default function createRequest(url: string, options: RequestOptions) {
     ...options,
     body,
     headers,
+    credentials: 'include',
   })
 }

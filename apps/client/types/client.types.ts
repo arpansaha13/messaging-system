@@ -51,8 +51,3 @@ export interface ContactType {
   dp: string | null
   displayName: string
 }
-
-export interface JwtToken {
-  authToken: string
-  expiresAt: number
-}

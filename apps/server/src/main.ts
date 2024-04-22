@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { ConfigService } from '@nestjs/config'
 import { ValidationPipe } from '@nestjs/common'
 import helmet from 'helmet'
+import cookieParser from 'cookie-parser'
 import { SocketIoAdapter } from 'src/common/adapters/socketio.adapter'
 import { AppModule } from './app.module'
 import type { EnvVariables } from './env.types'
@@ -11,6 +12,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService<EnvVariables>)
 
   app.use(helmet())
+  app.use(cookieParser())
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -24,6 +26,7 @@ async function bootstrap() {
 
   const corsOrigins = configService.get('CORS_ORIGINS').split(',')
   app.enableCors({
+    credentials: true,
     origin: corsOrigins,
   })
 

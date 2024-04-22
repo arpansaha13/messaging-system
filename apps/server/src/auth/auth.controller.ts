@@ -1,11 +1,16 @@
-import { Body, Controller, Post, HttpCode, HttpStatus, Param, Get } from '@nestjs/common'
+import { Body, Controller, Post, HttpCode, HttpStatus, Param, Get, Res, Req } from '@nestjs/common'
 import { AuthService } from './auth.service'
 import { SignInDto, SignUpDto, VerifyAccountDto, VerifyAccountParams } from './auth.dto'
-import type { JwtToken } from './jwt.types'
+import type { Request, Response } from 'express'
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Get('/check-auth')
+  checkAuth(@Req() request: Request): Promise<{ valid: boolean }> {
+    return this.authService.checkAuth(request)
+  }
 
   @Post('/sign-up')
   signUp(@Body() credentials: SignUpDto): Promise<string> {
@@ -13,8 +18,13 @@ export class AuthController {
   }
 
   @Post('/sign-in')
-  login(@Body() credentials: SignInDto): Promise<JwtToken> {
-    return this.authService.login(credentials)
+  login(@Res() res: Response, @Body() credentials: SignInDto): Promise<Response> {
+    return this.authService.login(res, credentials)
+  }
+
+  @Post('/logout')
+  logout(@Res() res: Response): Promise<Response> {
+    return this.authService.logout(res)
   }
 
   @Get('/validate-link/account/:hash')

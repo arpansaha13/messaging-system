@@ -9,14 +9,19 @@ import { UnverifiedUser } from './auth.entity'
 import { SignInDto, SignUpDto } from './auth.dto'
 import { MailService } from 'src/mail/mail.service'
 import type { Repository, EntityManager } from 'typeorm'
-import type { JwtPayload, JwtToken } from './jwt.types'
+import type { Request, Response } from 'express'
+import type { EnvVariables } from 'src/env.types'
+
+interface JwtPayload {
+  user_id: number
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly config: ConfigService,
     private readonly mailService: MailService,
+    private readonly configService: ConfigService<EnvVariables>,
 
     @InjectEntityManager()
     private manager: EntityManager,
@@ -27,13 +32,6 @@ export class AuthService {
   ) {}
 
   private PASSWORD_MISMATCH_EXCEPTION_MESSAGE = 'Password and confirm-password do not match.'
-
-  private async createAuthToken(user: User): Promise<JwtToken> {
-    const payload: JwtPayload = { user_id: user.id }
-    const authToken = this.jwtService.sign(payload)
-    const expiresAt = Date.now() /* milli-secs */ + this.config.get('JWT_TOKEN_VALIDITY_SECONDS') * 1000
-    return { authToken, expiresAt }
-  }
 
   private generateHash(length = 8) {
     let result = ''
@@ -57,6 +55,27 @@ export class AuthService {
       counter++
     }
     return result
+  }
+
+  async checkAuth(request: Request): Promise<{ valid: boolean }> {
+    const token = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
+
+    if (!token) return { valid: false }
+
+    try {
+      const payload = this.jwtService.verify(token)
+      const { user_id } = payload
+
+      if (!user_id) return { valid: false }
+
+      const userExists = await this.userRepository.exists({
+        where: { id: user_id },
+      })
+
+      return { valid: userExists }
+    } catch (err) {
+      return { valid: false }
+    }
   }
 
   async signUp(credentials: SignUpDto): Promise<string> {
@@ -97,14 +116,38 @@ export class AuthService {
     }
   }
 
-  async login(credentials: SignInDto): Promise<JwtToken> {
+  async login(res: Response, credentials: SignInDto): Promise<Response> {
     const user = await this.userRepository.findOne({
       where: { email: credentials.email },
     })
+
     if (user !== null && (await bcrypt.compare(credentials.password, user.password))) {
-      return this.createAuthToken(user)
+      const payload: JwtPayload = { user_id: user.id }
+      const token = this.jwtService.sign(payload)
+      const maxAge = this.configService.get('JWT_TOKEN_VALIDITY_SECONDS') * 1000
+
+      res.cookie(this.configService.get('AUTH_COOKIE_NAME'), token, {
+        path: '/api',
+        secure: true,
+        httpOnly: true,
+        maxAge,
+      })
+
+      return res.status(200).send()
     }
+
     throw new UnauthorizedException('Invalid email or password.')
+  }
+
+  async logout(res: Response) {
+    res.cookie(this.configService.get('AUTH_COOKIE_NAME'), '', {
+      path: '/api',
+      secure: true,
+      httpOnly: true,
+      maxAge: 0,
+    })
+
+    return res.status(200).send()
   }
 
   async validateVerificationLink(hash: string) {
@@ -149,7 +192,7 @@ export class AuthService {
       const otpAge = timeNow.getTime() - unverifiedUser.updatedAt.getTime()
       const otpAgeMs = otpAge / 1000 /* Convert to milliseconds */
 
-      if (otpAgeMs > parseInt(this.config.get('OTP_VALIDATION_SECONDS'))) {
+      if (otpAgeMs > parseInt(this.configService.get('OTP_VALIDATION_SECONDS'))) {
         throw new InvalidOrExpiredException('OTP has expired.')
       }
 

@@ -1,7 +1,7 @@
 import createRequest from './createRequest'
 import type { RequestOptions } from '~/types'
 
-export default async function _fetch(url: string, options: RequestOptions) {
+export default async function _fetch(url: string, options?: RequestOptions) {
   const request = createRequest(url, options)
   const res = await fetch(request)
 

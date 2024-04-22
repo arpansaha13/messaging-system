@@ -8,7 +8,7 @@ import { AuthService } from './auth.service'
 import { AuthController } from './auth.controller'
 import { MailModule } from 'src/mail/mail.module'
 import { User } from 'src/users/user.entity'
-import { JwtStrategy } from './jwt.strategy'
+import { CookieStrategy } from './cookie.strategy'
 import type { JwtEnvVariables } from '../env.types'
 
 @Module({
@@ -17,7 +17,7 @@ import type { JwtEnvVariables } from '../env.types'
     ConfigModule,
 
     TypeOrmModule.forFeature([User, UnverifiedUser]),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({ defaultStrategy: 'cookie' }),
 
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -27,13 +27,16 @@ import type { JwtEnvVariables } from '../env.types'
         signOptions: {
           expiresIn: Number(configService.get('JWT_TOKEN_VALIDITY_SECONDS')),
         },
+        verifyOptions: {
+          maxAge: Number(configService.get('JWT_TOKEN_VALIDITY_SECONDS')),
+        },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, ConfigService],
+  providers: [AuthService, CookieStrategy, ConfigService],
 
   // Export so that any module that imports this module is able to use the auth mechanism.
-  exports: [JwtStrategy, PassportModule],
+  exports: [CookieStrategy, PassportModule],
 })
 export class AuthModule {}

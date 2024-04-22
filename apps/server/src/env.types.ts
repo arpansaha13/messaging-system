@@ -7,12 +7,16 @@ interface TypeormEnvVariables {
   TYPEORM_DATABASE_URL?: string
 }
 
+interface CookieEnvVariables {
+  AUTH_COOKIE_NAME: string
+}
+
 export interface JwtEnvVariables {
   JWT_SECRET: string
   JWT_TOKEN_VALIDITY_SECONDS: number
 }
 
-export interface EnvVariables extends TypeormEnvVariables, JwtEnvVariables {
+export interface EnvVariables extends TypeormEnvVariables, CookieEnvVariables, JwtEnvVariables {
   NODE_ENV: 'development' | 'production'
   API_PORT: number
   'SOCKET.IO_PORT': number

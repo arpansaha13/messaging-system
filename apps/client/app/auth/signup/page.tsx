@@ -3,12 +3,11 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import { useStore } from '~/store'
-import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
@@ -20,14 +19,8 @@ import { useMap } from 'react-use'
 
 export default function SignUpPage() {
   const router = useRouter()
-  const expiresAt = useAuthStore(state => state.authExpiresAt)
 
-  useEffect(() => {
-    if (expiresAt !== null && Date.now() < expiresAt) {
-      router.replace('/')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // TODO: block this page if authenticated
 
   const [setNotification] = useStore(state => [state.setNotification], shallow)
 

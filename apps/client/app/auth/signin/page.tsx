@@ -13,7 +13,6 @@ import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
-import type { JwtToken } from '~/types'
 
 // export const metadata: Metadata = {
 //   title: 'WhatsApp Clone | Sign in',
@@ -21,17 +20,9 @@ import type { JwtToken } from '~/types'
 
 export default function SignInPage() {
   const router = useRouter()
-  const expiresAt = useAuthStore(state => state.authExpiresAt)
 
-  useEffect(() => {
-    if (expiresAt !== null && Date.now() < expiresAt) {
-      router.replace('/')
-    }
-    router.prefetch('/')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // TODO: block this page if authenticated
 
-  const setAuthState = useAuthStore(state => state.setAuthState)
   const [toggleNotification, setNotification] = useStore(
     state => [state.toggleNotification, state.setNotification],
     shallow,
@@ -51,11 +42,7 @@ export default function SignInPage() {
       method: 'POST',
       body: formData,
     })
-      .then((data: JwtToken) => {
-        setAuthState({
-          authToken: data.authToken,
-          authExpiresAt: data.expiresAt,
-        })
+      .then(() => {
         router.replace('/')
         toggleNotification(false)
       })

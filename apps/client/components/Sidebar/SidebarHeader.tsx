@@ -1,20 +1,19 @@
-import { memo } from 'react'
 import { useRouter } from 'next/navigation'
+import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
-// Icons
 import { Icon } from '@iconify/react'
 import githubIcon from '@iconify-icons/mdi/github'
 import { ChatBubbleBottomCenterTextIcon, UserPlusIcon } from '@heroicons/react/20/solid'
-// Components
+import { useFetch } from '~/hooks/useFetch'
 import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
-// Stores
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 
 const SidebarHeader = () => {
+  const fetchHook = useFetch()
   const router = useRouter()
-  const [authUser, resetAuthState] = useAuthStore(state => [state.authUser!, state.resetAuthState])
+  const authUser = useAuthStore(state => state.authUser!)
   const [toggleSlideOver, setSlideOverState, resetStore] = useStore(
     state => [state.toggleSlideOver, state.setSlideOverState, state.resetStore],
     shallow,
@@ -63,13 +62,14 @@ const SidebarHeader = () => {
     },
     {
       slot: 'Log out',
-      onClick() {
+      async onClick() {
+        await fetchHook('auth/logout', { method: 'POST' })
         router.replace('/auth/signin')
-        resetAuthState()
         resetStore()
       },
     },
   ]
+
   function openNewChatMenu() {
     setSlideOverState({
       title: 'New chat',
@@ -77,6 +77,7 @@ const SidebarHeader = () => {
     })
     toggleSlideOver(true)
   }
+
   function openProfile() {
     setSlideOverState({
       title: 'Profile',
@@ -84,6 +85,7 @@ const SidebarHeader = () => {
     })
     toggleSlideOver(true)
   }
+
   function openAddContactMenu() {
     setSlideOverState({
       title: 'Add new contact',

@@ -3,8 +3,6 @@
 // import { Metadata } from 'next'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { useAuthStore } from '~/store/useAuthStore'
 import LinkNotExpired from './not-expired'
 
 // export const metadata: Metadata = {
@@ -13,16 +11,10 @@ import LinkNotExpired from './not-expired'
 
 export default function VerificationPage() {
   const router = useRouter()
-  const expiresAt = useAuthStore(state => state.authExpiresAt)
+
+  // TODO: block this page if authenticated
 
   // TODO: check if link is expired
-
-  useEffect(() => {
-    if (expiresAt !== null && Date.now() < expiresAt) {
-      router.replace('/')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   return (
     <>
