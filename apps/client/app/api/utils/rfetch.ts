@@ -26,5 +26,8 @@ export default function rfetch(url: string, request: Request) {
 
     // TypeError: RequestInit: duplex option is required when sending a body.
     duplex: 'half',
+
+    // Disable all caching for now
+    cache: 'no-store',
   })
 }
