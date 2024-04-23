@@ -76,7 +76,7 @@ export class UserToRoomService {
   }
   async clearChat(authUserId: number, roomId: number): Promise<void> {
     // TODO: check if chat is already cleared - throw error in that case
-    await this.updateFirstMsgTstamp(authUserId, roomId, null)
+    await this.#updateUserToRoom(authUserId, roomId, { firstMsgTstamp: new Date() })
   }
   async deleteChat(authUserId: number, roomId: number): Promise<void> {
     // TODO: check if chat is already deleted - throw error in that case
