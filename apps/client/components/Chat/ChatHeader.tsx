@@ -1,15 +1,12 @@
 import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
-import { useFetch } from '~/hooks/useFetch'
 // import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 import { useStore } from '~/store'
 
 const ChatHeader = () => {
-  const fetchHook = useFetch()
-
   const [typingState, activeChatInfo, activeRoom, clearConvoItemLatestMsg, clearChat] = useStore(
     state => [
       state.typingState,
@@ -59,7 +56,7 @@ const ChatHeader = () => {
             {
               slot: 'Clear messages',
               async onClick() {
-                clearChat(activeRoom.id, fetchHook)
+                clearChat(activeRoom.id)
                 clearConvoItemLatestMsg(activeRoom.id)
               },
             },

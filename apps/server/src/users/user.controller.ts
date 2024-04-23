@@ -17,6 +17,11 @@ export class UserController {
     return request.user
   }
 
+  @Patch('/me')
+  updateAuthUserInfo(@Req() request: Request, @Body() data: UpdateUserInfoDto) {
+    return this.userService.updateUserInfo(request.user.id, data)
+  }
+
   @Get('/convo')
   getUserConvo(@Req() request: Request): Promise<any> {
     return this.userService.getUserConvo(request.user.id)
@@ -35,10 +40,5 @@ export class UserController {
   @Get('/:userId/room-ids')
   getRoomIdsOfUser(@Param() params: UserIdParam): Promise<User['rooms']> {
     return this.userService.getRoomIdsOfUser(params.userId)
-  }
-
-  @Patch('/:userId')
-  updateUserInfo(@Req() request: Request, @Body() data: UpdateUserInfoDto) {
-    return this.userService.updateUserInfo(request.user.id, data)
   }
 }

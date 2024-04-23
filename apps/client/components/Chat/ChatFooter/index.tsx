@@ -4,7 +4,6 @@ import { shallow } from 'zustand/shallow'
 // import { MicrophoneIcon } from '@heroicons/react/24/solid'
 // import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 import TextArea from './TextArea'
-import { useFetch } from '~/hooks/useFetch'
 import { useSocket } from '~/hooks/useSocket'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
@@ -28,7 +27,6 @@ const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) =
 }
 
 const ChatFooter = () => {
-  const fetchHook = useFetch()
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
@@ -77,7 +75,7 @@ const ChatFooter = () => {
       const ISOtimestamp = ISODateNow()
       if (activeRoom !== null) {
         if (activeRoom.archived) {
-          unarchiveRoom(activeRoom.id, fetchHook)
+          unarchiveRoom(activeRoom.id)
         }
         const msg = {
           content: value,
@@ -85,14 +83,10 @@ const ChatFooter = () => {
           senderId: authUser.id,
         }
         sendMsg(activeRoom.id, msg)
-        updateConvoItem(
-          activeRoom.id,
-          {
-            ...msg,
-            status: MessageStatus.SENDING,
-          },
-          fetchHook,
-        )
+        updateConvoItem(activeRoom.id, {
+          ...msg,
+          status: MessageStatus.SENDING,
+        })
       }
       setValue('')
       socket.emit('send-message', {

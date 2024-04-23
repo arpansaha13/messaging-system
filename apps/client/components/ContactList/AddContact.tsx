@@ -2,23 +2,17 @@ import { type ChangeEvent, useRef, useState, KeyboardEvent, type FormEvent } fro
 import { Dialog } from '@headlessui/react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
-// Custom Hook
-import { useFetch } from '~/hooks/useFetch'
-// Components
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
 import BaseInput from '~base/BaseInput'
 import SearchBar from '~common/SearchBar'
 import ContactListItem from './ContactListItem'
-// Store
 import { useStore } from '~/store'
-// Utils
-import { isNullOrUndefined } from '@arpansaha13/utils'
-// Types
+import _fetch from '~/utils/_fetch'
 import type { ContactResType, UserType } from '~/types'
 
 const AddContact = () => {
-  const fetchHook = useFetch()
   const [toggleNotification, setNotification, toggleSlideOver, initContactStore] = useStore(
     state => [state.toggleNotification, state.setNotification, state.toggleSlideOver, state.initContactStore],
     shallow,
@@ -50,9 +44,9 @@ const AddContact = () => {
         setExistingContact(null)
         return
       }
-      fetchHook(`contacts?userId=${value}`).then(async (resContact: ContactResType) => {
+      _fetch(`contacts?userId=${value}`).then(async (resContact: ContactResType) => {
         if (!resContact) {
-          const resUser: UserType = await fetchHook(`users/search?search=${value}`)
+          const resUser: UserType = await _fetch(`users/search?search=${value}`)
           setSearchRes(resUser ? resUser : null)
         } else {
           setSearchRes(null)
@@ -77,7 +71,7 @@ const AddContact = () => {
   }
   function addToContacts(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    fetchHook('contacts', {
+    _fetch('contacts', {
       method: 'POST',
       body: { userIdToAdd: modalContent.id, alias: modalContent.alias },
     }).then((res: { message: string }) => {
@@ -89,7 +83,7 @@ const AddContact = () => {
         description: res.message,
       })
       toggleSlideOver(false)
-      initContactStore(fetchHook)
+      initContactStore()
       setTimeout(() => {
         toggleNotification(false)
       }, 5000)

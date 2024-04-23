@@ -1,16 +1,10 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
-// Components
-import Avatar from '~common/Avatar'
-// Custom Hook
-import { useFetch } from '~/hooks/useFetch'
-// Icons
-import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
-// Stores
-import { useAuthStore } from '~/store/useAuthStore'
-// Utils
 import { classNames } from '@arpansaha13/utils'
-// Types
+import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
+import Avatar from '~common/Avatar'
+import { useAuthStore } from '~/store/useAuthStore'
+import _fetch from '~/utils/_fetch'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import type { AuthUserType } from '~/types'
 
@@ -77,7 +71,6 @@ const Field = ({ heading, content, setContent, editState, setEditState }: FieldP
 const MemoisedField = memo(Field)
 
 const Profile = () => {
-  const fetchHook = useFetch()
   const [authUser, setAuthUser] = useAuthStore(state => [state.authUser!, state.setAuthUser], shallow)
 
   const [editingBio, setEditBio] = useState(false)
@@ -92,7 +85,7 @@ const Profile = () => {
     if (authUser.displayName !== displayName) data.displayName = displayName
     if (Object.keys(data).length === 0) return
 
-    fetchHook(`users/${authUser.id}`, {
+    _fetch('users/me', {
       body: data,
       method: 'PATCH',
     }).then((res: AuthUserType) => {

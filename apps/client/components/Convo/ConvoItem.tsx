@@ -4,19 +4,13 @@ import { shallow } from 'zustand/shallow'
 // Utils
 import { classNames } from '@arpansaha13/utils'
 import isUnread from '~/utils/isUnread'
-// Custom Hooks
-import { useFetch } from '~/hooks/useFetch'
-// Components
 import Avatar from '~common/Avatar'
 import MsgStatusIcon from '../MsgStatusIcon'
 import ConvoItemDropDown from './ConvoItemDropDown'
-// Icons
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
-// Stores
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
-// Types
 import type { ConvoItemType } from '~/types'
 
 export interface ConvoItemProps {
@@ -40,8 +34,6 @@ const ConvoItem = ({
   pinned = false,
   onClick,
 }: ConvoItemProps) => {
-  const fetchHook = useFetch()
-
   const authUser = useAuthStore(state => state.authUser)!
   const [
     activeRoom,
@@ -74,9 +66,9 @@ const ConvoItem = ({
       slot: !archived ? 'Archive chat' : 'Unarchive chat',
       onClick() {
         if (!archived) {
-          archiveRoom(roomId, fetchHook)
+          archiveRoom(roomId)
         } else {
-          unarchiveRoom(roomId, fetchHook)
+          unarchiveRoom(roomId)
         }
       },
     },
@@ -89,7 +81,7 @@ const ConvoItem = ({
     {
       slot: 'Delete chat',
       onClick() {
-        deleteChat(roomId, fetchHook)
+        deleteChat(roomId)
         deleteConvo(roomId, archived)
         // If active room is being deleted
         if (activeRoom && activeRoom.id === roomId) {
@@ -105,9 +97,9 @@ const ConvoItem = ({
               slot: !pinned ? 'Pin chat' : 'Unpin chat',
               onClick() {
                 if (!pinned) {
-                  updateConvoPin(roomId, true, fetchHook)
+                  updateConvoPin(roomId, true)
                 } else {
-                  updateConvoPin(roomId, false, fetchHook)
+                  updateConvoPin(roomId, false)
                 }
               },
             },

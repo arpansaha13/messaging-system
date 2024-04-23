@@ -1,17 +1,11 @@
 import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
-// Custom Hooks
-import { useFetch } from '~/hooks/useFetch'
-// Components
 import ContactListItem from './ContactListItem'
-// Stores
 import { useStore } from '~/store'
-// Types
+import _fetch from '~/utils/_fetch'
 import type { ContactType, MessageType } from '~/types'
 
 export const ContactList = () => {
-  const fetchHook = useFetch()
-
   const [add, chats, contacts, searchConvoByUserId, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
     state => [
       state.addChat,
@@ -43,7 +37,7 @@ export const ContactList = () => {
     setProxyConvo(convo === null)
 
     if (convo && !chats.has(convo.room.id)) {
-      const chatRes: MessageType[] = await fetchHook(`rooms/${convo.room.id}/messages`)
+      const chatRes: MessageType[] = await _fetch(`rooms/${convo.room.id}/messages`)
       add(convo.room.id, chatRes)
     }
   }

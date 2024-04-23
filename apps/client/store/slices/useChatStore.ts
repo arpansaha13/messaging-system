@@ -1,6 +1,7 @@
+import _fetch from '~/utils/_fetch'
 import { ISOToMilliSecs } from '~/utils'
 import { MessageStatus } from '~/types'
-import type { FetchHook, Slice } from '~/store/types.store'
+import type { Slice } from '~/store/types.store'
 import type { MessageType, ConvoItemType, MsgReceivedType } from '~/types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
@@ -38,8 +39,8 @@ export interface ChatStoreType {
     senderId: number,
   ) => void
 
-  clearChat: (roomId: number, fetchHook: FetchHook) => void
-  deleteChat: (roomId: number, fetchHook: FetchHook) => void
+  clearChat: (roomId: number) => void
+  deleteChat: (roomId: number) => void
 }
 
 export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
@@ -120,15 +121,15 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
       }
     })
   },
-  clearChat(roomId, fetchHook) {
+  clearChat(roomId) {
     set((state: ChatStoreType) => {
-      fetchHook(`user-to-room/${roomId}/clear-chat`, { method: 'DELETE' })
+      _fetch(`user-to-room/${roomId}/clear-chat`, { method: 'DELETE' })
       state.chats.set(roomId, new Map<number, MessageType>())
     })
   },
-  deleteChat(roomId, fetchHook) {
+  deleteChat(roomId) {
     set((state: ChatStoreType) => {
-      fetchHook(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
+      _fetch(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
       state.chats.delete(roomId)
     })
   },

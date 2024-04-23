@@ -4,14 +4,13 @@ import { shallow } from 'zustand/shallow'
 import { Icon } from '@iconify/react'
 import githubIcon from '@iconify-icons/mdi/github'
 import { ChatBubbleBottomCenterTextIcon, UserPlusIcon } from '@heroicons/react/20/solid'
-import { useFetch } from '~/hooks/useFetch'
 import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
+import _fetch from '~/utils/_fetch'
 
 const SidebarHeader = () => {
-  const fetchHook = useFetch()
   const router = useRouter()
   const authUser = useAuthStore(state => state.authUser!)
   const [toggleSlideOver, setSlideOverState, resetStore] = useStore(
@@ -63,7 +62,7 @@ const SidebarHeader = () => {
     {
       slot: 'Log out',
       async onClick() {
-        await fetchHook('auth/logout', { method: 'POST' })
+        await _fetch('auth/logout', { method: 'POST' })
         router.replace('/auth/signin')
         resetStore()
       },

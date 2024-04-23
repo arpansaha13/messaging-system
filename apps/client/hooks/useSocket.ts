@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react'
 import io from 'socket.io-client'
 import { shallow } from 'zustand/shallow'
-// Custom Hook
-import { useFetch } from './useFetch'
-// Stores
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
-// Utils
 import isUnread from '~/utils/isUnread'
-// Types
 import { MessageStatus } from '~/types'
 import type { ConvoItemType } from '~/types'
 
@@ -74,7 +69,6 @@ const socketWrapper = {
  * This hook is meant to be run only once during app initialization.
  */
 export function useSocketInit() {
-  const fetchHook = useFetch()
   const authUser = useAuthStore(state => state.authUser)!
   const [
     activeRoom,
@@ -165,7 +159,7 @@ export function useSocketInit() {
         createdAt: data.ISOtime,
         senderId: data.senderId,
       }
-      updateConvoItem(data.roomId, { ...msg, status: MessageStatus.DELIVERED }, fetchHook)
+      updateConvoItem(data.roomId, { ...msg, status: MessageStatus.DELIVERED })
       // No need to update status if the chat has never been fetched
       // Because they will arrive with proper data whenever fetched (updated on server)
       const updatedChats = getChats()

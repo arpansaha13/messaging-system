@@ -1,5 +1,5 @@
+import _fetch from '~/utils/_fetch'
 import type { StateCreator } from 'zustand'
-import type { FetchHook } from '~/store/types.store'
 import type { ContactResType, ContactType } from '~/types'
 
 export interface ContactStoreType {
@@ -7,13 +7,13 @@ export interface ContactStoreType {
   contacts: { [letter: string]: ContactType[] }
 
   /** Initialize the contacts map. */
-  initContactStore: (fetchHook: FetchHook) => Promise<void>
+  initContactStore: () => Promise<void>
 }
 
 export const useContactStore: StateCreator<ContactStoreType, [], [], ContactStoreType> = set => ({
   contacts: {},
-  async initContactStore(fetchHook) {
-    const contactsRes: ContactResType[] = await fetchHook('contacts')
+  async initContactStore() {
+    const contactsRes: ContactResType[] = await _fetch('contacts')
     const newContacts: ContactStoreType['contacts'] = {}
 
     for (const contactResItem of contactsRes) {

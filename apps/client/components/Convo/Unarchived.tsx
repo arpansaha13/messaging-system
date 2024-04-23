@@ -1,16 +1,10 @@
 import { shallow } from 'zustand/shallow'
-// Components
 import ConvoItem from './ConvoItem'
-// Store
 import { useStore } from '~/store'
-// Custom Hooks
-import { useFetch } from '~/hooks/useFetch'
-// Types
+import _fetch from '~/utils/_fetch'
 import type { ConvoItemType, MessageType } from '~/types'
 
 export default function UnarchivedRooms() {
-  const fetchHook = useFetch()
-
   const [add, chats, convo, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
     state => [
       state.addChat,
@@ -34,7 +28,7 @@ export default function UnarchivedRooms() {
     })
 
     if (!chats.has(convoItem.room.id)) {
-      const chatRes: MessageType[] = await fetchHook(`rooms/${convoItem.room.id}/messages`)
+      const chatRes: MessageType[] = await _fetch(`rooms/${convoItem.room.id}/messages`)
       add(convoItem.room.id, chatRes)
     }
   }
