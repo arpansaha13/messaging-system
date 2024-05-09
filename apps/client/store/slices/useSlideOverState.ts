@@ -1,12 +1,17 @@
 import type { Slice } from '~/store/types.store'
 
-type SlideOverComponentNames = 'ContactList' | 'Archived' | 'StarredMessages' | 'Settings' | 'Profile' | 'AddContact'
+type SlideOverComponentNames =
+  | 'ContactList'
+  | 'Archived'
+  | 'StarredMessages'
+  | 'Settings'
+  | 'Profile'
+  | 'AddContact'
+  | 'Unarchived'
 
 export interface SlideOverStateType {
   slideOverState: {
     open: boolean
-    /** Panel title displayed on top of slide over panel. */
-    title: string
     /** The name of the component to be rendered in the slide-over. */
     componentName: SlideOverComponentNames
   }
@@ -20,8 +25,7 @@ export interface SlideOverStateType {
 export const useSlideOverState: Slice<SlideOverStateType> = set => ({
   slideOverState: {
     open: false,
-    title: 'New Chat',
-    componentName: 'ContactList',
+    componentName: 'Unarchived',
   },
   toggleSlideOver(bool) {
     set((state: SlideOverStateType) => {

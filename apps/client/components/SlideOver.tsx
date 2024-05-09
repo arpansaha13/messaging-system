@@ -3,8 +3,6 @@ import { Transition } from '@headlessui/react'
 import { shallow } from 'zustand/shallow'
 // Stores
 import { useStore } from '~/store'
-// Icons
-import { ArrowLeftIcon } from '@heroicons/react/20/solid'
 // Types
 import type { ReactNode } from 'react'
 
@@ -13,7 +11,7 @@ interface SlideOverProps {
 }
 
 const SlideOver = ({ children }: SlideOverProps) => {
-  const [slideOverState, toggleSlideOver] = useStore(state => [state.slideOverState, state.toggleSlideOver], shallow)
+  const [slideOverState] = useStore(state => [state.slideOverState], shallow)
 
   return (
     <Transition.Root show={slideOverState.open} as={Fragment}>
@@ -28,20 +26,7 @@ const SlideOver = ({ children }: SlideOverProps) => {
           leaveTo="-translate-x-full"
         >
           <div className="pointer-events-auto w-screen max-w-md">
-            <div className="flex h-full flex-col bg-gray-50 dark:bg-gray-900 shadow-xl">
-              <header className="pt-14 pb-2 bg-emerald-600 text-gray-100 dark:bg-gray-800 dark:text-gray-50">
-                <div className="flex items-center">
-                  <button
-                    onClick={() => toggleSlideOver(false)}
-                    className="ml-3 mr-4 h-12 w-12 inline-flex items-center justify-center"
-                  >
-                    <ArrowLeftIcon className="h-6 w-6" aria-hidden="true" />
-                  </button>
-                  <h2 className="inline-block text-xl font-medium">{slideOverState.title}</h2>
-                </div>
-              </header>
-              {children}
-            </div>
+            <div className="flex h-full flex-col bg-gray-50 dark:bg-gray-900 shadow-xl">{children}</div>
           </div>
         </Transition.Child>
       </div>
