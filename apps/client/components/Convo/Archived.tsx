@@ -2,7 +2,7 @@ import { shallow } from 'zustand/shallow'
 import ConvoItem from './ConvoItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ConvoItemType, MessageType } from '~/types'
+import type { ConvoItemType, MessageType } from '@pkg/types'
 
 export default function Archived() {
   const [add, chats, archivedConvo, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(

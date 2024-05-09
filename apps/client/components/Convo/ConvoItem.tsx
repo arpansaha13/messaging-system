@@ -11,7 +11,7 @@ import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
-import type { ConvoItemType } from '~/types'
+import type { ConvoItemType } from '@pkg/types'
 
 export interface ConvoItemProps {
   roomId: number

@@ -1,4 +1,4 @@
-import type { RequestOptions } from '~/types'
+import type { RequestOptions } from '@pkg/types'
 
 export default function createRequest(url: string, options?: RequestOptions) {
   const headers = {

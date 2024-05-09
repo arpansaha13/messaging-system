@@ -10,7 +10,7 @@ import SearchBar from '~common/SearchBar'
 import ContactListItem from './ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ContactResType, UserType } from '~/types'
+import type { ContactResType, UserType } from '@pkg/types'
 
 const AddContact = () => {
   const [toggleNotification, setNotification, toggleSlideOver, initContactStore] = useStore(

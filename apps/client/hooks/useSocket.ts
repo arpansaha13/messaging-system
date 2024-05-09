@@ -4,8 +4,8 @@ import { shallow } from 'zustand/shallow'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
-import { MessageStatus } from '~/types'
-import type { ConvoItemType } from '~/types'
+import { MessageStatus } from '@pkg/types'
+import type { ConvoItemType } from '@pkg/types'
 
 interface ReceiveMsgType {
   roomId: number

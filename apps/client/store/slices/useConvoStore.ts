@@ -1,6 +1,6 @@
 import _fetch from '~/utils/_fetch'
 import type { Slice } from '~/store/types.store'
-import type { ConvoItemType, MessageStatus } from '~/types'
+import type { ConvoItemType, MessageStatus } from '@pkg/types'
 
 type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
 

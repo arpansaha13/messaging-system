@@ -1,7 +1,7 @@
 import { enableMapSet } from 'immer'
 import { immer } from 'zustand/middleware/immer'
 import { createWithEqualityFn } from 'zustand/traditional'
-import type { MessageType } from '~/types'
+import type { MessageType } from '@pkg/types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'
 import { type ContactStoreType, useContactStore } from './slices/useContactStore'

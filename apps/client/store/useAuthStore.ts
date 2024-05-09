@@ -1,5 +1,5 @@
 import { createWithEqualityFn } from 'zustand/traditional'
-import type { AuthUserType } from '~/types'
+import type { AuthUserType } from '@pkg/types'
 
 interface AuthStoreType {
   authUser: AuthUserType | null

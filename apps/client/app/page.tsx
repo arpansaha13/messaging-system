@@ -8,7 +8,7 @@ import AsyncPage from '~/components/AsyncPage'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { AuthUserResType } from '~/types'
+import type { AuthUserResType } from '@pkg/types'
 
 export default function Page() {
   const router = useRouter()

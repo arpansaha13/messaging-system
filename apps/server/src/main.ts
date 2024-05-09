@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core'
 import { ConfigService } from '@nestjs/config'
 import { ValidationPipe } from '@nestjs/common'
 import helmet from 'helmet'
+// import session from 'express-session'
 import cookieParser from 'cookie-parser'
 import { SocketIoAdapter } from 'src/common/adapters/socketio.adapter'
 import { AppModule } from './app.module'
@@ -13,6 +14,17 @@ async function bootstrap() {
 
   app.use(helmet())
   app.use(cookieParser())
+
+  // TODO: Use a session store
+  // https://github.com/expressjs/session?tab=readme-ov-file#compatible-session-stores
+  // app.use(
+  //   session({
+  //     secret: configService.get('SESSION_SECRET'),
+  //     resave: false,
+  //     saveUninitialized: false,
+  //     cookie: { secure: true },
+  //   }),
+  // )
 
   app.useGlobalPipes(
     new ValidationPipe({

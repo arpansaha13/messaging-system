@@ -1,6 +1,6 @@
 import _fetch from '~/utils/_fetch'
 import type { StateCreator } from 'zustand'
-import type { ContactResType, ContactType } from '~/types'
+import type { ContactResType, ContactType } from '@pkg/types'
 
 export interface ContactStoreType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */

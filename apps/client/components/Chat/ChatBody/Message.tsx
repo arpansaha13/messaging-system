@@ -3,7 +3,7 @@ import { format, parseISO } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '../../MsgStatusIcon'
 import { useAuthStore } from '~/store/useAuthStore'
-import type { MessageType } from '~/types'
+import type { MessageType } from '@pkg/types'
 
 interface MessageProps {
   message: MessageType

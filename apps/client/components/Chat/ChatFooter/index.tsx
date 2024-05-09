@@ -8,7 +8,7 @@ import { useSocket } from '~/hooks/useSocket'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
 import { ISODateNow } from '~/utils'
-import { MessageStatus } from '~/types'
+import { MessageStatus } from '@pkg/types'
 import type { KeyboardEvent } from 'react'
 import type { TypingStateType } from '~/hooks/useSocket'
 

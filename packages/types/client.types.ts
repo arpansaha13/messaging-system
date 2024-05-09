@@ -1,4 +1,4 @@
-import { MessageStatus } from './message.types'
+import type { MessageStatus } from './message.types'
 
 /** Generic type for chat-list item. A = archived, G = isGroup */
 export interface ConvoItemType<A = false, G = false> {

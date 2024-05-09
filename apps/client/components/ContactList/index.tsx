@@ -3,7 +3,7 @@ import { shallow } from 'zustand/shallow'
 import ContactListItem from './ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ContactType, MessageType } from '~/types'
+import type { ContactType, MessageType } from '@pkg/types'
 
 export const ContactList = () => {
   const [add, chats, contacts, searchConvoByUserId, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(

@@ -6,7 +6,7 @@ import Avatar from '~common/Avatar'
 import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
-import type { AuthUserType } from '~/types'
+import type { AuthUserType } from '@pkg/types'
 
 interface FieldProps {
   heading: string

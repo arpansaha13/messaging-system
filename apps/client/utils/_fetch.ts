@@ -1,5 +1,5 @@
 import createRequest from './createRequest'
-import type { RequestOptions } from '~/types'
+import type { RequestOptions } from '@pkg/types'
 
 export default async function _fetch(url: string, options?: RequestOptions) {
   const request = createRequest(url, options)

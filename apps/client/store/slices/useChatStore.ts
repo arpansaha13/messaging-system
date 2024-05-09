@@ -1,8 +1,8 @@
 import _fetch from '~/utils/_fetch'
 import { ISOToMilliSecs } from '~/utils'
-import { MessageStatus } from '~/types'
+import { MessageStatus } from '@pkg/types'
 import type { Slice } from '~/store/types.store'
-import type { MessageType, ConvoItemType, MsgReceivedType } from '~/types'
+import type { MessageType, ConvoItemType, MsgReceivedType } from '@pkg/types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
