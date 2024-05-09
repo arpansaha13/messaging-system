@@ -6,6 +6,7 @@ import { UserSearchQuery } from './dto/user-search-query.dto'
 import { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { Request } from 'express'
 import type { User } from 'src/users/user.entity'
+import type { UserConvoResponse } from './dto/user-convo-response.dto'
 
 @Controller('users')
 @UseGuards(AuthGuard())
@@ -23,7 +24,7 @@ export class UserController {
   }
 
   @Get('/convo')
-  getUserConvo(@Req() request: Request): Promise<any> {
+  getUserConvo(@Req() request: Request): Promise<UserConvoResponse> {
     return this.userService.getUserConvo(request.user.id)
   }
 

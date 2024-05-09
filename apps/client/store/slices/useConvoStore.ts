@@ -4,6 +4,11 @@ import type { ConvoItemType, MessageStatus } from '@pkg/types'
 
 type ActiveRoom = Pick<ConvoItemType<boolean>['room'], 'id' | 'archived'> | null
 
+type ConvoResponse = {
+  archivedList: ConvoItemType
+  unarchivedList: ConvoItemType
+}
+
 export interface ConvoStoreType {
   /** The currently active chat-room. */
   activeRoom: ActiveRoom
@@ -50,8 +55,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
   convo: [],
   archivedConvo: [],
   async initConvo() {
-    const convoRes: any[] = await _fetch('users/convo')
-    const { unarchivedList, archivedList } = prepareConvo(convoRes)
+    const { unarchivedList, archivedList }: ConvoResponse = await _fetch('users/convo')
     set(() => ({ convo: unarchivedList, archivedConvo: archivedList }))
   },
   isProxyConvo: false,
@@ -181,48 +185,4 @@ const sortConvoCompareFn = (a: Readonly<ConvoItemType<boolean>>, b: Readonly<Con
   if (a.latestMsg!.createdAt > b.latestMsg!.createdAt) return -1
   if (a.latestMsg!.createdAt < b.latestMsg!.createdAt) return 1
   return 0
-}
-/** Generic type A = archived */
-function prepareConvo(convoRes: any[]): {
-  unarchivedList: ConvoItemType[]
-  archivedList: ConvoItemType<true>[]
-} {
-  const archivedList: ConvoItemType<true>[] = []
-  const unarchivedList: ConvoItemType[] = []
-
-  for (const convoItem of convoRes) {
-    const template: ConvoItemType<boolean> = {
-      userToRoomId: convoItem.u2r_id,
-      room: {
-        id: convoItem.r_id,
-        archived: convoItem.u2r_archived,
-        pinned: convoItem.u2r_pinned,
-        muted: convoItem.u2r_muted,
-        isGroup: convoItem.r_is_group,
-      },
-      contact: convoItem.c_id
-        ? {
-            id: convoItem.c_id,
-            alias: convoItem.c_alias,
-          }
-        : null,
-      user: {
-        id: convoItem.u_id,
-        dp: convoItem.u_dp,
-        bio: convoItem.u_bio,
-        displayName: convoItem.u_display_name,
-      },
-      latestMsg: convoItem.msg_content
-        ? {
-            content: convoItem.msg_content,
-            createdAt: convoItem.msg_created_at,
-            senderId: convoItem.msg_sender_id,
-            status: convoItem.msg_status,
-          }
-        : null,
-    }
-    if (template.room.archived) archivedList.push(template as ConvoItemType<true>)
-    else unarchivedList.push(template as ConvoItemType<false>)
-  }
-  return { unarchivedList, archivedList }
 }

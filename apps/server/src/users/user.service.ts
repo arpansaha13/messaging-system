@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
-// Entities
 import { User } from 'src/users/user.entity'
-// Types
 import type { EntityManager, Repository } from 'typeorm'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
+import type { ConvoItemType } from '@pkg/types'
+import { UserConvoResponse } from './dto/user-convo-response.dto'
 
 @Injectable()
 export class UserService {
@@ -54,7 +54,7 @@ export class UserService {
   }
 
   /** Dedicated api for convo list. */
-  getUserConvo(authUserId: number): Promise<any[]> {
+  async getUserConvo(authUserId: number): Promise<UserConvoResponse> {
     const query = `SELECT
       t1.*,
       msg.content AS msg_content,
@@ -99,10 +99,53 @@ export class UserService {
     // Use LEFT JOIN for contacts, otherwise convo with unknown users won't load
     // Use LEFT JOIN for messages, otherwise convo's with no messages won't load
     // If latestMsg is `null`, then it ranks in the end
-    return this.em.query(query)
+    const convoRes: any[] = await this.em.query(query)
+    return prepareConvo(convoRes)
   }
   async findUsers(authUserId: number, searchUserId: number): Promise<User> {
     if (authUserId === searchUserId) return null
     return this.userRepository.findOneBy({ id: searchUserId })
   }
+}
+
+/** Generic type A = archived */
+function prepareConvo(convoRes: any[]): UserConvoResponse {
+  const archivedList: ConvoItemType<true>[] = []
+  const unarchivedList: ConvoItemType[] = []
+
+  for (const convoItem of convoRes) {
+    const template: ConvoItemType<boolean> = {
+      userToRoomId: convoItem.u2r_id,
+      room: {
+        id: convoItem.r_id,
+        archived: convoItem.u2r_archived,
+        pinned: convoItem.u2r_pinned,
+        muted: convoItem.u2r_muted,
+        isGroup: convoItem.r_is_group,
+      },
+      contact: convoItem.c_id
+        ? {
+            id: convoItem.c_id,
+            alias: convoItem.c_alias,
+          }
+        : null,
+      user: {
+        id: convoItem.u_id,
+        dp: convoItem.u_dp,
+        bio: convoItem.u_bio,
+        displayName: convoItem.u_display_name,
+      },
+      latestMsg: convoItem.msg_content
+        ? {
+            content: convoItem.msg_content,
+            createdAt: convoItem.msg_created_at,
+            senderId: convoItem.msg_sender_id,
+            status: convoItem.msg_status,
+          }
+        : null,
+    }
+    if (template.room.archived) archivedList.push(template as ConvoItemType<true>)
+    else unarchivedList.push(template as ConvoItemType<false>)
+  }
+  return { unarchivedList, archivedList }
 }
