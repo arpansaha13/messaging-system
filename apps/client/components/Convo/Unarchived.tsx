@@ -9,7 +9,7 @@ export default function UnarchivedRooms() {
     state => [
       state.addChat,
       state.chats,
-      state.convo,
+      state.unarchived,
       state.setActiveChatInfo,
       state.setActiveRoom,
       state.setProxyConvo,

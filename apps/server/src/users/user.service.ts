@@ -4,7 +4,7 @@ import { User } from 'src/users/user.entity'
 import type { EntityManager, Repository } from 'typeorm'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { ConvoItemType } from '@pkg/types'
-import { UserConvoResponse } from './dto/user-convo-response.dto'
+import type { UserConvoResponse } from './dto/user-convo-response.dto'
 
 @Injectable()
 export class UserService {
@@ -110,8 +110,8 @@ export class UserService {
 
 /** Generic type A = archived */
 function prepareConvo(convoRes: any[]): UserConvoResponse {
-  const archivedList: ConvoItemType<true>[] = []
-  const unarchivedList: ConvoItemType[] = []
+  const archived: ConvoItemType<true>[] = []
+  const unarchived: ConvoItemType[] = []
 
   for (const convoItem of convoRes) {
     const template: ConvoItemType<boolean> = {
@@ -144,8 +144,8 @@ function prepareConvo(convoRes: any[]): UserConvoResponse {
           }
         : null,
     }
-    if (template.room.archived) archivedList.push(template as ConvoItemType<true>)
-    else unarchivedList.push(template as ConvoItemType<false>)
+    if (template.room.archived) archived.push(template as ConvoItemType<true>)
+    else unarchived.push(template as ConvoItemType<false>)
   }
-  return { unarchivedList, archivedList }
+  return { unarchived, archived }
 }

@@ -5,11 +5,11 @@ import _fetch from '~/utils/_fetch'
 import type { ConvoItemType, MessageType } from '@pkg/types'
 
 export default function Archived() {
-  const [add, chats, archivedConvo, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
+  const [add, chats, archived, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
     state => [
       state.addChat,
       state.chats,
-      state.archivedConvo,
+      state.archived,
       state.setActiveChatInfo,
       state.setActiveRoom,
       state.setProxyConvo,
@@ -35,7 +35,7 @@ export default function Archived() {
   return (
     <div>
       <ul role="list">
-        {archivedConvo.map(convoItem => (
+        {archived.map(convoItem => (
           <ConvoItem
             key={convoItem.room.id}
             roomId={convoItem.room.id}

@@ -37,7 +37,8 @@ export const useStore = createWithEqualityFn<StoreType>()(
       a[0]({
         activeChatInfo: null,
         activeRoom: null,
-        convo: [],
+        unarchived: [],
+        archived: [],
         isProxyConvo: false,
         chats: new Map<number, Map<number, MessageType>>(),
         contacts: {},
@@ -51,7 +52,6 @@ export const useStore = createWithEqualityFn<StoreType>()(
         typingState: {},
         slideOverState: {
           open: false,
-          title: 'New Chat',
           componentName: 'ContactList',
         },
       })

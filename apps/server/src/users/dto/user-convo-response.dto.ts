@@ -1,6 +1,6 @@
 import { ConvoItemType } from '@pkg/types'
 
 export interface UserConvoResponse {
-  unarchivedList: ConvoItemType[]
-  archivedList: ConvoItemType<true>[]
+  unarchived: ConvoItemType[]
+  archived: ConvoItemType<true>[]
 }
