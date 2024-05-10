@@ -19,17 +19,6 @@ export interface RoomResType<G = true> {
   isGroup: G
 }
 
-export interface ContactResType {
-  id: number
-  alias: string
-  userInContact: {
-    id: number
-    bio: string
-    dp: string | null
-    displayName: string
-  }
-}
-
 export type MsgResType = null | {
   content: string
   senderId: number

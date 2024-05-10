@@ -25,13 +25,32 @@ export class ContactService {
     }
   }
 
-  async getAllContactsOfUser(authUser: User): Promise<Contact[]> {
-    return this.contactRepository.find({
+  // TODO: fix response types
+  async getAllContactsOfUser(authUser: User): Promise<Record<string, Contact[]>> {
+    const contactsRes = await this.contactRepository.find({
       select: this.#contactSelect,
       where: { user: { id: authUser.id } },
       order: { alias: 'ASC' },
       relations: { userInContact: true },
     })
+
+    const newContacts = {}
+
+    for (const contactResItem of contactsRes) {
+      const letter = contactResItem.alias[0]
+      if (typeof newContacts[letter] === 'undefined') newContacts[letter] = []
+
+      newContacts[letter].push({
+        alias: contactResItem.alias,
+        contactId: contactResItem.id,
+        userId: contactResItem.userInContact.id,
+        bio: contactResItem.userInContact.bio,
+        dp: contactResItem.userInContact.dp,
+        displayName: contactResItem.userInContact.displayName,
+      })
+    }
+
+    return newContacts
   }
 
   // TODO: Add validation - if the contact is not of the user, then throe Unauthorized error
