@@ -1,21 +1,17 @@
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
 import { Icon } from '@iconify/react'
 import githubIcon from '@iconify-icons/mdi/github'
 import { ChatBubbleBottomCenterTextIcon, UserPlusIcon } from '@heroicons/react/20/solid'
-import Avatar from '~common/Avatar'
 import HeaderDropDown from '../HeaderDropDown'
 import { useStore } from '~/store'
-import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 
 const SidebarHeader = () => {
   const router = useRouter()
-  const [toggleSlideOver, setSlideOverState, resetStore] = useStore(
-    state => [state.toggleSlideOver, state.setSlideOverState, state.resetStore],
-    shallow,
-  )
+  const [resetStore] = useStore(state => [state.resetStore], shallow)
 
   const menuItems = [
     {
@@ -27,22 +23,6 @@ const SidebarHeader = () => {
       },
     },
   ]
-
-  function openNewChatMenu() {
-    setSlideOverState({
-      title: 'New chat',
-      componentName: 'ContactList',
-    })
-    toggleSlideOver(true)
-  }
-
-  function openAddContactMenu() {
-    setSlideOverState({
-      title: 'Add new contact',
-      componentName: 'AddContact',
-    })
-    toggleSlideOver(true)
-  }
 
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none">
@@ -56,18 +36,19 @@ const SidebarHeader = () => {
         >
           <Icon icon={githubIcon} className="flex-shrink-0" color="inherit" width={24} height={24} />
         </a>
-        <button className="p-2 btn-icon" onClick={openAddContactMenu}>
+        <Link href="/add-contact" className="p-2 btn-icon">
           <UserPlusIcon className="w-6 h-6 flex-shrink-0" />
-        </button>
+        </Link>
         {/* <button className="p-2 btn-icon">
           <ViewfinderCircleIcon className="w-6 h-6 flex-shrink-0" />
         </button> */}
-        <button className="p-2 btn-icon" onClick={openNewChatMenu}>
+        <Link href="/contacts" className="p-2 btn-icon">
           <ChatBubbleBottomCenterTextIcon className="w-6 h-6 flex-shrink-0" />
-        </button>
+        </Link>
         <HeaderDropDown menuItems={menuItems} />
       </div>
     </header>
   )
 }
+
 export default memo(SidebarHeader)

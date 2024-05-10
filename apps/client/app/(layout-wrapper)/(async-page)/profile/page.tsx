@@ -1,3 +1,5 @@
+'use client'
+
 import { memo, useEffect, useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
@@ -70,7 +72,7 @@ const Field = ({ heading, content, setContent, editState, setEditState }: FieldP
 
 const MemoisedField = memo(Field)
 
-const Profile = () => {
+export default function Page() {
   const [authUser, setAuthUser] = useAuthStore(state => [state.authUser!, state.setAuthUser], shallow)
 
   const [editingBio, setEditBio] = useState(false)
@@ -135,4 +137,3 @@ const Profile = () => {
     </div>
   )
 }
-export default memo(Profile)

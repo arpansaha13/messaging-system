@@ -1,3 +1,5 @@
+'use client'
+
 import { type ChangeEvent, useRef, useState, KeyboardEvent, type FormEvent } from 'react'
 import { Dialog } from '@headlessui/react'
 import { useDebounce } from 'react-use'
@@ -7,12 +9,12 @@ import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
 import BaseInput from '~base/BaseInput'
 import SearchBar from '~common/SearchBar'
-import ContactListItem from './ContactListItem'
+import ContactListItem from '~/components/ContactList/ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ContactResType, UserType } from '@pkg/types'
+import type { ContactType, UserType } from '@pkg/types'
 
-const AddContact = () => {
+export default function Page() {
   const [toggleNotification, setNotification, toggleSlideOver, initContactStore] = useStore(
     state => [state.toggleNotification, state.setNotification, state.toggleSlideOver, state.initContactStore],
     shallow,
@@ -31,7 +33,7 @@ const AddContact = () => {
   const baseInputRef = useRef(null)
 
   const [searchRes, setSearchRes] = useState<UserType | null>(null)
-  const [existingContact, setExistingContact] = useState<ContactResType | null>(null)
+  const [existingContact, setExistingContact] = useState<ContactType | null>(null)
 
   useDebounce(
     () => {
@@ -44,7 +46,7 @@ const AddContact = () => {
         setExistingContact(null)
         return
       }
-      _fetch(`contacts?userId=${value}`).then(async (resContact: ContactResType) => {
+      _fetch(`contacts?userId=${value}`).then(async (resContact: ContactType) => {
         if (!resContact) {
           const resUser: UserType = await _fetch(`users/search?search=${value}`)
           setSearchRes(resUser ? resUser : null)
@@ -124,14 +126,14 @@ const AddContact = () => {
           </p>
           <div className="mt-4 mx-auto text-center flex justify-center">
             <Avatar
-              src={existingContact.userInContact.dp}
-              alt={`display picture of ${existingContact.userInContact.displayName}`}
+              src={existingContact.dp}
+              alt={`display picture of ${existingContact.displayName}`}
               width={5}
               height={5}
             />
           </div>
           <div className="mt-2">
-            <p className="text-sm text-center text-gray-500 dark:text-gray-300">{existingContact.userInContact.bio}</p>
+            <p className="text-sm text-center text-gray-500 dark:text-gray-300">{existingContact.bio}</p>
           </div>
         </>
       )}
@@ -180,4 +182,3 @@ const AddContact = () => {
     </div>
   )
 }
-export default AddContact

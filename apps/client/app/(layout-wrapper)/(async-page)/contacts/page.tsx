@@ -1,11 +1,12 @@
-import { memo } from 'react'
+'use client'
+
 import { shallow } from 'zustand/shallow'
-import ContactListItem from './ContactListItem'
+import ContactListItem from '~/components/ContactList/ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { ContactType, MessageType } from '@pkg/types'
 
-export const ContactList = () => {
+export default function Page() {
   const [add, chats, contacts, searchConvoByUserId, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
     state => [
       state.addChat,
@@ -43,7 +44,7 @@ export const ContactList = () => {
   }
 
   return (
-    <nav className="h-full overflow-y-scroll scrollbar" aria-label="Directory">
+    <div className="overflow-y-scroll scrollbar" aria-label="Directory">
       {Object.keys(contacts).map(letter => (
         <div key={letter} className="relative">
           {/* Size of image = h-12 w-12 */}
@@ -58,7 +59,6 @@ export const ContactList = () => {
           </ul>
         </div>
       ))}
-    </nav>
+    </div>
   )
 }
-export default memo(ContactList)

@@ -1,24 +1,21 @@
-import { type FormEventHandler, memo, useRef, useState } from 'react'
+'use client'
+
+import { type FormEventHandler, useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
-// Custom Hook
 import { useDark } from '~/hooks/useDark'
-// Components
 import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
-// Icons
 import { Icon } from '@iconify/react'
 import themeIcon from '@iconify-icons/mdi/brightness-6'
-// Stores
-import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import { isNullOrUndefined } from '@arpansaha13/utils'
+import Link from 'next/link'
 
-const Settings = () => {
+export default function Settings() {
   const [themeModalOpen, setThemeModal] = useState(false)
   const [isDark, toggleDark] = useDark()
 
   const [authUser] = useAuthStore(state => [state.authUser!], shallow)
-  const setSlideOverState = useStore(state => state.setSlideOverState)
 
   const themeFormRef = useRef<HTMLFormElement>(null)
   const themes = [
@@ -35,25 +32,19 @@ const Settings = () => {
     toggleDark(selectedTheme === 'dark')
     setThemeModal(false)
   }
-  function openProfile() {
-    setSlideOverState({
-      title: 'Profile',
-      componentName: 'Profile',
-    })
-  }
 
   return (
     <div>
-      <button
+      <Link
+        href="/profile"
         className="pl-4 py-4 flex items-center w-full text-left hover:bg-gray-200/60 dark:hover:bg-gray-600/40"
-        onClick={openProfile}
       >
         <Avatar src={authUser.dp} width={5} height={5} />
         <div className="ml-4">
           <p className="text-lg text-gray-900 dark:text-gray-100">{authUser.displayName}</p>
           <p className="text-base text-gray-600 dark:text-gray-300">{authUser.bio}</p>
         </div>
-      </button>
+      </Link>
 
       <ul>
         <li>
@@ -117,4 +108,3 @@ const Settings = () => {
     </div>
   )
 }
-export default memo(Settings)

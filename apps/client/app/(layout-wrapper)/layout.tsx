@@ -4,13 +4,16 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import Loading from '~/components/Loading'
-import AsyncPage from '~/components/AsyncPage'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { AuthUserResType } from '@pkg/types'
 
-export default function Page() {
+interface LayoutWrapperProps {
+  children: React.ReactNode
+}
+
+export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const router = useRouter()
 
   const setAuthUser = useAuthStore(state => state.setAuthUser, shallow)
@@ -33,7 +36,7 @@ export default function Page() {
   }, [])
 
   if (hasLoaded) {
-    return <AsyncPage />
+    return children
   } else {
     return <Loading />
   }

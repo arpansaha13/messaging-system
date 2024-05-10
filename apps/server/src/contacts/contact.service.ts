@@ -26,7 +26,7 @@ export class ContactService {
   }
 
   // TODO: fix response types
-  async getAllContactsOfUser(authUser: User): Promise<Record<string, Contact[]>> {
+  async getAllContactsOfUser(authUser: User): Promise<Record<string, any[]>> {
     const contactsRes = await this.contactRepository.find({
       select: this.#contactSelect,
       where: { user: { id: authUser.id } },
@@ -61,12 +61,24 @@ export class ContactService {
       relations: { userInContact: true },
     })
   }
-  async getContactByUserId(authUser: User, userId: number): Promise<Contact> {
-    return this.contactRepository.findOne({
+
+  async getContactByUserId(authUser: User, userId: number): Promise<any> {
+    const res = await this.contactRepository.findOne({
       select: this.#contactSelect,
       where: { user: { id: authUser.id }, userInContact: { id: userId } },
       relations: { userInContact: true },
     })
+
+    if (!res) return res
+
+    return {
+      alias: res.alias,
+      contactId: res.id,
+      userId: res.userInContact.id,
+      bio: res.userInContact.bio,
+      dp: res.userInContact.dp,
+      displayName: res.userInContact.displayName,
+    }
   }
 
   async addToContactsOfUser(authUser: User, userIdToAdd: number, alias: string): Promise<string> {

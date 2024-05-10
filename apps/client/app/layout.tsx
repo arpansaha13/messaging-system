@@ -6,13 +6,16 @@ export const metadata: Metadata = {
   description: 'A WhatsApp Clone project',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+interface RootLayoutProps {
+  children: React.ReactNode
+}
 
+export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
   return (
     <html lang="en">
       {/* Browser extensions like grammarly will add attributes on body causing hydration warnings */}
-      <body suppressHydrationWarning>
-        <div className="w-screen h-screen relative">{children}</div>
+      <body suppressHydrationWarning className="w-screen h-screen">
+        {children}
       </body>
     </html>
   )
