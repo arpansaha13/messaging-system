@@ -20,6 +20,7 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d data-source.ts"
   },
   "dependencies": {
+    "@arpansaha13/utils": "^0.6.0",
     "@nestjs-modules/mailer": "^1.11.2",
     "@nestjs/cli": "^10.3.2",
     "@nestjs/common": "^10.3.7",

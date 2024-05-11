@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 import * as bcrypt from 'bcryptjs'
+import { slugify } from '@arpansaha13/utils'
 import { InvalidOrExpiredException } from 'src/common/exceptions'
 import { User } from 'src/users/user.entity'
 import { UnverifiedUser } from './auth.entity'
@@ -57,6 +58,17 @@ export class AuthService {
     return result
   }
 
+  private generateUsername(globalName: string) {
+    const HASH_LENGTH = 6
+    const hash = this.generateHash(HASH_LENGTH)
+    const separator = '-'
+    const USERNAME_MAXLENGTH = 20
+    const SLUG_MAXLENGTH_WITHOUT_HASH = USERNAME_MAXLENGTH - HASH_LENGTH - 1
+    const slug = slugify(globalName.slice(0, SLUG_MAXLENGTH_WITHOUT_HASH), separator)
+
+    return slug + '-' + hash
+  }
+
   async checkAuth(request: Request): Promise<{ valid: boolean }> {
     const token = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
 
@@ -86,6 +98,7 @@ export class AuthService {
     // TODO: Verify if the hash already exists in db
     const hash = this.generateHash()
     const otp = this.generateOtp()
+    const username = this.generateUsername(credentials.globalName)
     let unverifiedUser: UnverifiedUser = null!
 
     try {
@@ -97,6 +110,7 @@ export class AuthService {
           hash,
           otp,
           email: credentials.email,
+          username,
           globalName: credentials.globalName,
           password: hashedPwd,
         })
@@ -172,6 +186,7 @@ export class AuthService {
           email: unverifiedUser.email,
           globalName: unverifiedUser.globalName,
           password: unverifiedUser.password,
+          username: unverifiedUser.username,
         })
 
         await txnManager.save(newUser)
