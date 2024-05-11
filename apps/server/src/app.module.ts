@@ -30,6 +30,7 @@ import type { EnvVariables } from 'src/env.types'
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService<EnvVariables>) => ({
+        entities: ['dist/**/*.entity.js'],
         type: 'postgres',
         host: configService.get('TYPEORM_HOST'),
         port: configService.get('TYPEORM_PORT'),
@@ -37,8 +38,6 @@ import type { EnvVariables } from 'src/env.types'
         password: configService.get('TYPEORM_PASSWORD'),
         database: configService.get('TYPEORM_DATABASE'),
         url: configService.get('TYPEORM_DATABASE_URL'),
-        autoLoadEntities: configService.get('NODE_ENV') === 'development',
-        synchronize: configService.get('NODE_ENV') === 'development', // Do not use in production
       }),
     }),
   ],
