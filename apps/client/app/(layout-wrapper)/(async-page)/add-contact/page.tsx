@@ -15,8 +15,8 @@ import _fetch from '~/utils/_fetch'
 import type { ContactType, UserType } from '@pkg/types'
 
 export default function Page() {
-  const [toggleNotification, setNotification, toggleSlideOver, initContactStore] = useStore(
-    state => [state.toggleNotification, state.setNotification, state.toggleSlideOver, state.initContactStore],
+  const [toggleNotification, setNotification, initContactStore] = useStore(
+    state => [state.toggleNotification, state.setNotification, state.initContactStore],
     shallow,
   )
 
@@ -84,7 +84,6 @@ export default function Page() {
         title: 'Contact added',
         description: res.message,
       })
-      toggleSlideOver(false)
       initContactStore()
       setTimeout(() => {
         toggleNotification(false)

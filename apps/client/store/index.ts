@@ -7,7 +7,6 @@ import { type ChatStoreType, useChatStore } from './slices/useChatStore'
 import { type ContactStoreType, useContactStore } from './slices/useContactStore'
 import { type DraftStoreType, useDraftStore } from './slices/useDraftStore'
 import { type NotificationStateType, useNotificationState } from './slices/useNotificationState'
-import { type SlideOverStateType, useSlideOverState } from './slices/useSlideOverState'
 import { type TypingStateType, useTypingState } from './slices/useTypingState'
 
 export interface StoreType
@@ -16,7 +15,6 @@ export interface StoreType
     ContactStoreType,
     DraftStoreType,
     NotificationStateType,
-    SlideOverStateType,
     TypingStateType {
   resetStore: () => void
 }
@@ -30,7 +28,6 @@ export const useStore = createWithEqualityFn<StoreType>()(
     ...useContactStore(...a),
     ...useDraftStore(...a),
     ...useNotificationState(...a),
-    ...useSlideOverState(...a),
     ...useTypingState(...a),
 
     resetStore() {
@@ -50,10 +47,6 @@ export const useStore = createWithEqualityFn<StoreType>()(
           show: false,
         },
         typingState: {},
-        slideOverState: {
-          open: false,
-          componentName: 'ContactList',
-        },
       })
     },
   })),
