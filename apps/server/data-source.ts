@@ -6,13 +6,14 @@ dotEnvConfig()
 export const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: process.env.TYPEORM_HOST,
+  port: parseInt(process.env.TYPEORM_PORT ?? '5432'),
   database: process.env.TYPEORM_DATABASE,
   username: process.env.TYPEORM_USERNAME,
   password: process.env.TYPEORM_PASSWORD,
   ssl: {
     rejectUnauthorized: false,
   },
-  entities: ['dist/**/*.entity.js'], // 'src/**/*.entity.ts'
+  entities: ['dist/**/*.entity.js'],
   migrations: ['migrations/*.ts'],
 }
 
