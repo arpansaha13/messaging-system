@@ -32,8 +32,6 @@ export class AuthService {
     private unverifiedUserRepository: Repository<UnverifiedUser>,
   ) {}
 
-  private PASSWORD_MISMATCH_EXCEPTION_MESSAGE = 'Password and confirm-password do not match.'
-
   private generateHash(length = 8) {
     let result = ''
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -91,10 +89,6 @@ export class AuthService {
   }
 
   async signUp(credentials: SignUpDto): Promise<string> {
-    if (credentials.password !== credentials.confirmPassword) {
-      throw new UnauthorizedException(this.PASSWORD_MISMATCH_EXCEPTION_MESSAGE)
-    }
-
     // TODO: Verify if the hash already exists in db
     const hash = this.generateHash()
     const otp = this.generateOtp()

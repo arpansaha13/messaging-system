@@ -62,11 +62,13 @@ export default function SignUpPage() {
         })
       })
       .catch(err => {
+        const message: string | Array<string> = err.message
+
         setNotification({
           show: true,
           status: 'error',
           title: 'Sign up failed!',
-          description: err.message,
+          description: typeof message === 'string' ? message : message[0],
         })
       })
       .finally(() => setLoading(false))
