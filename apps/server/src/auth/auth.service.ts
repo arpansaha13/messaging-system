@@ -93,32 +93,34 @@ export class AuthService {
     const hash = this.generateHash()
     const otp = this.generateOtp()
     const username = this.generateUsername(credentials.globalName)
-    let unverifiedUser: UnverifiedUser = null!
 
     try {
       // TODO: Retry if failed
       await this.manager.transaction(async txnManager => {
         const hashedPwd = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
 
-        unverifiedUser = txnManager.create(UnverifiedUser, {
-          hash,
-          otp,
-          email: credentials.email,
-          username,
-          globalName: credentials.globalName,
-          password: hashedPwd,
-        })
-        await txnManager.save(unverifiedUser)
+        if (await this.userRepository.exists({ where: { email: credentials.email } })) {
+          throw new ConflictException('This email is already registered.')
+        }
+
+        await txnManager.upsert(
+          UnverifiedUser,
+          {
+            hash,
+            otp,
+            email: credentials.email,
+            username,
+            globalName: credentials.globalName,
+            password: hashedPwd,
+          },
+          { conflictPaths: ['email'], skipUpdateIfNoValuesChanged: true },
+        )
       })
 
-      await this.mailService.sendVerificationMail(unverifiedUser, hash, otp)
+      await this.mailService.sendVerificationMail(credentials.email, credentials.globalName, hash, otp)
       return 'Please verify your account using the link sent to your email.'
     } catch (error) {
-      if (error.code === '23505') {
-        // Duplicate key
-        throw new ConflictException('Email id is already registered.')
-      }
-
+      if (error.status === 409) throw error
       console.log(error)
       throw new InternalServerErrorException()
     }
