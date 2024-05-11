@@ -44,7 +44,7 @@ export default function Page() {
   }
 
   return (
-    <div className="overflow-y-scroll scrollbar" aria-label="Directory">
+    <div aria-label="Directory">
       {Object.keys(contacts).map(letter => (
         <div key={letter} className="relative">
           {/* Size of image = h-12 w-12 */}

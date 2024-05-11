@@ -92,7 +92,7 @@ export default function Page() {
   }
 
   return (
-    <div className="p-2 h-full overflow-y-scroll scrollbar">
+    <div className="p-2">
       <SearchBar
         id="search"
         name="search"

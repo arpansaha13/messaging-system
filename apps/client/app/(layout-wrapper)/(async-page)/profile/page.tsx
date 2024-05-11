@@ -97,7 +97,7 @@ export default function Page() {
   }, [displayName, bio, authUser])
 
   return (
-    <div className="px-8 py-6 space-y-10 h-full overflow-auto scrollbar">
+    <div className="px-8 py-6 space-y-10">
       <div className="flex justify-center">
         <Avatar src={authUser.dp} width={12.5} height={12.5} />
       </div>
