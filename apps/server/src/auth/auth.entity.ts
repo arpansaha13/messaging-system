@@ -12,6 +12,9 @@ export class UnverifiedUser extends BaseEntityNoPk {
   @Column({ name: 'global_name', nullable: false })
   globalName: string
 
+  @Column({ name: 'username', nullable: false })
+  username: string
+
   @Column({ unique: true, nullable: false })
   email: string
 
