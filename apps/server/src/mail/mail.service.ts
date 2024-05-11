@@ -18,7 +18,7 @@ export class MailService {
         // ✏️ filling curly brackets with content
         url,
         otp,
-        name: user.displayName,
+        name: user.globalName,
       },
     })
   }

@@ -9,8 +9,8 @@ export class UnverifiedUser extends BaseEntityNoPk {
   @Column({ nullable: false })
   otp: string
 
-  @Column({ name: 'display_name', nullable: false })
-  displayName: string
+  @Column({ name: 'global_name', nullable: false })
+  globalName: string
 
   @Column({ unique: true, nullable: false })
   email: string

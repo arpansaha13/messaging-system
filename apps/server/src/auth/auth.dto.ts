@@ -18,7 +18,7 @@ export class SignUpDto {
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(20)
-  displayName: string
+  globalName: string
 }
 
 export class SignInDto {

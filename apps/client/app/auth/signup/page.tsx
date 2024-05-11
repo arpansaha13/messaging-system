@@ -18,8 +18,6 @@ import { useMap } from 'react-use'
 // }
 
 export default function SignUpPage() {
-  const router = useRouter()
-
   // TODO: block this page if authenticated
 
   const [setNotification] = useStore(state => [state.setNotification], shallow)
@@ -91,13 +89,13 @@ export default function SignUpPage() {
               <BaseInput id="email" name="email" type="email" autoComplete="email" required label="Email address" />
 
               <BaseInput
-                id="display-name"
-                name="displayName"
-                autoComplete="username"
+                id="global-name"
+                name="globalName"
+                autoComplete="name"
                 required
                 minLength={1}
                 maxLength={20}
-                label="Display name"
+                label="Name"
               />
 
               <BaseInput

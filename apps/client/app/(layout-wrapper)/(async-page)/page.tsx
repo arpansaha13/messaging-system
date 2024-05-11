@@ -42,7 +42,7 @@ export default function Page() {
             key={convoItem.room.id}
             roomId={convoItem.room.id}
             dp={convoItem.user.dp}
-            displayName={convoItem.user.displayName}
+            globalName={convoItem.user.globalName}
             pinned={convoItem.room.pinned}
             alias={convoItem.contact?.alias ?? null}
             latestMsg={convoItem.latestMsg}

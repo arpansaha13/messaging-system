@@ -41,7 +41,7 @@ export default function Settings() {
       >
         <Avatar src={authUser.dp} width={5} height={5} />
         <div className="ml-4">
-          <p className="text-lg text-gray-900 dark:text-gray-100">{authUser.displayName}</p>
+          <p className="text-lg text-gray-900 dark:text-gray-100">{authUser.globalName}</p>
           <p className="text-base text-gray-600 dark:text-gray-300">{authUser.bio}</p>
         </div>
       </Link>

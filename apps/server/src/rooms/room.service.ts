@@ -40,7 +40,7 @@ export class RoomService {
             id: true,
             dp: true,
             bio: true,
-            displayName: true,
+            globalName: true,
           },
         },
       },

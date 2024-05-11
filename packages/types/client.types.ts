@@ -15,7 +15,7 @@ export interface ConvoItemType<A = false, G = false> {
     id: number
     dp: string | null
     bio: string
-    displayName: string
+    globalName: string
   }
   /** Will be `null` if this user is not in contacts. */
   contact: null | {
@@ -34,7 +34,7 @@ export interface UserType {
   id: number
   bio: string
   dp: string | null
-  displayName: string
+  globalName: string
 }
 export interface AuthUserType extends UserType {
   email: string
@@ -49,5 +49,5 @@ export interface ContactType {
   alias: string
   bio: string
   dp: string | null
-  displayName: string
+  globalName: string
 }

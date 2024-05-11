@@ -65,7 +65,7 @@ export class UserService {
       SELECT
         u2r.u2r_id, u2r.u2r_archived, u2r.u2r_pinned, u2r.u2r_muted,
         r.id AS r_id, r.is_group AS r_is_group,
-        u.id AS u_id, u.dp AS u_dp, u.bio AS u_bio, u.display_name AS u_display_name,
+        u.id AS u_id, u.dp AS u_dp, u.bio AS u_bio, u.global_name AS u_global_name,
         contact.id AS c_id, contact.alias AS c_alias,
         (
           SELECT msg.id AS msg_id
@@ -133,7 +133,7 @@ function prepareConvo(convoRes: any[]): UserConvoResponse {
         id: convoItem.u_id,
         dp: convoItem.u_dp,
         bio: convoItem.u_bio,
-        displayName: convoItem.u_display_name,
+        globalName: convoItem.u_global_name,
       },
       latestMsg: convoItem.msg_content
         ? {

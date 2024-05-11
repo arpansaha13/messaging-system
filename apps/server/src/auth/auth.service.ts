@@ -97,7 +97,7 @@ export class AuthService {
           hash,
           otp,
           email: credentials.email,
-          displayName: credentials.displayName,
+          globalName: credentials.globalName,
           password: hashedPwd,
         })
         await txnManager.save(unverifiedUser)
@@ -170,7 +170,7 @@ export class AuthService {
 
         const newUser = txnManager.create(User, {
           email: unverifiedUser.email,
-          displayName: unverifiedUser.displayName,
+          globalName: unverifiedUser.globalName,
           password: unverifiedUser.password,
         })
 

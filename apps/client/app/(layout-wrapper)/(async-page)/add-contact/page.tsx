@@ -27,7 +27,7 @@ export default function Page() {
     alias: '',
     dp: null as string | null,
     bio: '',
-    displayName: '',
+    globalName: '',
   })
   const isFirstRun = useRef(true)
   const baseInputRef = useRef(null)
@@ -111,8 +111,8 @@ export default function Page() {
             userId={searchRes.id}
             bio={searchRes.bio}
             dp={searchRes.dp}
-            alias={`~${searchRes.displayName}`}
-            displayName={searchRes.displayName}
+            alias={`~${searchRes.globalName}`}
+            globalName={searchRes.globalName}
             onClick={() => handleClick(searchRes)}
           />
         </ul>
@@ -126,7 +126,7 @@ export default function Page() {
           <div className="mt-4 mx-auto text-center flex justify-center">
             <Avatar
               src={existingContact.dp}
-              alt={`display picture of ${existingContact.displayName}`}
+              alt={`display picture of ${existingContact.globalName}`}
               width={5}
               height={5}
             />
@@ -140,10 +140,10 @@ export default function Page() {
       <Modal initialFocusRef={baseInputRef} open={modalOpen} setOpen={setOpen}>
         <div className="mt-3 sm:mt-5">
           <Dialog.Title as="h3" className="text-lg text-center font-medium leading-6 text-gray-900 dark:text-white">
-            Add {`~${modalContent.displayName}`} to contacts
+            Add {`~${modalContent.globalName}`} to contacts
           </Dialog.Title>
           <div className="mt-4 mx-auto text-center flex justify-center">
-            <Avatar src={modalContent.dp} alt={`display picture of ${modalContent.displayName}`} width={6} height={6} />
+            <Avatar src={modalContent.dp} alt={`display picture of ${modalContent.globalName}`} width={6} height={6} />
           </div>
           <div className="mt-2">
             <p className="text-sm text-center text-gray-500 dark:text-gray-300">{modalContent.bio}</p>

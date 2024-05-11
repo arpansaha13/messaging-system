@@ -30,7 +30,7 @@ export default function Page() {
         id: contact.userId,
         bio: contact.bio,
         dp: contact.dp,
-        displayName: contact.displayName,
+        globalName: contact.globalName,
       },
     })
     const convo = searchConvoByUserId(contact.userId)

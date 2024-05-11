@@ -21,7 +21,7 @@ export class ContactService {
       id: true
       dp: true
       bio: true
-      displayName: true
+      globalName: true
     }
   }
 
@@ -46,7 +46,7 @@ export class ContactService {
         userId: contactResItem.userInContact.id,
         bio: contactResItem.userInContact.bio,
         dp: contactResItem.userInContact.dp,
-        displayName: contactResItem.userInContact.displayName,
+        globalName: contactResItem.userInContact.globalName,
       })
     }
 
@@ -77,7 +77,7 @@ export class ContactService {
       userId: res.userInContact.id,
       bio: res.userInContact.bio,
       dp: res.userInContact.dp,
-      displayName: res.userInContact.displayName,
+      globalName: res.userInContact.globalName,
     }
   }
 

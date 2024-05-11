@@ -6,8 +6,8 @@ import { BaseEntity } from 'src/common/entities/base.entity'
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
-  @Column({ name: 'display_name', nullable: false })
-  displayName: string
+  @Column({ name: 'global_name', nullable: false })
+  globalName: string
 
   @Column({ unique: true, nullable: false })
   email: string

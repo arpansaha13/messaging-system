@@ -17,7 +17,7 @@ export interface ConvoItemProps {
   roomId: number
   alias: string | null
   dp: string | null
-  displayName: string
+  globalName: string
   latestMsg: ConvoItemType['latestMsg']
   archived?: boolean
   pinned?: boolean
@@ -28,7 +28,7 @@ const ConvoItem = ({
   roomId,
   alias,
   dp,
-  displayName,
+  globalName,
   latestMsg,
   archived = false,
   pinned = false,
@@ -139,7 +139,7 @@ const ConvoItem = ({
         <div className="ml-4 py-3 w-full border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
             <p className="text-base text-black dark:text-gray-50">
-              {alias ?? <span className="italic">{`~${displayName}`}</span>}
+              {alias ?? <span className="italic">{`~${globalName}`}</span>}
             </p>
             {latestMsg && (
               <p

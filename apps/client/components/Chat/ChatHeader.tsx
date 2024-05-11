@@ -77,7 +77,7 @@ const ChatHeader = () => {
 
         <div>
           <p className="text-gray-800 dark:text-gray-50 font-semibold">
-            {activeChatInfo.contact?.alias ?? <span className="italic">{`~${activeChatInfo.user.displayName}`}</span>}
+            {activeChatInfo.contact?.alias ?? <span className="italic">{`~${activeChatInfo.user.globalName}`}</span>}
           </p>
           <p
             className={classNames(

@@ -12,5 +12,5 @@ export class UpdateUserInfoDto {
 
   @IsOptional()
   @IsString()
-  displayName?: User['displayName']
+  globalName?: User['globalName']
 }

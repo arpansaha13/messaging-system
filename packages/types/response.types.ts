@@ -31,7 +31,7 @@ export interface AuthUserResType {
   bio: string
   email: string
   dp: string | null
-  displayName: string
+  globalName: string
   createdAt: string
   updatedAt: string
   deletedAt: string

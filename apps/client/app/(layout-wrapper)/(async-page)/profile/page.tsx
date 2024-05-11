@@ -77,14 +77,14 @@ export default function Page() {
 
   const [editingBio, setEditBio] = useState(false)
   const [editingDisplayName, setEditDisplayName] = useState(false)
-  const [displayName, setDisplayName] = useState(authUser.displayName)
+  const [globalName, setDisplayName] = useState(authUser.globalName)
   const [bio, setBio] = useState(authUser.bio)
 
   useEffect(() => {
-    const data: Partial<Pick<AuthUserType, 'bio' | 'displayName'>> = {}
+    const data: Partial<Pick<AuthUserType, 'bio' | 'globalName'>> = {}
 
     if (authUser.bio !== bio) data.bio = bio
-    if (authUser.displayName !== displayName) data.displayName = displayName
+    if (authUser.globalName !== globalName) data.globalName = globalName
     if (Object.keys(data).length === 0) return
 
     _fetch('users/me', {
@@ -94,7 +94,7 @@ export default function Page() {
       setAuthUser(res)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [displayName, bio, authUser])
+  }, [globalName, bio, authUser])
 
   return (
     <div className="px-8 py-6 space-y-10">
@@ -115,7 +115,7 @@ export default function Page() {
       <div>
         <MemoisedField
           heading="Your name"
-          content={displayName}
+          content={globalName}
           setContent={setDisplayName}
           editState={editingDisplayName}
           setEditState={setEditDisplayName}
