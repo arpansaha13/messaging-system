@@ -28,23 +28,14 @@ const SidebarHeader = () => {
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none">
       <p className="text-xl font-bold text-gray-950 dark:text-white">Chats</p>
       <div className="flex items-center text-gray-500 dark:text-gray-400 space-x-2">
-        <a
+        {/* <a
           href="https://github.com/arpansaha13/whatsapp-clone"
           target="_blank"
           rel="noreferrer"
           className="block p-2 btn-icon cursor-pointer"
         >
           <Icon icon={githubIcon} className="flex-shrink-0" color="inherit" width={24} height={24} />
-        </a>
-        <Link href="/add-contact" className="p-2 btn-icon">
-          <UserPlusIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
-        {/* <button className="p-2 btn-icon">
-          <ViewfinderCircleIcon className="w-6 h-6 flex-shrink-0" />
-        </button> */}
-        <Link href="/contacts" className="p-2 btn-icon">
-          <ChatBubbleBottomCenterTextIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
+        </a> */}
         <HeaderDropDown menuItems={menuItems} />
       </div>
     </header>

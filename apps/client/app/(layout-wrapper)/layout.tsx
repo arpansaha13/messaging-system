@@ -13,7 +13,7 @@ interface LayoutWrapperProps {
   children: React.ReactNode
 }
 
-export default function LayoutWrapper({ children }: LayoutWrapperProps) {
+export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
   const router = useRouter()
 
   const setAuthUser = useAuthStore(state => state.setAuthUser, shallow)

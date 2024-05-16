@@ -10,10 +10,9 @@ export default function rfetch(url: string, request: Request) {
   // TypeError: Request with GET/HEAD method cannot have body.
   // Probably the "method" does not get copied while cloning a Request object
 
-  const { cache, credentials, headers, integrity, method, mode, redirect, referrer, referrerPolicy, body } = request
+  const { credentials, headers, integrity, method, mode, redirect, referrer, referrerPolicy, body } = request
 
   return fetch(newURL, {
-    cache,
     credentials,
     headers,
     integrity,
