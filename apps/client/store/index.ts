@@ -1,7 +1,6 @@
 import { enableMapSet } from 'immer'
 import { immer } from 'zustand/middleware/immer'
 import { createWithEqualityFn } from 'zustand/traditional'
-import type { MessageType } from '@pkg/types'
 import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'
 import { type ContactStoreType, useContactStore } from './slices/useContactStore'
@@ -15,9 +14,7 @@ export interface StoreType
     ContactStoreType,
     DraftStoreType,
     NotificationStateType,
-    TypingStateType {
-  resetStore: () => void
-}
+    TypingStateType {}
 
 enableMapSet()
 
@@ -29,25 +26,5 @@ export const useStore = createWithEqualityFn<StoreType>()(
     ...useDraftStore(...a),
     ...useNotificationState(...a),
     ...useTypingState(...a),
-
-    resetStore() {
-      a[0]({
-        activeChatInfo: null,
-        activeRoom: null,
-        unarchived: [],
-        archived: [],
-        isProxyConvo: false,
-        chats: new Map<number, Map<number, MessageType>>(),
-        contacts: {},
-        drafts: new Map<number, string>(),
-        notification: {
-          status: 'success',
-          title: '',
-          description: '',
-          show: false,
-        },
-        typingState: {},
-      })
-    },
   })),
 )

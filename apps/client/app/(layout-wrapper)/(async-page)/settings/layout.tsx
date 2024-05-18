@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import { classNames } from '@arpansaha13/utils'
+import _fetch from '~/utils/_fetch'
 
 interface SettingsLayoutProps {
   children: React.ReactNode
@@ -13,14 +15,19 @@ export default function SettingsLayout({ children }: Readonly<SettingsLayoutProp
 
   const tabs = [
     {
-      name: 'Appearance',
-      href: '/settings/appearance',
-    },
-    {
       name: 'Profile',
       href: '/settings/profile',
     },
+    {
+      name: 'Appearance',
+      href: '/settings/appearance',
+    },
   ]
+
+  async function logout() {
+    await _fetch('auth/logout', { method: 'POST' })
+    window.location.reload()
+  }
 
   return (
     <div className="h-full">
@@ -39,6 +46,16 @@ export default function SettingsLayout({ children }: Readonly<SettingsLayoutProp
                 {tab.name}
               </Link>
             ))}
+
+            <button
+              className={classNames(
+                'flex justify-between w-full px-4 py-2 text-sm rounded-l-md transition-colors hover:bg-gray-300 dark:hover:bg-gray-700',
+              )}
+              onClick={logout}
+            >
+              <p>Log out</p>
+              <ArrowRightStartOnRectangleIcon className="flex-shrink-0 w-5 h-5" />
+            </button>
           </div>
         </div>
         <div className="flex-grow h-full py-16 px-8 col-span-3 bg-gray-100 dark:bg-transparent transition-colors overflow-auto">
