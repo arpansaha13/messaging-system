@@ -23,6 +23,7 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/env.types.ts",
+    "src/seed.mjs",
   ],
   "exclude": [
     "node_modules"

@@ -5,6 +5,8 @@
     "prebuild": "rimraf dist",
     "build": "pnpm prebuild && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "db:init": "pnpm migration:run && pnpm db:seed",
+    "db:seed": "node src/seed.mjs",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -50,6 +52,7 @@
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@nestjs/schematics": "^10.1.1",
     "@nestjs/testing": "^10.3.7",
     "@pkg/types": "workspace:^",
@@ -62,6 +65,7 @@
     "@types/node": "^20.12.7",
     "@types/nodemailer": "^6.4.14",
     "@types/passport-jwt": "^4.0.1",
+    "@types/pg": "^8.11.6",
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
