@@ -10,9 +10,12 @@ export const dataSourceOptions: DataSourceOptions = {
   database: process.env.TYPEORM_DATABASE,
   username: process.env.TYPEORM_USERNAME,
   password: process.env.TYPEORM_PASSWORD,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl:
+    process.env.NODE_ENV === 'development'
+      ? false
+      : {
+          rejectUnauthorized: false,
+        },
   entities: ['dist/**/*.entity.js'],
   migrations: ['migrations/*.ts'],
 }
