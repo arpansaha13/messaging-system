@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import io from 'socket.io-client'
 import { shallow } from 'zustand/shallow'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
@@ -110,7 +111,7 @@ export function useSocketInit() {
   // TODO: refactor the store - combine activeRoom and activeChatInfo
 
   useEffect(() => {
-    if (activeRoom === null) return
+    if (isNullOrUndefined(activeRoom)) return
 
     const activeChatInfo = getActiveChatInfo()!
     const convo = searchConvoByUserId(activeChatInfo.user.id)!
@@ -132,6 +133,8 @@ export function useSocketInit() {
   const [, setHookRunCount] = useState<number>(0)
 
   useEffect(() => {
+    if (isNullOrUndefined(authUser)) return
+
     setHookRunCount(count => {
       if (count > 1) {
         console.warn(
@@ -219,7 +222,7 @@ export function useSocketInit() {
       socketWrapper.off('all-message-status')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [authUser])
 
   return { isConnected, socket: socketWrapper }
 }
