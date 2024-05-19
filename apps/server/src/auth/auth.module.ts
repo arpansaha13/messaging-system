@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Global, Module } from '@nestjs/common'
 import { JwtModule } from '@nestjs/jwt'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { PassportModule } from '@nestjs/passport'
@@ -11,6 +11,7 @@ import { User } from 'src/users/user.entity'
 import { CookieStrategy } from './cookie.strategy'
 import type { JwtEnvVariables } from '../env.types'
 
+@Global()
 @Module({
   imports: [
     MailModule,

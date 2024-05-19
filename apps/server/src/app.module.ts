@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { MailModule } from './mail/mail.module'
 import { RoomModule } from './rooms/room.module'
 import { UserModule } from './users/user.module'
+import { AuthModule } from 'src/auth/auth.module'
 import { ChatsModule } from './chats/chats.module'
 import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
@@ -13,6 +14,7 @@ import type { EnvVariables } from 'src/env.types'
 
 @Module({
   imports: [
+    AuthModule,
     MailModule,
     UserModule,
     RoomModule,
