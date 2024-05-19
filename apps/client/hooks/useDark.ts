@@ -57,14 +57,6 @@ export function usePreferredDark() {
   return preferredDark
 }
 
-interface UseDarkOptions {
-  /**
-   * Default color mode.
-   * @default 'light'
-   */
-  default?: 'light' | 'dark'
-}
-
 /**
  * Adds the 'dark' class in the `html` tag.
  * This hook paired with the `darkMode: 'class'` config of Tailwind can be used to toggle between light and dark modes.
@@ -73,18 +65,17 @@ interface UseDarkOptions {
  *
  * This hook will **not** cause a rerender when system theme preference change.
  */
-export function useDark(options?: UseDarkOptions) {
+export function useDark() {
   const [isDark, toggleDark] = useDarkState(state => [state.isDark, state.toggleDark])
   const selector = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     selector.current = document.querySelector('html')
-    if (isDark === null) toggleDark((options?.default ?? 'light') === 'dark')
-    else toggleDark(isDark)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
+    if (isDark === null) return
+
     if (isDark) {
       if (!selector.current?.classList.contains('dark')) {
         selector.current?.classList.add('dark')
