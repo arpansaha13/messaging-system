@@ -23,8 +23,8 @@ export class AuthController {
   }
 
   @Post('/logout')
-  logout(@Res() res: Response): Promise<Response> {
-    return this.authService.logout(res)
+  logout(@Req() request: Request, @Res() res: Response): Promise<Response> {
+    return this.authService.logout(request, res)
   }
 
   @Get('/validate-link/account/:hash')

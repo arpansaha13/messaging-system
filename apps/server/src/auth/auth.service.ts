@@ -9,6 +9,7 @@ import { User } from 'src/users/user.entity'
 import { UnverifiedUser } from './unverified-user.entity'
 import { SignInDto, SignUpDto } from './auth.dto'
 import { MailService } from 'src/mail/mail.service'
+import { SessionService } from 'src/sessions/session.service'
 import type { Repository, EntityManager } from 'typeorm'
 import type { Request, Response } from 'express'
 import type { EnvVariables } from 'src/env.types'
@@ -22,6 +23,7 @@ export class AuthService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly mailService: MailService,
+    private readonly sessionService: SessionService,
     private readonly configService: ConfigService<EnvVariables>,
 
     @InjectEntityManager()
@@ -68,12 +70,13 @@ export class AuthService {
   }
 
   async checkAuth(request: Request): Promise<{ valid: boolean }> {
-    const token = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
+    const sessionKey = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
 
-    if (!token) return { valid: false }
+    const session = await this.sessionService.getSessionById(sessionKey)
+    if (session === null) return { valid: false }
 
     try {
-      const payload = this.jwtService.verify(token)
+      const payload = this.jwtService.verify(session.token)
       const { user_id } = payload
 
       if (!user_id) return { valid: false }
@@ -136,9 +139,12 @@ export class AuthService {
       const token = this.jwtService.sign(payload)
       const maxAge = this.configService.get('JWT_TOKEN_VALIDITY_SECONDS') * 1000
 
-      res.cookie(this.configService.get('AUTH_COOKIE_NAME'), token, {
+      const session = await this.sessionService.createSession({ token, expiresAt: new Date(Date.now() + maxAge) })
+
+      res.cookie(this.configService.get('AUTH_COOKIE_NAME'), session.key, {
         path: '/api',
         secure: true,
+        sameSite: true,
         httpOnly: true,
         maxAge,
       })
@@ -149,13 +155,19 @@ export class AuthService {
     throw new UnauthorizedException('Invalid email or password.')
   }
 
-  async logout(res: Response) {
-    res.cookie(this.configService.get('AUTH_COOKIE_NAME'), '', {
-      path: '/api',
-      secure: true,
-      httpOnly: true,
-      maxAge: 0,
-    })
+  async logout(request: Request, res: Response) {
+    const sessionKey = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
+
+    if (sessionKey !== null) {
+      await this.sessionService.deleteSession(sessionKey)
+
+      res.cookie(this.configService.get('AUTH_COOKIE_NAME'), '', {
+        path: '/api',
+        secure: true,
+        httpOnly: true,
+        maxAge: 0,
+      })
+    }
 
     return res.status(200).send()
   }

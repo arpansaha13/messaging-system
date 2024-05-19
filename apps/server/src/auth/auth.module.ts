@@ -8,6 +8,7 @@ import { AuthService } from './auth.service'
 import { AuthController } from './auth.controller'
 import { MailModule } from 'src/mail/mail.module'
 import { User } from 'src/users/user.entity'
+import { SessionModule } from 'src/sessions/session.module'
 import { CookieStrategy } from './cookie.strategy'
 import type { JwtEnvVariables } from '../env.types'
 
@@ -16,6 +17,7 @@ import type { JwtEnvVariables } from '../env.types'
   imports: [
     MailModule,
     ConfigModule,
+    SessionModule,
 
     TypeOrmModule.forFeature([User, UnverifiedUser]),
     PassportModule.register({ defaultStrategy: 'cookie' }),
