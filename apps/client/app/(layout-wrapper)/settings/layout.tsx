@@ -32,7 +32,7 @@ export default function SettingsLayout({ children }: Readonly<SettingsLayoutProp
   return (
     <div className="h-full">
       <div className="h-full flex">
-        <div className="h-full py-16 w-[28rem] bg-gray-200 dark:bg-gray-800 transition-colors">
+        <div className="h-full py-16 w-[28rem] bg-gray-300 dark:bg-gray-800 transition-colors">
           <div className="ml-auto w-48 space-y-1">
             {tabs.map(tab => (
               <Link
@@ -40,7 +40,7 @@ export default function SettingsLayout({ children }: Readonly<SettingsLayoutProp
                 href={tab.href}
                 className={classNames(
                   'block w-full px-4 py-2 text-sm rounded-l-md transition-colors',
-                  pathname === tab.href ? 'bg-gray-100 dark:bg-gray-900' : 'hover:bg-gray-300 dark:hover:bg-gray-700',
+                  pathname === tab.href ? 'bg-gray-100 dark:bg-gray-900' : 'hover:bg-gray-200 dark:hover:bg-gray-700',
                 )}
               >
                 {tab.name}

@@ -125,7 +125,7 @@ const ConvoItem = ({
     <li>
       <div
         className={classNames(
-          'px-3 w-full text-left flex items-center relative',
+          'px-3 w-full text-left flex items-center relative rounded',
           roomId === activeRoom?.id
             ? 'bg-gray-300/60 dark:bg-gray-700/90'
             : 'hover:bg-gray-200/60 dark:hover:bg-gray-600/40',

@@ -13,12 +13,14 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
   const showChatView = activeRoom !== null || isProxyConvo
 
   return (
-    <div className="flex h-full">
-      <section className="flex-shrink-0 w-[26rem] h-full bg-white dark:bg-transparent border-r border-gray-200 dark:border-gray-600/70 space-y-2 overflow-hidden flex flex-col">
+    <div className="p-2 flex h-full gap-2">
+      <section className="p-2 flex-shrink-0 w-[26rem] h-full bg-white dark:bg-gray-900 shadow-md space-y-2 flex flex-col rounded overflow-hidden">
         <div className="flex-grow overflow-y-auto scrollbar">{children}</div>
       </section>
 
-      <section className="flex-grow h-full bg-gray-100 dark:bg-gray-800">{showChatView && <Chat />}</section>
+      <section className="flex-grow h-full bg-gray-100 dark:bg-gray-800 shadow-md rounded overflow-hidden">
+        {showChatView && <Chat />}
+      </section>
     </div>
   )
 }

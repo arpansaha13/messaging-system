@@ -1,11 +1,7 @@
 import { Fragment } from 'react'
-// Components
 import { Menu, Transition } from '@headlessui/react'
-// Icons
 import { ChevronDownIcon } from '@heroicons/react/24/solid'
-// Utils
 import { classNames } from '@arpansaha13/utils'
-// Types
 import type { ReactNode, MouseEvent } from 'react'
 
 interface DropDownProps {
@@ -39,7 +35,7 @@ const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
             leaveTo="transform opacity-0 scale-95"
           >
             <Menu.Items
-              className="absolute z-10 mt-2 origin-top-left rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow shadow-gray-700 dark:shadow-black focus:outline-none"
+              className="absolute right-0 z-10 mt-2 origin-top-right rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow shadow-gray-700 dark:shadow-black focus:outline-none"
               style={{ width: `12rem` }}
             >
               <div className="py-2">
