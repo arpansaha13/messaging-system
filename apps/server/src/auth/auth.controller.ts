@@ -1,6 +1,6 @@
 import { Body, Controller, Post, HttpCode, HttpStatus, Param, Get, Res, Req } from '@nestjs/common'
 import { AuthService } from './auth.service'
-import { SignInDto, SignUpDto, VerifyAccountDto, VerifyAccountParams } from './auth.dto'
+import { LoginDto, SignUpDto, VerifyAccountDto, VerifyAccountParams } from './auth.dto'
 import type { Request, Response } from 'express'
 
 @Controller('auth')
@@ -17,8 +17,8 @@ export class AuthController {
     return this.authService.signUp(credentials)
   }
 
-  @Post('/sign-in')
-  login(@Res() res: Response, @Body() credentials: SignInDto): Promise<Response> {
+  @Post('/login')
+  login(@Res() res: Response, @Body() credentials: LoginDto): Promise<Response> {
     return this.authService.login(res, credentials)
   }
 

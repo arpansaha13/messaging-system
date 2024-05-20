@@ -58,7 +58,7 @@ export default function SettingsLayout({ children }: Readonly<SettingsLayoutProp
             </button>
           </div>
         </div>
-        <div className="flex-grow h-full py-16 px-8 col-span-3 bg-gray-100 dark:bg-transparent transition-colors overflow-auto">
+        <div className="flex-grow h-full py-16 px-8 col-span-3 bg-gray-100 dark:bg-gray-900 transition-colors overflow-auto">
           {children}
         </div>
       </div>

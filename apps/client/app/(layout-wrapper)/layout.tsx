@@ -38,7 +38,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   useEffect(() => {
     _fetch('auth/check-auth').then(({ valid }: any) => {
       if (!valid) {
-        router.replace('/auth/signin')
+        router.replace('/auth/login')
       } else {
         _fetch('users/me').then((authUserRes: AuthUserResType) => {
           setAuthUser(authUserRes)

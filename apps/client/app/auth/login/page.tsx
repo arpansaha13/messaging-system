@@ -32,13 +32,13 @@ export default function SignInPage() {
 
   const [loading, setLoading] = useState<boolean>(false)
 
-  function signIn(e: FormEvent<HTMLFormElement>) {
+  function login(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
 
     const formData = getFormData(formRef.current!)
 
-    _fetch('auth/sign-in', {
+    _fetch('auth/login', {
       method: 'POST',
       body: formData,
     })
@@ -64,13 +64,13 @@ export default function SignInPage() {
           <Image src="/react-logo.svg" alt="React logo" priority={true} fill={true} className="object-contain" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-          Sign in to your account
+          Login to your account
         </h2>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-gray-100 dark:bg-gray-900/90 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form ref={formRef} className="space-y-6" onSubmit={signIn}>
+          <form ref={formRef} className="space-y-6" onSubmit={login}>
             <BaseInput id="email" name="email" type="email" autoComplete="email" required label="Email address" />
 
             <BaseInput
@@ -83,16 +83,16 @@ export default function SignInPage() {
             />
 
             {/* <div className="flex items-center justify-end">
-          <div className="text-sm">
-            <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
-              Forgot your password?
-            </a>
-          </div>
-        </div> */}
+              <div className="text-sm">
+                <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
+                  Forgot your password?
+                </a>
+              </div>
+            </div> */}
 
             <div>
               <BaseButton type="submit" loading={loading}>
-                Sign in
+                Login
               </BaseButton>
             </div>
 

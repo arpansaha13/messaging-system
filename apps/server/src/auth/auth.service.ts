@@ -7,7 +7,7 @@ import { slugify } from '@arpansaha13/utils'
 import { InvalidOrExpiredException } from 'src/common/exceptions'
 import { User } from 'src/users/user.entity'
 import { UnverifiedUser } from './unverified-user.entity'
-import { SignInDto, SignUpDto } from './auth.dto'
+import { LoginDto, SignUpDto } from './auth.dto'
 import { MailService } from 'src/mail/mail.service'
 import { SessionService } from 'src/sessions/session.service'
 import type { Repository, EntityManager } from 'typeorm'
@@ -129,7 +129,7 @@ export class AuthService {
     }
   }
 
-  async login(res: Response, credentials: SignInDto): Promise<Response> {
+  async login(res: Response, credentials: LoginDto): Promise<Response> {
     const user = await this.userRepository.findOne({
       where: { email: credentials.email },
     })

@@ -46,7 +46,7 @@ export class SignUpDto {
   globalName: string
 }
 
-export class SignInDto {
+export class LoginDto {
   @IsNotEmpty()
   @IsEmail()
   email: string

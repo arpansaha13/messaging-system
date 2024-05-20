@@ -134,8 +134,8 @@ export default function SignUpPage() {
             <div className="flex items-center justify-start">
               <div className="text-sm">
                 <span className="text-gray-800 dark:text-gray-100">Already have an account?</span>{' '}
-                <Link href="/auth/signin">
-                  <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Sign in</span>
+                <Link href="/auth/login">
+                  <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Login</span>
                 </Link>
               </div>
             </div>
