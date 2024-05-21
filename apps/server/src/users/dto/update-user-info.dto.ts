@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator'
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator'
+import { IsAlphaWithSpaces } from 'src/common/decorators/is-alpha-with-spaces.decorator'
 import { User } from '../user.entity'
 
 export class UpdateUserInfoDto {
@@ -11,6 +12,8 @@ export class UpdateUserInfoDto {
   dp?: User['dp']
 
   @IsOptional()
-  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  @IsAlphaWithSpaces({ message: 'Name should only contain alphabets and spaces' })
   globalName?: User['globalName']
 }

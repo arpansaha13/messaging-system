@@ -1,5 +1,6 @@
 import { IsEmail, IsNotEmpty, IsStrongPassword, MaxLength, MinLength } from 'class-validator'
 import { Match } from 'src/common/decorators/match.decorator'
+import { IsAlphaWithSpaces } from 'src/common/decorators/is-alpha-with-spaces.decorator'
 
 export class SignUpDto {
   @IsNotEmpty()
@@ -43,6 +44,7 @@ export class SignUpDto {
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(20)
+  @IsAlphaWithSpaces({ message: 'Name should only contain alphabets and spaces' })
   globalName: string
 }
 
