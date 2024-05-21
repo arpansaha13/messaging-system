@@ -12,7 +12,7 @@ import {
 import { AuthGuard } from '@nestjs/passport'
 import { ContactService } from 'src/contacts/contact.service'
 import { TransformToPlainInterceptor } from 'src/common/interceptors/toPlain.interceptor'
-import { AddToContactDto } from 'src/contacts/dto/addToContact.dto'
+import { AddToContactDto } from 'src/contacts/dto/add-to-contact.dto'
 import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
 import type { Request } from 'express'
 import type { Contact } from './contact.entity'
