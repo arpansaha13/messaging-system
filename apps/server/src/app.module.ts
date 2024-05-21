@@ -8,7 +8,7 @@ import { AuthModule } from 'src/auth/auth.module'
 import { ChatsModule } from './chats/chats.module'
 import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
-import { UserToRoomModule } from './UserToRoom/userToRoom.module'
+import { UserToRoomModule } from './user-to-room/user-to-room.module'
 import { AppController } from './app.controller'
 import type { EnvVariables } from 'src/env.types'
 

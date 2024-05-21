@@ -1,7 +1,7 @@
 import { Controller, Delete, Get, Param, Patch, Req, UseGuards } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
-import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
-import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
+import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
+import { UserToRoomService } from 'src/user-to-room/user-to-room.service'
 import { RoomIdParam } from 'src/rooms/dto/room-id-param.dto'
 import type { Request } from 'express'
 

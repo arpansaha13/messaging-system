@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm'
-import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
+import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
 import { Message } from 'src/messages/message.entity'
 
 @Entity({ name: 'rooms' })

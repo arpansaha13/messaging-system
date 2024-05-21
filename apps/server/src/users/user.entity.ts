@@ -1,7 +1,7 @@
 import { Exclude } from 'class-transformer'
 import { Column, Entity, OneToMany } from 'typeorm'
 import { Contact } from 'src/contacts/contact.entity'
-import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
+import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
 import { BaseEntity } from 'src/common/entities/base.entity'
 
 @Entity({ name: 'users' })

@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
-// Entities
-import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
-// Types
+import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
 import { EntityManager, Not, Repository, UpdateResult } from 'typeorm'
 
 @Injectable()
