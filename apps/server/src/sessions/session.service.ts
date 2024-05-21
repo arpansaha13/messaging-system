@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Session } from './session.entity'
+import { SessionRepository } from './session.repository'
+import type { Session } from './session.entity'
 import type { CreateSessionDto } from './session.dto'
-import type { Repository } from 'typeorm'
 
 @Injectable()
 export class SessionService {
   constructor(
-    @InjectRepository(Session)
-    private readonly sessionRepository: Repository<Session>,
+    @InjectRepository(SessionRepository)
+    private readonly sessionRepository: SessionRepository,
   ) {}
 
   async createSession(createSessionDto: CreateSessionDto): Promise<Session> {

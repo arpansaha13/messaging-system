@@ -3,15 +3,17 @@ import { TypeOrmModule } from '@nestjs/typeorm'
 import { MessageModule } from 'src/messages/message.module'
 import { UserToRoomModule } from 'src/UserToRoom/userToRoom.module'
 import { User } from 'src/users/user.entity'
+import { UserRepository } from 'src/users/user.repository'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import { Room } from './room.entity'
-import { RoomController } from './room.controller'
 import { RoomService } from './room.service'
+import { RoomRepository } from './room.repository'
+import { RoomController } from './room.controller'
 
 @Module({
   imports: [MessageModule, UserToRoomModule, TypeOrmModule.forFeature([User, Room, UserToRoom])],
   controllers: [RoomController],
-  providers: [RoomService],
+  providers: [RoomRepository, UserRepository, RoomService],
   exports: [RoomService],
 })
 export class RoomModule {}

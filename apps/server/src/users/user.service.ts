@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
-import { User } from 'src/users/user.entity'
-import type { EntityManager, Repository } from 'typeorm'
-import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
+import { UserRepository } from './user.repository'
+import type { EntityManager } from 'typeorm'
 import type { ConvoItemType } from '@pkg/types'
+import type { User } from 'src/users/user.entity'
+import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { UserConvoResponse } from './dto/user-convo-response.dto'
 
 @Injectable()
@@ -12,8 +13,8 @@ export class UserService {
     @InjectEntityManager()
     private em: EntityManager,
 
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    @InjectRepository(UserRepository)
+    private userRepository: UserRepository,
   ) {}
 
   #userNotFound() {

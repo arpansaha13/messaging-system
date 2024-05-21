@@ -6,11 +6,13 @@ import * as bcrypt from 'bcryptjs'
 import { isNullOrUndefined, slugify } from '@arpansaha13/utils'
 import { InvalidOrExpiredException } from 'src/common/exceptions'
 import { User } from 'src/users/user.entity'
+import { UserRepository } from 'src/users/user.repository'
 import { UnverifiedUser } from './unverified-user.entity'
+import { UnverifiedUserRepository } from './unverified-user.repository'
 import { LoginDto, SignUpDto } from './auth.dto'
 import { MailService } from 'src/mail/mail.service'
 import { SessionService } from 'src/sessions/session.service'
-import type { Repository, EntityManager } from 'typeorm'
+import type { EntityManager } from 'typeorm'
 import type { Request, Response } from 'express'
 import type { EnvVariables } from 'src/env.types'
 
@@ -28,10 +30,10 @@ export class AuthService {
 
     @InjectEntityManager()
     private manager: EntityManager,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(UnverifiedUser)
-    private unverifiedUserRepository: Repository<UnverifiedUser>,
+    @InjectRepository(UserRepository)
+    private userRepository: UserRepository,
+    @InjectRepository(UnverifiedUserRepository)
+    private unverifiedUserRepository: UnverifiedUserRepository,
   ) {}
 
   private generateHash(length = 8) {

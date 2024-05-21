@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, Injectable, InternalServerError
 import { InjectRepository } from '@nestjs/typeorm'
 import { UserService } from 'src/users/user.service'
 import { Contact } from './contact.entity'
-import type { Repository } from 'typeorm'
+import { ContactRepository } from './contact.repository'
 import type { User } from 'src/users/user.entity'
 
 @Injectable()
@@ -10,8 +10,8 @@ export class ContactService {
   constructor(
     private readonly userService: UserService,
 
-    @InjectRepository(Contact)
-    private contactRepository: Repository<Contact>,
+    @InjectRepository(ContactRepository)
+    private contactRepository: ContactRepository,
   ) {}
 
   #contactSelect: {

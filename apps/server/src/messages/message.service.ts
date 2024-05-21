@@ -3,13 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { In, Not, MoreThanOrEqual } from 'typeorm'
 import { Room } from 'src/rooms/room.entity'
 import { Message, MessageStatus } from './message.entity'
-import type { Repository } from 'typeorm'
+import { MessageRepository } from './message.repository'
 
 @Injectable()
 export class MessageService {
   constructor(
-    @InjectRepository(Message)
-    private messageRepository: Repository<Message>,
+    @InjectRepository(MessageRepository)
+    private messageRepository: MessageRepository,
   ) {}
 
   #sameParticipantError() {

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { RoomService } from 'src/rooms/room.service'
 import { MessageService } from 'src/messages/message.service'
-import { Message, MessageStatus } from 'src/messages/message.entity'
+import { MessageStatus } from 'src/messages/message.entity'
+import { MessageRepository } from 'src/messages/message.repository'
 import { UserToRoomService } from 'src/UserToRoom/userToRoom.service'
-import type { Repository } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
 import type { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
 import type { Room } from 'src/rooms/room.entity'
@@ -17,8 +17,8 @@ export class ChatsService {
     private readonly messageService: MessageService,
     private readonly userToRoomService: UserToRoomService,
 
-    @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>,
+    @InjectRepository(MessageRepository)
+    private readonly messageRepository: MessageRepository,
   ) {}
 
   /** A map of all clients (user_id's) to their client socket id's. */

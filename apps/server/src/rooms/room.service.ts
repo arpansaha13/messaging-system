@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
 import { Room } from './room.entity'
-import { User } from 'src/users/user.entity'
+import { RoomRepository } from './room.repository'
+import { UserRepository } from 'src/users/user.repository'
 import { UserToRoom } from 'src/UserToRoom/UserToRoom.entity'
-import type { EntityManager, Repository } from 'typeorm'
+import type { User } from 'src/users/user.entity'
+import type { EntityManager } from 'typeorm'
 import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
 @Injectable()
@@ -11,10 +13,10 @@ export class RoomService {
   constructor(
     @InjectEntityManager()
     private manager: EntityManager,
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
-    @InjectRepository(Room)
-    private roomRepository: Repository<Room>,
+    @InjectRepository(UserRepository)
+    private userRepository: UserRepository,
+    @InjectRepository(RoomRepository)
+    private roomRepository: RoomRepository,
   ) {}
 
   #sameParticipantError() {

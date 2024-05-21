@@ -4,9 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { PassportStrategy } from '@nestjs/passport'
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { Strategy } from 'passport-cookie'
-import { User } from 'src/users/user.entity'
+import { UserRepository } from 'src/users/user.repository'
 import { SessionService } from 'src/sessions/session.service'
-import type { Repository } from 'typeorm'
+import type { User } from 'src/users/user.entity'
 import type { EnvVariables } from 'src/env.types'
 
 @Injectable()
@@ -16,8 +16,8 @@ export class CookieStrategy extends PassportStrategy(Strategy) {
     private readonly jwtService: JwtService,
     private readonly sessionService: SessionService,
 
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    @InjectRepository(UserRepository)
+    private readonly userRepository: UserRepository,
   ) {
     super({
       cookieName: configService.get('AUTH_COOKIE_NAME'),
