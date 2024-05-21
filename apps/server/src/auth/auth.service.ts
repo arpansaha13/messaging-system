@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
 import * as bcrypt from 'bcryptjs'
-import { slugify } from '@arpansaha13/utils'
+import { isNullOrUndefined, slugify } from '@arpansaha13/utils'
 import { InvalidOrExpiredException } from 'src/common/exceptions'
 import { User } from 'src/users/user.entity'
 import { UnverifiedUser } from './unverified-user.entity'
@@ -72,14 +72,16 @@ export class AuthService {
   async checkAuth(request: Request): Promise<{ valid: boolean }> {
     const sessionKey = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
 
+    if (isNullOrUndefined(sessionKey)) return { valid: false }
+
     const session = await this.sessionService.getSessionById(sessionKey)
-    if (session === null) return { valid: false }
+    if (isNullOrUndefined(session)) return { valid: false }
 
     try {
       const payload = this.jwtService.verify(session.token)
       const { user_id } = payload
 
-      if (!user_id) return { valid: false }
+      if (isNullOrUndefined(user_id)) return { valid: false }
 
       const userExists = await this.userRepository.exists({
         where: { id: user_id },
@@ -87,6 +89,7 @@ export class AuthService {
 
       return { valid: userExists }
     } catch (err) {
+      console.error(err)
       return { valid: false }
     }
   }
@@ -158,7 +161,7 @@ export class AuthService {
   async logout(request: Request, res: Response) {
     const sessionKey = request.cookies[this.configService.get('AUTH_COOKIE_NAME')]
 
-    if (sessionKey !== null) {
+    if (!isNullOrUndefined(sessionKey)) {
       await this.sessionService.deleteSession(sessionKey)
 
       res.cookie(this.configService.get('AUTH_COOKIE_NAME'), '', {
