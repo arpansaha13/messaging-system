@@ -24,22 +24,16 @@ const SearchBar = ({ value, setValue, id, ...attrs }: SearchBarProps) => {
       </label>
       <div className="relative">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-          {value ? (
-            <button onClick={() => setValue('')}>
-              <ArrowLeftIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-500" aria-hidden="true" />
-            </button>
-          ) : (
-            <MagnifyingGlassIcon
-              className="pointer-events-none h-4 w-4 text-gray-600 dark:text-gray-400"
-              aria-hidden="true"
-            />
-          )}
+          <MagnifyingGlassIcon
+            className="pointer-events-none h-4 w-4 text-gray-600 dark:text-gray-400"
+            aria-hidden="true"
+          />
         </div>
         <input
           ref={inputRef}
           id={id}
           {...attrs}
-          className="block w-full rounded-lg text-gray-600 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 py-2 pl-16 pr-8 text-sm border-none placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
+          className="block w-full rounded-lg text-gray-600 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 py-2 pl-16 pr-8 text-sm shadow dark:shadow-gray-950/40 border-none placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
           value={value}
           onChange={e => setValue(e.target.value)}
         />

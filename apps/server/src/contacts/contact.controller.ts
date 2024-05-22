@@ -27,15 +27,9 @@ export class ContactController {
   getContacts(
     @Req() request: Request,
     @Query() query: GetContactsQueryDto,
-  ): Promise<Contact | Record<string, Contact[]>> {
-    if (query.contactId && query.userId) {
-      throw new BadGatewayException('Invalid query params.')
-    }
-    if (query.contactId) {
-      return this.contactService.getContactById(query.contactId)
-    }
-    if (query.userId) {
-      return this.contactService.getContactByUserId(request.user, query.userId)
+  ): Promise<Contact[] | Record<string, Contact[]>> {
+    if (query.search) {
+      return this.contactService.getContactsByQuery(request.user, query.search)
     }
     return this.contactService.getAllContactsOfUser(request.user)
   }

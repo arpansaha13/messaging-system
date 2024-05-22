@@ -1,23 +1,55 @@
 'use client'
 
+import { useRef, useState } from 'react'
+import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
+import { isNullOrUndefined } from '@arpansaha13/utils'
+import SearchBar from '~common/SearchBar'
 import ContactListItem from '~/components/ContactList/ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { ContactType, MessageType } from '@pkg/types'
 
+interface ContactsProps {
+  handleClick: (contact: ContactType) => void
+}
+
+interface SearchResultsProps {
+  results: ContactType[]
+  handleClick: (contact: ContactType) => void
+}
+
 export default function Page() {
-  const [add, chats, contacts, searchConvoByUserId, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
+  const [add, chats, searchConvoByUserId, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
     state => [
       state.addChat,
       state.chats,
-      state.contacts,
       state.searchConvoByUserId,
       state.setActiveChatInfo,
       state.setActiveRoom,
       state.setProxyConvo,
     ],
     shallow,
+  )
+
+  const isFirstRun = useRef(true)
+  const [value, setValue] = useState('')
+  const [searchResults, setSearchResults] = useState<ContactType[] | null>(null)
+
+  useDebounce(
+    () => {
+      if (isFirstRun.current) {
+        isFirstRun.current = false
+        return
+      }
+      if (value === '') {
+        setSearchResults(null)
+        return
+      }
+      _fetch(`contacts?search=${value}`).then(setSearchResults)
+    },
+    1000,
+    [value],
   )
 
   async function handleClick(contact: ContactType) {
@@ -44,21 +76,43 @@ export default function Page() {
   }
 
   return (
-    <div aria-label="Directory">
-      {Object.keys(contacts).map(letter => (
-        <div key={letter} className="relative">
-          {/* Size of image = h-12 w-12 */}
-          <div className="mx-3 my-2 h-12 w-12 flex items-center justify-center font-medium text-gray-500 dark:text-emerald-500">
-            <h3>{letter}</h3>
-          </div>
+    <div className="py-2">
+      <SearchBar id="search" name="search" placeholder="Search" type="text" value={value} setValue={setValue} />
 
-          <ul role="list">
-            {contacts[letter as keyof typeof contacts].map(contact => (
-              <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
-            ))}
-          </ul>
-        </div>
-      ))}
+      {isNullOrUndefined(searchResults) ? (
+        <Contacts handleClick={handleClick} />
+      ) : (
+        <SearchResults results={searchResults} handleClick={handleClick} />
+      )}
     </div>
+  )
+}
+
+function Contacts({ handleClick }: ContactsProps) {
+  const contacts = useStore(state => state.contacts)
+
+  return Object.keys(contacts).map(letter => (
+    <div key={letter} className="relative">
+      {/* Size of image = h-12 w-12 */}
+      <div className="mx-3 my-2 h-12 w-12 flex items-center justify-center font-medium text-gray-500 dark:text-emerald-500">
+        <h3>{letter}</h3>
+      </div>
+
+      <ul role="list">
+        {contacts[letter as keyof typeof contacts].map(contact => (
+          <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
+        ))}
+      </ul>
+    </div>
+  ))
+}
+
+function SearchResults({ results, handleClick }: SearchResultsProps) {
+  return (
+    <ul role="list" className="py-3">
+      {results.map(contact => (
+        <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
+      ))}
+    </ul>
   )
 }

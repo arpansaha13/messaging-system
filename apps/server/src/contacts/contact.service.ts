@@ -1,9 +1,10 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { Brackets, Like } from 'typeorm'
+import { User } from 'src/users/user.entity'
 import { UserService } from 'src/users/user.service'
 import { Contact } from './contact.entity'
 import { ContactRepository } from './contact.repository'
-import type { User } from 'src/users/user.entity'
 
 @Injectable()
 export class ContactService {
@@ -14,13 +15,14 @@ export class ContactService {
     private contactRepository: ContactRepository,
   ) {}
 
-  #contactSelect: {
+  private contactSelect: {
     id: true
     alias: true
     userInContact: {
       id: true
       dp: true
       bio: true
+      username: true
       globalName: true
     }
   }
@@ -28,7 +30,7 @@ export class ContactService {
   // TODO: fix response types
   async getAllContactsOfUser(authUser: User): Promise<Record<string, any[]>> {
     const contactsRes = await this.contactRepository.find({
-      select: this.#contactSelect,
+      select: this.contactSelect,
       where: { user: { id: authUser.id } },
       order: { alias: 'ASC' },
       relations: { userInContact: true },
@@ -46,6 +48,7 @@ export class ContactService {
         userId: contactResItem.userInContact.id,
         bio: contactResItem.userInContact.bio,
         dp: contactResItem.userInContact.dp,
+        username: contactResItem.userInContact.username,
         globalName: contactResItem.userInContact.globalName,
       })
     }
@@ -53,32 +56,38 @@ export class ContactService {
     return newContacts
   }
 
-  // TODO: Add validation - if the contact is not of the user, then throe Unauthorized error
-  async getContactById(contactId: number): Promise<Contact> {
-    return this.contactRepository.findOne({
-      select: this.#contactSelect,
-      where: { id: contactId },
-      relations: { userInContact: true },
-    })
-  }
+  async getContactsByQuery(authUser: User, search: string): Promise<any[]> {
+    const res = await this.contactRepository
+      .createQueryBuilder('contact')
+      .innerJoinAndSelect('contact.userInContact', 'userInContact')
+      .select([
+        'contact.id',
+        'contact.alias',
+        'userInContact.id',
+        'userInContact.globalName',
+        'userInContact.username',
+        'userInContact.bio',
+        'userInContact.dp',
+      ])
+      .where('contact.user.id = :userId', { userId: authUser.id })
+      .andWhere(
+        new Brackets(qb => {
+          qb.where('contact.alias ILIKE :searchString', { searchString: `%${search}%` })
+            .orWhere('userInContact.globalName ILIKE :searchString', { searchString: `%${search}%` })
+            .orWhere('userInContact.username ILIKE :searchString', { searchString: `%${search}%` })
+        }),
+      )
+      .getMany()
 
-  async getContactByUserId(authUser: User, userId: number): Promise<any> {
-    const res = await this.contactRepository.findOne({
-      select: this.#contactSelect,
-      where: { user: { id: authUser.id }, userInContact: { id: userId } },
-      relations: { userInContact: true },
-    })
-
-    if (!res) return res
-
-    return {
-      alias: res.alias,
-      contactId: res.id,
-      userId: res.userInContact.id,
-      bio: res.userInContact.bio,
-      dp: res.userInContact.dp,
-      globalName: res.userInContact.globalName,
-    }
+    return res.map(resItem => ({
+      alias: resItem.alias,
+      contactId: resItem.id,
+      userId: resItem.userInContact.id,
+      bio: resItem.userInContact.bio,
+      dp: resItem.userInContact.dp,
+      username: resItem.userInContact.username,
+      globalName: resItem.userInContact.globalName,
+    }))
   }
 
   async addToContactsOfUser(authUser: User, userIdToAdd: number, alias: string): Promise<string> {

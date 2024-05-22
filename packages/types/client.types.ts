@@ -50,4 +50,5 @@ export interface ContactType {
   bio: string
   dp: string | null
   globalName: string
+  username: string
 }
