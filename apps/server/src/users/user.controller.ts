@@ -37,9 +37,4 @@ export class UserController {
   getUserById(@Param() params: UserIdParam): Promise<User> {
     return this.userService.getUserById(params.userId)
   }
-
-  @Get('/:userId/room-ids')
-  getRoomIdsOfUser(@Param() params: UserIdParam): Promise<User['rooms']> {
-    return this.userService.getRoomIdsOfUser(params.userId)
-  }
 }

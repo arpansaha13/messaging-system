@@ -1,40 +1,22 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Brackets, Like } from 'typeorm'
 import { User } from 'src/users/user.entity'
-import { UserService } from 'src/users/user.service'
-import { Contact } from './contact.entity'
+import { UserRepository } from 'src/users/user.repository'
 import { ContactRepository } from './contact.repository'
 
 @Injectable()
 export class ContactService {
   constructor(
-    private readonly userService: UserService,
+    @InjectRepository(UserRepository)
+    private userRepository: UserRepository,
 
     @InjectRepository(ContactRepository)
     private contactRepository: ContactRepository,
   ) {}
 
-  private contactSelect: {
-    id: true
-    alias: true
-    userInContact: {
-      id: true
-      dp: true
-      bio: true
-      username: true
-      globalName: true
-    }
-  }
-
   // TODO: fix response types
-  async getAllContactsOfUser(authUser: User): Promise<Record<string, any[]>> {
-    const contactsRes = await this.contactRepository.find({
-      select: this.contactSelect,
-      where: { user: { id: authUser.id } },
-      order: { alias: 'ASC' },
-      relations: { userInContact: true },
-    })
+  async getContacts(authUser: User): Promise<Record<string, any[]>> {
+    const contactsRes = await this.contactRepository.getContactsByUserId(authUser.id)
 
     const newContacts = {}
 
@@ -57,27 +39,7 @@ export class ContactService {
   }
 
   async getContactsByQuery(authUser: User, search: string): Promise<any[]> {
-    const res = await this.contactRepository
-      .createQueryBuilder('contact')
-      .innerJoinAndSelect('contact.userInContact', 'userInContact')
-      .select([
-        'contact.id',
-        'contact.alias',
-        'userInContact.id',
-        'userInContact.globalName',
-        'userInContact.username',
-        'userInContact.bio',
-        'userInContact.dp',
-      ])
-      .where('contact.user.id = :userId', { userId: authUser.id })
-      .andWhere(
-        new Brackets(qb => {
-          qb.where('contact.alias ILIKE :searchString', { searchString: `%${search}%` })
-            .orWhere('userInContact.globalName ILIKE :searchString', { searchString: `%${search}%` })
-            .orWhere('userInContact.username ILIKE :searchString', { searchString: `%${search}%` })
-        }),
-      )
-      .getMany()
+    const res = await this.contactRepository.getContactsByUserIdAndQuery(authUser.id, search)
 
     return res.map(resItem => ({
       alias: resItem.alias,
@@ -90,30 +52,22 @@ export class ContactService {
     }))
   }
 
-  async addToContactsOfUser(authUser: User, userIdToAdd: number, alias: string): Promise<string> {
+  async addToContacts(authUser: User, userIdToAdd: number, alias: string): Promise<string> {
     if (authUser.id === userIdToAdd) {
       throw new BadRequestException('Invalid user ids.')
     }
-    const existing = await this.contactRepository.count({
-      where: {
-        user: { id: authUser.id },
-        userInContact: { id: userIdToAdd },
-      },
-    })
-    if (existing > 0) {
+
+    if (await this.contactRepository.existsByUserIds(authUser.id, userIdToAdd)) {
       throw new ConflictException('Given contact is already added.')
     }
-    const userToAdd = await this.userService.getUserById(userIdToAdd)
+
+    const userToAdd = await this.userRepository.findOneBy({ id: userIdToAdd })
     if (userToAdd === null) {
       throw new BadRequestException('Invalid user id.')
     }
-    const newContact = new Contact()
-    newContact.user = authUser
-    newContact.userInContact = userToAdd
-    newContact.alias = alias
 
     try {
-      await this.contactRepository.save(newContact)
+      await this.contactRepository.createContact(authUser, userToAdd, alias)
       return `${alias} has been added to contacts.`
     } catch (error) {
       throw new InternalServerErrorException()

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MailerService } from '@nestjs-modules/mailer'
-import { UnverifiedUser } from 'src/auth/unverified-user.entity'
 
 @Injectable()
 export class MailService {

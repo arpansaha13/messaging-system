@@ -70,7 +70,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
         convoItem.room.archived = false
         convoItem.latestMsg = latestMsg
         pushAndSort(state.unarchived, convoItem)
-        _fetch(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+        _fetch(`user-to-room/${roomId}/unarchive`, { method: 'PATCH' })
         return
       }
       idx = findRoomIndex(roomId, state.unarchived)
@@ -124,7 +124,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
       convoItem.room.archived = true
       convoItem.room.pinned = false
       pushAndSort(state.archived, convoItem)
-      _fetch(`user-to-room/archive/${roomId}`, { method: 'PATCH' })
+      _fetch(`user-to-room/${roomId}/archive`, { method: 'PATCH' })
     })
   },
   unarchiveRoom(roomId) {
@@ -134,7 +134,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
       const convoItem = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
       convoItem.room.archived = false
       pushAndSort(state.unarchived, convoItem)
-      _fetch(`user-to-room/unarchive/${roomId}`, { method: 'PATCH' })
+      _fetch(`user-to-room/${roomId}/unarchive`, { method: 'PATCH' })
     })
   },
   deleteConvo(roomId, archived = false) {

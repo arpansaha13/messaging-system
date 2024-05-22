@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository, InjectEntityManager } from '@nestjs/typeorm'
-import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
-import { EntityManager, Not, Repository, UpdateResult } from 'typeorm'
+import { EntityManager, Not, UpdateResult } from 'typeorm'
+import { UserToRoomRepository } from './user-to-room.repository'
+import type { UserToRoom } from 'src/user-to-room/user-to-room.entity'
 
 @Injectable()
 export class UserToRoomService {
@@ -9,8 +10,8 @@ export class UserToRoomService {
     @InjectEntityManager()
     private em: EntityManager,
 
-    @InjectRepository(UserToRoom)
-    private userToRoomRepository: Repository<UserToRoom>,
+    @InjectRepository(UserToRoomRepository)
+    private userToRoomRepository: UserToRoomRepository,
   ) {}
 
   getUserToRoom(authUserId: number, roomId: number, loadRelationIds = false): Promise<UserToRoom> {
@@ -50,6 +51,7 @@ export class UserToRoomService {
     const res = await this.em.query(query)
     return res.length > 0 ? res[0].room_id : null
   }
+
   getReceiverIn1to1Room(authUserId: number, roomId: number, loadRelationIds = false): Promise<UserToRoom> {
     return this.userToRoomRepository.findOne({
       where: {
@@ -69,25 +71,31 @@ export class UserToRoomService {
       partialEntity,
     )
   }
+
   async updateFirstMsgTstamp(authUserId: number, roomId: number, newValue: string): Promise<void> {
     await this.#updateUserToRoom(authUserId, roomId, { firstMsgTstamp: newValue !== null ? new Date(newValue) : null })
   }
+
   async clearChat(authUserId: number, roomId: number): Promise<void> {
     // TODO: check if chat is already cleared - throw error in that case
     await this.#updateUserToRoom(authUserId, roomId, { firstMsgTstamp: new Date() })
   }
+
   async deleteChat(authUserId: number, roomId: number): Promise<void> {
     // TODO: check if chat is already deleted - throw error in that case
     await this.#updateUserToRoom(authUserId, roomId, { firstMsgTstamp: null, deleted: true })
   }
+
   async updatePin(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
     // TODO: check if chat is already pinned - throw error in that case
     await this.#updateUserToRoom(authUserId, roomId, { pinned: newValue })
   }
+
   async updateArchive(authUserId: number, roomId: number, newValue: boolean): Promise<void> {
     // TODO: check if chat is already archived/unarchived - throw error in that case
     await this.#updateUserToRoom(authUserId, roomId, { archived: newValue, pinned: false })
   }
+
   async reviveRoomForUser(userId: number, roomId: number) {
     await this.#updateUserToRoom(userId, roomId, { deleted: false })
   }

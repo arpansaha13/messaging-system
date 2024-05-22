@@ -1,29 +1,21 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { In, Not, MoreThanOrEqual } from 'typeorm'
+import { In, Not } from 'typeorm'
 import { Room } from 'src/rooms/room.entity'
 import { Message, MessageStatus } from './message.entity'
 import { MessageRepository } from './message.repository'
+import { UserToRoomRepository } from 'src/user-to-room/user-to-room.repository'
+import type { User } from 'src/users/user.entity'
 
 @Injectable()
 export class MessageService {
   constructor(
+    @InjectRepository(UserToRoomRepository)
+    private userToRoomRepository: UserToRoomRepository,
+
     @InjectRepository(MessageRepository)
     private messageRepository: MessageRepository,
   ) {}
-
-  #sameParticipantError() {
-    throw new BadRequestException('Both chat participants cannot have the same user_id.')
-  }
-  #messageNotFound() {
-    throw new NotFoundException('Message could not be found.')
-  }
-
-  async getMessageById(messageId: number): Promise<Message> {
-    const message = await this.messageRepository.findOneBy({ id: messageId })
-    if (message === null) this.#messageNotFound()
-    return message
-  }
 
   /**
    * Update status of **all received** messages from SENT to DELIVERED.
@@ -41,6 +33,7 @@ export class MessageService {
       { status: MessageStatus.DELIVERED },
     )
   }
+
   /**
    * Update status of **delivered** messages from DELIVERED to READ.
    * This should be done whenever the receiver opens the chat with unread messages.
@@ -58,46 +51,25 @@ export class MessageService {
     )
   }
 
-  /**
-   * @param firstMsgTstamp the timestamp before which the messages were cleared
-   */
-  getMessagesByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<Message[]> | [] {
+  async getMessagesByRoomId(authUser: User, roomId: number): Promise<Message[]> {
+    /** The timestamp before which the messages were cleared */
+    const firstMsgTstamp = await this.userToRoomRepository.getFirstMsgTstampBy({
+      user: { id: authUser.id },
+      room: { id: roomId },
+    })
+
     if (firstMsgTstamp === null) return []
-    // `firstMsgTstamp` is received as a Date number in milliseconds
-    return this.messageRepository.find({
-      select: {
-        id: true,
-        content: true,
-        createdAt: true,
-        senderId: true,
-        // Send status of all messages irrespective of whether it belongs to auth-user or not
-        // This is used to show read receipts
-        status: true,
-      },
-      where: { room: { id: roomId }, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
-      order: { createdAt: 'ASC' },
-    })
-  }
 
-  /**
-   * @param firstMsgTstamp the timestamp before which the messages were cleared
-   * @returns The latest message entity. If no message is found, returns `null`.
-   */
-  async getLatestMsgByRoomId(roomId: number, firstMsgTstamp: Date | null): Promise<Message> | null {
-    // `firstMsgTstamp` is a Date number in milliseconds
-    if (firstMsgTstamp === null) return null
-
-    return this.messageRepository.findOne({
-      where: { room: { id: roomId }, createdAt: MoreThanOrEqual(new Date(firstMsgTstamp)) },
-      order: { createdAt: 'DESC' },
-    })
+    return this.messageRepository.getMessagesByRoomId(roomId, firstMsgTstamp)
   }
 
   /**
    * @returns the msg_id of the newly created chat message.
    */
   async create1to1ChatMsg(room: Room, senderId: number, receiverId: number, content: string): Promise<number> {
-    if (senderId === receiverId) this.#sameParticipantError()
+    if (senderId === receiverId) {
+      throw new BadRequestException('Both chat participants cannot have the same user_id.')
+    }
 
     const newMessage = new Message()
     newMessage.room = room

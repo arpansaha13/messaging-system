@@ -70,7 +70,7 @@ export default function Page() {
     setProxyConvo(convo === null)
 
     if (convo && !chats.has(convo.room.id)) {
-      const chatRes: MessageType[] = await _fetch(`rooms/${convo.room.id}/messages`)
+      const chatRes: MessageType[] = await _fetch(`messages/${convo.room.id}`)
       add(convo.room.id, chatRes)
     }
   }

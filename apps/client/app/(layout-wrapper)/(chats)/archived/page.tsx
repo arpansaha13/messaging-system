@@ -30,7 +30,7 @@ export default function Page() {
     })
 
     if (!chats.has(convoItem.room.id)) {
-      const chatRes: MessageType[] = await _fetch(`rooms/${convoItem.room.id}/messages`)
+      const chatRes: MessageType[] = await _fetch(`messages/${convoItem.room.id}`)
       add(convoItem.room.id, chatRes)
     }
   }

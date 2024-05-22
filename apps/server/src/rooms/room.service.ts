@@ -4,7 +4,6 @@ import { Room } from './room.entity'
 import { RoomRepository } from './room.repository'
 import { UserRepository } from 'src/users/user.repository'
 import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
-import type { User } from 'src/users/user.entity'
 import type { EntityManager } from 'typeorm'
 import type { Ws1to1MessageDto } from 'src/chats/dto/chatGateway.dto'
 
@@ -13,49 +12,18 @@ export class RoomService {
   constructor(
     @InjectEntityManager()
     private manager: EntityManager,
+
     @InjectRepository(UserRepository)
     private userRepository: UserRepository,
+
     @InjectRepository(RoomRepository)
     private roomRepository: RoomRepository,
   ) {}
 
-  #sameParticipantError() {
-    throw new BadRequestException('Both room participants cannot have the same user_id.')
-  }
-  #roomNotFound() {
-    throw new NotFoundException('Room could not be found.')
-  }
-
   async getRoomById(roomId: number): Promise<Room> {
     const room = this.roomRepository.findOneBy({ id: roomId })
-    if (room === null) this.#roomNotFound()
+    if (room === null) throw new NotFoundException('Room could not be found.')
     return room
-  }
-
-  async getUsersOfRoomById(roomId: number): Promise<User[]> {
-    const room = await this.roomRepository.findOne({
-      select: {
-        id: true,
-        users: {
-          userToRoomId: true,
-          user: {
-            id: true,
-            dp: true,
-            bio: true,
-            globalName: true,
-          },
-        },
-      },
-      where: { id: roomId },
-      relations: {
-        users: {
-          user: true,
-        },
-      },
-      relationLoadStrategy: 'query',
-    })
-    if (room === null) this.#roomNotFound()
-    return room.users.map(e => e.user)
   }
 
   /**
@@ -67,7 +35,9 @@ export class RoomService {
     const senderId = firstMsg.senderId
     const receiverId = firstMsg.receiverId
 
-    if (senderId === receiverId) this.#sameParticipantError()
+    if (senderId === receiverId) {
+      throw new BadRequestException('Both room participants cannot have the same user_id.')
+    }
 
     const [sender, receiver] = await Promise.all([
       this.userRepository.findOneBy({ id: senderId }),
@@ -78,12 +48,11 @@ export class RoomService {
     try {
       const [room, senderUserToRoom, receiverUserToRoom] = await this.manager.transaction(async txnManager => {
         const newSenderUserToRoom = new UserToRoom()
-        const newReceiverUserToRoom = new UserToRoom()
-
         newSenderUserToRoom.user = sender
-        newReceiverUserToRoom.user = receiver
-
         newSenderUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
+
+        const newReceiverUserToRoom = new UserToRoom()
+        newReceiverUserToRoom.user = receiver
         newReceiverUserToRoom.firstMsgTstamp = new Date(firstMsg.ISOtime)
 
         const newRoom = new Room()
