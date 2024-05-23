@@ -5,7 +5,7 @@ import { config as dotEnvConfig } from 'dotenv'
 
 dotEnvConfig()
 
-const pool = new pg.Pool({
+const client = new pg.Client({
   user: process.env.TYPEORM_USERNAME,
   host: process.env.TYPEORM_HOST,
   database: process.env.TYPEORM_DATABASE,
@@ -13,168 +13,151 @@ const pool = new pg.Pool({
   port: parseInt(process.env.TYPEORM_PORT ?? '5432'),
 })
 
-async function executeQuery(query, params) {
-  const client = await pool.connect()
-  try {
-    const res = await client.query(query, params)
-    return res.rows
-  } catch (error) {
-    console.error('Error executing query:', error)
-  } finally {
-    client.release()
+const hashedPwd = await bcrypt.hash('@Password0', await bcrypt.genSalt())
+
+const users = [
+  {
+    global_name: 'Aarav Sharma',
+    username: 'aarav',
+    email: 'aarav@test.com',
+    dp: null,
+    bio: 'Hey there! I am using WhatsApp.',
+    password: hashedPwd,
+  },
+  {
+    global_name: 'Aditi Verma',
+    username: 'aditi',
+    email: 'aditi@test.com',
+    dp: null,
+    bio: 'Hey there! I am using WhatsApp.',
+    password: hashedPwd,
+  },
+  {
+    global_name: 'Raj Patel',
+    username: 'raj',
+    email: 'raj@test.com',
+    dp: null,
+    bio: 'Hey there! I am using WhatsApp.',
+    password: hashedPwd,
+  },
+  {
+    global_name: 'Neha Gupta',
+    username: 'neha',
+    email: 'neha@test.com',
+    dp: null,
+    bio: 'Hey there! I am using WhatsApp.',
+    password: hashedPwd,
+  },
+  {
+    global_name: 'Rohan Kumar',
+    username: 'rohan',
+    email: 'rohan@test.com',
+    dp: null,
+    bio: 'Hey there! I am using WhatsApp.',
+    password: hashedPwd,
+  },
+]
+
+async function seed() {
+  await client.connect()
+
+  // Clear existing data
+  await client.query('DELETE FROM message_recipients')
+  await client.query('DELETE FROM messages')
+  await client.query('DELETE FROM contacts')
+  await client.query('DELETE FROM chats')
+  await client.query('DELETE FROM users')
+
+  const chats = []
+
+  async function insertUsers() {
+    for (let i = 0; i < 5; i++) {
+      const result = await client.query(
+        `INSERT INTO users (global_name, username, email, dp, bio, password)
+        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        Object.values(users[i]),
+      )
+      users[i].id = result.rows[0].id
+    }
   }
-}
 
-async function insertUsers() {
-  const hashedPwd = await bcrypt.hash('@Password0', await bcrypt.genSalt())
+  async function insertChats() {
+    for (let i = 0; i < users.length; i++) {
+      for (let j = i + 1; j < users.length; j++) {
+        const user1 = users[i]
+        const user2 = users[j]
 
-  const users = [
-    {
-      global_name: 'Aarav Sharma',
-      username: 'aarav',
-      email: 'aarav@test.com',
-      bio: 'Hey there! I am using WhatsApp.',
-      password: hashedPwd,
-    },
-    {
-      global_name: 'Aditi Verma',
-      username: 'aditi',
-      email: 'aditi@test.com',
-      bio: 'Hey there! I am using WhatsApp.',
-      password: hashedPwd,
-    },
-    {
-      global_name: 'Raj Patel',
-      username: 'raj',
-      email: 'raj@test.com',
-      bio: 'Hey there! I am using WhatsApp.',
-      password: hashedPwd,
-    },
-    {
-      global_name: 'Neha Gupta',
-      username: 'neha',
-      email: 'neha@test.com',
-      bio: 'Hey there! I am using WhatsApp.',
-      password: hashedPwd,
-    },
-    {
-      global_name: 'Rohan Kumar',
-      username: 'rohan',
-      email: 'rohan@test.com',
-      bio: 'Hey there! I am using WhatsApp.',
-      password: hashedPwd,
-    },
-  ]
-
-  const insertQuery = `
-    INSERT INTO users (global_name, username, email, bio, password)
-    VALUES ($1, $2, $3, $4, $5)
-    RETURNING id
-  `
-
-  for (const user of users) {
-    const params = [user.global_name, user.username, user.email, user.bio, user.password]
-    await executeQuery(insertQuery, params)
-  }
-
-  console.log('Users inserted successfully.')
-}
-
-async function insertContacts() {
-  const users = await executeQuery('SELECT id FROM users ORDER BY id')
-  const contactInsertQuery = `
-    INSERT INTO contacts (user_id, user_id_in_contact, alias, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5)
-  `
-
-  const now = new Date()
-
-  for (const user of users) {
-    // Each user can have 1 to (total_users - 1) contacts
-    const numContacts = Math.floor(Math.random() * (users.length - 1)) + 1
-
-    for (let i = 0; i < numContacts; i++) {
-      const contactId = users[Math.floor(Math.random() * users.length)].id
-
-      if (contactId !== user.id) {
-        const alias = faker.person.fullName()
-        await executeQuery(contactInsertQuery, [user.id, contactId, alias, now, now])
-        console.log(`Inserted contact for user ${user.id} with contact ${contactId}`)
+        // Two entries for each chat
+        for (const [sender, receiver] of [
+          [user1, user2],
+          [user2, user1],
+        ]) {
+          const result = await client.query(
+            `INSERT INTO chats (sender_id, receiver_id, first_msg_tstamp, muted, archived, pinned)
+             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+            [
+              sender.id,
+              receiver.id,
+              faker.date.past(),
+              faker.datatype.boolean(),
+              faker.datatype.boolean(),
+              faker.datatype.boolean(),
+            ],
+          )
+          chats.push({ id: result.rows[0].id, sender, receiver })
+        }
       }
     }
   }
-}
 
-async function insertRoomsAndUserToRoom() {
-  const users = await executeQuery('SELECT id FROM users ORDER BY id')
+  async function insertMessages() {
+    for (const chat of chats) {
+      const messageCount = faker.number.int({ min: 1, max: 10 })
+      for (let i = 0; i < messageCount; i++) {
+        const sender = [chat.sender, chat.receiver][faker.number.int({ min: 0, max: 1 })]
+        const receiver = sender.id === chat.sender.id ? chat.receiver : chat.sender
 
-  const roomInsertQuery = `
-    INSERT INTO rooms (created_at)
-    VALUES ($1)
-    RETURNING id
-  `
+        const result = await client.query(
+          `INSERT INTO messages (content, sender_id, created_at, updated_at)
+           VALUES ($1, $2, $3, $4) RETURNING id`,
+          [faker.lorem.sentence(), sender.id, faker.date.past(), new Date()],
+        )
+        const messageId = result.rows[0].id
 
-  const userToRoomInsertQuery = `
-    INSERT INTO user_to_room (user_id, room_id, first_msg_tstamp, is_muted, archived, pinned, deleted)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-  `
-
-  const now = new Date(2023, 0, 1)
-  for (let i = 0; i < users.length - 1; i++) {
-    for (let j = i + 1; j < users.length; j++) {
-      const room = await executeQuery(roomInsertQuery, [now])
-      const roomId = room[0].id
-
-      await executeQuery(userToRoomInsertQuery, [users[i].id, roomId, now, false, false, false, false])
-      await executeQuery(userToRoomInsertQuery, [users[j].id, roomId, now, false, false, false, false])
-
-      console.log(`Room ${roomId} created for user ${users[i].id} and user ${users[j].id}`)
+        await client.query(
+          `INSERT INTO message_recipients (message_id, receiver_id, status, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            messageId,
+            receiver.id,
+            ['SENT', 'DELIVERED', 'READ'][faker.number.int({ min: 0, max: 2 })],
+            new Date(),
+            new Date(),
+          ],
+        )
+      }
     }
   }
-}
 
-async function insertMessages() {
-  const rooms = await executeQuery('SELECT id FROM rooms')
-
-  const messageInsertQuery = `
-    INSERT INTO messages (room_id, content, status, sender_id, deleted_by, deleted_for_everyone, created_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-  `
-
-  for (const room of rooms) {
-    const roomId = room.id
-    const roomUsers = await executeQuery('SELECT user_id FROM user_to_room WHERE room_id = $1', [roomId])
-
-    for (let i = 0; i < 50; i++) {
-      // Adjust number of messages as needed
-      const content = faker.lorem.sentence()
-      const status = 'SENT'
-      const senderId = roomUsers[Math.floor(Math.random() * roomUsers.length)].user_id
-      const createdAt = faker.date.recent({ days: 30 }) // Recent 30 days
-      const deletedBy = {}
-      const deletedForEveryone = false
-
-      await executeQuery(messageInsertQuery, [
-        roomId,
-        content,
-        status,
-        senderId,
-        JSON.stringify(deletedBy),
-        deletedForEveryone,
-        createdAt,
-      ])
+  async function insertContacts() {
+    for (const user of users) {
+      const numberOfContacts = faker.number.int({ min: 1, max: users.length - 1 })
+      for (let i = 0; i < numberOfContacts; i++) {
+        const contactUser = users.filter(u => u.id !== user.id)[faker.number.int({ min: 0, max: users.length - 2 })]
+        await client.query(
+          `INSERT INTO contacts (user_id, user_id_in_contact, alias, created_at, updated_at)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [user.id, contactUser.id, faker.person.fullName(), new Date(), new Date()],
+        )
+      }
     }
-
-    console.log(`Inserted messages for room ${roomId}`)
   }
-}
 
-async function main() {
   await insertUsers()
-  await insertContacts()
-  await insertRoomsAndUserToRoom()
+  await insertChats()
   await insertMessages()
-  await pool.end()
+  await insertContacts()
+  await client.end()
 }
 
-main().catch(console.error)
+seed().catch(e => console.error(e.stack))
