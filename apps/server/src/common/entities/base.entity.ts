@@ -12,6 +12,6 @@ export abstract class BaseEntityNoPk {
 }
 
 export abstract class BaseEntity extends BaseEntityNoPk {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn({ name: 'id' })
   id: number
 }

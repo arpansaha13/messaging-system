@@ -1,8 +1,6 @@
-import { Exclude } from 'class-transformer'
 import { Column, Entity, OneToMany } from 'typeorm'
-import { Contact } from 'src/contacts/contact.entity'
-import { UserToRoom } from 'src/user-to-room/user-to-room.entity'
 import { BaseEntity } from 'src/common/entities/base.entity'
+import { Contact } from 'src/contacts/contact.entity'
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -22,12 +20,8 @@ export class User extends BaseEntity {
   bio: string
 
   @Column({ nullable: false })
-  @Exclude({ toPlainOnly: true })
   password: string
 
   @OneToMany(() => Contact, contact => contact.user)
   contacts: Contact[]
-
-  @OneToMany(() => UserToRoom, userToRoom => userToRoom.user)
-  rooms: UserToRoom[]
 }
