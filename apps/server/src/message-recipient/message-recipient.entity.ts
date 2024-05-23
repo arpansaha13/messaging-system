@@ -1,0 +1,24 @@
+import { Message } from 'src/messages/message.entity'
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { BaseEntity } from 'src/common/entities/base.entity'
+import { User } from 'src/users/user.entity'
+
+export enum MessageStatus {
+  SENT = 'SENT',
+  DELIVERED = 'DELIVERED',
+  READ = 'READ',
+}
+
+@Entity({ name: 'message_recipients' })
+export class MessageRecipient extends BaseEntity {
+  @ManyToOne(() => Message, msg => msg.recipients)
+  @JoinColumn({ name: 'message_id', referencedColumnName: 'id' })
+  message: Message
+
+  @Column({ name: 'status', nullable: false, default: MessageStatus.SENT })
+  status: MessageStatus
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'receiver_id', referencedColumnName: 'id' })
+  receiver: User
+}

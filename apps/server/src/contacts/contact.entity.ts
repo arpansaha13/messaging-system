@@ -1,20 +1,9 @@
-import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
 import { User } from '../users/user.entity'
+import { BaseEntity } from 'src/common/entities/base.entity'
 
 @Entity({ name: 'contacts' })
-export class Contact {
-  @PrimaryGeneratedColumn()
-  id: number
-
+export class Contact extends BaseEntity {
   @ManyToOne(() => User, user => user.contacts)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: User
@@ -26,13 +15,4 @@ export class Contact {
   /** Alias or name by which the user has saved this contact. */
   @Column({ nullable: false })
   alias: string
-
-  @CreateDateColumn({ type: 'timestamptz' })
-  created_at: Date
-
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updated_at: Date
-
-  @DeleteDateColumn({ nullable: true, type: 'timestamptz' })
-  deleted_at: Date
 }

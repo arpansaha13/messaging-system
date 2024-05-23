@@ -1,52 +1,17 @@
-import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm'
-
-import { Room } from 'src/rooms/room.entity'
-
-export enum MessageStatus {
-  SENT = 'SENT',
-  DELIVERED = 'DELIVERED',
-  READ = 'READ',
-}
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
+import { BaseEntity } from 'src/common/entities/base.entity'
+import { User } from 'src/users/user.entity'
+import { MessageRecipient } from 'src/message-recipient/message-recipient.entity'
 
 @Entity({ name: 'messages' })
-export class Message {
-  @PrimaryGeneratedColumn()
-  id: number
-
-  @ManyToOne(() => Room, room => room.messages)
-  @JoinColumn({ name: 'room_id' })
-  room: Room
-
+export class Message extends BaseEntity {
   @Column({ nullable: false })
   content: string
 
-  @Column({ nullable: false, default: MessageStatus.SENT })
-  status: MessageStatus
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
+  sender: User
 
-  @Column({ name: 'sender_id', nullable: false })
-  senderId: number
-
-  @Column({ name: 'deleted_by', type: 'jsonb' })
-  deletedBy: { [key: string]: boolean }
-
-  @Column({ name: 'deleted_for_everyone', type: 'boolean', default: false })
-  deletedForEveryone: boolean
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
-  createdAt: Date
-
-  /** Messages cannot be edited (yet?) */
-  // @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
-  // updated_at: Date
-
-  @DeleteDateColumn({ name: 'deleted_at', nullable: true, type: 'timestamptz' })
-  deletedAt: Date
+  @OneToMany(() => MessageRecipient, recipient => recipient.message)
+  recipients: MessageRecipient[]
 }
