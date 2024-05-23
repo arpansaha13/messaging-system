@@ -37,7 +37,7 @@ export class UserToRoomService {
 
   async updateFirstMsgTstamp(authUserId: number, roomId: number, newValue: string): Promise<void> {
     await this.userToRoomRepository.updateUserToRoom(authUserId, roomId, {
-      firstMsgTstamp: newValue !== null ? new Date(newValue) : null,
+      firstMsgTstamp: new Date(newValue),
     })
   }
 
@@ -48,7 +48,7 @@ export class UserToRoomService {
 
   async deleteChat(authUserId: number, roomId: number): Promise<void> {
     // TODO: check if chat is already deleted - throw error in that case
-    await this.userToRoomRepository.updateUserToRoom(authUserId, roomId, { firstMsgTstamp: null, deleted: true })
+    await this.userToRoomRepository.updateUserToRoom(authUserId, roomId, { firstMsgTstamp: new Date(), deleted: true })
   }
 
   async updatePin(authUserId: number, roomId: number, newValue: boolean): Promise<void> {

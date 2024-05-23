@@ -17,10 +17,11 @@ export class UserToRoom {
   room: Room
 
   /**
-   * Timestamp of the first message of this chat for a user. If a user performs "clear-chat", this timestamp will help to identify which messages to show. If this field is `null`, then the user does not have any messages in this chat, either because the user has cleared the chat, or they never chatted.
+   * Timestamp of the first message of this chat for a user.
+   * The messages before this timestamp are cleared/deleted by the user.
    */
-  @Column({ name: 'first_msg_tstamp', type: 'timestamptz', nullable: true, default: null })
-  firstMsgTstamp: Date | null
+  @Column({ name: 'first_msg_tstamp', type: 'timestamptz', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
+  firstMsgTstamp: Date
 
   @Column({ name: 'is_muted', type: 'boolean', default: false, nullable: false })
   isMuted: boolean

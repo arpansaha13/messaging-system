@@ -94,7 +94,10 @@ export class ChatsService {
     if (isNewRoom) {
       // First check if a room exists between the two users but is deleted for the sender
       // If yes, then revive that room for the sender
-      const roomIdOrNull = await this.userToRoomService.get1to1RoomIdOfUsers(data.senderId, data.receiverId)
+      const roomIdOrNull: number | null = await this.userToRoomService.get1to1RoomIdOfUsers(
+        data.senderId,
+        data.receiverId,
+      )
       if (roomIdOrNull !== null) {
         data.roomId = roomIdOrNull
         await this.userToRoomService.reviveRoomForUser(data.senderId, data.roomId)
@@ -112,12 +115,6 @@ export class ChatsService {
       senderUserToRoom = await this.userToRoomService.getUserToRoom(data.senderId, data.roomId)
       receiverUserToRoom = await this.userToRoomService.getUserToRoom(data.receiverId, data.roomId)
 
-      if (senderUserToRoom.firstMsgTstamp === null) {
-        await this.userToRoomService.updateFirstMsgTstamp(data.senderId, data.roomId, data.ISOtime)
-      }
-      if (receiverUserToRoom.firstMsgTstamp === null) {
-        await this.userToRoomService.updateFirstMsgTstamp(data.receiverId, data.roomId, data.ISOtime)
-      }
       // If receiver has deleted the room, then revive it for the receiver
       if (receiverUserToRoom.deleted) {
         await this.userToRoomService.reviveRoomForUser(data.receiverId, data.roomId)

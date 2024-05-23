@@ -58,8 +58,6 @@ export class MessageService {
       room: { id: roomId },
     })
 
-    if (firstMsgTstamp === null) return []
-
     return this.messageRepository.getMessagesByRoomId(roomId, firstMsgTstamp)
   }
 
