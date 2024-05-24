@@ -44,11 +44,6 @@ export class ChatsService {
     const receiverIds = chats.map(chat => chat.receiver_id)
 
     const messages = await Promise.all(promises)
-    messages.sort((a, b) => {
-      if (a.pinned && b.pinned) return a.createdAt < b.createdAt ? 1 : -1
-      if (a.pinned) return -1
-      return 1
-    })
 
     const contacts = await this.contactRepository
       .createQueryBuilder('contact')
@@ -117,6 +112,25 @@ export class ChatsService {
       if (item.chat.archived) res.archived.push(item)
       else res.unarchived.push(item)
     })
+
+    const compareFn = (a: any, b: any) => {
+      if (a.chat.pinned && b.chat.pinned) {
+        if (a.latestMsg === null) return -1
+        if (b.latestMsg === null) return 1
+
+        return a.latestMsg.createdAt < b.latestMsg.createdAt ? 1 : -1
+      }
+      if (a.chat.pinned) return -1
+      if (b.chat.pinned) return 1
+
+      if (a.latestMsg === null) return -1
+      if (b.latestMsg === null) return 1
+
+      return a.latestMsg.createdAt < b.latestMsg.createdAt ? 1 : -1
+    }
+
+    res.unarchived.sort(compareFn)
+    res.archived.sort(compareFn)
 
     return res
   }
