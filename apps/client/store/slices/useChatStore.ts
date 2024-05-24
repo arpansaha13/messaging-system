@@ -6,7 +6,7 @@ import type { MessageType, ConvoItemType, MsgReceivedType } from '@pkg/types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
-type ActiveChatInfo = Omit<ConvoItemType, 'latestMsg' | 'room' | 'userToRoomId'> | null
+type ActiveChat = Pick<ConvoItemType, 'receiver' | 'contact'> | null
 
 export interface ChatStoreType {
   /**
@@ -16,31 +16,38 @@ export interface ChatStoreType {
   chats: Map<number, Map<number, MessageType>>
   getChats: () => ChatStoreType['chats']
 
-  activeChatInfo: ActiveChatInfo
-  getActiveChatInfo: () => ActiveChatInfo
-  setActiveChatInfo: (newChatInfo: ActiveChatInfo) => void
+  activeChat: ActiveChat
+  getActiveChat: () => ActiveChat
+  setActiveChat: (newChatInfo: ActiveChat) => void
+
+  isProxyChat: boolean
+  setProxyChat: (bool: boolean) => void
 
   /** Add a new chat. */
-  addChat: (roomId: number, chat: MessageType[]) => void
+  addChat: (receiverId: number, messages: MessageType[]) => void
 
   /** Append new messages to existing chat. This is meant to be used when an existing chat is re-opened with new unread messages. */
-  pushChat: (roomId: number, messages: MessageType[]) => void
+  pushChat: (receiverId: number, messages: MessageType[]) => void
 
   /** Append a newly sent message. This can be used during an ongoing chat. */
-  sendMsg: (roomId: number, msg: Omit<MsgReceivedType, 'status'>) => void
+  sendMsg: (receiverId: number, msg: Omit<MsgReceivedType, 'status'>) => void
 
   /** Append the received messages to ongoing chat. */
-  receiveMsg: (roomId: number, msg: Omit<MsgReceivedType, 'status'>) => void
+  receiveMsg: (receiverId: number, msg: Omit<MsgReceivedType, 'status'>) => void
 
-  updateMsgStatus: (roomId: number, ISOtime: string, newStatus: Exclude<MessageStatus, MessageStatus.SENDING>) => void
+  updateMsgStatus: (
+    receiverId: number,
+    ISOtime: string,
+    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
+  ) => void
   updateAllMsgStatus: (
-    roomId: number,
+    chatId: number,
     newStatus: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>,
     senderId: number,
   ) => void
 
-  clearChat: (roomId: number) => void
-  deleteChat: (roomId: number) => void
+  clearChat: (chatId: number) => void
+  deleteChat: (chatId: number) => void
 }
 
 export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
@@ -48,69 +55,73 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
   getChats() {
     return get().chats
   },
-  activeChatInfo: null,
-  setActiveChatInfo(newChatInfo) {
-    set({ activeChatInfo: newChatInfo })
+  activeChat: null,
+  setActiveChat(activeChat) {
+    set({ activeChat })
   },
-  getActiveChatInfo() {
-    return get().activeChatInfo
+  getActiveChat() {
+    return get().activeChat
   },
-  addChat(roomId: number, chat: MessageType[]) {
+  isProxyChat: false,
+  setProxyChat(bool) {
+    set(() => ({ isProxyConvo: bool }))
+  },
+  addChat(chatId: number, messages: MessageType[]) {
     // Update through `Immer`
     set((state: ChatStoreType) => {
       const newChat = new Map<number, MessageType>()
-      for (const message of chat) {
+      for (const message of messages) {
         newChat.set(ISOToMilliSecs(message.createdAt), message)
       }
-      state.chats.set(roomId, newChat)
+      state.chats.set(chatId, newChat)
     })
   },
-  pushChat(roomId: number, messages: MessageType[]) {
+  pushChat(chatId: number, messages: MessageType[]) {
     // Use `Immer` for nested updates
     set((state: ChatStoreType) => {
-      let chat = state.chats.get(roomId)
+      let chat = state.chats.get(chatId)
 
       // If this is a new chat, then it would not exist in the `chats` map. Add it first.
       if (typeof chat === 'undefined') {
-        get().addChat(roomId, [])
-        chat = get().chats.get(roomId)!
+        get().addChat(chatId, [])
+        chat = get().chats.get(chatId)!
       }
       for (const message of messages) {
         chat.set(ISOToMilliSecs(message.createdAt), message)
       }
-      state.chats.set(roomId, chat)
+      state.chats.set(chatId, chat)
     })
   },
-  sendMsg(roomId, msg) {
-    get().pushChat(roomId, [
+  sendMsg(chatId, msg) {
+    get().pushChat(chatId, [
       {
         ...msg,
         status: MessageStatus.SENDING,
       },
     ])
   },
-  receiveMsg(roomId, msg) {
-    get().pushChat(roomId, [
+  receiveMsg(chatId, msg) {
+    get().pushChat(chatId, [
       {
         ...msg,
         status: MessageStatus.DELIVERED,
       },
     ])
   },
-  updateMsgStatus(roomId, ISOtime, newStatus) {
+  updateMsgStatus(receiverId, ISOtime, newStatus) {
     set((state: ChatStoreType) => {
       const timeMilliSecs = ISOToMilliSecs(ISOtime)
-      const chat = state.chats.get(roomId)!
+      const chat = state.chats.get(receiverId)!
       const msgToUpdate = chat.get(timeMilliSecs)!
       const updatedMsg = { ...msgToUpdate, status: newStatus }
       chat.set(timeMilliSecs, updatedMsg)
     })
   },
-  updateAllMsgStatus(roomId, newStatus, senderId) {
+  updateAllMsgStatus(chatId, newStatus, senderId) {
     set((state: ChatStoreType) => {
-      const chat = state.chats.get(roomId)
+      const chat = state.chats.get(chatId)
       if (!chat) {
-        console.error('Chat not found. Invalid `roomId`')
+        console.error('Chat not found. Invalid `chatId`')
         return
       }
       const iter = chat.values()
@@ -121,16 +132,16 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
       }
     })
   },
-  clearChat(roomId) {
+  clearChat(chatId) {
     set((state: ChatStoreType) => {
-      _fetch(`user-to-room/${roomId}/clear-chat`, { method: 'DELETE' })
-      state.chats.set(roomId, new Map<number, MessageType>())
+      _fetch(`chat/${chatId}/clear-chat`, { method: 'DELETE' })
+      state.chats.set(chatId, new Map<number, MessageType>())
     })
   },
-  deleteChat(roomId) {
+  deleteChat(chatId) {
     set((state: ChatStoreType) => {
-      _fetch(`user-to-room/${roomId}/delete-chat`, { method: 'DELETE' })
-      state.chats.delete(roomId)
+      _fetch(`chat/${chatId}/delete-chat`, { method: 'DELETE' })
+      state.chats.delete(chatId)
     })
   },
 })

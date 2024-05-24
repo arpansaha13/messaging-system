@@ -1,7 +1,8 @@
 import { memo } from 'react'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 
 interface AvatarProps {
-  src: string | null
+  src: string | null | undefined
   alt?: string
   /**
    * Width of the avatar in 'rem' units.
@@ -18,7 +19,7 @@ interface AvatarProps {
 const Avatar = ({ src, width = 3, height = 3, alt = '' }: AvatarProps) => {
   return (
     <>
-      {src !== null ? (
+      {!isNullOrUndefined(src) ? (
         <img className="rounded-full" src={src} alt={alt} style={{ width: `${width}rem`, height: `${height}rem` }} />
       ) : (
         <div

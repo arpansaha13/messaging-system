@@ -19,7 +19,7 @@ export default function ChatBody({ messages }: ChatBodyProps) {
           let mapEntry = mapItr.next()
 
           while (!mapEntry.done) {
-            temp.push(<Message key={mapEntry.value[0]} message={mapEntry.value[1]} />)
+            temp.unshift(<Message key={mapEntry.value[0]} message={mapEntry.value[1]} />)
             mapEntry = mapItr.next()
           }
           return temp

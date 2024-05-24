@@ -7,14 +7,8 @@ import HeaderDropDown from '../HeaderDropDown'
 import { useStore } from '~/store'
 
 const ChatHeader = () => {
-  const [typingState, activeChatInfo, activeRoom, clearConvoItemLatestMsg, clearChat] = useStore(
-    state => [
-      state.typingState,
-      state.activeChatInfo!,
-      state.activeRoom,
-      state.clearConvoItemLatestMsg,
-      state.clearChat,
-    ],
+  const [typingState, activeChat, clearConvoLatestMsg, clearChat] = useStore(
+    state => [state.typingState, state.activeChat, state.clearConvoLatestMsg, state.clearChat],
     shallow,
   )
 
@@ -51,13 +45,13 @@ const ChatHeader = () => {
     // },
     // Show 'Clear messages' only if the room exists
     ...(() =>
-      activeRoom !== null
+      activeChat !== null
         ? [
             {
               slot: 'Clear messages',
               async onClick() {
-                clearChat(activeRoom.id)
-                clearConvoItemLatestMsg(activeRoom.id)
+                clearChat(activeChat.chat.id)
+                clearConvoLatestMsg(activeChat.receiver.id)
               },
             },
           ]
@@ -73,22 +67,22 @@ const ChatHeader = () => {
   return (
     <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none relative z-10">
       <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-3">
-        <Avatar src={activeChatInfo.user.dp} height={2.5} width={2.5} />
+        <Avatar src={activeChat?.receiver.dp} height={2.5} width={2.5} />
 
         <div>
           <p className="text-gray-800 dark:text-gray-50 font-semibold">
-            {activeChatInfo.contact?.alias ?? <span className="italic">{`~${activeChatInfo.user.globalName}`}</span>}
+            {activeChat?.contact?.alias ?? <span className="italic">{`~${activeChat?.receiver.globalName}`}</span>}
           </p>
           <p
             className={classNames(
               'text-xs transition-[height] duration-200 overflow-hidden',
-              activeRoom && typingState[activeRoom.id] ? 'h-4' : 'h-0 delay-150',
+              activeChat && typingState[activeChat.receiver.id] ? 'h-4' : 'h-0 delay-150',
             )}
           >
             <span
               className={classNames(
                 'transition-opacity',
-                activeRoom && typingState[activeRoom.id] ? 'opacity-100 delay-200' : 'opacity-0',
+                activeChat && typingState[activeChat.receiver.id] ? 'opacity-100 delay-200' : 'opacity-0',
               )}
             >
               typing...

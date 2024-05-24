@@ -7,11 +7,11 @@ export interface ConvoItemType<A = false> {
     alias: string
   } | null
   latestMsg: {
-    id: number
+    // id: number
     status: MessageStatus
     content: string
     senderId: number
-    createdAt: Date
+    createdAt: string
   } | null
   receiver: {
     id: number
