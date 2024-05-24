@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common'
-import { RoomModule } from 'src/rooms/room.module'
-import { MessageModule } from 'src/messages/message.module'
-import { UserToRoomModule } from 'src/user-to-room/user-to-room.module'
 import { MessageRepository } from 'src/messages/message.repository'
 import { ChatsGateway } from './chats.gateway'
 import { ChatsService } from './chats.service'
+import { ChatRepository } from './chats.repository'
+import { ChatsController } from './chats.controller'
+import { ContactRepository } from 'src/contacts/contact.repository'
 
 @Module({
-  imports: [RoomModule, MessageModule, UserToRoomModule],
-  providers: [ChatsGateway, ChatsService, MessageRepository],
+  providers: [ContactRepository, ChatsGateway, ChatRepository, ChatsService, MessageRepository],
+  controllers: [ChatsController],
 })
 export class ChatsModule {}

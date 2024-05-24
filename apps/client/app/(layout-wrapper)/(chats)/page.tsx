@@ -20,30 +20,31 @@ export default function Page() {
   )
   async function handleClick(convoItem: ConvoItemType) {
     setActiveRoom({
-      id: convoItem.room.id,
-      archived: convoItem.room.archived,
+      id: convoItem.chat.id,
+      archived: convoItem.chat.archived,
     })
     setProxyConvo(false)
     setActiveChatInfo({
       contact: convoItem.contact ?? null,
-      user: convoItem.user,
+      receiver: convoItem.receiver,
     })
 
-    if (!chats.has(convoItem.room.id)) {
-      const chatRes: MessageType[] = await _fetch(`messages/${convoItem.room.id}`)
-      add(convoItem.room.id, chatRes)
+    if (!chats.has(convoItem.chat.id)) {
+      const chatRes: MessageType[] = await _fetch(`messages/${convoItem.chat.id}`)
+      add(convoItem.chat.id, chatRes)
     }
   }
+
   return (
     <div>
       <ul role="list">
         {convo.map(convoItem => (
           <ConvoItem
-            key={convoItem.room.id}
-            roomId={convoItem.room.id}
-            dp={convoItem.user.dp}
-            globalName={convoItem.user.globalName}
-            pinned={convoItem.room.pinned}
+            key={convoItem.chat.id}
+            roomId={convoItem.chat.id}
+            dp={convoItem.receiver.dp}
+            globalName={convoItem.receiver.globalName}
+            pinned={convoItem.chat.pinned}
             alias={convoItem.contact?.alias ?? null}
             latestMsg={convoItem.latestMsg}
             onClick={() => handleClick(convoItem)}

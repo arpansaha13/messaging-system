@@ -1,207 +1,151 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { RoomService } from 'src/rooms/room.service'
-import { MessageService } from 'src/messages/message.service'
-import { MessageStatus } from 'src/messages/message.entity'
+import { Brackets } from 'typeorm'
+import { ChatRepository } from './chats.repository'
+import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
-import { UserToRoomService } from 'src/user-to-room/user-to-room.service'
-import type { Server, Socket } from 'socket.io'
-import type { UserToRoom } from 'src/user-to-room/user-to-room.entity'
-import type { Room } from 'src/rooms/room.entity'
-import type { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
+import type { User } from 'src/users/user.entity'
 
 @Injectable()
 export class ChatsService {
   constructor(
-    private readonly roomService: RoomService,
-    private readonly messageService: MessageService,
-    private readonly userToRoomService: UserToRoomService,
+    @InjectRepository(ChatRepository)
+    private readonly chatRepository: ChatRepository,
+
+    @InjectRepository(ContactRepository)
+    private readonly contactRepository: ContactRepository,
 
     @InjectRepository(MessageRepository)
     private readonly messageRepository: MessageRepository,
   ) {}
 
-  /** A map of all clients (user_id's) to their client socket id's. */
-  // TODO: Move this to an external cache
-  private clients = new Map<number, string>()
-
-  private getMapKeyByValue(map: Map<number, string>, searchValue: string): number {
-    for (const [key, value] of map.entries()) {
-      if (value === searchValue) return key
-    }
-  }
-
-  async addSession(userId: number, socket: Socket, server: Server) {
-    // If the same user connects again it will overwrite previous data in map.
-    // Which means multiple connections are not possible currently.
-    // TODO: support multiple connections
-    const userToRooms = await this.userToRoomService.getRoomsOfUser(userId)
-    const rooms = userToRooms.map(u2r => u2r.room)
-
-    this.clients.set(userId, socket.id)
-
-    if (rooms.length === 0) return
-
-    // Get the userIds of those who had sent a message
-    const res: { sender_id: number; room_id: number }[] = await this.messageRepository
-      .createQueryBuilder('msg')
-      .select(['msg.sender_id', 'msg.room_id'])
-      .distinctOn(['msg.sender_id'])
-      .where("msg.room_id IN (:...rooms) AND msg.status = 'SENT' AND msg.sender_id != :userId", {
-        rooms: rooms.map(room => room.id),
-        userId,
-      })
+  async getChats(userId: User['id']): Promise<any> {
+    const chats = await this.chatRepository
+      .createQueryBuilder('chat')
+      .where('chat.sender.id = :userId', { userId })
+      .select('chat.receiver.id', 'receiverId')
+      .addSelect('chat.id', 'id')
+      .addSelect('chat.muted', 'muted')
+      .addSelect('chat.pinned', 'pinned')
+      .addSelect('chat.archived', 'archived')
       .getRawMany()
 
-    // Out of these userIds, send DELIVERED status to the **online** userIds
-    for (const resItem of res) {
-      const socketId = this.clients.get(resItem.sender_id)
-      if (socketId) {
-        server.to(socketId).emit('all-message-status', {
-          roomId: resItem.room_id,
-          senderId: resItem.sender_id,
-          status: MessageStatus.DELIVERED,
-        })
-      }
+    const receiverIds = chats.map(chat => chat.receiverId)
+
+    if (receiverIds.length === 0) {
+      return []
     }
 
-    this.messageService.updateDeliveredStatus(userId, rooms)
-  }
-
-  // TODO: check if room is unarchived if the receiver is offline
-  handleDisconnect(senderSocket: Socket) {
-    const disconnectedUserId = this.getMapKeyByValue(this.clients, senderSocket.id)
-    this.clients.delete(disconnectedUserId)
-  }
-
-  /**
-   * `sender` is the user who sent the message.
-   * `receiver` is the user who has received or will receive the message.
-   *
-   * This event will come from the sender's side.
-   */
-  async handleEvent(data: Ws1to1MessageDto, senderSocket: Socket, server: Server) {
-    const receiverSocketId = this.clients.get(data.receiverId)
-    let isNewRoom = false
-    let isRevivedRoom = false
-    let room: Room = null
-    let senderUserToRoom: UserToRoom = null
-    let receiverUserToRoom: UserToRoom | null = null
-
-    if (data.roomId === null) isNewRoom = true
-
-    // Create new room if it is to be a new one
-    if (isNewRoom) {
-      // First check if a room exists between the two users but is deleted for the sender
-      // If yes, then revive that room for the sender
-      const roomIdOrNull: number | null = await this.userToRoomService.get1to1RoomIdOfUsers(
-        data.senderId,
-        data.receiverId,
+    const messages = await this.messageRepository
+      .createQueryBuilder('message')
+      .select('message.id', 'id')
+      .addSelect('message.content', 'content')
+      .addSelect('message.sender.id', 'senderId')
+      .addSelect('message.createdAt', 'createdAt')
+      .addSelect('recipient.status', 'status')
+      .addSelect('receiver.id')
+      .addSelect('receiver.globalName')
+      .addSelect('receiver.dp')
+      .addSelect('receiver.username')
+      .innerJoin('message.recipients', 'recipient')
+      .innerJoin('recipient.receiver', 'receiver')
+      .where(
+        new Brackets(qb => {
+          // prettier-ignore
+          qb.where('message.sender.id = :userId', { userId })
+            .andWhere('recipient.receiver.id IN (:...receiverIds)', { receiverIds })
+        }),
       )
-      if (roomIdOrNull !== null) {
-        data.roomId = roomIdOrNull
-        await this.userToRoomService.reviveRoomForUser(data.senderId, data.roomId)
-        isNewRoom = false
-        isRevivedRoom = true
-      } else {
-        const createRoomRes = await this.roomService.create1to1Room(data)
-        room = createRoomRes[0]
-        senderUserToRoom = createRoomRes[1]
-        data.roomId = room.id
-      }
-    }
-    // If the room already exists or is revived, update the `firstMsgTstamp`s
-    if (!isNewRoom || isRevivedRoom) {
-      senderUserToRoom = await this.userToRoomService.getUserToRoom(data.senderId, data.roomId)
-      receiverUserToRoom = await this.userToRoomService.getUserToRoom(data.receiverId, data.roomId)
+      .orWhere(
+        new Brackets(qb => {
+          // prettier-ignore
+          qb.where('message.sender.id IN (:...receiverIds)', { receiverIds })
+            .andWhere('recipient.receiver.id = :userId', { userId })
+        }),
+      )
+      .orderBy('receiver.id', 'ASC') // needed for DISTINCT ON
+      .addOrderBy('message.createdAt', 'DESC') // latest message
+      .distinctOn(['receiver.id']) // take only the latest message for each unique receiver
+      .getRawMany()
 
-      // If receiver has deleted the room, then revive it for the receiver
-      if (receiverUserToRoom.deleted) {
-        await this.userToRoomService.reviveRoomForUser(data.receiverId, data.roomId)
-      }
-    }
-    // Fetch the already existing room
-    if (!isNewRoom || isRevivedRoom) {
-      room = await this.roomService.getRoomById(data.roomId)
-    }
-    // Store message in db
-    const msgId = await this.messageService.create1to1ChatMsg(room, data.senderId, data.receiverId, data.content)
+    messages.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
 
-    /** Inform the sender about the new message status. */
-    function emitMsgStatus(status: MessageStatus) {
-      server.to(senderSocket.id).emit('message-status', {
-        roomId: room.id,
-        status,
-        senderId: data.senderId,
-        ISOtime: data.ISOtime,
-      })
-    }
-    if (!isNewRoom && !isRevivedRoom) {
-      emitMsgStatus.bind(this)(MessageStatus.SENT)
-    } else {
-      // In case of a *new* or *revived* room, the details of the room are absent/removed at the client
-      // So send this message back to sender along with other details
-      server.to(senderSocket.id).emit('message-to-new-or-revived-room', {
-        userToRoomId: senderUserToRoom.userToRoomId,
-        room: {
-          id: room.id,
-          archived: senderUserToRoom.archived,
-          deleted: senderUserToRoom.deleted,
-          isGroup: room.isGroup,
-          muted: senderUserToRoom.isMuted,
-        },
+    const contacts = await this.contactRepository
+      .createQueryBuilder('contact')
+      .select('contact.id', 'id')
+      .addSelect('contact.alias', 'alias')
+      .addSelect('userInContact.id', 'userIdInContact')
+      .innerJoin('contact.userInContact', 'userInContact')
+      .where('contact.user.id = :userId', { userId })
+      .andWhere('contact.userInContact.id IN (:...receiverIds)', { receiverIds })
+      .getRawMany()
+
+    const contactsMap = new Map()
+    contacts.forEach(contact => {
+      contactsMap.set(contact.userIdInContact, contact)
+    })
+
+    const res = { unarchived: [], archived: [] }
+
+    // The messages query finds the latest message per user and not per conversation
+    // Hence it adds one extra record in any one chat, i.e. the latest msg of the sender
+    // irrespective of whether it is the latest msg of the chat or not.
+    // Filter out the extra record.
+    const chatIsTaken = new Set()
+
+    messages.forEach(message => {
+      const { receiverId: _, ...chat } = chats.find(chat =>
+        [message.receiver_id, message.senderId].includes(chat.receiverId),
+      )
+
+      if (chatIsTaken.has(chat.id)) return
+      chatIsTaken.add(chat.id)
+
+      const contact = contactsMap.get(message.receiver_id) ?? null
+
+      const item = {
+        contact: contact
+          ? {
+              id: contact.id,
+              alias: contact.alias,
+            }
+          : null,
         latestMsg: {
-          content: data.content,
-          createdAt: data.ISOtime,
-          senderId: data.senderId,
-          status: MessageStatus.SENT,
+          id: message.id,
+          status: message.status,
+          content: message.content,
+          senderId: message.senderId,
+          createdAt: message.createdAt,
         },
-      })
-    }
+        receiver: {
+          id: message.receiver_id,
+          dp: message.receiver_dp,
+          username: message.receiver_username,
+          globalName: message.receiver_global_name,
+        },
+        chat,
+      }
 
-    // If the receiver is not online
-    if (typeof receiverSocketId === 'undefined') return
-
-    // Send the message to receiver
-    server.to(receiverSocketId).emit('receive-message', {
-      roomId: room.id,
-      senderId: data.senderId,
-      content: data.content,
-      ISOtime: data.ISOtime,
+      if (item.chat.archived) res.archived.push(item)
+      else res.unarchived.push(item)
     })
 
-    this.messageService.updateMsgStatus(msgId, MessageStatus.DELIVERED)
-    emitMsgStatus.bind(this)(MessageStatus.DELIVERED)
+    return res
   }
 
-  /**
-   * `sender` is the user who has or had sent the message.
-   * `reader` is the user who is has read the message.
-   *
-   * This event will come from the reader's side.
-   */
-  async handleReadStatus(data: WsOpenedOrReadChatDto, readerSocket: Socket, server: Server) {
-    const senderSocketId = this.clients.get(data.senderId)
-    await this.messageService.updateReadStatus(data.senderId, data.roomId)
-
-    // If the sender is not online
-    if (typeof senderSocketId === 'undefined') return
-
-    const payload: any = {
-      roomId: data.roomId,
-      senderId: data.senderId,
-      status: MessageStatus.READ,
-    }
-    if (data.ISOtime) payload.ISOtime = data.ISOtime
-    const event = data.ISOtime ? 'message-status' : 'all-message-status'
-    server.to(senderSocketId).emit(event, payload)
+  async clearChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {
+    await this.chatRepository.updateChatOptions(authUserId, receiverId, { firstMsgTstamp: new Date() })
   }
 
-  handleTyping(data: WsTypingStateDto, server: Server) {
-    const receiverSocketId = this.clients.get(data.receiverId)
-    server.to(receiverSocketId).emit('typing-state', {
-      roomId: data.roomId,
-      isTyping: data.isTyping,
-    })
+  async deleteChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {
+    await this.chatRepository.delete({ sender: { id: authUserId }, receiver: { id: receiverId } })
+  }
+
+  async updatePin(authUserId: User['id'], receiverId: User['id'], newValue: boolean): Promise<void> {
+    await this.chatRepository.updateChatOptions(authUserId, receiverId, { pinned: newValue })
+  }
+
+  async updateArchive(authUserId: User['id'], receiverId: User['id'], newValue: boolean): Promise<void> {
+    await this.chatRepository.updateChatOptions(authUserId, receiverId, { archived: newValue, pinned: false })
   }
 }
