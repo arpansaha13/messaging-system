@@ -27,7 +27,7 @@ export class ChatsService {
       .addSelect('chat.muted', 'muted')
       .addSelect('chat.pinned', 'pinned')
       .addSelect('chat.archived', 'archived')
-      .addSelect('chat.firstMsgTstamp', 'firstMsgTstamp')
+      .addSelect('chat.clearedAt', 'clearedAt')
       .addSelect('receiver.id')
       .addSelect('receiver.globalName')
       .addSelect('receiver.dp')
@@ -38,7 +38,7 @@ export class ChatsService {
     const promises = []
 
     for (const chat of chats) {
-      promises.push(this.messageRepository.getLatestMessageByUserId(userId, chat.receiver_id, chat.firstMsgTstamp))
+      promises.push(this.messageRepository.getLatestMessageByUserId(userId, chat.receiver_id, chat.clearedAt))
     }
 
     const receiverIds = chats.map(chat => chat.receiver_id)
@@ -136,7 +136,7 @@ export class ChatsService {
   }
 
   async clearChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {
-    await this.chatRepository.updateChatOptions(authUserId, receiverId, { firstMsgTstamp: new Date() })
+    await this.chatRepository.updateChatOptions(authUserId, receiverId, { clearedAt: new Date() })
   }
 
   async deleteChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {

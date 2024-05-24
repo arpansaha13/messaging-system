@@ -93,7 +93,7 @@ async function seed() {
           [user2, user1],
         ]) {
           const result = await client.query(
-            `INSERT INTO chats (sender_id, receiver_id, first_msg_tstamp, muted, archived, pinned)
+            `INSERT INTO chats (sender_id, receiver_id, cleared_at, muted, archived, pinned)
              VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
             [
               sender.id,

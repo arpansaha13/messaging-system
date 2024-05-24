@@ -10,7 +10,7 @@ export class MessageRepository extends Repository<Message> {
     super(Message, dataSource.createEntityManager())
   }
 
-  getMessagesByUserId(senderId: User['id'], receiverId: User['id'], clearedAt: Chat['firstMsgTstamp']) {
+  getMessagesByUserId(senderId: User['id'], receiverId: User['id'], clearedAt: Chat['clearedAt']) {
     return this.createQueryBuilder('message')
       .select('message.id', 'id')
       .addSelect('message.content', 'content')
@@ -41,7 +41,7 @@ export class MessageRepository extends Repository<Message> {
       .getRawMany()
   }
 
-  getLatestMessageByUserId(senderId: User['id'], receiverId: User['id'], clearedAt: Chat['firstMsgTstamp']) {
+  getLatestMessageByUserId(senderId: User['id'], receiverId: User['id'], clearedAt: Chat['clearedAt']) {
     return this.createQueryBuilder('message')
       .select('message.id', 'id')
       .addSelect('message.content', 'content')
