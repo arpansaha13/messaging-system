@@ -140,14 +140,24 @@ async function seed() {
   }
 
   async function insertContacts() {
+    const existingPairs = new Set()
+
     for (const user of users) {
       const numberOfContacts = faker.number.int({ min: 1, max: users.length - 1 })
+      const possibleContacts = users.filter(u => u.id !== user.id)
+
       for (let i = 0; i < numberOfContacts; i++) {
-        const contactUser = users.filter(u => u.id !== user.id)[faker.number.int({ min: 0, max: users.length - 2 })]
+        let contactUser
+        do {
+          contactUser = possibleContacts[faker.number.int({ min: 0, max: users.length - 2 })]
+        } while (existingPairs.has(`${user.id}-${contactUser.id}`))
+
+        existingPairs.add(`${user.id}-${contactUser.id}`)
         await client.query(
-          `INSERT INTO contacts (user_id, user_id_in_contact, alias, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [user.id, contactUser.id, faker.person.fullName(), new Date(), new Date()],
+          `INSERT INTO contacts
+          (user_id, user_id_in_contact, alias, created_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5)`,
+          [user.id, contactUser.id, faker.person.fullName(), faker.date.past(), faker.date.past()],
         )
       }
     }
