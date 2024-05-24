@@ -6,7 +6,7 @@ import type { MessageType, ConvoItemType, MsgReceivedType } from '@pkg/types'
 
 // TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
 
-type ActiveChat = Pick<ConvoItemType, 'receiver' | 'contact'> | null
+type ActiveChat = Pick<ConvoItemType<boolean>, 'receiver' | 'contact'> | null
 
 export interface ChatStoreType {
   /**
@@ -46,8 +46,8 @@ export interface ChatStoreType {
     senderId: number,
   ) => void
 
-  clearChat: (chatId: number) => void
-  deleteChat: (chatId: number) => void
+  clearChat: (receiverId: number) => void
+  deleteChat: (receiverId: number) => void
 }
 
 export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
@@ -132,16 +132,16 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
       }
     })
   },
-  clearChat(chatId) {
+  clearChat(receiverId) {
     set((state: ChatStoreType) => {
-      _fetch(`chat/${chatId}/clear-chat`, { method: 'DELETE' })
-      state.chats.set(chatId, new Map<number, MessageType>())
+      _fetch(`chats/${receiverId}/clear`, { method: 'DELETE' })
+      state.chats.set(receiverId, new Map<number, MessageType>())
     })
   },
-  deleteChat(chatId) {
+  deleteChat(receiverId) {
     set((state: ChatStoreType) => {
-      _fetch(`chat/${chatId}/delete-chat`, { method: 'DELETE' })
-      state.chats.delete(chatId)
+      _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
+      state.chats.delete(receiverId)
     })
   },
 })

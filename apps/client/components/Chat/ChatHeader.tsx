@@ -50,7 +50,7 @@ const ChatHeader = () => {
             {
               slot: 'Clear messages',
               async onClick() {
-                clearChat(activeChat.chat.id)
+                clearChat(activeChat.receiver.id)
                 clearConvoLatestMsg(activeChat.receiver.id)
               },
             },

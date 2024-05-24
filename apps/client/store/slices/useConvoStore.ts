@@ -144,8 +144,8 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
       const convo = state.unarchived[idx]
       convo.chat.pinned = pinned
       state.unarchived.sort(sortConvoCompareFn)
-      if (pinned) _fetch(`chats/${receiverId}/pin-chat`, { method: 'PATCH' })
-      else _fetch(`chats/${receiverId}/unpin-chat`, { method: 'PATCH' })
+      if (pinned) _fetch(`chats/${receiverId}/pin`, { method: 'PATCH' })
+      else _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
     })
   },
 })
