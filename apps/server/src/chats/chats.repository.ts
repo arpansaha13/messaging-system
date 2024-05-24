@@ -10,8 +10,8 @@ export class ChatRepository extends Repository<Chat> {
   }
 
   async getFirstMsgTstampBy(where: FindOptionsWhere<Chat> | FindOptionsWhere<Chat>[]) {
-    const chat = await this.createQueryBuilder('chat').select('chat.firstMsgTstamp').where(where).getOne()
-    return chat.firstMsgTstamp
+    const chat = await this.createQueryBuilder('chat').select('chat.clearedAt').where(where).getOne()
+    return chat.clearedAt
   }
 
   updateChatOptions(senderId: User['id'], receiverId: User['id'], partialEntity: Partial<Chat>): Promise<UpdateResult> {

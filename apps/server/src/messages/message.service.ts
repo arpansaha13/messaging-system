@@ -56,7 +56,7 @@ export class MessageService {
 
     if (isNullOrUndefined(chat)) return []
 
-    return this.messageRepository.getMessagesByUserId(authUser.id, receiverId, chat.firstMsgTstamp)
+    return this.messageRepository.getMessagesByUserId(authUser.id, receiverId, chat.clearedAt)
   }
 
   /**
