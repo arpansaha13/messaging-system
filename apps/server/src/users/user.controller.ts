@@ -23,11 +23,6 @@ export class UserController {
     return this.userService.updateUserInfo(request.user.id, data)
   }
 
-  @Get('/convo')
-  getUserConvo(@Req() request: Request): Promise<UserConvoResponse> {
-    return this.userService.getUserConvo(request.user.id)
-  }
-
   @Get('/search')
   findUsers(@Req() request: Request, @Query() query: UserSearchQuery): Promise<User> {
     return this.userService.findUsers(request.user.id, query.search)

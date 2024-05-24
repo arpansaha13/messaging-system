@@ -1,32 +1,29 @@
 import type { MessageStatus } from './message.types'
 
-/** Generic type for chat-list item. A = archived, G = isGroup */
-export interface ConvoItemType<A = false, G = false> {
-  userToRoomId: number
-  room: {
+/** Generic type for chat-list item. A = archived */
+export interface ConvoItemType<A = false> {
+  contact: {
+    id: number
+    alias: string
+  } | null
+  latestMsg: {
+    id: number
+    status: MessageStatus
+    content: string
+    senderId: number
+    createdAt: Date
+  } | null
+  receiver: {
+    id: number
+    dp: string | null
+    username: string
+    globalName: string
+  }
+  chat: {
     id: number
     muted: boolean
     archived: A
     pinned: boolean
-    isGroup: G
-  }
-  /** The user with whom the chat is. */
-  user: {
-    id: number
-    dp: string | null
-    bio: string
-    globalName: string
-  }
-  /** Will be `null` if this user is not in contacts. */
-  contact: null | {
-    id: number
-    alias: string
-  }
-  latestMsg: null | {
-    content: string
-    senderId: number
-    status: MessageStatus
-    createdAt: string
   }
 }
 
