@@ -1,7 +1,6 @@
 import { memo } from 'react'
 import { format, parseISO, differenceInCalendarDays } from 'date-fns'
 import { shallow } from 'zustand/shallow'
-// Utils
 import { classNames } from '@arpansaha13/utils'
 import isUnread from '~/utils/isUnread'
 import Avatar from '~common/Avatar'
@@ -14,7 +13,8 @@ import { useStore } from '~/store'
 import type { ConvoItemType } from '@pkg/types'
 
 export interface ConvoItemProps {
-  roomId: number
+  chatId: number
+  userId: number
   alias: string | null
   dp: string | null
   globalName: string
@@ -25,7 +25,8 @@ export interface ConvoItemProps {
 }
 
 const ConvoItem = ({
-  roomId,
+  chatId,
+  userId,
   alias,
   dp,
   globalName,
@@ -35,21 +36,11 @@ const ConvoItem = ({
   onClick,
 }: ConvoItemProps) => {
   const authUser = useAuthStore(state => state.authUser)!
-  const [
-    activeRoom,
-    setActiveRoom,
-    setActiveChatInfo,
-    archiveRoom,
-    unarchiveRoom,
-    deleteChat,
-    deleteConvo,
-    updateConvoPin,
-  ] = useStore(
+  const [activeChat, setActiveChat, archiveRoom, unarchiveRoom, deleteChat, deleteConvo, updateConvoPin] = useStore(
     state => [
       // Initially no rooms would be active - so `activeRoom` may be null
-      state.activeRoom,
-      state.setActiveRoom,
-      state.setActiveChatInfo,
+      state.activeChat,
+      state.setActiveChat,
       state.archiveRoom,
       state.unarchiveRoom,
       state.deleteChat,
@@ -66,27 +57,20 @@ const ConvoItem = ({
       slot: !archived ? 'Archive chat' : 'Unarchive chat',
       onClick() {
         if (!archived) {
-          archiveRoom(roomId)
+          archiveRoom(chatId)
         } else {
-          unarchiveRoom(roomId)
+          unarchiveRoom(chatId)
         }
       },
     },
-    // {
-    //   slot: 'Mute notifications',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
     {
       slot: 'Delete chat',
       onClick() {
-        deleteChat(roomId)
-        deleteConvo(roomId, archived)
+        deleteChat(chatId)
+        deleteConvo(userId, archived)
         // If active room is being deleted
-        if (activeRoom && activeRoom.id === roomId) {
-          setActiveRoom(null)
-          setActiveChatInfo(null)
+        if (activeChat && activeChat.receiver.id === userId) {
+          setActiveChat(null)
         }
       },
     },
@@ -97,20 +81,14 @@ const ConvoItem = ({
               slot: !pinned ? 'Pin chat' : 'Unpin chat',
               onClick() {
                 if (!pinned) {
-                  updateConvoPin(roomId, true)
+                  updateConvoPin(chatId, true)
                 } else {
-                  updateConvoPin(roomId, false)
+                  updateConvoPin(chatId, false)
                 }
               },
             },
           ]
         : [])(),
-    // {
-    //   slot: 'Mark as unread',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
   ]
 
   function getDateTime() {
@@ -126,7 +104,7 @@ const ConvoItem = ({
       <div
         className={classNames(
           'px-3 w-full text-left flex items-center relative rounded',
-          roomId === activeRoom?.id
+          userId === activeChat?.receiver.id
             ? 'bg-gray-300/60 dark:bg-gray-700/90'
             : 'hover:bg-gray-200/60 dark:hover:bg-gray-600/40',
           unread ? 'font-semibold' : '',

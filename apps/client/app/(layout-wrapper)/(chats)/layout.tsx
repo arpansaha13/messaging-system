@@ -9,8 +9,8 @@ interface ChatsLayoutProps {
 }
 
 export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
-  const [activeRoom, isProxyConvo] = useStore(state => [state.activeRoom, state.isProxyConvo], shallow)
-  const showChatView = activeRoom !== null || isProxyConvo
+  const [activeChat, isProxyChat] = useStore(state => [state.activeChat, state.isProxyChat], shallow)
+  const showChatView = activeChat !== null || isProxyChat
 
   return (
     <div className="p-2 flex h-full gap-2">

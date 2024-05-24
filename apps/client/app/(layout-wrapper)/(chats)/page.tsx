@@ -7,41 +7,31 @@ import _fetch from '~/utils/_fetch'
 import type { ConvoItemType, MessageType } from '@pkg/types'
 
 export default function Page() {
-  const [add, chats, convo, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
-    state => [
-      state.addChat,
-      state.chats,
-      state.unarchived,
-      state.setActiveChatInfo,
-      state.setActiveRoom,
-      state.setProxyConvo,
-    ],
+  const [add, chats, convo, setActiveChat, setProxyChat] = useStore(
+    state => [state.addChat, state.chats, state.unarchived, state.setActiveChat, state.setProxyChat],
     shallow,
   )
   async function handleClick(convoItem: ConvoItemType) {
-    setActiveRoom({
-      id: convoItem.chat.id,
-      archived: convoItem.chat.archived,
-    })
-    setProxyConvo(false)
-    setActiveChatInfo({
-      contact: convoItem.contact ?? null,
+    setActiveChat({
+      contact: convoItem.contact,
       receiver: convoItem.receiver,
     })
+    setProxyChat(false)
 
-    if (!chats.has(convoItem.chat.id)) {
-      const chatRes: MessageType[] = await _fetch(`messages/${convoItem.chat.id}`)
-      add(convoItem.chat.id, chatRes)
+    if (!chats.has(convoItem.receiver.id)) {
+      const chatRes: MessageType[] = await _fetch(`messages/${convoItem.receiver.id}`)
+      add(convoItem.receiver.id, chatRes)
     }
   }
 
   return (
     <div>
-      <ul role="list">
+      <ul>
         {convo.map(convoItem => (
           <ConvoItem
             key={convoItem.chat.id}
-            roomId={convoItem.chat.id}
+            chatId={convoItem.chat.id}
+            userId={convoItem.receiver.id}
             dp={convoItem.receiver.dp}
             globalName={convoItem.receiver.globalName}
             pinned={convoItem.chat.pinned}

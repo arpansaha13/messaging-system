@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { Brackets } from 'typeorm'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { ChatRepository } from './chats.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
@@ -23,57 +23,38 @@ export class ChatsService {
     const chats = await this.chatRepository
       .createQueryBuilder('chat')
       .where('chat.sender.id = :userId', { userId })
-      .select('chat.receiver.id', 'receiverId')
-      .addSelect('chat.id', 'id')
+      .select('chat.id', 'id')
       .addSelect('chat.muted', 'muted')
       .addSelect('chat.pinned', 'pinned')
       .addSelect('chat.archived', 'archived')
-      .getRawMany()
-
-    const receiverIds = chats.map(chat => chat.receiverId)
-
-    if (receiverIds.length === 0) {
-      return []
-    }
-
-    const messages = await this.messageRepository
-      .createQueryBuilder('message')
-      .select('message.id', 'id')
-      .addSelect('message.content', 'content')
-      .addSelect('message.sender.id', 'senderId')
-      .addSelect('message.createdAt', 'createdAt')
-      .addSelect('recipient.status', 'status')
+      .addSelect('chat.firstMsgTstamp', 'firstMsgTstamp')
       .addSelect('receiver.id')
       .addSelect('receiver.globalName')
       .addSelect('receiver.dp')
       .addSelect('receiver.username')
-      .innerJoin('message.recipients', 'recipient')
-      .innerJoin('recipient.receiver', 'receiver')
-      .where(
-        new Brackets(qb => {
-          // prettier-ignore
-          qb.where('message.sender.id = :userId', { userId })
-            .andWhere('recipient.receiver.id IN (:...receiverIds)', { receiverIds })
-        }),
-      )
-      .orWhere(
-        new Brackets(qb => {
-          // prettier-ignore
-          qb.where('message.sender.id IN (:...receiverIds)', { receiverIds })
-            .andWhere('recipient.receiver.id = :userId', { userId })
-        }),
-      )
-      .orderBy('receiver.id', 'ASC') // needed for DISTINCT ON
-      .addOrderBy('message.createdAt', 'DESC') // latest message
-      .distinctOn(['receiver.id']) // take only the latest message for each unique receiver
+      .innerJoin('chat.receiver', 'receiver')
       .getRawMany()
 
-    messages.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    const promises = []
+
+    for (const chat of chats) {
+      promises.push(this.messageRepository.getLatestMessageByUserId(userId, chat.receiver_id, chat.firstMsgTstamp))
+    }
+
+    const receiverIds = chats.map(chat => chat.receiver_id)
+
+    const messages = await Promise.all(promises)
+    messages.sort((a, b) => {
+      if (a.pinned && b.pinned) return a.createdAt < b.createdAt ? 1 : -1
+      if (a.pinned) return -1
+      return 1
+    })
 
     const contacts = await this.contactRepository
       .createQueryBuilder('contact')
       .select('contact.id', 'id')
       .addSelect('contact.alias', 'alias')
+      .addSelect('userInContact.id', 'userIdInContact')
       .addSelect('userInContact.id', 'userIdInContact')
       .innerJoin('contact.userInContact', 'userInContact')
       .where('contact.user.id = :userId', { userId })
@@ -87,21 +68,21 @@ export class ChatsService {
 
     const res = { unarchived: [], archived: [] }
 
-    // The messages query finds the latest message per user and not per conversation
-    // Hence it adds one extra record in any one chat, i.e. the latest msg of the sender
-    // irrespective of whether it is the latest msg of the chat or not.
-    // Filter out the extra record.
-    const chatIsTaken = new Set()
+    chats.forEach(chat => {
+      const message = messages.find(message => {
+        if (isNullOrUndefined(message)) return null
 
-    messages.forEach(message => {
-      const { receiverId: _, ...chat } = chats.find(chat =>
-        [message.receiver_id, message.senderId].includes(chat.receiverId),
-      )
+        const messageParticipants = [message.receiver_id, message.senderId].sort()
+        const chatParticipants = [chat.receiver_id, userId].sort()
 
-      if (chatIsTaken.has(chat.id)) return
-      chatIsTaken.add(chat.id)
+        const isSame =
+          messageParticipants.length === chatParticipants.length &&
+          messageParticipants.every((el, i) => el === chatParticipants[i])
 
-      const contact = contactsMap.get(message.receiver_id) ?? null
+        return isSame
+      })
+
+      const contact = contactsMap.get(chat.receiver_id) ?? null
 
       const item = {
         contact: contact
@@ -110,20 +91,27 @@ export class ChatsService {
               alias: contact.alias,
             }
           : null,
-        latestMsg: {
-          id: message.id,
-          status: message.status,
-          content: message.content,
-          senderId: message.senderId,
-          createdAt: message.createdAt,
-        },
+        latestMsg: message
+          ? {
+              id: message.id,
+              status: message.status,
+              content: message.content,
+              senderId: message.senderId,
+              createdAt: message.createdAt,
+            }
+          : null,
         receiver: {
-          id: message.receiver_id,
-          dp: message.receiver_dp,
-          username: message.receiver_username,
-          globalName: message.receiver_global_name,
+          id: chat.receiver_id,
+          dp: chat.receiver_dp,
+          username: chat.receiver_username,
+          globalName: chat.receiver_global_name,
         },
-        chat,
+        chat: {
+          id: chat.id,
+          muted: chat.muted,
+          pinned: chat.pinned,
+          archived: chat.archived,
+        },
       }
 
       if (item.chat.archived) res.archived.push(item)

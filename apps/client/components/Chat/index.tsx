@@ -4,11 +4,10 @@ import ChatHeader from './ChatHeader'
 import ChatFooter from './ChatFooter'
 import { useStore } from '~/store'
 
-// Frequently updates on state change.
 export default function ChatView() {
-  const [chats, activeRoom] = useStore(state => [state.chats, state.activeRoom], shallow)
+  const [chats, activeChat] = useStore(state => [state.chats, state.activeChat], shallow)
 
-  const messages = activeRoom === null ? null : chats.get(activeRoom.id) ?? null
+  const messages = activeChat === null ? null : chats.get(activeChat.receiver.id) ?? null
 
   return (
     <div className="flex flex-col h-full">

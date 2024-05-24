@@ -20,15 +20,8 @@ interface SearchResultsProps {
 }
 
 export default function Page() {
-  const [add, chats, searchConvoByUserId, setActiveChatInfo, setActiveRoom, setProxyConvo] = useStore(
-    state => [
-      state.addChat,
-      state.chats,
-      state.searchConvoByUserId,
-      state.setActiveChatInfo,
-      state.setActiveRoom,
-      state.setProxyConvo,
-    ],
+  const [add, chats, searchConvo, setActiveChat, setProxyChat] = useStore(
+    state => [state.addChat, state.chats, state.searchConvo, state.setActiveChat, state.setProxyChat],
     shallow,
   )
 
@@ -53,25 +46,24 @@ export default function Page() {
   )
 
   async function handleClick(contact: ContactType) {
-    setActiveChatInfo({
+    setActiveChat({
       contact: {
         id: contact.contactId,
         alias: contact.alias,
       },
-      user: {
+      receiver: {
         id: contact.userId,
-        bio: contact.bio,
+        username: contact.username,
         dp: contact.dp,
         globalName: contact.globalName,
       },
     })
-    const convo = searchConvoByUserId(contact.userId)
-    setActiveRoom(convo?.room ?? null)
-    setProxyConvo(convo === null)
+    const convo = searchConvo(contact.userId)
+    setProxyChat(convo === null)
 
-    if (convo && !chats.has(convo.room.id)) {
-      const chatRes: MessageType[] = await _fetch(`messages/${convo.room.id}`)
-      add(convo.room.id, chatRes)
+    if (convo && !chats.has(convo.receiver.id)) {
+      const chatRes: MessageType[] = await _fetch(`messages/${convo.receiver.id}`)
+      add(convo.receiver.id, chatRes)
     }
   }
 
