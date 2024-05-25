@@ -1,60 +1,50 @@
 import _fetch from '~/utils/_fetch'
-import { ISOToMilliSecs } from '~/utils'
 import { MessageStatus } from '@pkg/types'
 import type { Slice } from '~/store/types.store'
-import type { MessageType, ConvoItemType, MsgReceivedType } from '@pkg/types'
-
-// TODO: Try to use some other unique identifier for each message instead of time. What if both sender and receiver create a msg at same time?
-
-type ActiveChat = Pick<ConvoItemType<boolean>, 'receiver' | 'contact'> | null
+import type { MessageType, ConvoItemType, MsgSendingType } from '@pkg/types'
 
 export interface ChatStoreType {
   /**
-   * List of all chats of the logged-in user, mapped with their respective room_id.
-   * Each message in a chat is again mapped with their timestamps (for now).
+   * List of all chats of the logged-in user, mapped with their respective receiverId.
+   * Each message in a chat is again mapped with their messageId.
    */
   chats: Map<number, Map<number, MessageType>>
   getChats: () => ChatStoreType['chats']
 
-  activeChat: ActiveChat
-  getActiveChat: () => ActiveChat
-  setActiveChat: (newChatInfo: ActiveChat) => void
+  /** Messages that are newly created and are being sent. */
+  tempChats: Map<number, Map<string, MsgSendingType>>
 
-  isProxyChat: boolean
-  setProxyChat: (bool: boolean) => void
+  activeChat: Pick<ConvoItemType<boolean>, 'receiver' | 'contact'> | null
+  getActiveChat: () => ChatStoreType['activeChat']
+  setActiveChat: (newChatInfo: ChatStoreType['activeChat']) => void
 
-  /** Add a new chat. */
-  addChat: (receiverId: number, messages: MessageType[]) => void
-
-  /** Append new messages to existing chat. This is meant to be used when an existing chat is re-opened with new unread messages. */
-  pushChat: (receiverId: number, messages: MessageType[]) => void
-
-  /** Append a newly sent message. This can be used during an ongoing chat. */
-  sendMsg: (receiverId: number, msg: Omit<MsgReceivedType, 'status'>) => void
-
-  /** Append the received messages to ongoing chat. */
-  receiveMsg: (receiverId: number, msg: Omit<MsgReceivedType, 'status'>) => void
+  upsertChat: (receiverId: number, messages: MessageType[]) => void
+  upsertTempChat: (receiverId: number, messages: MsgSendingType[]) => void
 
   updateMsgStatus: (
     receiverId: number,
-    ISOtime: string,
+    messageId: number,
     newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
-  ) => void
-  updateAllMsgStatus: (
-    chatId: number,
-    newStatus: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>,
-    senderId: number,
   ) => void
 
   clearChat: (receiverId: number) => void
   deleteChat: (receiverId: number) => void
+
+  getTempMessage: (receiverId: number, hash: string) => MsgSendingType
+  deleteTempMessage: (receiverId: number, hash: string) => void
 }
 
 export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
-  chats: new Map<number, Map<number, MessageType>>(),
+  chats: new Map(),
   getChats() {
     return get().chats
   },
+
+  tempChats: new Map(),
+  getTempChats() {
+    return get().tempChats
+  },
+
   activeChat: null,
   setActiveChat(activeChat) {
     set({ activeChat })
@@ -62,86 +52,78 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
   getActiveChat() {
     return get().activeChat
   },
-  isProxyChat: false,
-  setProxyChat(bool) {
-    set(() => ({ isProxyConvo: bool }))
-  },
-  addChat(chatId: number, messages: MessageType[]) {
-    // Update through `Immer`
-    set((state: ChatStoreType) => {
-      const newChat = new Map<number, MessageType>()
-      for (const message of messages) {
-        newChat.set(ISOToMilliSecs(message.createdAt), message)
-      }
-      state.chats.set(chatId, newChat)
-    })
-  },
-  pushChat(chatId: number, messages: MessageType[]) {
-    // Use `Immer` for nested updates
-    set((state: ChatStoreType) => {
-      let chat = state.chats.get(chatId)
 
-      // If this is a new chat, then it would not exist in the `chats` map. Add it first.
-      if (typeof chat === 'undefined') {
-        get().addChat(chatId, [])
-        chat = get().chats.get(chatId)!
+  upsertChat(receiverId, messages) {
+    set(state => {
+      let chat: Map<number, MessageType>
+
+      if (!state.chats.has(receiverId)) {
+        chat = new Map()
+      } else {
+        chat = state.chats.get(receiverId)!
       }
+
       for (const message of messages) {
-        chat.set(ISOToMilliSecs(message.createdAt), message)
+        chat.set(message.id, message)
       }
-      state.chats.set(chatId, chat)
+
+      state.chats.set(receiverId, chat)
     })
   },
-  sendMsg(chatId, msg) {
-    get().pushChat(chatId, [
-      {
-        ...msg,
-        status: MessageStatus.SENDING,
-      },
-    ])
+
+  upsertTempChat(receiverId, messages) {
+    set(state => {
+      let chat: Map<string, MsgSendingType>
+
+      if (!state.tempChats.has(receiverId)) {
+        chat = new Map()
+      } else {
+        chat = state.tempChats.get(receiverId)!
+      }
+
+      for (const message of messages) {
+        chat.set(message.hash, message)
+      }
+
+      state.tempChats.set(receiverId, chat)
+    })
   },
-  receiveMsg(chatId, msg) {
-    get().pushChat(chatId, [
-      {
-        ...msg,
-        status: MessageStatus.DELIVERED,
-      },
-    ])
-  },
-  updateMsgStatus(receiverId, ISOtime, newStatus) {
-    set((state: ChatStoreType) => {
-      const timeMilliSecs = ISOToMilliSecs(ISOtime)
+
+  updateMsgStatus(receiverId, messageId, newStatus) {
+    set(state => {
       const chat = state.chats.get(receiverId)!
-      const msgToUpdate = chat.get(timeMilliSecs)!
+      const msgToUpdate = chat.get(messageId)!
       const updatedMsg = { ...msgToUpdate, status: newStatus }
-      chat.set(timeMilliSecs, updatedMsg)
+      chat.set(messageId, updatedMsg)
     })
   },
-  updateAllMsgStatus(chatId, newStatus, senderId) {
-    set((state: ChatStoreType) => {
-      const chat = state.chats.get(chatId)
-      if (!chat) {
-        console.error('Chat not found. Invalid `chatId`')
-        return
-      }
-      const iter = chat.values()
-      let iterRes = iter.next()
-      while (!iterRes.done) {
-        if (iterRes.value.senderId === senderId) iterRes.value.status = newStatus
-        iterRes = iter.next()
-      }
-    })
-  },
+
   clearChat(receiverId) {
-    set((state: ChatStoreType) => {
+    set(state => {
       _fetch(`chats/${receiverId}/clear`, { method: 'DELETE' })
-      state.chats.set(receiverId, new Map<number, MessageType>())
+      state.chats.delete(receiverId)
+      state.tempChats.delete(receiverId)
     })
   },
+
   deleteChat(receiverId) {
-    set((state: ChatStoreType) => {
+    set(state => {
       _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
       state.chats.delete(receiverId)
+      state.tempChats.delete(receiverId)
+    })
+  },
+
+  getTempMessage(receiverId, hash) {
+    const tempChat = get().tempChats.get(receiverId)!
+    const message = tempChat.get(hash)!
+    return message
+  },
+
+  deleteTempMessage(receiverId, hash) {
+    set(state => {
+      const tempChat = state.tempChats.get(receiverId)!
+      tempChat.delete(hash)
     })
   },
 })

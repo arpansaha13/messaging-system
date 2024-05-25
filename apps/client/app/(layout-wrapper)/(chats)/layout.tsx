@@ -1,6 +1,6 @@
 'use client'
 
-import { shallow } from 'zustand/shallow'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
 import Chat from '~/components/Chat'
 
@@ -9,8 +9,7 @@ interface ChatsLayoutProps {
 }
 
 export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
-  const [activeChat, isProxyChat] = useStore(state => [state.activeChat, state.isProxyChat], shallow)
-  const showChatView = activeChat !== null || isProxyChat
+  const activeChat = useStore(state => state.activeChat)
 
   return (
     <div className="p-2 flex h-full gap-2">
@@ -19,7 +18,7 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
       </section>
 
       <section className="flex-grow h-full bg-gray-100 dark:bg-gray-800 shadow-md rounded overflow-hidden">
-        {showChatView && <Chat />}
+        {!isNullOrUndefined(activeChat) && <Chat />}
       </section>
     </div>
   )

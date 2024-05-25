@@ -7,14 +7,10 @@ import TextArea from './TextArea'
 import { useSocket } from '~/hooks/useSocket'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
-import { ISODateNow } from '~/utils'
+import { generateHash } from '~/utils/generateHash'
 import { MessageStatus } from '@pkg/types'
 import type { KeyboardEvent } from 'react'
-import type { TypingStateType } from '~/hooks/useSocket'
-
-interface TypingStatePayloadType extends TypingStateType {
-  receiverId: number
-}
+import type { ISenderEmitTyping, MsgSendingType } from '@pkg/types'
 
 const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) => {
   if (metaKey || ctrlKey || altKey) return false
@@ -30,27 +26,26 @@ const ChatFooter = () => {
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
-  const [activeChat, sendMsg, addDraft, drafts, removeDraft, unarchiveRoom, updateConvo] = useStore(
+  const [activeChat, addDraft, drafts, removeDraft, unarchiveRoom, upsertTempChat] = useStore(
     state => [
-      state.activeChat,
-      state.sendMsg,
+      state.activeChat!,
       state.addDraft,
       state.drafts,
       state.removeDraft,
       state.unarchiveRoom,
-      state.updateConvo,
+      state.upsertTempChat,
     ],
     shallow,
   )
 
   const [value, setValue] = useState('')
-  const prevReceiverId = useRef(activeChat?.receiver.id ?? null)
+  const prevReceiverId = useRef(activeChat.receiver.id ?? null)
 
-  function typingStatePayload(isTyping: boolean): TypingStatePayloadType {
+  function typingPayload(isTyping: boolean): ISenderEmitTyping {
     return {
-      roomId: activeChat!.id,
+      senderId: authUser.id,
+      receiverId: activeChat.receiver.id,
       isTyping,
-      receiverId: activeChat!.receiver.id,
     }
   }
   const isFirstRun = useRef(true)
@@ -60,39 +55,37 @@ const ChatFooter = () => {
         isFirstRun.current = false
         return
       }
-      if (activeChat !== null) socket.emit('typing-state', typingStatePayload(false))
+      socket.emit('typing', typingPayload(false))
     },
     1000,
     [value],
   )
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (activeChat !== null && isReady() && isTypedCharGood(e)) {
-      socket.emit('typing-state', typingStatePayload(true))
+    if (isReady() && isTypedCharGood(e)) {
+      socket.emit('typing', typingPayload(true))
     }
     if (e.key === 'Enter' && value) {
-      const ISOtimestamp = ISODateNow()
-      if (activeChat !== null) {
-        if (activeChat.chat.archived) {
-          unarchiveRoom(activeChat.chat.id)
-        }
-        const msg = {
-          content: value,
-          createdAt: ISOtimestamp,
-          senderId: authUser.id,
-        }
-        sendMsg(activeChat.receiver.id, msg)
-        updateConvo(activeChat.receiver.id, {
-          ...msg,
-          status: MessageStatus.SENDING,
-        })
-      }
+      unarchiveRoom(activeChat.receiver.id)
+
+      const newMessage = {
+        hash: generateHash(),
+        content: value,
+        senderId: authUser.id,
+        status: MessageStatus.SENDING,
+      } as MsgSendingType
+
+      // Note: Convo won't be updated for a message that is still "sending"
+      upsertTempChat(activeChat.receiver.id, [
+        {
+          ...newMessage,
+          createdInClientAt: new Date(),
+        },
+      ])
+
       setValue('')
       socket.emit('send-message', {
-        content: value,
-        ISOtime: ISOtimestamp,
-        roomId: activeChat?.id ?? null,
-        senderId: authUser.id,
+        ...newMessage,
         receiverId: activeChat.receiver.id,
       })
     }
@@ -133,4 +126,5 @@ const ChatFooter = () => {
     </div>
   )
 }
+
 export default memo(ChatFooter)

@@ -1,25 +1,19 @@
 export interface MsgSendingType {
-  // id: number
+  hash: string
   content: string
   senderId: number
-  createdAt: string
   status: MessageStatus.SENDING
+
+  /** For deciding the order in which messages should be shown in chat window */
+  createdInClientAt: Date
 }
-export interface MsgConfirmedType {
-  // id: number
+export interface MessageType {
+  id: number
   content: string
   senderId: number
   createdAt: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
 }
-export interface MsgReceivedType {
-  // id: number
-  content: string
-  senderId: number
-  createdAt: string
-  status: MessageStatus.DELIVERED
-}
-export type MessageType = MsgSendingType | MsgConfirmedType | MsgReceivedType
 
 export enum MessageStatus {
   SENDING = 'SENDING',

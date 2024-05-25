@@ -7,8 +7,8 @@ import _fetch from '~/utils/_fetch'
 import type { ConvoItemType, MessageType } from '@pkg/types'
 
 export default function Page() {
-  const [add, chats, convo, setActiveChat, setProxyChat] = useStore(
-    state => [state.addChat, state.chats, state.unarchived, state.setActiveChat, state.setProxyChat],
+  const [upsertChat, chats, convo, setActiveChat] = useStore(
+    state => [state.upsertChat, state.chats, state.unarchived, state.setActiveChat],
     shallow,
   )
   async function handleClick(convoItem: ConvoItemType) {
@@ -16,11 +16,10 @@ export default function Page() {
       contact: convoItem.contact,
       receiver: convoItem.receiver,
     })
-    setProxyChat(false)
 
     if (!chats.has(convoItem.receiver.id)) {
       const chatRes: MessageType[] = await _fetch(`messages/${convoItem.receiver.id}`)
-      add(convoItem.receiver.id, chatRes)
+      upsertChat(convoItem.receiver.id, chatRes)
     }
   }
 

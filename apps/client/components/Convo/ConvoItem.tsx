@@ -49,8 +49,8 @@ const ConvoItem = ({
     ],
     shallow,
   )
-  let authUserIsSender = authUser.id === latestMsg?.senderId
-  let unread = isUnread(authUser.id, latestMsg)
+  const authUserIsSender = authUser.id === latestMsg?.senderId
+  const unread = isUnread(authUser.id, latestMsg)
 
   const menuItems = [
     {

@@ -1,4 +1,4 @@
-import type { MessageStatus } from './message.types'
+import type { MessageType } from './message.types'
 
 /** Generic type for chat-list item. A = archived */
 export interface ConvoItemType<A = false> {
@@ -6,13 +6,7 @@ export interface ConvoItemType<A = false> {
     id: number
     alias: string
   } | null
-  latestMsg: {
-    // id: number
-    status: MessageStatus
-    content: string
-    senderId: number
-    createdAt: string
-  } | null
+  latestMsg: MessageType | null
   receiver: {
     id: number
     dp: string | null

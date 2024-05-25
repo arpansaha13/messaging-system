@@ -1,5 +1,4 @@
-import { memo } from 'react'
-import { format, parseISO } from 'date-fns'
+import { format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '../../MsgStatusIcon'
 import { useAuthStore } from '~/store/useAuthStore'
@@ -12,6 +11,7 @@ interface MessageProps {
 const Message = ({ message }: MessageProps) => {
   const authUser = useAuthStore(state => state.authUser)!
   const authUserIsSender = authUser.id === message.senderId
+
   return (
     <div
       className={classNames(
@@ -23,11 +23,12 @@ const Message = ({ message }: MessageProps) => {
 
       <div className="min-w-[4.5rem] text-xs text-gray-800 dark:text-gray-300 inline-flex items-end justify-end">
         <p className="flex items-center absolute right-2 bottom-1">
-          <span className="mr-1">{format(parseISO(message.createdAt), 'h:mm a')}</span>
+          <span className="mr-1">{format(message.createdAt, 'h:mm a')}</span>
           {authUserIsSender && <MsgStatusIcon status={message.status} />}
         </p>
       </div>
     </div>
   )
 }
-export default memo(Message)
+
+export default Message
