@@ -24,21 +24,13 @@ export default function ChatBody() {
 
   // Keep scroll position at bottom
   useEffect(() => {
-    if (elRef.current) elRef.current.scrollTop = elRef.current.scrollHeight
-  }, [elRef])
-
-  const HEADER_HEIGHT_PX = 60
-  const FOOTER_HEIGHT_PX = 60
-  const LAYOUT_Y_PADDING_REM = 2
+    if (elRef.current) {
+      elRef.current.scrollTo({ top: elRef.current.scrollHeight })
+    }
+  }, [elRef.current?.offsetHeight])
 
   return (
-    <div
-      ref={elRef}
-      className="px-20 py-4 overflow-y-scroll scrollbar"
-      style={{
-        maxHeight: `calc(100vh - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${LAYOUT_Y_PADDING_REM}rem)`,
-      }}
-    >
+    <div ref={elRef} className="px-20 py-4 overflow-y-scroll scrollbar">
       {chats.has(activeChat.receiver.id) && <Messages />}
     </div>
   )
