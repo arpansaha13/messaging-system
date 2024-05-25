@@ -60,7 +60,7 @@ const ChatHeader = () => {
   ]
 
   return (
-    <header className="px-4 py-2.5 flex items-center justify-between bg-gray-100 dark:bg-gray-800 shadow-sm shadow-gray-400/30 dark:shadow-none relative z-10">
+    <>
       <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-3">
         <Avatar src={activeChat.receiver.dp} height={2.5} width={2.5} />
 
@@ -93,7 +93,7 @@ const ChatHeader = () => {
 
         <HeaderDropDown menuItems={chatMenuItems} width={14.5} />
       </div>
-    </header>
+    </>
   )
 }
 export default memo(ChatHeader)

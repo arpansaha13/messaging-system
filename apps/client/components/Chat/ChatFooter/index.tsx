@@ -107,7 +107,7 @@ const ChatFooter = () => {
   }, [activeChat])
 
   return (
-    <div className="px-4 py-2.5 w-full flex items-center text-gray-900 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 space-x-1 shadow-[0_-1px_2px_0] shadow-gray-300/20 dark:shadow-none relative z-10">
+    <>
       {/* <button className="p-1 btn-icon">
         <FaceSmileIcon className="w-7 h-7 flex-shrink-0" />
       </button>
@@ -123,7 +123,7 @@ const ChatFooter = () => {
       {/* <button className="p-2 btn-icon">
         <MicrophoneIcon className="w-6 h-6 flex-shrink-0" />
       </button> */}
-    </div>
+    </>
   )
 }
 
