@@ -3,10 +3,24 @@ import { shallow } from 'zustand/shallow'
 import { useStore } from '~/store'
 import Message from './Message'
 import TempMessage from './TempMessage'
+import _fetch from '~/utils/_fetch'
 import type { MessageType, MsgSendingType } from '@pkg/types'
 
 export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
+
+  const [chats, activeChat, getChats, upsertChat] = useStore(
+    state => [state.chats, state.activeChat!, state.getChats, state.upsertChat],
+    shallow,
+  )
+
+  useEffect(() => {
+    if (!getChats().has(activeChat.receiver.id)) {
+      _fetch(`messages/${activeChat.receiver.id}`).then((chatRes: MessageType[]) => {
+        upsertChat(activeChat.receiver.id, chatRes)
+      })
+    }
+  }, [activeChat])
 
   // Keep scroll position at bottom
   useEffect(() => {
@@ -25,7 +39,7 @@ export default function ChatBody() {
         maxHeight: `calc(100vh - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${LAYOUT_Y_PADDING_REM}rem)`,
       }}
     >
-      <Messages />
+      {chats.has(activeChat.receiver.id) && <Messages />}
     </div>
   )
 }

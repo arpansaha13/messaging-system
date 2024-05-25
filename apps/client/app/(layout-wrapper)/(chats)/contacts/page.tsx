@@ -8,7 +8,7 @@ import SearchBar from '~common/SearchBar'
 import ContactListItem from '~/components/ContactList/ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ContactType, MessageType } from '@pkg/types'
+import type { ContactType } from '@pkg/types'
 
 interface ContactsProps {
   handleClick: (contact: ContactType) => void
@@ -20,10 +20,7 @@ interface SearchResultsProps {
 }
 
 export default function Page() {
-  const [upsertChat, chats, searchConvo, setActiveChat] = useStore(
-    state => [state.upsertChat, state.chats, state.searchConvo, state.setActiveChat],
-    shallow,
-  )
+  const [searchConvo, setActiveChat] = useStore(state => [state.searchConvo, state.setActiveChat], shallow)
 
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
@@ -59,11 +56,6 @@ export default function Page() {
       },
     })
     const convo = searchConvo(contact.userId)
-
-    if (convo && !chats.has(convo.receiver.id)) {
-      const chatRes: MessageType[] = await _fetch(`messages/${convo.receiver.id}`)
-      upsertChat(convo.receiver.id, chatRes)
-    }
   }
 
   return (
