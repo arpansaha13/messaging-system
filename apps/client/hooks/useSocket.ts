@@ -6,45 +6,13 @@ import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
 import { MessageStatus } from '@pkg/types'
-import type { ConvoItemType } from '@pkg/types'
-
-interface ReceiveMsgType {
-  roomId: number
-  senderId: number
-  content: string
-  ISOtime: string
-}
-interface MsgStatusUpdateType {
-  roomId: number
-  ISOtime: string
-  senderId: number
-  status: Exclude<MessageStatus, MessageStatus.SENDING>
-}
-interface AllMsgStatusUpdateType {
-  roomId: number
-  senderId: number
-  status: Exclude<MessageStatus, MessageStatus.SENDING | MessageStatus.SENT>
-}
-type SendMsgNewRoomType = {
-  userToRoomId: ConvoItemType['userToRoomId']
-  room: ConvoItemType['room']
-  latestMsg: NonNullable<ConvoItemType['latestMsg']>
-}
-export interface TypingStateType {
-  roomId: number
-  isTyping: boolean
-}
-
-type SocketOnEvents =
-  | 'connect'
-  | 'disconnect'
-  | 'receive-message'
-  | 'message-status'
-  | 'all-message-status'
-  | 'typing-state'
-  | 'message-to-new-or-revived-room'
-
-type SocketEmitEvents = 'send-message' | 'join' | 'session-connect' | 'typing-state' | 'opened-or-read-chat'
+import type {
+  MessageType,
+  SocketEmitEvent,
+  SocketEmitEventPayload,
+  SocketOnEvent,
+  SocketOnEventPayload,
+} from '@pkg/types'
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_IO_BASE_URL!
 
@@ -52,14 +20,14 @@ const socket = io(SOCKET_URL, { autoConnect: true })
 
 /** A socket wrapper to allow type security. */
 const socketWrapper = {
-  emit(event: SocketEmitEvents, data: any, ack?: (res: any) => void) {
-    if (ack) socket.emit(event, data, ack)
-    else socket.emit(event, data)
+  emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void) {
+    if (ack) socket.emit(event, payload, ack)
+    else socket.emit(event, payload)
   },
-  on(event: SocketOnEvents, listener: (...args: any[]) => void) {
-    socket.on(event, listener)
+  on<T extends SocketOnEvent>(event: T, listener: (payload: SocketOnEventPayload[T]) => void) {
+    socket.on(event as any, listener)
   },
-  off(event: SocketOnEvents) {
+  off(event: SocketOnEvent) {
     socket.off(event)
   },
 }
@@ -72,62 +40,57 @@ const socketWrapper = {
 export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
   const [
-    activeRoom,
+    activeChat,
     getChats,
-    getActiveRoom,
-    getActiveChatInfo,
+    getActiveChat,
     setTyping,
-    setProxyConvo,
-    setActiveRoom,
-    addChat,
-    receiveMsg,
     updateMsgStatus,
-    updateAllMsgStatus,
-    addNewConvoItem,
-    updateConvoItem,
-    updateConvoItemStatus,
-    searchConvoByUserId,
+    updateConvo,
+    updateConvoStatus,
+    searchConvo,
+    upsertChat,
+    getTempMessage,
+    deleteTempMessage,
+    unarchiveChat,
   ] = useStore(
     state => [
-      state.activeRoom,
+      state.activeChat,
       state.getChats,
-      state.getActiveRoom,
-      state.getActiveChatInfo,
+      state.getActiveChat,
       state.setTypingState,
-      state.setProxyConvo,
-      state.setActiveRoom,
-      state.addChat,
-      state.receiveMsg,
       state.updateMsgStatus,
-      state.updateAllMsgStatus,
-      state.addNewConvoItem,
-      state.updateConvoItem,
-      state.updateConvoItemStatus,
-      state.searchConvoByUserId,
+      state.updateConvo,
+      state.updateConvoStatus,
+      state.searchConvo,
+      state.upsertChat,
+      state.getTempMessage,
+      state.deleteTempMessage,
+      state.unarchiveRoom,
     ],
     shallow,
   )
 
-  // TODO: refactor the store - combine activeRoom and activeChatInfo
-
   useEffect(() => {
-    if (isNullOrUndefined(activeRoom)) return
+    if (isNullOrUndefined(activeChat)) return
 
-    const activeChatInfo = getActiveChatInfo()!
-    const convo = searchConvoByUserId(activeChatInfo.user.id)!
+    const convo = searchConvo(activeChat.receiver.id)!
 
-    // Emit this event only when there are unread messages which have been read
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
-    socketWrapper.emit('opened-or-read-chat', {
-      roomId: activeRoom.id,
-      senderId: activeChatInfo.user.id,
-    })
-    // Update the sender's msg status to update the reader's (auth-user's) unread state
-    updateAllMsgStatus(activeRoom.id, MessageStatus.READ, activeChatInfo.user.id)
-    updateConvoItemStatus(activeRoom.id, MessageStatus.READ, activeChatInfo.user.id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeRoom])
+    // Emit this event only when there are unread messages which have been read
+    const chats = getChats()
+    const chat = chats.get(activeChat.receiver.id)!
+
+    for (const message of chat.values()) {
+      socketWrapper.emit('read', {
+        messageId: message.id,
+        senderId: activeChat.receiver.id,
+        receiverId: authUser.id,
+      })
+      updateConvoStatus(activeChat.receiver.id, MessageStatus.READ, authUser.id)
+      updateMsgStatus(authUser.id, message.id, MessageStatus.READ)
+    }
+  }, [activeChat, authUser])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
@@ -152,74 +115,82 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('disconnect', () => {
-      // Remember, we cannot emit events after disconnection.
+      // Note: We cannot emit events after disconnection.
       setIsConnected(false)
     })
 
-    socketWrapper.on('receive-message', (data: ReceiveMsgType) => {
-      const msg = {
-        content: data.content,
-        createdAt: data.ISOtime,
-        senderId: data.senderId,
+    socketWrapper.on('receive-message', payload => {
+      const message: MessageType = {
+        id: payload.messageId,
+        content: payload.content,
+        createdAt: payload.createdAt,
+        senderId: payload.senderId,
+        status: MessageStatus.DELIVERED,
       }
-      updateConvoItem(data.roomId, { ...msg, status: MessageStatus.DELIVERED })
+      unarchiveChat(payload.senderId)
+      updateConvo(payload.senderId, message)
+
+      socketWrapper.emit('delivered', { messageId: message.id, receiverId: authUser.id, senderId: payload.senderId })
+
       // No need to update status if the chat has never been fetched
       // Because they will arrive with proper data whenever fetched (updated on server)
       const updatedChats = getChats()
-      if (updatedChats.has(data.roomId)) {
-        receiveMsg(data.roomId, msg)
+      if (!updatedChats.has(payload.senderId)) return
 
-        const updatedActiveRoom = getActiveRoom()!
-        // If the receiver has the chat opened
-        if (updatedActiveRoom && updatedActiveRoom.id === data.roomId) {
-          socketWrapper.emit('opened-or-read-chat', {
-            roomId: updatedActiveRoom.id,
-            ISOtime: data.ISOtime,
-            senderId: data.senderId,
-          })
-          updateConvoItemStatus(data.roomId, MessageStatus.READ, data.senderId)
-        }
+      upsertChat(payload.senderId, [message])
+
+      const updatedActiveChat = getActiveChat()
+
+      // If the receiver has the chat opened
+      if (updatedActiveChat && updatedActiveChat.receiver.id === payload.senderId) {
+        socketWrapper.emit('read', {
+          receiverId: authUser.id,
+          senderId: payload.senderId,
+          messageId: payload.messageId,
+        })
+        updateConvoStatus(payload.senderId, MessageStatus.READ, payload.senderId)
+        updateMsgStatus(authUser.id, payload.messageId, MessageStatus.READ)
       }
     })
 
-    socketWrapper.on('message-to-new-or-revived-room', (data: SendMsgNewRoomType) => {
-      // Add a new item in chat-list
-      const activeChatInfo = getActiveChatInfo()!
-      const newConvoItem: ConvoItemType = {
-        userToRoomId: data.userToRoomId,
-        contact: activeChatInfo.contact,
-        user: activeChatInfo.user,
-        room: data.room,
-        latestMsg: data.latestMsg,
+    socketWrapper.on('sent', payload => {
+      const tempMessage = getTempMessage(payload.receiverId, payload.hash)
+      deleteTempMessage(payload.receiverId, payload.hash)
+
+      const message: MessageType = {
+        id: payload.messageId,
+        content: tempMessage.content,
+        createdAt: payload.createdAt,
+        senderId: authUser.id,
+        status: payload.status,
       }
-      addNewConvoItem(newConvoItem)
-      addChat(data.room.id, [data.latestMsg])
-      setActiveRoom(data.room)
-      setProxyConvo(false)
+
+      updateConvo(payload.receiverId, message)
+      upsertChat(payload.receiverId, [message])
     })
 
-    socketWrapper.on('message-status', (data: MsgStatusUpdateType) => {
-      updateMsgStatus(data.roomId, data.ISOtime, data.status)
-      updateConvoItemStatus(data.roomId, data.status, data.senderId)
+    socketWrapper.on('delivered', payload => {
+      updateConvoStatus(payload.receiverId, payload.status, authUser.id)
+      updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
-    socketWrapper.on('all-message-status', (data: AllMsgStatusUpdateType) => {
-      updateAllMsgStatus(data.roomId, data.status, data.senderId)
-      updateConvoItemStatus(data.roomId, data.status, data.senderId)
+    socketWrapper.on('read', payload => {
+      updateConvoStatus(payload.receiverId, payload.status, authUser.id)
+      updateMsgStatus(authUser.id, payload.messageId, payload.status)
     })
 
-    socketWrapper.on('typing-state', (data: TypingStateType) => {
-      setTyping(data.roomId, data.isTyping)
+    socketWrapper.on('typing', payload => {
+      setTyping(payload.senderId, payload.isTyping)
     })
 
     return () => {
       socketWrapper.off('connect')
       socketWrapper.off('disconnect')
       socketWrapper.off('receive-message')
-      socketWrapper.off('message-status')
-      socketWrapper.off('typing-state')
-      socketWrapper.off('message-to-new-or-revived-room')
-      socketWrapper.off('all-message-status')
+      socketWrapper.off('sent')
+      socketWrapper.off('delivered')
+      socketWrapper.off('read')
+      socketWrapper.off('typing')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser])

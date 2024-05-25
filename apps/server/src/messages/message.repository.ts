@@ -37,7 +37,7 @@ export class MessageRepository extends Repository<Message> {
           )
         }),
       )
-      .orderBy('message.createdAt', 'DESC') // latest message
+      .orderBy('message.createdAt')
       .getRawMany()
   }
 

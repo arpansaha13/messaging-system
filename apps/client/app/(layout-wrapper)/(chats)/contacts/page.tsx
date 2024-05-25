@@ -20,8 +20,8 @@ interface SearchResultsProps {
 }
 
 export default function Page() {
-  const [add, chats, searchConvo, setActiveChat, setProxyChat] = useStore(
-    state => [state.addChat, state.chats, state.searchConvo, state.setActiveChat, state.setProxyChat],
+  const [upsertChat, chats, searchConvo, setActiveChat] = useStore(
+    state => [state.upsertChat, state.chats, state.searchConvo, state.setActiveChat],
     shallow,
   )
 
@@ -59,11 +59,10 @@ export default function Page() {
       },
     })
     const convo = searchConvo(contact.userId)
-    setProxyChat(convo === null)
 
     if (convo && !chats.has(convo.receiver.id)) {
       const chatRes: MessageType[] = await _fetch(`messages/${convo.receiver.id}`)
-      add(convo.receiver.id, chatRes)
+      upsertChat(convo.receiver.id, chatRes)
     }
   }
 

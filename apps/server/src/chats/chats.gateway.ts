@@ -1,26 +1,26 @@
-import { ChatsService } from './chats.service'
-import {
-  MessageBody,
-  ConnectedSocket,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets'
-import { Ws1to1MessageDto, WsOpenedOrReadChatDto, WsTypingStateDto } from './dto/chatGateway.dto'
+import { ChatsWsService } from './chats.ws.service'
+import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
 import type { Server, Socket } from 'socket.io'
+import type {
+  IReceiverEmitDelivered,
+  IReceiverEmitRead,
+  ISenderEmitMessage,
+  ISessionConnect,
+  ISenderEmitTyping,
+  SocketEmitEvent,
+  SocketOnEventPayload,
+} from '@pkg/types'
 
 @WebSocketGateway()
 export class ChatsGateway {
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(private readonly chatsService: ChatsWsService) {}
 
   @WebSocketServer()
-  private readonly server: Server
+  private readonly server: Server<SocketOnEventPayload>
 
-  // FIXME: DTOs are not working with websocket event payloads
-
-  @SubscribeMessage('session-connect')
-  async addSession(@MessageBody('userId') userId: number, @ConnectedSocket() socket: Socket) {
-    this.chatsService.addSession(userId, socket, this.server)
+  @SubscribeMessage<SocketEmitEvent>('session-connect')
+  addSession(@MessageBody() payload: ISessionConnect, @ConnectedSocket() socket: Socket) {
+    this.chatsService.addSession(payload, socket)
   }
 
   @SubscribeMessage('disconnect')
@@ -28,18 +28,23 @@ export class ChatsGateway {
     this.chatsService.handleDisconnect(senderSocket)
   }
 
-  @SubscribeMessage('send-message')
-  async handleEvent(@MessageBody() data: Ws1to1MessageDto, @ConnectedSocket() senderSocket: Socket) {
-    this.chatsService.handleEvent(data, senderSocket, this.server)
+  @SubscribeMessage<SocketEmitEvent>('send-message')
+  sendMessage(@MessageBody() payload: ISenderEmitMessage) {
+    this.chatsService.sendMessage(payload, this.server)
   }
 
-  @SubscribeMessage('opened-or-read-chat')
-  async handleReadStatus(@MessageBody() data: WsOpenedOrReadChatDto, @ConnectedSocket() readerSocket: Socket) {
-    this.chatsService.handleReadStatus(data, readerSocket, this.server)
+  @SubscribeMessage<SocketEmitEvent>('delivered')
+  handleDelivered(@MessageBody() payload: IReceiverEmitDelivered) {
+    this.chatsService.handleDelivered(payload, this.server)
   }
 
-  @SubscribeMessage('typing-state')
-  handleTyping(@MessageBody() data: WsTypingStateDto) {
-    this.chatsService.handleTyping(data, this.server)
+  @SubscribeMessage<SocketEmitEvent>('read')
+  handleReadStatus(@MessageBody() payload: IReceiverEmitRead) {
+    this.chatsService.handleRead(payload, this.server)
+  }
+
+  @SubscribeMessage<SocketEmitEvent>('typing')
+  handleTyping(@MessageBody() payload: ISenderEmitTyping) {
+    this.chatsService.handleTyping(payload, this.server)
   }
 }

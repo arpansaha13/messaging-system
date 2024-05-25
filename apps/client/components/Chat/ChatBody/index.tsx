@@ -1,34 +1,17 @@
 import { useEffect, useRef } from 'react'
+import { shallow } from 'zustand/shallow'
+import { useStore } from '~/store'
 import Message from './Message'
-import type { MessageType } from '@pkg/types'
+import TempMessage from './TempMessage'
+import type { MessageType, MsgSendingType } from '@pkg/types'
 
-interface ChatBodyProps {
-  messages: Map<number, MessageType> | null
-}
-
-export default function ChatBody({ messages }: ChatBodyProps) {
+export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
-  const mapItr = messages?.entries() ?? null
-
-  // TODO: refactor this code to make it cleaner
-  const renderMap: JSX.Element[] | null =
-    mapItr === null
-      ? null
-      : (() => {
-          const temp: JSX.Element[] = []
-          let mapEntry = mapItr.next()
-
-          while (!mapEntry.done) {
-            temp.unshift(<Message key={mapEntry.value[0]} message={mapEntry.value[1]} />)
-            mapEntry = mapItr.next()
-          }
-          return temp
-        })()
 
   // Keep scroll position at bottom
   useEffect(() => {
     if (elRef.current) elRef.current.scrollTop = elRef.current.scrollHeight
-  })
+  }, [elRef])
 
   const HEADER_HEIGHT_PX = 60
   const FOOTER_HEIGHT_PX = 60
@@ -42,7 +25,53 @@ export default function ChatBody({ messages }: ChatBodyProps) {
         maxHeight: `calc(100vh - ${HEADER_HEIGHT_PX}px - ${FOOTER_HEIGHT_PX}px - ${LAYOUT_Y_PADDING_REM}rem)`,
       }}
     >
-      {renderMap}
+      <Messages />
     </div>
   )
+}
+
+function Messages() {
+  const [chats, tempChats, activeChat] = useStore(state => [state.chats, state.tempChats, state.activeChat!], shallow)
+
+  if (!chats.has(activeChat.receiver.id) && !tempChats.has(activeChat.receiver.id)) return null
+
+  const messages = chats.get(activeChat.receiver.id) ?? new Map<string, MessageType>()
+  const tempMessages = tempChats.get(activeChat.receiver.id) ?? new Map<string, MsgSendingType>()
+
+  const messageItr = messages.values()
+  const tempMessageItr = tempMessages.values()
+
+  const renderMap: JSX.Element[] = []
+
+  let messageItrResult = messageItr.next()
+  let tempMessageItrResult = tempMessageItr.next()
+
+  while (!messageItrResult.done && !tempMessageItrResult.done) {
+    const message = messageItrResult.value
+    const tempMessage = tempMessageItrResult.value
+
+    if (new Date(message.createdAt) >= tempMessage.createdInClientAt) {
+      renderMap.unshift(<Message key={message.id} message={message} />)
+      messageItrResult = messageItr.next()
+    } else if (new Date(message.createdAt) < tempMessage.createdInClientAt) {
+      renderMap.unshift(<TempMessage key={tempMessage.hash} message={tempMessage} />)
+      tempMessageItrResult = tempMessageItr.next()
+    }
+  }
+
+  while (!messageItrResult.done) {
+    const message = messageItrResult.value
+
+    renderMap.push(<Message key={message.id} message={message} />)
+    messageItrResult = messageItr.next()
+  }
+
+  while (!tempMessageItrResult.done) {
+    const tempMessage = tempMessageItrResult.value
+
+    renderMap.push(<TempMessage key={tempMessage.hash} message={tempMessage} />)
+    tempMessageItrResult = tempMessageItr.next()
+  }
+
+  return renderMap
 }
