@@ -41,6 +41,7 @@ export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
   const [
     activeChat,
+    chats,
     getChats,
     getActiveChat,
     setTyping,
@@ -55,6 +56,7 @@ export function useSocketInit() {
   ] = useStore(
     state => [
       state.activeChat,
+      state.chats,
       state.getChats,
       state.getActiveChat,
       state.setTypingState,
@@ -77,20 +79,23 @@ export function useSocketInit() {
 
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
-    // Emit this event only when there are unread messages which have been read
     const chats = getChats()
-    const chat = chats.get(activeChat.receiver.id)!
+    const chat = chats.get(activeChat.receiver.id)
+
+    if (isNullOrUndefined(chat)) return
 
     for (const message of chat.values()) {
+      if (message.senderId === authUser.id || message.status === MessageStatus.READ) continue
+
       socketWrapper.emit('read', {
         messageId: message.id,
         senderId: activeChat.receiver.id,
         receiverId: authUser.id,
       })
       updateConvoStatus(activeChat.receiver.id, MessageStatus.READ, authUser.id)
-      updateMsgStatus(authUser.id, message.id, MessageStatus.READ)
+      updateMsgStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
-  }, [activeChat, authUser])
+  }, [activeChat, authUser, chats])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
@@ -148,8 +153,6 @@ export function useSocketInit() {
           senderId: payload.senderId,
           messageId: payload.messageId,
         })
-        updateConvoStatus(payload.senderId, MessageStatus.READ, payload.senderId)
-        updateMsgStatus(authUser.id, payload.messageId, MessageStatus.READ)
       }
     })
 
@@ -175,8 +178,9 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('read', payload => {
+      // TODO: check message id before updating convo status
       updateConvoStatus(payload.receiverId, payload.status, authUser.id)
-      updateMsgStatus(authUser.id, payload.messageId, payload.status)
+      updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
     socketWrapper.on('typing', payload => {
