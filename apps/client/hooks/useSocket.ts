@@ -92,7 +92,7 @@ export function useSocketInit() {
         senderId: activeChat.receiver.id,
         receiverId: authUser.id,
       })
-      updateConvoStatus(activeChat.receiver.id, MessageStatus.READ, authUser.id)
+      updateConvoStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
       updateMsgStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
   }, [activeChat, authUser, chats])
@@ -153,6 +153,8 @@ export function useSocketInit() {
           senderId: payload.senderId,
           messageId: payload.messageId,
         })
+        updateConvoStatus(payload.senderId, payload.messageId, payload.status)
+        updateMsgStatus(payload.senderId, payload.messageId, payload.status)
       }
     })
 
@@ -173,13 +175,12 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('delivered', payload => {
-      updateConvoStatus(payload.receiverId, payload.status, authUser.id)
+      updateConvoStatus(payload.receiverId, payload.messageId, payload.status)
       updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
     socketWrapper.on('read', payload => {
-      // TODO: check message id before updating convo status
-      updateConvoStatus(payload.receiverId, payload.status, authUser.id)
+      updateConvoStatus(payload.receiverId, payload.messageId, payload.status)
       updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
     })
 

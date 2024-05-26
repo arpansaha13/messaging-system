@@ -16,8 +16,8 @@ export interface ConvoStoreType {
   updateConvo: (receiverId: number, latestMsg: ConvoItemType['latestMsg']) => void
   updateConvoStatus: (
     receiverId: number,
+    messageId: number,
     latestMsgStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
-    senderId: number,
   ) => void
 
   /**
@@ -64,16 +64,20 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     })
   },
 
-  updateConvoStatus(receiverId, latestMsgStatus, senderId) {
+  updateConvoStatus(receiverId, messageId, latestMsgStatus) {
     set(state => {
       let idx = findRoomIndex(receiverId, state.unarchived)
       if (idx !== null) {
         const latestMsg = state.unarchived[idx].latestMsg!
-        if (latestMsg.senderId === senderId) latestMsg.status = latestMsgStatus
+        if (latestMsg.id === messageId) latestMsg.status = latestMsgStatus
         return
       }
+
       idx = findRoomIndex(receiverId, state.archived)!
-      state.archived[idx].latestMsg!.status = latestMsgStatus
+      if (idx !== null) {
+        const latestMsg = state.archived[idx].latestMsg!
+        if (latestMsg.id === messageId) latestMsg.status = latestMsgStatus
+      }
     })
   },
 
