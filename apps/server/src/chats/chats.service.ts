@@ -114,19 +114,19 @@ export class ChatsService {
     })
 
     const compareFn = (a: any, b: any) => {
-      if (a.chat.pinned && b.chat.pinned) {
-        if (a.latestMsg === null) return -1
-        if (b.latestMsg === null) return 1
+      // Pinned chats on top
+      if (a.chat.pinned && !b.chat.pinned) return -1
+      if (!a.chat.pinned && b.chat.pinned) return 1
 
-        return a.latestMsg.createdAt < b.latestMsg.createdAt ? 1 : -1
-      }
-      if (a.chat.pinned) return -1
-      if (b.chat.pinned) return 1
+      // Cleared convo's at bottom
+      if (a.latestMsg !== null && b.latestMsg === null) return -1
+      if (a.latestMsg === null && b.latestMsg !== null) return 1
+      if (a.latestMsg === null && b.latestMsg === null) return 0
 
-      if (a.latestMsg === null) return -1
-      if (b.latestMsg === null) return 1
-
-      return a.latestMsg.createdAt < b.latestMsg.createdAt ? 1 : -1
+      // Latest convo on top
+      if (new Date(a.latestMsg!.createdAt) > new Date(b.latestMsg!.createdAt)) return -1
+      if (new Date(a.latestMsg!.createdAt) < new Date(b.latestMsg!.createdAt)) return 1
+      return 0
     }
 
     res.unarchived.sort(compareFn)
