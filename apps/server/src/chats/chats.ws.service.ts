@@ -3,6 +3,7 @@ import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { User } from 'src/users/user.entity'
 import { UserRepository } from 'src/users/user.repository'
+import { Chat } from './chats.entity'
 import { Message } from 'src/messages/message.entity'
 import { MessageRepository } from 'src/messages/message.repository'
 import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-recipient.entity'
@@ -62,8 +63,39 @@ export class ChatsWsService {
 
     const { message, messageRecipient } = await this.manager
       .transaction(async txnManager => {
-        const sender = await txnManager.findOneBy(User, { id: payload.senderId })
-        const receiver = await txnManager.findOneBy(User, { id: payload.receiverId })
+        const [sender, receiver] = await Promise.all([
+          txnManager.findOneBy(User, { id: payload.senderId }),
+          txnManager.findOneBy(User, { id: payload.receiverId }),
+        ])
+
+        const [senderToReceiverChatExists, receiverToSenderChatExists] = await Promise.all([
+          txnManager.exists(Chat, {
+            where: {
+              sender: { id: payload.senderId },
+              receiver: { id: payload.receiverId },
+            },
+          }),
+          txnManager.exists(Chat, {
+            where: {
+              sender: { id: payload.receiverId },
+              receiver: { id: payload.senderId },
+            },
+          }),
+        ])
+
+        if (!senderToReceiverChatExists) {
+          const senderToReceiver = new Chat()
+          senderToReceiver.sender = sender
+          senderToReceiver.receiver = receiver
+          await txnManager.save(senderToReceiver)
+        }
+
+        if (!receiverToSenderChatExists) {
+          const receiverToSender = new Chat()
+          receiverToSender.sender = receiver
+          receiverToSender.receiver = sender
+          await txnManager.save(receiverToSender)
+        }
 
         let message = new Message()
         message.content = payload.content

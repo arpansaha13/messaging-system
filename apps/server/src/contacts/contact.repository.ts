@@ -40,12 +40,12 @@ export class ContactRepository extends Repository<Contact> {
         'userInContact.bio',
         'userInContact.dp',
       ])
-      .where('contact.user.id = :userId', { userId: userId })
+      .where('contact.user.id = :userId', { userId })
       .andWhere(
         new Brackets(qb => {
-          qb.where('contact.alias ILIKE :searchString', { searchString: `%${search}%` })
-            .orWhere('userInContact.globalName ILIKE :searchString', { searchString: `%${search}%` })
-            .orWhere('userInContact.username ILIKE :searchString', { searchString: `%${search}%` })
+          qb.where('contact.alias ILIKE :search', { search: `%${search}%` })
+            .orWhere('userInContact.globalName ILIKE :search', { search: `%${search}%` })
+            .orWhere('userInContact.username ILIKE :search', { search: `%${search}%` })
         }),
       )
       .getMany()

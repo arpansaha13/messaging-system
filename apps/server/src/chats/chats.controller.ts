@@ -10,8 +10,13 @@ export class ChatsController {
   constructor(private chatService: ChatsService) {}
 
   @Get()
-  getChats(@Req() request: Request) {
-    return this.chatService.getChats(request.user.id)
+  getChatsOfUser(@Req() request: Request) {
+    return this.chatService.getChatsOfUser(request.user.id)
+  }
+
+  @Get('/:receiverId')
+  getChatOfUserWithReceiver(@Req() request: Request, @Param() params: ChatIdParam) {
+    return this.chatService.getChatOfUserWithReceiver(request.user.id, params.receiverId)
   }
 
   @Patch('/:receiverId/archive')
