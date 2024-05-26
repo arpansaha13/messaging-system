@@ -21,7 +21,6 @@ export default function Page() {
         {convo.map(convoItem => (
           <ConvoItem
             key={convoItem.chat.id}
-            chatId={convoItem.chat.id}
             userId={convoItem.receiver.id}
             dp={convoItem.receiver.dp}
             globalName={convoItem.receiver.globalName}
