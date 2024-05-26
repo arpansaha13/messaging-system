@@ -4,9 +4,11 @@ import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
+import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
 import { MessageStatus } from '@pkg/types'
 import type {
+  ConvoItemType,
   MessageType,
   SocketEmitEvent,
   SocketEmitEventPayload,
@@ -53,6 +55,7 @@ export function useSocketInit() {
     getTempMessage,
     deleteTempMessage,
     unarchiveChat,
+    insertUnarchivedConvo,
   ] = useStore(
     state => [
       state.activeChat,
@@ -68,6 +71,7 @@ export function useSocketInit() {
       state.getTempMessage,
       state.deleteTempMessage,
       state.unarchiveRoom,
+      state.insertUnarchivedConvo,
     ],
     shallow,
   )
@@ -76,6 +80,10 @@ export function useSocketInit() {
     if (isNullOrUndefined(activeChat)) return
 
     const convo = searchConvo(activeChat.receiver.id)!
+
+    if (isNullOrUndefined(convo)) {
+      // TODO: If sender opens a chat that does not exist
+    }
 
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
@@ -124,7 +132,7 @@ export function useSocketInit() {
       setIsConnected(false)
     })
 
-    socketWrapper.on('receive-message', payload => {
+    socketWrapper.on('receive-message', async payload => {
       const message: MessageType = {
         id: payload.messageId,
         content: payload.content,
@@ -132,6 +140,12 @@ export function useSocketInit() {
         senderId: payload.senderId,
         status: MessageStatus.DELIVERED,
       }
+
+      if (isNullOrUndefined(searchConvo(payload.senderId))) {
+        const convo: ConvoItemType = await _fetch(`chats/${payload.senderId}`)
+        insertUnarchivedConvo(convo)
+      }
+
       unarchiveChat(payload.senderId)
       updateConvo(payload.senderId, message)
 
@@ -145,9 +159,9 @@ export function useSocketInit() {
       upsertChat(payload.senderId, [message])
 
       const updatedActiveChat = getActiveChat()
+      const chatIsOpen = updatedActiveChat && updatedActiveChat.receiver.id === payload.senderId
 
-      // If the receiver has the chat opened
-      if (updatedActiveChat && updatedActiveChat.receiver.id === payload.senderId) {
+      if (chatIsOpen) {
         socketWrapper.emit('read', {
           receiverId: authUser.id,
           senderId: payload.senderId,

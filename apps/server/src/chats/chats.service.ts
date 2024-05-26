@@ -19,21 +19,8 @@ export class ChatsService {
     private readonly messageRepository: MessageRepository,
   ) {}
 
-  async getChats(userId: User['id']): Promise<any> {
-    const chats = await this.chatRepository
-      .createQueryBuilder('chat')
-      .where('chat.sender.id = :userId', { userId })
-      .select('chat.id', 'id')
-      .addSelect('chat.muted', 'muted')
-      .addSelect('chat.pinned', 'pinned')
-      .addSelect('chat.archived', 'archived')
-      .addSelect('chat.clearedAt', 'clearedAt')
-      .addSelect('receiver.id')
-      .addSelect('receiver.globalName')
-      .addSelect('receiver.dp')
-      .addSelect('receiver.username')
-      .innerJoin('chat.receiver', 'receiver')
-      .getRawMany()
+  async getChatsOfUser(userId: User['id']): Promise<any> {
+    const chats = await this.chatRepository.getChatsOfUser(userId)
 
     const promises = []
 
@@ -79,35 +66,7 @@ export class ChatsService {
 
       const contact = contactsMap.get(chat.receiver_id) ?? null
 
-      const item = {
-        contact: contact
-          ? {
-              id: contact.id,
-              alias: contact.alias,
-            }
-          : null,
-        latestMsg: message
-          ? {
-              id: message.id,
-              status: message.status,
-              content: message.content,
-              senderId: message.senderId,
-              createdAt: message.createdAt,
-            }
-          : null,
-        receiver: {
-          id: chat.receiver_id,
-          dp: chat.receiver_dp,
-          username: chat.receiver_username,
-          globalName: chat.receiver_global_name,
-        },
-        chat: {
-          id: chat.id,
-          muted: chat.muted,
-          pinned: chat.pinned,
-          archived: chat.archived,
-        },
-      }
+      const item = createChatListItem(chat, message, contact)
 
       if (item.chat.archived) res.archived.push(item)
       else res.unarchived.push(item)
@@ -135,6 +94,29 @@ export class ChatsService {
     return res
   }
 
+  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']) {
+    const chat = await this.chatRepository.getChatOfUserByReceiverId(userId, receiverId)
+
+    if (isNullOrUndefined(chat)) {
+      return null
+    }
+
+    const message = await this.messageRepository.getLatestMessageByUserId(userId, chat.receiver_id, chat.clearedAt)
+
+    const contact = await this.contactRepository
+      .createQueryBuilder('contact')
+      .select('contact.id', 'id')
+      .addSelect('contact.alias', 'alias')
+      .addSelect('userInContact.id', 'userIdInContact')
+      .addSelect('userInContact.id', 'userIdInContact')
+      .innerJoin('contact.userInContact', 'userInContact')
+      .where('contact.user.id = :userId', { userId })
+      .andWhere('contact.userInContact.id = :receiverId', { receiverId })
+      .getRawOne()
+
+    return createChatListItem(chat, message, contact)
+  }
+
   async clearChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {
     await this.chatRepository.updateChatOptions(authUserId, receiverId, { clearedAt: new Date() })
   }
@@ -149,5 +131,37 @@ export class ChatsService {
 
   async updateArchive(authUserId: User['id'], receiverId: User['id'], newValue: boolean): Promise<void> {
     await this.chatRepository.updateChatOptions(authUserId, receiverId, { archived: newValue, pinned: false })
+  }
+}
+
+function createChatListItem(chat: any, message: any | null, contact: any | null) {
+  return {
+    contact: contact
+      ? {
+          id: contact.id,
+          alias: contact.alias,
+        }
+      : null,
+    latestMsg: message
+      ? {
+          id: message.id,
+          status: message.status,
+          content: message.content,
+          senderId: message.senderId,
+          createdAt: message.createdAt,
+        }
+      : null,
+    receiver: {
+      id: chat.receiver_id,
+      dp: chat.receiver_dp,
+      username: chat.receiver_username,
+      globalName: chat.receiver_global_name,
+    },
+    chat: {
+      id: chat.id,
+      muted: chat.muted,
+      pinned: chat.pinned,
+      archived: chat.archived,
+    },
   }
 }

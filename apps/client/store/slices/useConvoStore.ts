@@ -20,13 +20,10 @@ export interface ConvoStoreType {
     latestMsgStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
   ) => void
 
-  /**
-   * Search if a chat exists with the given user.
-   * @returns the chat if the chat exists, else `null`.
-   */
   searchConvo: (receiverId: number) => ConvoItemType<boolean> | null
 
-  addConvo: (newItem: ConvoItemType) => void
+  insertUnarchivedConvo: (newItem: ConvoItemType) => void
+
   deleteConvo: (receiverId: number, archived?: boolean) => void
 
   clearConvoLatestMsg: (receiverId: number) => void
@@ -103,7 +100,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     return null
   },
 
-  addConvo(newItem) {
+  insertUnarchivedConvo(newItem) {
     set((state: ConvoStoreType) => {
       state.unarchived.push(newItem)
       state.unarchived.sort(sortConvoCompareFn)
