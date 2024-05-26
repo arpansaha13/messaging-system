@@ -9,8 +9,8 @@ import type { MessageType, MsgSendingType } from '@pkg/types'
 export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
 
-  const [chats, activeChat, getChats, upsertChat] = useStore(
-    state => [state.chats, state.activeChat!, state.getChats, state.upsertChat],
+  const [chats, tempChats, activeChat, getChats, upsertChat] = useStore(
+    state => [state.chats, state.tempChats, state.activeChat!, state.getChats, state.upsertChat],
     shallow,
   )
 
@@ -22,12 +22,13 @@ export default function ChatBody() {
     }
   }, [activeChat])
 
-  // Keep scroll position at bottom
+  // Keep scroll position at bottom.
+  // Rerun this effect whenever a new message is pushed. For this, include `chats` and `tempChats` in dependencies.
   useEffect(() => {
     if (elRef.current) {
       elRef.current.scrollTo({ top: elRef.current.scrollHeight })
     }
-  }, [elRef.current?.offsetHeight])
+  }, [elRef, chats, tempChats])
 
   return (
     <div ref={elRef} className="px-20 py-4 overflow-y-scroll scrollbar">
@@ -56,11 +57,11 @@ function Messages() {
     const message = messageItrResult.value
     const tempMessage = tempMessageItrResult.value
 
-    if (new Date(message.createdAt) >= tempMessage.createdInClientAt) {
-      renderMap.unshift(<Message key={message.id} message={message} />)
+    if (new Date(message.createdAt) <= tempMessage.createdInClientAt) {
+      renderMap.push(<Message key={message.id} message={message} />)
       messageItrResult = messageItr.next()
     } else if (new Date(message.createdAt) < tempMessage.createdInClientAt) {
-      renderMap.unshift(<TempMessage key={tempMessage.hash} message={tempMessage} />)
+      renderMap.push(<TempMessage key={tempMessage.hash} message={tempMessage} />)
       tempMessageItrResult = tempMessageItr.next()
     }
   }
