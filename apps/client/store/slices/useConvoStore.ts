@@ -48,8 +48,14 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
 
   updateConvo(receiverId, latestMsg) {
     set((state: ConvoStoreType) => {
-      let idx = findRoomIndex(receiverId, state.archived)
+      let idx = findRoomIndex(receiverId, state.unarchived)
       let convoItem: ConvoItemType<boolean> | null = null
+      if (idx !== null) {
+        convoItem = state.unarchived.splice(idx, 1)[0]
+        convoItem.latestMsg = latestMsg
+        pushAndSort(state.unarchived, convoItem)
+      }
+      idx = findRoomIndex(receiverId, state.archived)
       if (idx !== null) {
         convoItem = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
         convoItem.chat.archived = false
@@ -57,12 +63,6 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
         pushAndSort(state.unarchived, convoItem)
         _fetch(`user-to-chat/${receiverId}/unarchive`, { method: 'PATCH' })
         return
-      }
-      idx = findRoomIndex(receiverId, state.unarchived)
-      if (idx !== null) {
-        convoItem = state.unarchived.splice(idx, 1)[0]
-        convoItem.latestMsg = latestMsg
-        pushAndSort(state.unarchived, convoItem)
       }
     })
   },

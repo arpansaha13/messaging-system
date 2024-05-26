@@ -1,3 +1,4 @@
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
 import { MessageStatus } from '@pkg/types'
 import type { Slice } from '~/store/types.store'
@@ -56,8 +57,9 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
   upsertChat(receiverId, messages) {
     set(state => {
       let chat: Map<number, MessageType>
+      const chatExists = state.chats.has(receiverId)
 
-      if (!state.chats.has(receiverId)) {
+      if (!chatExists) {
         chat = new Map()
       } else {
         chat = state.chats.get(receiverId)!
@@ -67,34 +69,35 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
         chat.set(message.id, message)
       }
 
-      state.chats.set(receiverId, chat)
+      if (!chatExists) state.chats.set(receiverId, chat)
     })
   },
 
   upsertTempChat(receiverId, messages) {
     set(state => {
-      let chat: Map<string, MsgSendingType>
+      let tempChat: Map<string, MsgSendingType>
+      const tempChatExists = state.tempChats.has(receiverId)
 
-      if (!state.tempChats.has(receiverId)) {
-        chat = new Map()
+      if (!tempChatExists) {
+        tempChat = new Map()
       } else {
-        chat = state.tempChats.get(receiverId)!
+        tempChat = state.tempChats.get(receiverId)!
       }
 
       for (const message of messages) {
-        chat.set(message.hash, message)
+        tempChat.set(message.hash, message)
       }
 
-      state.tempChats.set(receiverId, chat)
+      if (!tempChatExists) state.tempChats.set(receiverId, tempChat)
     })
   },
 
   updateMsgStatus(receiverId, messageId, newStatus) {
     set(state => {
       const chat = state.chats.get(receiverId)!
-      const msgToUpdate = chat.get(messageId)!
-      const updatedMsg = { ...msgToUpdate, status: newStatus }
-      chat.set(messageId, updatedMsg)
+      const message = chat.get(messageId)!
+      // The chat may have been cleared. In that case message won't exist.
+      if (!isNullOrUndefined(message)) message.status = newStatus
     })
   },
 
