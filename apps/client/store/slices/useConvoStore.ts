@@ -27,13 +27,13 @@ export interface ConvoStoreType {
   searchConvo: (receiverId: number) => ConvoItemType<boolean> | null
 
   addConvo: (newItem: ConvoItemType) => void
-  deleteConvo: (chatId: number, archived?: boolean) => void
+  deleteConvo: (receiverId: number, archived?: boolean) => void
 
   clearConvoLatestMsg: (receiverId: number) => void
 
-  archiveRoom: (chatId: number) => void
-  unarchiveRoom: (chatId: number) => void
-  updateConvoPin: (chatId: number, pinned: boolean) => void
+  archiveRoom: (receiverId: number) => void
+  unarchiveRoom: (receiverId: number) => void
+  updateConvoPin: (receiverId: number, pinned: boolean) => void
 }
 
 export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
@@ -48,21 +48,18 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
 
   updateConvo(receiverId, latestMsg) {
     set((state: ConvoStoreType) => {
-      let idx = findRoomIndex(receiverId, state.unarchived)
-      let convoItem: ConvoItemType<boolean> | null = null
+      let idx = findRoomIndex(receiverId, state.archived)
       if (idx !== null) {
-        convoItem = state.unarchived.splice(idx, 1)[0]
-        convoItem.latestMsg = latestMsg
-        pushAndSort(state.unarchived, convoItem)
-      }
-      idx = findRoomIndex(receiverId, state.archived)
-      if (idx !== null) {
-        convoItem = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
+        let convoItem = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
         convoItem.chat.archived = false
+        state.unarchived.push(convoItem)
+        _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
+      }
+      idx = findRoomIndex(receiverId, state.unarchived)
+      if (idx !== null) {
+        let convoItem = state.unarchived[idx]
         convoItem.latestMsg = latestMsg
-        pushAndSort(state.unarchived, convoItem)
-        _fetch(`user-to-chat/${receiverId}/unarchive`, { method: 'PATCH' })
-        return
+        state.unarchived.sort(sortConvoCompareFn)
       }
     })
   },
@@ -104,7 +101,8 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
 
   addConvo(newItem) {
     set((state: ConvoStoreType) => {
-      pushAndSort(state.unarchived, newItem)
+      state.unarchived.push(newItem)
+      state.unarchived.sort(sortConvoCompareFn)
     })
   },
 
@@ -114,8 +112,12 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
       if (idx === null) return
       const convo = state.unarchived.splice(idx, 1)[0] as unknown as ConvoItemType<true>
       convo.chat.archived = true
-      convo.chat.pinned = false
-      pushAndSort(state.archived, convo)
+      if (convo.chat.pinned) {
+        convo.chat.pinned = false
+        _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
+      }
+      state.archived.push(convo)
+      state.archived.sort(sortConvoCompareFn)
       _fetch(`chats/${receiverId}/archive`, { method: 'PATCH' })
     })
   },
@@ -124,9 +126,10 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     set((state: ConvoStoreType) => {
       const idx = findRoomIndex(receiverId, state.archived)
       if (idx === null) return
-      const convoItem = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
-      convoItem.chat.archived = false
-      pushAndSort(state.unarchived, convoItem)
+      const convo = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
+      convo.chat.archived = false
+      state.unarchived.push(convo)
+      state.unarchived.sort(sortConvoCompareFn)
       _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
     })
   },
@@ -158,11 +161,6 @@ function findRoomIndex(receiverId: number, list: ReadonlyArray<ConvoItemType<boo
   const idx = list.findIndex(val => val.receiver.id === receiverId)
   if (idx === -1) return null
   return idx
-}
-
-function pushAndSort(list: ConvoItemType<boolean>[], item: Readonly<ConvoItemType<boolean>>): void {
-  list.push(item)
-  list.sort(sortConvoCompareFn)
 }
 
 const sortConvoCompareFn = (a: Readonly<ConvoItemType<boolean>>, b: Readonly<ConvoItemType<boolean>>) => {

@@ -13,7 +13,6 @@ import { useStore } from '~/store'
 import type { ConvoItemType } from '@pkg/types'
 
 export interface ConvoItemProps {
-  chatId: number
   userId: number
   alias: string | null
   dp: string | null
@@ -25,7 +24,6 @@ export interface ConvoItemProps {
 }
 
 const ConvoItem = ({
-  chatId,
   userId,
   alias,
   dp,
@@ -57,16 +55,16 @@ const ConvoItem = ({
       slot: !archived ? 'Archive chat' : 'Unarchive chat',
       onClick() {
         if (!archived) {
-          archiveRoom(chatId)
+          archiveRoom(userId)
         } else {
-          unarchiveRoom(chatId)
+          unarchiveRoom(userId)
         }
       },
     },
     {
       slot: 'Delete chat',
       onClick() {
-        deleteChat(chatId)
+        deleteChat(userId)
         deleteConvo(userId, archived)
         // If active room is being deleted
         if (activeChat && activeChat.receiver.id === userId) {
@@ -81,9 +79,9 @@ const ConvoItem = ({
               slot: !pinned ? 'Pin chat' : 'Unpin chat',
               onClick() {
                 if (!pinned) {
-                  updateConvoPin(chatId, true)
+                  updateConvoPin(userId, true)
                 } else {
-                  updateConvoPin(chatId, false)
+                  updateConvoPin(userId, false)
                 }
               },
             },
