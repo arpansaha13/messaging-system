@@ -81,10 +81,7 @@ export function useSocketInit() {
 
     const convo = searchConvo(activeChat.receiver.id)!
 
-    if (isNullOrUndefined(convo)) {
-      // TODO: If sender opens a chat that does not exist
-    }
-
+    if (isNullOrUndefined(convo)) return
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
     const chats = getChats()
@@ -140,14 +137,16 @@ export function useSocketInit() {
         senderId: payload.senderId,
         status: MessageStatus.DELIVERED,
       }
+      const convoExists = !isNullOrUndefined(searchConvo(payload.senderId))
 
-      if (isNullOrUndefined(searchConvo(payload.senderId))) {
+      if (convoExists) {
+        unarchiveChat(payload.senderId)
+        updateConvo(payload.senderId, message)
+      } else {
         const convo: ConvoItemType = await _fetch(`chats/${payload.senderId}`)
+        convo.latestMsg = message
         insertUnarchivedConvo(convo)
       }
-
-      unarchiveChat(payload.senderId)
-      updateConvo(payload.senderId, message)
 
       socketWrapper.emit('delivered', { messageId: message.id, receiverId: authUser.id, senderId: payload.senderId })
 
@@ -172,9 +171,8 @@ export function useSocketInit() {
       }
     })
 
-    socketWrapper.on('sent', payload => {
+    socketWrapper.on('sent', async payload => {
       const tempMessage = getTempMessage(payload.receiverId, payload.hash)
-      deleteTempMessage(payload.receiverId, payload.hash)
 
       const message: MessageType = {
         id: payload.messageId,
@@ -184,7 +182,19 @@ export function useSocketInit() {
         status: payload.status,
       }
 
-      updateConvo(payload.receiverId, message)
+      const convoExists = !isNullOrUndefined(searchConvo(payload.receiverId))
+
+      if (convoExists) {
+        updateConvo(payload.receiverId, message)
+      } else {
+        const convo: ConvoItemType = await _fetch(`chats/${payload.receiverId}`)
+        convo.latestMsg = message
+        insertUnarchivedConvo(convo)
+      }
+
+      // Temp message should be deleted after fetching the new convo
+      // Otherwise there will be a delay for "sent" message to appear until the fetch is complete
+      deleteTempMessage(payload.receiverId, payload.hash)
       upsertChat(payload.receiverId, [message])
     })
 
