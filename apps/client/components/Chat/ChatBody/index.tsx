@@ -9,41 +9,50 @@ import type { MessageType, MsgSendingType } from '@pkg/types'
 export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
 
-  const [chats, tempChats, activeChat, getChats, upsertChat] = useStore(
-    state => [state.chats, state.tempChats, state.activeChat!, state.getChats, state.upsertChat],
+  const [userMessagesMap, tempMessagesMap, activeChat, getUserMessagesMap, upsertMessages] = useStore(
+    state => [
+      state.userMessagesMap,
+      state.tempMessagesMap,
+      state.activeChat!,
+      state.getUserMessagesMap,
+      state.upsertMessages,
+    ],
     shallow,
   )
 
   useEffect(() => {
-    if (!getChats().has(activeChat.receiver.id)) {
+    if (!getUserMessagesMap().has(activeChat.receiver.id)) {
       _fetch(`messages/${activeChat.receiver.id}`).then((chatRes: MessageType[]) => {
-        upsertChat(activeChat.receiver.id, chatRes)
+        upsertMessages(activeChat.receiver.id, chatRes)
       })
     }
   }, [activeChat])
 
   // Keep scroll position at bottom.
-  // Rerun this effect whenever a new message is pushed. For this, include `chats` and `tempChats` in dependencies.
+  // Rerun this effect whenever a new message is pushed.
   useEffect(() => {
     if (elRef.current) {
       elRef.current.scrollTo({ top: elRef.current.scrollHeight })
     }
-  }, [elRef, chats, tempChats])
+  }, [elRef, userMessagesMap, tempMessagesMap])
 
   return (
     <div ref={elRef} className="px-20 py-4 overflow-y-scroll scrollbar">
-      {chats.has(activeChat.receiver.id) && <Messages />}
+      {userMessagesMap.has(activeChat.receiver.id) && <Messages />}
     </div>
   )
 }
 
 function Messages() {
-  const [chats, tempChats, activeChat] = useStore(state => [state.chats, state.tempChats, state.activeChat!], shallow)
+  const [userMessagesMap, tempMessagesMap, activeChat] = useStore(
+    state => [state.userMessagesMap, state.tempMessagesMap, state.activeChat!],
+    shallow,
+  )
 
-  if (!chats.has(activeChat.receiver.id) && !tempChats.has(activeChat.receiver.id)) return null
+  if (!userMessagesMap.has(activeChat.receiver.id) && !tempMessagesMap.has(activeChat.receiver.id)) return null
 
-  const messages = chats.get(activeChat.receiver.id) ?? new Map<string, MessageType>()
-  const tempMessages = tempChats.get(activeChat.receiver.id) ?? new Map<string, MsgSendingType>()
+  const messages = userMessagesMap.get(activeChat.receiver.id) ?? new Map<string, MessageType>()
+  const tempMessages = tempMessagesMap.get(activeChat.receiver.id) ?? new Map<string, MsgSendingType>()
 
   const messageItr = messages.values()
   const tempMessageItr = tempMessages.values()

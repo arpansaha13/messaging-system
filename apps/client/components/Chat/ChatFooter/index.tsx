@@ -26,14 +26,14 @@ const ChatFooter = () => {
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
-  const [activeChat, addDraft, drafts, removeDraft, unarchiveChat, upsertTempChat] = useStore(
+  const [activeChat, addDraft, drafts, removeDraft, unarchiveChat, upsertTempMessages] = useStore(
     state => [
       state.activeChat!,
       state.addDraft,
       state.drafts,
       state.removeDraft,
       state.unarchiveChat,
-      state.upsertTempChat,
+      state.upsertTempMessages,
     ],
     shallow,
   )
@@ -76,7 +76,7 @@ const ChatFooter = () => {
       } as MsgSendingType
 
       // Note: Convo won't be updated for a message that is still "sending"
-      upsertTempChat(activeChat.receiver.id, [
+      upsertTempMessages(activeChat.receiver.id, [
         {
           ...newMessage,
           createdInClientAt: new Date(),
