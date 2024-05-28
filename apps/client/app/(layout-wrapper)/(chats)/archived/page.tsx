@@ -5,20 +5,20 @@ import ConvoItemTemplate from '~/components/Convo/ConvoItemTemplate'
 import ConvoItemDropDown from '~/components/Convo/ConvoItemDropDown'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ConvoItemType } from '@pkg/types'
+import type { ChatListItemType } from '@pkg/types'
 
 interface ArchivedConvoItemProps {
   userId: number
   alias: string | null
   dp: string | null
   globalName: string
-  latestMsg: ConvoItemType['latestMsg']
+  latestMsg: ChatListItemType['latestMsg']
   onClick: () => void
 }
 
 export default function Page() {
   const [archived, setActiveChat] = useStore(state => [state.archived, state.setActiveChat], shallow)
-  async function handleClick(convoItem: ConvoItemType<true>) {
+  async function handleClick(convoItem: ChatListItemType<true>) {
     setActiveChat({
       contact: convoItem.contact ?? null,
       receiver: convoItem.receiver,
@@ -43,14 +43,14 @@ export default function Page() {
 }
 
 function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps) {
-  const [activeChat, setActiveChat, unarchiveRoom, deleteChat, deleteConvo] = useStore(
+  const [activeChat, setActiveChat, unarchiveChat, deleteMessages, deleteChat] = useStore(
     state => [
-      // Initially no rooms would be active - so `activeChat` may be null
+      // `activeRoom` will be null when no chats are active
       state.activeChat,
       state.setActiveChat,
-      state.unarchiveRoom,
+      state.unarchiveChat,
+      state.deleteMessages,
       state.deleteChat,
-      state.deleteConvo,
     ],
     shallow,
   )
@@ -59,14 +59,14 @@ function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps
     {
       slot: 'Unarchive chat',
       onClick() {
-        unarchiveRoom(userId)
+        unarchiveChat(userId)
       },
     },
     {
       slot: 'Delete chat',
       onClick() {
-        deleteChat(userId)
-        deleteConvo(userId, true)
+        deleteMessages(userId)
+        deleteChat(userId, true)
         // If active room is being deleted
         if (activeChat && activeChat.receiver.id === userId) {
           setActiveChat(null)

@@ -104,7 +104,7 @@ export default function Page() {
       />
 
       {!isNullOrUndefined(searchRes) && (
-        <ul role="list">
+        <ul>
           <ContactListItem
             key={searchRes.id}
             contactId={searchRes.id}
@@ -113,6 +113,7 @@ export default function Page() {
             dp={searchRes.dp}
             alias={`~${searchRes.globalName}`}
             globalName={searchRes.globalName}
+            username={searchRes.username}
             onClick={() => handleClick(searchRes)}
           />
         </ul>

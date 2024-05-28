@@ -8,7 +8,7 @@ import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
 import { MessageStatus } from '@pkg/types'
 import type {
-  ConvoItemType,
+  ChatListItemType,
   MessageType,
   SocketEmitEvent,
   SocketEmitEventPayload,
@@ -48,14 +48,14 @@ export function useSocketInit() {
     getActiveChat,
     setTyping,
     updateMsgStatus,
-    updateConvo,
-    updateConvoStatus,
-    searchConvo,
+    updateChatListItemMessage,
+    updateChatListItemMessageStatus,
+    searchChat,
     upsertChat,
     getTempMessage,
     deleteTempMessage,
     unarchiveChat,
-    insertUnarchivedConvo,
+    insertUnarchivedChat,
   ] = useStore(
     state => [
       state.activeChat,
@@ -64,14 +64,14 @@ export function useSocketInit() {
       state.getActiveChat,
       state.setTypingState,
       state.updateMsgStatus,
-      state.updateConvo,
-      state.updateConvoStatus,
-      state.searchConvo,
+      state.updateChatListItemMessage,
+      state.updateChatListItemMessageStatus,
+      state.searchChat,
       state.upsertChat,
       state.getTempMessage,
       state.deleteTempMessage,
-      state.unarchiveRoom,
-      state.insertUnarchivedConvo,
+      state.unarchiveChat,
+      state.insertUnarchivedChat,
     ],
     shallow,
   )
@@ -79,7 +79,7 @@ export function useSocketInit() {
   useEffect(() => {
     if (isNullOrUndefined(activeChat)) return
 
-    const convo = searchConvo(activeChat.receiver.id)!
+    const convo = searchChat(activeChat.receiver.id)!
 
     if (isNullOrUndefined(convo)) return
     if (!isUnread(authUser.id, convo.latestMsg)) return
@@ -97,7 +97,7 @@ export function useSocketInit() {
         senderId: activeChat.receiver.id,
         receiverId: authUser.id,
       })
-      updateConvoStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
+      updateChatListItemMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
       updateMsgStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
   }, [activeChat, authUser, chats])
@@ -137,15 +137,15 @@ export function useSocketInit() {
         senderId: payload.senderId,
         status: MessageStatus.DELIVERED,
       }
-      const convoExists = !isNullOrUndefined(searchConvo(payload.senderId))
+      const convoExists = !isNullOrUndefined(searchChat(payload.senderId))
 
       if (convoExists) {
         unarchiveChat(payload.senderId)
-        updateConvo(payload.senderId, message)
+        updateChatListItemMessage(payload.senderId, message)
       } else {
-        const convo: ConvoItemType = await _fetch(`chats/${payload.senderId}`)
+        const convo: ChatListItemType = await _fetch(`chats/${payload.senderId}`)
         convo.latestMsg = message
-        insertUnarchivedConvo(convo)
+        insertUnarchivedChat(convo)
       }
 
       socketWrapper.emit('delivered', { messageId: message.id, receiverId: authUser.id, senderId: payload.senderId })
@@ -166,7 +166,7 @@ export function useSocketInit() {
           senderId: payload.senderId,
           messageId: payload.messageId,
         })
-        updateConvoStatus(payload.senderId, payload.messageId, payload.status)
+        updateChatListItemMessageStatus(payload.senderId, payload.messageId, payload.status)
         updateMsgStatus(payload.senderId, payload.messageId, payload.status)
       }
     })
@@ -182,14 +182,14 @@ export function useSocketInit() {
         status: payload.status,
       }
 
-      const convoExists = !isNullOrUndefined(searchConvo(payload.receiverId))
+      const convoExists = !isNullOrUndefined(searchChat(payload.receiverId))
 
       if (convoExists) {
-        updateConvo(payload.receiverId, message)
+        updateChatListItemMessage(payload.receiverId, message)
       } else {
-        const convo: ConvoItemType = await _fetch(`chats/${payload.receiverId}`)
+        const convo: ChatListItemType = await _fetch(`chats/${payload.receiverId}`)
         convo.latestMsg = message
-        insertUnarchivedConvo(convo)
+        insertUnarchivedChat(convo)
       }
 
       // Temp message should be deleted after fetching the new convo
@@ -199,12 +199,12 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('delivered', payload => {
-      updateConvoStatus(payload.receiverId, payload.messageId, payload.status)
+      updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
       updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
     socketWrapper.on('read', payload => {
-      updateConvoStatus(payload.receiverId, payload.messageId, payload.status)
+      updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
       updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
     })
 

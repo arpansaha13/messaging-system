@@ -1,7 +1,7 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { type ConvoItemType, MessageStatus } from '@pkg/types'
+import { type ChatListItemType, MessageStatus } from '@pkg/types'
 
-export default function isUnread(authUserId: number, latestMsg: ConvoItemType['latestMsg']) {
+export default function isUnread(authUserId: number, latestMsg: ChatListItemType['latestMsg']) {
   let unread = false
   if (!isNullOrUndefined(latestMsg)) {
     const authUserIsSender = authUserId === latestMsg.senderId

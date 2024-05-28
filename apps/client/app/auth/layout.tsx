@@ -1,5 +1,3 @@
-import Link from 'next/link'
-import GithubIcon from '~common/GithubIcon'
 import Notification from '~common/Notification'
 import type { ReactNode } from 'react'
 

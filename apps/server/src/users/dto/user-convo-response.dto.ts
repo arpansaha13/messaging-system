@@ -1,6 +1,6 @@
-import { ConvoItemType } from '@pkg/types'
+import { ChatListItemType } from '@pkg/types'
 
 export interface UserConvoResponse {
-  unarchived: ConvoItemType[]
-  archived: ConvoItemType<true>[]
+  unarchived: ChatListItemType[]
+  archived: ChatListItemType<true>[]
 }

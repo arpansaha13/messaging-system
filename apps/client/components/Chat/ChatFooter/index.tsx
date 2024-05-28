@@ -26,13 +26,13 @@ const ChatFooter = () => {
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
-  const [activeChat, addDraft, drafts, removeDraft, unarchiveRoom, upsertTempChat] = useStore(
+  const [activeChat, addDraft, drafts, removeDraft, unarchiveChat, upsertTempChat] = useStore(
     state => [
       state.activeChat!,
       state.addDraft,
       state.drafts,
       state.removeDraft,
-      state.unarchiveRoom,
+      state.unarchiveChat,
       state.upsertTempChat,
     ],
     shallow,
@@ -66,7 +66,7 @@ const ChatFooter = () => {
       socket.emit('typing', typingPayload(true))
     }
     if (e.key === 'Enter' && value) {
-      unarchiveRoom(activeChat.receiver.id)
+      unarchiveChat(activeChat.receiver.id)
 
       const newMessage = {
         hash: generateHash(),
