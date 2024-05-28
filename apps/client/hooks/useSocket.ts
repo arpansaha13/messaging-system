@@ -43,15 +43,15 @@ export function useSocketInit() {
   const authUser = useAuthStore(state => state.authUser)!
   const [
     activeChat,
-    chats,
-    getChats,
+    userMessagesMap,
+    getUserMessagesMap,
     getActiveChat,
     setTyping,
-    updateMsgStatus,
+    updateMessageStatus,
     updateChatListItemMessage,
     updateChatListItemMessageStatus,
     searchChat,
-    upsertChat,
+    upsertMessages,
     getTempMessage,
     deleteTempMessage,
     unarchiveChat,
@@ -59,15 +59,15 @@ export function useSocketInit() {
   ] = useStore(
     state => [
       state.activeChat,
-      state.chats,
-      state.getChats,
+      state.userMessagesMap,
+      state.getUserMessagesMap,
       state.getActiveChat,
       state.setTypingState,
-      state.updateMsgStatus,
+      state.updateMessageStatus,
       state.updateChatListItemMessage,
       state.updateChatListItemMessageStatus,
       state.searchChat,
-      state.upsertChat,
+      state.upsertMessages,
       state.getTempMessage,
       state.deleteTempMessage,
       state.unarchiveChat,
@@ -84,12 +84,12 @@ export function useSocketInit() {
     if (isNullOrUndefined(convo)) return
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
-    const chats = getChats()
-    const chat = chats.get(activeChat.receiver.id)
+    const userMessagesMap = getUserMessagesMap()
+    const messages = userMessagesMap.get(activeChat.receiver.id)
 
-    if (isNullOrUndefined(chat)) return
+    if (isNullOrUndefined(messages)) return
 
-    for (const message of chat.values()) {
+    for (const message of messages.values()) {
       if (message.senderId === authUser.id || message.status === MessageStatus.READ) continue
 
       socketWrapper.emit('read', {
@@ -98,9 +98,9 @@ export function useSocketInit() {
         receiverId: authUser.id,
       })
       updateChatListItemMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
-      updateMsgStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
+      updateMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
-  }, [activeChat, authUser, chats])
+  }, [activeChat, authUser, userMessagesMap])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
@@ -152,10 +152,10 @@ export function useSocketInit() {
 
       // No need to update status if the chat has never been fetched
       // Because they will arrive with proper data whenever fetched (updated on server)
-      const updatedChats = getChats()
+      const updatedChats = getUserMessagesMap()
       if (!updatedChats.has(payload.senderId)) return
 
-      upsertChat(payload.senderId, [message])
+      upsertMessages(payload.senderId, [message])
 
       const updatedActiveChat = getActiveChat()
       const chatIsOpen = updatedActiveChat && updatedActiveChat.receiver.id === payload.senderId
@@ -167,7 +167,7 @@ export function useSocketInit() {
           messageId: payload.messageId,
         })
         updateChatListItemMessageStatus(payload.senderId, payload.messageId, payload.status)
-        updateMsgStatus(payload.senderId, payload.messageId, payload.status)
+        updateMessageStatus(payload.senderId, payload.messageId, payload.status)
       }
     })
 
@@ -195,17 +195,17 @@ export function useSocketInit() {
       // Temp message should be deleted after fetching the new convo
       // Otherwise there will be a delay for "sent" message to appear until the fetch is complete
       deleteTempMessage(payload.receiverId, payload.hash)
-      upsertChat(payload.receiverId, [message])
+      upsertMessages(payload.receiverId, [message])
     })
 
     socketWrapper.on('delivered', payload => {
       updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
-      updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
+      updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
     socketWrapper.on('read', payload => {
       updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
-      updateMsgStatus(payload.receiverId, payload.messageId, payload.status)
+      updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
     socketWrapper.on('typing', payload => {

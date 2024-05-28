@@ -11,6 +11,12 @@ export interface ChatListStoreType {
   unarchived: ChatListItemType[]
   archived: ChatListItemType<true>[]
 
+  activeChat: Pick<ChatListItemType<boolean>, 'receiver' | 'contact'> | null
+
+  getActiveChat: () => ChatListStoreType['activeChat']
+
+  setActiveChat: (newChatInfo: ChatListStoreType['activeChat']) => void
+
   initChatList: () => Promise<void>
 
   insertUnarchivedChat: (newItem: ChatListItemType) => void
@@ -40,6 +46,16 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
   unarchived: [],
 
   archived: [],
+
+  activeChat: null,
+
+  getActiveChat() {
+    return get().activeChat
+  },
+
+  setActiveChat(activeChat) {
+    set({ activeChat })
+  },
 
   async initChatList() {
     const { unarchived, archived }: ChatsResponse = await _fetch('chats')

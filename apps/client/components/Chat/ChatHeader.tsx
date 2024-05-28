@@ -7,8 +7,8 @@ import HeaderDropDown from '../HeaderDropDown'
 import { useStore } from '~/store'
 
 const ChatHeader = () => {
-  const [typingState, activeChat, clearChatListItemMessage, clearChat] = useStore(
-    state => [state.typingState, state.activeChat!, state.clearChatListItemMessage, state.clearChat],
+  const [typingState, activeChat, clearChatListItemMessage, clearMessages] = useStore(
+    state => [state.typingState, state.activeChat!, state.clearChatListItemMessage, state.clearMessages],
     shallow,
   )
 
@@ -47,7 +47,7 @@ const ChatHeader = () => {
     {
       slot: 'Clear messages',
       onClick() {
-        clearChat(activeChat.receiver.id)
+        clearMessages(activeChat.receiver.id)
         clearChatListItemMessage(activeChat.receiver.id)
       },
     },

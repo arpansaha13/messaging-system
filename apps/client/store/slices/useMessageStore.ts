@@ -1,0 +1,122 @@
+import { isNullOrUndefined } from '@arpansaha13/utils'
+import _fetch from '~/utils/_fetch'
+import type { MessageStatus } from '@pkg/types'
+import type { Slice } from '~/store/types.store'
+import type { MessageType, MsgSendingType } from '@pkg/types'
+
+export interface MessageStoreType {
+  /**
+   * Messages mapped with receiver (user) id
+   * Each message is mapped with their messageId.
+   */
+  userMessagesMap: Map<number, Map<number, MessageType>>
+  getUserMessagesMap: () => MessageStoreType['userMessagesMap']
+
+  /** Messages that are newly created and are being sent. */
+  tempMessagesMap: Map<number, Map<string, MsgSendingType>>
+
+  upsertMessages: (receiverId: number, messages: MessageType[]) => void
+  upsertTempMessages: (receiverId: number, messages: MsgSendingType[]) => void
+
+  updateMessageStatus: (
+    receiverId: number,
+    messageId: number,
+    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
+  ) => void
+
+  clearMessages: (receiverId: number) => void
+  deleteMessages: (receiverId: number) => void
+
+  getTempMessage: (receiverId: number, hash: string) => MsgSendingType
+  deleteTempMessage: (receiverId: number, hash: string) => void
+}
+
+export const useMessageStore: Slice<MessageStoreType> = (set, get) => ({
+  userMessagesMap: new Map(),
+
+  getUserMessagesMap() {
+    return get().userMessagesMap
+  },
+
+  tempMessagesMap: new Map(),
+
+  getTempChats() {
+    return get().tempMessagesMap
+  },
+
+  upsertMessages(receiverId, newMessages) {
+    set(state => {
+      let messages: Map<number, MessageType>
+      const chatExists = state.userMessagesMap.has(receiverId)
+
+      if (!chatExists) {
+        messages = new Map()
+      } else {
+        messages = state.userMessagesMap.get(receiverId)!
+      }
+
+      for (const message of newMessages) {
+        messages.set(message.id, message)
+      }
+
+      if (!chatExists) state.userMessagesMap.set(receiverId, messages)
+    })
+  },
+
+  upsertTempMessages(receiverId, messages) {
+    set(state => {
+      let tempChat: Map<string, MsgSendingType>
+      const tempChatExists = state.tempMessagesMap.has(receiverId)
+
+      if (!tempChatExists) {
+        tempChat = new Map()
+      } else {
+        tempChat = state.tempMessagesMap.get(receiverId)!
+      }
+
+      for (const message of messages) {
+        tempChat.set(message.hash, message)
+      }
+
+      if (!tempChatExists) state.tempMessagesMap.set(receiverId, tempChat)
+    })
+  },
+
+  updateMessageStatus(receiverId, messageId, newStatus) {
+    set(state => {
+      const messages = state.userMessagesMap.get(receiverId)!
+      const message = messages.get(messageId)!
+      // The chat may have been cleared. In that case message won't exist.
+      if (!isNullOrUndefined(message)) message.status = newStatus
+    })
+  },
+
+  clearMessages(receiverId) {
+    set(state => {
+      _fetch(`chats/${receiverId}/clear`, { method: 'DELETE' })
+      state.userMessagesMap.delete(receiverId)
+      state.tempMessagesMap.delete(receiverId)
+    })
+  },
+
+  deleteMessages(receiverId) {
+    set(state => {
+      _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
+      state.userMessagesMap.delete(receiverId)
+      state.tempMessagesMap.delete(receiverId)
+    })
+  },
+
+  getTempMessage(receiverId, hash) {
+    const tempChat = get().tempMessagesMap.get(receiverId)!
+    const message = tempChat.get(hash)!
+    return message
+  },
+
+  deleteTempMessage(receiverId, hash) {
+    set(state => {
+      const tempChat = state.tempMessagesMap.get(receiverId)!
+      tempChat.delete(hash)
+    })
+  },
+})
