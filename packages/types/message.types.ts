@@ -1,4 +1,4 @@
-export interface MsgSendingType {
+export interface IMessageSending {
   hash: string
   content: string
   senderId: number
@@ -7,7 +7,7 @@ export interface MsgSendingType {
   /** For deciding the order in which messages should be shown in chat window */
   createdInClientAt: Date
 }
-export interface MessageType {
+export interface IMessage {
   id: number
   content: string
   senderId: number

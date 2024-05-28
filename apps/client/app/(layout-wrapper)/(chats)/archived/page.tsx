@@ -5,20 +5,20 @@ import ConvoItemTemplate from '~/components/Convo/ConvoItemTemplate'
 import ConvoItemDropDown from '~/components/Convo/ConvoItemDropDown'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ChatListItemType } from '@pkg/types'
+import type { IChatListItem } from '@pkg/types'
 
 interface ArchivedConvoItemProps {
   userId: number
   alias: string | null
   dp: string | null
   globalName: string
-  latestMsg: ChatListItemType['latestMsg']
+  latestMsg: IChatListItem['latestMsg']
   onClick: () => void
 }
 
 export default function Page() {
   const [archived, setActiveChat] = useStore(state => [state.archived, state.setActiveChat], shallow)
-  async function handleClick(convoItem: ChatListItemType<true>) {
+  async function handleClick(convoItem: IChatListItem) {
     setActiveChat({
       contact: convoItem.contact ?? null,
       receiver: convoItem.receiver,

@@ -8,7 +8,7 @@ import Avatar from '~common/Avatar'
 import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
-import type { AuthUserType } from '@pkg/types'
+import type { IAuthUser } from '@pkg/types'
 
 interface FieldProps {
   heading: string
@@ -81,7 +81,7 @@ export default function Page() {
   const [bio, setBio] = useState(authUser.bio)
 
   useEffect(() => {
-    const data: Partial<Pick<AuthUserType, 'bio' | 'globalName'>> = {}
+    const data: Partial<Pick<IAuthUser, 'bio' | 'globalName'>> = {}
 
     if (authUser.bio !== bio) data.bio = bio
     if (authUser.globalName !== globalName) data.globalName = globalName
@@ -90,7 +90,7 @@ export default function Page() {
     _fetch('users/me', {
       body: data,
       method: 'PATCH',
-    }).then((res: AuthUserType) => {
+    }).then((res: IAuthUser) => {
       setAuthUser(res)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps

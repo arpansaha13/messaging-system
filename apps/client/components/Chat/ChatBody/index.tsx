@@ -4,7 +4,7 @@ import { useStore } from '~/store'
 import Message from './Message'
 import TempMessage from './TempMessage'
 import _fetch from '~/utils/_fetch'
-import type { MessageType, MsgSendingType } from '@pkg/types'
+import type { IMessage, IMessageSending } from '@pkg/types'
 
 export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
@@ -22,7 +22,7 @@ export default function ChatBody() {
 
   useEffect(() => {
     if (!getUserMessagesMap().has(activeChat.receiver.id)) {
-      _fetch(`messages/${activeChat.receiver.id}`).then((chatRes: MessageType[]) => {
+      _fetch(`messages/${activeChat.receiver.id}`).then((chatRes: IMessage[]) => {
         upsertMessages(activeChat.receiver.id, chatRes)
       })
     }
@@ -51,8 +51,8 @@ function Messages() {
 
   if (!userMessagesMap.has(activeChat.receiver.id) && !tempMessagesMap.has(activeChat.receiver.id)) return null
 
-  const messages = userMessagesMap.get(activeChat.receiver.id) ?? new Map<string, MessageType>()
-  const tempMessages = tempMessagesMap.get(activeChat.receiver.id) ?? new Map<string, MsgSendingType>()
+  const messages = userMessagesMap.get(activeChat.receiver.id) ?? new Map<string, IMessage>()
+  const tempMessages = tempMessagesMap.get(activeChat.receiver.id) ?? new Map<string, IMessageSending>()
 
   const messageItr = messages.values()
   const tempMessageItr = tempMessages.values()

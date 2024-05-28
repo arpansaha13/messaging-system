@@ -2,10 +2,10 @@ import { format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '../../MsgStatusIcon'
 import { useAuthStore } from '~/store/useAuthStore'
-import type { MessageType } from '@pkg/types'
+import type { IMessage } from '@pkg/types'
 
 interface MessageProps {
-  message: MessageType
+  message: IMessage
 }
 
 const Message = ({ message }: MessageProps) => {

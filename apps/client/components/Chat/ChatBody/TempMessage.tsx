@@ -1,9 +1,9 @@
 import { format } from 'date-fns'
 import MsgStatusIcon from '../../MsgStatusIcon'
-import type { MsgSendingType } from '@pkg/types'
+import type { IMessageSending } from '@pkg/types'
 
 interface MessageProps {
-  message: MsgSendingType
+  message: IMessageSending
 }
 
 const TempMessage = ({ message }: MessageProps) => {

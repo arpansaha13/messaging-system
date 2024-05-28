@@ -3,6 +3,8 @@ import { AuthGuard } from '@nestjs/passport'
 import { ChatsService } from './chats.service'
 import { ChatIdParam } from './dtos/chat-id-param.dto'
 import type { Request } from 'express'
+import type { IChatListItem } from '@pkg/types'
+import type { IChatsResponse } from './interfaces/chats-response.interface'
 
 @UseGuards(AuthGuard())
 @Controller('chats')
@@ -10,12 +12,12 @@ export class ChatsController {
   constructor(private chatService: ChatsService) {}
 
   @Get()
-  getChatsOfUser(@Req() request: Request) {
+  getChatsOfUser(@Req() request: Request): Promise<IChatsResponse> {
     return this.chatService.getChatsOfUser(request.user.id)
   }
 
   @Get('/:receiverId')
-  getChatOfUserWithReceiver(@Req() request: Request, @Param() params: ChatIdParam) {
+  getChatOfUserWithReceiver(@Req() request: Request, @Param() params: ChatIdParam): Promise<IChatListItem> {
     return this.chatService.getChatOfUserWithReceiver(request.user.id, params.receiverId)
   }
 

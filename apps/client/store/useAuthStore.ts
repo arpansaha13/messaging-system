@@ -1,9 +1,9 @@
 import { createWithEqualityFn } from 'zustand/traditional'
-import type { AuthUserType } from '@pkg/types'
+import type { IAuthUser } from '@pkg/types'
 
 interface AuthStoreType {
-  authUser: AuthUserType | null
-  setAuthUser: (authUser: AuthUserType | null) => void
+  authUser: IAuthUser | null
+  setAuthUser: (authUser: IAuthUser | null) => void
 }
 
 export const useAuthStore = createWithEqualityFn<AuthStoreType>()(set => ({
