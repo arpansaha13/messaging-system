@@ -2,21 +2,21 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
 import type { MessageStatus } from '@pkg/types'
 import type { Slice } from '~/store/types.store'
-import type { MessageType, MsgSendingType } from '@pkg/types'
+import type { IMessage, IMessageSending } from '@pkg/types'
 
 export interface MessageStoreType {
   /**
    * Messages mapped with receiver (user) id
    * Each message is mapped with their messageId.
    */
-  userMessagesMap: Map<number, Map<number, MessageType>>
+  userMessagesMap: Map<number, Map<number, IMessage>>
   getUserMessagesMap: () => MessageStoreType['userMessagesMap']
 
   /** Messages that are newly created and are being sent. */
-  tempMessagesMap: Map<number, Map<string, MsgSendingType>>
+  tempMessagesMap: Map<number, Map<string, IMessageSending>>
 
-  upsertMessages: (receiverId: number, messages: MessageType[]) => void
-  upsertTempMessages: (receiverId: number, messages: MsgSendingType[]) => void
+  upsertMessages: (receiverId: number, messages: IMessage[]) => void
+  upsertTempMessages: (receiverId: number, messages: IMessageSending[]) => void
 
   updateMessageStatus: (
     receiverId: number,
@@ -27,7 +27,7 @@ export interface MessageStoreType {
   clearMessages: (receiverId: number) => void
   deleteMessages: (receiverId: number) => void
 
-  getTempMessage: (receiverId: number, hash: string) => MsgSendingType
+  getTempMessage: (receiverId: number, hash: string) => IMessageSending
   deleteTempMessage: (receiverId: number, hash: string) => void
 }
 
@@ -46,7 +46,7 @@ export const useMessageStore: Slice<MessageStoreType> = (set, get) => ({
 
   upsertMessages(receiverId, newMessages) {
     set(state => {
-      let messages: Map<number, MessageType>
+      let messages: Map<number, IMessage>
       const chatExists = state.userMessagesMap.has(receiverId)
 
       if (!chatExists) {
@@ -65,7 +65,7 @@ export const useMessageStore: Slice<MessageStoreType> = (set, get) => ({
 
   upsertTempMessages(receiverId, messages) {
     set(state => {
-      let tempChat: Map<string, MsgSendingType>
+      let tempChat: Map<string, IMessageSending>
       const tempChatExists = state.tempMessagesMap.has(receiverId)
 
       if (!tempChatExists) {

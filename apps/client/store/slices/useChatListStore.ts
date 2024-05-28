@@ -1,17 +1,17 @@
 import _fetch from '~/utils/_fetch'
 import type { Slice } from '~/store/types.store'
-import type { ChatListItemType, MessageStatus } from '@pkg/types'
+import type { IChatListItem, MessageStatus } from '@pkg/types'
 
 type ChatsResponse = {
-  archived: ChatListItemType<true>
-  unarchived: ChatListItemType
+  archived: IChatListItem
+  unarchived: IChatListItem
 }
 
 export interface ChatListStoreType {
-  unarchived: ChatListItemType[]
-  archived: ChatListItemType<true>[]
+  unarchived: IChatListItem[]
+  archived: IChatListItem[]
 
-  activeChat: Pick<ChatListItemType<boolean>, 'receiver' | 'contact'> | null
+  activeChat: Pick<IChatListItem, 'receiver' | 'contact'> | null
 
   getActiveChat: () => ChatListStoreType['activeChat']
 
@@ -19,9 +19,9 @@ export interface ChatListStoreType {
 
   initChatList: () => Promise<void>
 
-  insertUnarchivedChat: (newItem: ChatListItemType) => void
+  insertUnarchivedChat: (newItem: IChatListItem) => void
 
-  updateChatListItemMessage: (receiverId: number, latestMsg: ChatListItemType['latestMsg']) => void
+  updateChatListItemMessage: (receiverId: number, latestMsg: IChatListItem['latestMsg']) => void
 
   updateChatListItemMessageStatus: (
     receiverId: number,
@@ -33,7 +33,7 @@ export interface ChatListStoreType {
 
   clearChatListItemMessage: (receiverId: number) => void
 
-  searchChat: (receiverId: number) => ChatListItemType<boolean> | null
+  searchChat: (receiverId: number) => IChatListItem | null
 
   archiveChat: (receiverId: number) => void
 
@@ -73,7 +73,7 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
     set(state => {
       let idx = findRoomIndex(receiverId, state.archived)
       if (idx !== null) {
-        let convoItem = state.archived.splice(idx, 1)[0] as unknown as ChatListItemType<false>
+        let convoItem = state.archived.splice(idx, 1)[0] as unknown as IChatListItem
         convoItem.chat.archived = false
         state.unarchived.push(convoItem)
         _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
@@ -142,7 +142,7 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
     set(state => {
       const idx = findRoomIndex(receiverId, state.unarchived)
       if (idx === null) return
-      const convo = state.unarchived.splice(idx, 1)[0] as unknown as ChatListItemType<true>
+      const convo = state.unarchived.splice(idx, 1)[0] as unknown as IChatListItem
       convo.chat.archived = true
       if (convo.chat.pinned) {
         convo.chat.pinned = false
@@ -158,7 +158,7 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
     set(state => {
       const idx = findRoomIndex(receiverId, state.archived)
       if (idx === null) return
-      const convo = state.archived.splice(idx, 1)[0] as unknown as ChatListItemType<false>
+      const convo = state.archived.splice(idx, 1)[0] as unknown as IChatListItem
       convo.chat.archived = false
       state.unarchived.push(convo)
       state.unarchived.sort(sortConvoCompareFn)
@@ -177,13 +177,13 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
   },
 })
 
-function findRoomIndex(receiverId: number, list: ReadonlyArray<ChatListItemType<boolean>>): number | null {
+function findRoomIndex(receiverId: number, list: ReadonlyArray<IChatListItem>): number | null {
   const idx = list.findIndex(val => val.receiver.id === receiverId)
   if (idx === -1) return null
   return idx
 }
 
-const sortConvoCompareFn = (a: Readonly<ChatListItemType<boolean>>, b: Readonly<ChatListItemType<boolean>>) => {
+const sortConvoCompareFn = (a: Readonly<IChatListItem>, b: Readonly<IChatListItem>) => {
   // Pinned chats on top
   if (a.chat.pinned && !b.chat.pinned) return -1
   if (!a.chat.pinned && b.chat.pinned) return 1

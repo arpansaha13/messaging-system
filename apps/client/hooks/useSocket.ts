@@ -8,8 +8,8 @@ import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
 import { MessageStatus } from '@pkg/types'
 import type {
-  ChatListItemType,
-  MessageType,
+  IChatListItem,
+  IMessage,
   SocketEmitEvent,
   SocketEmitEventPayload,
   SocketOnEvent,
@@ -130,7 +130,7 @@ export function useSocketInit() {
     })
 
     socketWrapper.on('receive-message', async payload => {
-      const message: MessageType = {
+      const message: IMessage = {
         id: payload.messageId,
         content: payload.content,
         createdAt: payload.createdAt,
@@ -143,7 +143,7 @@ export function useSocketInit() {
         unarchiveChat(payload.senderId)
         updateChatListItemMessage(payload.senderId, message)
       } else {
-        const convo: ChatListItemType = await _fetch(`chats/${payload.senderId}`)
+        const convo: IChatListItem = await _fetch(`chats/${payload.senderId}`)
         convo.latestMsg = message
         insertUnarchivedChat(convo)
       }
@@ -174,7 +174,7 @@ export function useSocketInit() {
     socketWrapper.on('sent', async payload => {
       const tempMessage = getTempMessage(payload.receiverId, payload.hash)
 
-      const message: MessageType = {
+      const message: IMessage = {
         id: payload.messageId,
         content: tempMessage.content,
         createdAt: payload.createdAt,
@@ -187,7 +187,7 @@ export function useSocketInit() {
       if (convoExists) {
         updateChatListItemMessage(payload.receiverId, message)
       } else {
-        const convo: ChatListItemType = await _fetch(`chats/${payload.receiverId}`)
+        const convo: IChatListItem = await _fetch(`chats/${payload.receiverId}`)
         convo.latestMsg = message
         insertUnarchivedChat(convo)
       }

@@ -8,15 +8,15 @@ import SearchBar from '~common/SearchBar'
 import ContactListItem from '~/components/ContactList/ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ContactType } from '@pkg/types'
+import type { IContact } from '@pkg/types'
 
 interface ContactsProps {
-  handleClick: (contact: ContactType) => void
+  handleClick: (contact: IContact) => void
 }
 
 interface SearchResultsProps {
-  results: ContactType[]
-  handleClick: (contact: ContactType) => void
+  results: IContact[]
+  handleClick: (contact: IContact) => void
 }
 
 export default function Page() {
@@ -24,7 +24,7 @@ export default function Page() {
 
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
-  const [searchResults, setSearchResults] = useState<ContactType[] | null>(null)
+  const [searchResults, setSearchResults] = useState<IContact[] | null>(null)
 
   useDebounce(
     () => {
@@ -42,7 +42,7 @@ export default function Page() {
     [value],
   )
 
-  function handleClick(contact: ContactType) {
+  function handleClick(contact: IContact) {
     setActiveChat({
       contact: {
         id: contact.contactId,
@@ -51,6 +51,7 @@ export default function Page() {
       receiver: {
         id: contact.userId,
         dp: contact.dp,
+        bio: contact.bio,
         username: contact.username,
         globalName: contact.globalName,
       },

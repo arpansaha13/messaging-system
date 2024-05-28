@@ -12,7 +12,7 @@ import SearchBar from '~common/SearchBar'
 import ContactListItem from '~/components/ContactList/ContactListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ContactType, UserType } from '@pkg/types'
+import type { IContact, IUser } from '@pkg/types'
 
 export default function Page() {
   const [toggleNotification, setNotification, initContactStore] = useStore(
@@ -32,8 +32,8 @@ export default function Page() {
   const isFirstRun = useRef(true)
   const baseInputRef = useRef(null)
 
-  const [searchRes, setSearchRes] = useState<UserType | null>(null)
-  const [existingContact, setExistingContact] = useState<ContactType | null>(null)
+  const [searchRes, setSearchRes] = useState<IUser | null>(null)
+  const [existingContact, setExistingContact] = useState<IContact | null>(null)
 
   useDebounce(
     () => {
@@ -46,9 +46,9 @@ export default function Page() {
         setExistingContact(null)
         return
       }
-      _fetch(`contacts?userId=${value}`).then(async (resContact: ContactType) => {
+      _fetch(`contacts?userId=${value}`).then(async (resContact: IContact) => {
         if (!resContact) {
-          const resUser: UserType = await _fetch(`users/search?search=${value}`)
+          const resUser: IUser = await _fetch(`users/search?search=${value}`)
           setSearchRes(resUser ? resUser : null)
         } else {
           setSearchRes(null)
@@ -59,7 +59,7 @@ export default function Page() {
     1000,
     [value],
   )
-  function handleClick(user: UserType) {
+  function handleClick(user: IUser) {
     setModalContent({ ...user, alias: '' })
     setOpen(true)
   }

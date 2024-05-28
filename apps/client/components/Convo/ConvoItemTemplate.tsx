@@ -6,13 +6,13 @@ import MsgStatusIcon from '../MsgStatusIcon'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
-import type { ChatListItemType } from '@pkg/types'
+import type { IChatListItem } from '@pkg/types'
 
 interface ConvoItemTemplateProps {
   userId: number
   alias: string | null
   dp: string | null
-  latestMsg: ChatListItemType['latestMsg']
+  latestMsg: IChatListItem['latestMsg']
   globalName: string
   children: React.ReactNode
   onClick: () => void

@@ -10,7 +10,7 @@ import { useStore } from '~/store'
 import { generateHash } from '~/utils/generateHash'
 import { MessageStatus } from '@pkg/types'
 import type { KeyboardEvent } from 'react'
-import type { ISenderEmitTyping, MsgSendingType } from '@pkg/types'
+import type { ISenderEmitTyping, IMessageSending } from '@pkg/types'
 
 const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) => {
   if (metaKey || ctrlKey || altKey) return false
@@ -73,7 +73,7 @@ const ChatFooter = () => {
         content: value,
         senderId: authUser.id,
         status: MessageStatus.SENDING,
-      } as MsgSendingType
+      } as IMessageSending
 
       // Note: Convo won't be updated for a message that is still "sending"
       upsertTempMessages(activeChat.receiver.id, [

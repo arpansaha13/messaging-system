@@ -1,8 +1,8 @@
 import { memo } from 'react'
 import Avatar from '~common/Avatar'
-import { ContactType } from '@pkg/types'
+import { IContact } from '@pkg/types'
 
-export interface ContactListItemProps extends ContactType {
+export interface ContactListItemProps extends IContact {
   onClick: () => void
 }
 

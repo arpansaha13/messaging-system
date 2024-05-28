@@ -4,7 +4,9 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { ChatRepository } from './chats.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
+import type { IChatListItem } from '@pkg/types'
 import type { User } from 'src/users/user.entity'
+import type { IChatsResponse } from './interfaces/chats-response.interface'
 
 @Injectable()
 export class ChatsService {
@@ -19,7 +21,7 @@ export class ChatsService {
     private readonly messageRepository: MessageRepository,
   ) {}
 
-  async getChatsOfUser(userId: User['id']): Promise<any> {
+  async getChatsOfUser(userId: User['id']): Promise<IChatsResponse> {
     const chats = await this.chatRepository.getChatsOfUser(userId)
 
     const promises = []
@@ -37,7 +39,6 @@ export class ChatsService {
       .select('contact.id', 'id')
       .addSelect('contact.alias', 'alias')
       .addSelect('userInContact.id', 'userIdInContact')
-      .addSelect('userInContact.id', 'userIdInContact')
       .innerJoin('contact.userInContact', 'userInContact')
       .where('contact.user.id = :userId', { userId })
       .andWhere('contact.userInContact.id IN (:...receiverIds)', { receiverIds })
@@ -48,7 +49,7 @@ export class ChatsService {
       contactsMap.set(contact.userIdInContact, contact)
     })
 
-    const res = { unarchived: [], archived: [] }
+    const res: IChatsResponse = { unarchived: [], archived: [] }
 
     chats.forEach(chat => {
       const message = messages.find(message => {
@@ -68,8 +69,8 @@ export class ChatsService {
 
       const item = createChatListItem(chat, message, contact)
 
-      if (item.chat.archived) res.archived.push(item)
-      else res.unarchived.push(item)
+      if (item.chat.archived) res.archived.push(item as IChatListItem)
+      else res.unarchived.push(item as IChatListItem)
     })
 
     const compareFn = (a: any, b: any) => {
@@ -94,7 +95,7 @@ export class ChatsService {
     return res
   }
 
-  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']) {
+  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']): Promise<IChatListItem> {
     const chat = await this.chatRepository.getChatOfUserByReceiverId(userId, receiverId)
 
     if (isNullOrUndefined(chat)) {
@@ -107,7 +108,6 @@ export class ChatsService {
       .createQueryBuilder('contact')
       .select('contact.id', 'id')
       .addSelect('contact.alias', 'alias')
-      .addSelect('userInContact.id', 'userIdInContact')
       .addSelect('userInContact.id', 'userIdInContact')
       .innerJoin('contact.userInContact', 'userInContact')
       .where('contact.user.id = :userId', { userId })
@@ -134,7 +134,7 @@ export class ChatsService {
   }
 }
 
-function createChatListItem(chat: any, message: any | null, contact: any | null) {
+function createChatListItem(chat: any, message: any | null, contact: any | null): IChatListItem {
   return {
     contact: contact
       ? {

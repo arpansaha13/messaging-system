@@ -1,41 +1,37 @@
-import type { MessageType } from './message.types'
+import type { IMessage } from './message.types'
 
 /** Generic type for chat-list item. A = archived */
-export interface ChatListItemType<A = false> {
+export interface IChatListItem {
   contact: {
     id: number
     alias: string
   } | null
-  latestMsg: MessageType | null
-  receiver: {
-    id: number
-    dp: string | null
-    username: string
-    globalName: string
-  }
+  latestMsg: IMessage | null
+  receiver: IUser
   chat: {
     id: number
     muted: boolean
-    archived: A
+    archived: boolean
     pinned: boolean
   }
 }
 
-export interface UserType {
+export interface IUser {
   id: number
   bio: string
   dp: string | null
   username: string
   globalName: string
 }
-export interface AuthUserType extends UserType {
+
+export interface IAuthUser extends IUser {
   email: string
   createdAt: string
   updatedAt: string
   deletedAt: string
 }
 
-export interface ContactType {
+export interface IContact {
   contactId: number
   userId: number
   alias: string

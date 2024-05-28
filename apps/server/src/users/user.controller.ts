@@ -6,7 +6,6 @@ import { UserSearchQuery } from './dto/user-search-query.dto'
 import { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { Request } from 'express'
 import type { User } from 'src/users/user.entity'
-import type { UserConvoResponse } from './dto/user-convo-response.dto'
 
 @Controller('users')
 @UseGuards(AuthGuard())
