@@ -18,9 +18,10 @@ export class ChatRepository extends Repository<Chat> {
       .addSelect('chat.archived', 'archived')
       .addSelect('chat.clearedAt', 'clearedAt')
       .addSelect('receiver.id')
-      .addSelect('receiver.globalName')
       .addSelect('receiver.dp')
+      .addSelect('receiver.bio')
       .addSelect('receiver.username')
+      .addSelect('receiver.globalName')
       .innerJoin('chat.receiver', 'receiver')
       .getRawMany()
   }
@@ -35,9 +36,10 @@ export class ChatRepository extends Repository<Chat> {
       .addSelect('chat.archived', 'archived')
       .addSelect('chat.clearedAt', 'clearedAt')
       .addSelect('receiver.id')
-      .addSelect('receiver.globalName')
       .addSelect('receiver.dp')
+      .addSelect('receiver.bio')
       .addSelect('receiver.username')
+      .addSelect('receiver.globalName')
       .innerJoin('chat.receiver', 'receiver')
       .getRawOne()
   }

@@ -154,6 +154,7 @@ function createChatListItem(chat: any, message: any | null, contact: any | null)
     receiver: {
       id: chat.receiver_id,
       dp: chat.receiver_dp,
+      bio: chat.receiver_bio,
       username: chat.receiver_username,
       globalName: chat.receiver_global_name,
     },
