@@ -7,21 +7,21 @@ import ConvoItemTemplate from '~/components/Convo/ConvoItemTemplate'
 import ConvoItemDropDown from '~/components/Convo/ConvoItemDropDown'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { ConvoItemType } from '@pkg/types'
+import type { ChatListItemType } from '@pkg/types'
 
 export interface UnarchivedConvoItemProps {
   userId: number
   alias: string | null
   dp: string | null
   globalName: string
-  latestMsg: ConvoItemType['latestMsg']
-  pinned?: boolean
+  latestMsg: ChatListItemType['latestMsg']
+  pinned: boolean
   onClick: () => void
 }
 
 export default function Page() {
-  const [convo, setActiveChat] = useStore(state => [state.unarchived, state.setActiveChat], shallow)
-  async function handleClick(convoItem: ConvoItemType) {
+  const [unarchived, setActiveChat] = useStore(state => [state.unarchived, state.setActiveChat], shallow)
+  async function handleClick(convoItem: ChatListItemType) {
     setActiveChat({
       contact: convoItem.contact,
       receiver: convoItem.receiver,
@@ -30,7 +30,7 @@ export default function Page() {
 
   return (
     <ul>
-      {convo.map(convoItem => (
+      {unarchived.map(convoItem => (
         <UnarchivedConvoItem
           key={convoItem.chat.id}
           userId={convoItem.receiver.id}
@@ -46,16 +46,16 @@ export default function Page() {
   )
 }
 
-function UnarchivedConvoItem({ userId, pinned = false, ...remainingProps }: UnarchivedConvoItemProps) {
-  const [activeChat, setActiveChat, archiveRoom, deleteChat, deleteConvo, updateConvoPin] = useStore(
+function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedConvoItemProps) {
+  const [activeChat, setActiveChat, archiveChat, deleteMessages, deleteChat, updateChatListItemMessagePin] = useStore(
     state => [
-      // Initially no rooms would be active - so `activeRoom` may be null
+      // `activeRoom` will be null when no chats are active
       state.activeChat,
       state.setActiveChat,
-      state.archiveRoom,
+      state.archiveChat,
+      state.deleteMessages,
       state.deleteChat,
-      state.deleteConvo,
-      state.updateConvoPin,
+      state.updateChatListItemMessagePin,
     ],
     shallow,
   )
@@ -64,14 +64,14 @@ function UnarchivedConvoItem({ userId, pinned = false, ...remainingProps }: Unar
     {
       slot: 'Archive chat',
       onClick() {
-        archiveRoom(userId)
+        archiveChat(userId)
       },
     },
     {
       slot: 'Delete chat',
       onClick() {
-        deleteChat(userId)
-        deleteConvo(userId, false)
+        deleteMessages(userId)
+        deleteChat(userId, false)
         // If active room is being deleted
         if (activeChat && activeChat.receiver.id === userId) {
           setActiveChat(null)
@@ -82,9 +82,9 @@ function UnarchivedConvoItem({ userId, pinned = false, ...remainingProps }: Unar
       slot: !pinned ? 'Pin chat' : 'Unpin chat',
       onClick() {
         if (!pinned) {
-          updateConvoPin(userId, true)
+          updateChatListItemMessagePin(userId, true)
         } else {
-          updateConvoPin(userId, false)
+          updateChatListItemMessagePin(userId, false)
         }
       },
     },

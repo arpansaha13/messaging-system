@@ -31,7 +31,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   const router = useRouter()
 
   const [authUser, setAuthUser] = useAuthStore(state => [state.authUser!, state.setAuthUser], shallow)
-  const [initConvo, initContactStore] = useStore(state => [state.initConvo, state.initContactStore], shallow)
+  const [initChatList, initContactStore] = useStore(state => [state.initChatList, state.initContactStore], shallow)
 
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 
@@ -42,7 +42,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
       } else {
         _fetch('users/me').then((authUserRes: AuthUserResType) => {
           setAuthUser(authUserRes)
-          Promise.all([initConvo(), initContactStore()]).then(() => setLoaded(true))
+          Promise.all([initChatList(), initContactStore()]).then(() => setLoaded(true))
         })
       }
     })

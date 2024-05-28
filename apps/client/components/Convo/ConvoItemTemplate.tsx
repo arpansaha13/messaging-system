@@ -6,13 +6,13 @@ import MsgStatusIcon from '../MsgStatusIcon'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
-import type { ConvoItemType } from '@pkg/types'
+import type { ChatListItemType } from '@pkg/types'
 
 interface ConvoItemTemplateProps {
   userId: number
   alias: string | null
   dp: string | null
-  latestMsg: ConvoItemType['latestMsg']
+  latestMsg: ChatListItemType['latestMsg']
   globalName: string
   children: React.ReactNode
   onClick: () => void
@@ -23,7 +23,7 @@ export default function ConvoItemTemplate(props: Readonly<ConvoItemTemplateProps
 
   const authUser = useAuthStore(state => state.authUser)!
 
-  // Initially no rooms would be active - so `activeChat` may be null
+  // If no chat is selected `activeChat` will be null
   const [activeChat] = useStore(state => [state.activeChat], shallow)
 
   function getDateTime() {

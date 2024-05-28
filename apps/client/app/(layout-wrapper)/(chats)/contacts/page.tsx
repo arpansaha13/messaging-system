@@ -20,7 +20,7 @@ interface SearchResultsProps {
 }
 
 export default function Page() {
-  const [searchConvo, setActiveChat] = useStore(state => [state.searchConvo, state.setActiveChat], shallow)
+  const [setActiveChat] = useStore(state => [state.setActiveChat], shallow)
 
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
@@ -42,7 +42,7 @@ export default function Page() {
     [value],
   )
 
-  async function handleClick(contact: ContactType) {
+  function handleClick(contact: ContactType) {
     setActiveChat({
       contact: {
         id: contact.contactId,
@@ -50,12 +50,11 @@ export default function Page() {
       },
       receiver: {
         id: contact.userId,
-        username: contact.username,
         dp: contact.dp,
+        username: contact.username,
         globalName: contact.globalName,
       },
     })
-    const convo = searchConvo(contact.userId)
   }
 
   return (
@@ -81,7 +80,7 @@ function Contacts({ handleClick }: ContactsProps) {
         <h3>{letter}</h3>
       </div>
 
-      <ul role="list">
+      <ul>
         {contacts[letter as keyof typeof contacts].map(contact => (
           <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
         ))}
@@ -92,7 +91,7 @@ function Contacts({ handleClick }: ContactsProps) {
 
 function SearchResults({ results, handleClick }: SearchResultsProps) {
   return (
-    <ul role="list" className="py-3">
+    <ul className="py-3">
       {results.map(contact => (
         <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
       ))}

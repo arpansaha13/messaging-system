@@ -2,7 +2,7 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
 import { MessageStatus } from '@pkg/types'
 import type { Slice } from '~/store/types.store'
-import type { MessageType, ConvoItemType, MsgSendingType } from '@pkg/types'
+import type { MessageType, ChatListItemType, MsgSendingType } from '@pkg/types'
 
 export interface ChatStoreType {
   /**
@@ -15,7 +15,7 @@ export interface ChatStoreType {
   /** Messages that are newly created and are being sent. */
   tempChats: Map<number, Map<string, MsgSendingType>>
 
-  activeChat: Pick<ConvoItemType<boolean>, 'receiver' | 'contact'> | null
+  activeChat: Pick<ChatListItemType<boolean>, 'receiver' | 'contact'> | null
   getActiveChat: () => ChatStoreType['activeChat']
   setActiveChat: (newChatInfo: ChatStoreType['activeChat']) => void
 
@@ -29,7 +29,7 @@ export interface ChatStoreType {
   ) => void
 
   clearChat: (receiverId: number) => void
-  deleteChat: (receiverId: number) => void
+  deleteMessages: (receiverId: number) => void
 
   getTempMessage: (receiverId: number, hash: string) => MsgSendingType
   deleteTempMessage: (receiverId: number, hash: string) => void
@@ -109,7 +109,7 @@ export const useChatStore: Slice<ChatStoreType> = (set, get) => ({
     })
   },
 
-  deleteChat(receiverId) {
+  deleteMessages(receiverId) {
     set(state => {
       _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
       state.chats.delete(receiverId)

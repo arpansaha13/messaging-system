@@ -1,7 +1,7 @@
 import { enableMapSet } from 'immer'
 import { immer } from 'zustand/middleware/immer'
 import { createWithEqualityFn } from 'zustand/traditional'
-import { type ConvoStoreType, useConvoStore } from './slices/useConvoStore'
+import { type ChatListStoreType, useChatListStore } from './slices/useChatListStore'
 import { type ChatStoreType, useChatStore } from './slices/useChatStore'
 import { type ContactStoreType, useContactStore } from './slices/useContactStore'
 import { type DraftStoreType, useDraftStore } from './slices/useDraftStore'
@@ -9,7 +9,7 @@ import { type NotificationStateType, useNotificationState } from './slices/useNo
 import { type TypingStateType, useTypingState } from './slices/useTypingState'
 
 export interface StoreType
-  extends ConvoStoreType,
+  extends ChatListStoreType,
     ChatStoreType,
     ContactStoreType,
     DraftStoreType,
@@ -20,7 +20,7 @@ enableMapSet()
 
 export const useStore = createWithEqualityFn<StoreType>()(
   immer((...a) => ({
-    ...useConvoStore(...a),
+    ...useChatListStore(...a),
     ...useChatStore(...a),
     ...useContactStore(...a),
     ...useDraftStore(...a),

@@ -1,7 +1,7 @@
 import type { MessageType } from './message.types'
 
 /** Generic type for chat-list item. A = archived */
-export interface ConvoItemType<A = false> {
+export interface ChatListItemType<A = false> {
   contact: {
     id: number
     alias: string
@@ -25,6 +25,7 @@ export interface UserType {
   id: number
   bio: string
   dp: string | null
+  username: string
   globalName: string
 }
 export interface AuthUserType extends UserType {

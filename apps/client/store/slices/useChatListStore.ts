@@ -1,53 +1,63 @@
 import _fetch from '~/utils/_fetch'
 import type { Slice } from '~/store/types.store'
-import type { ConvoItemType, MessageStatus } from '@pkg/types'
+import type { ChatListItemType, MessageStatus } from '@pkg/types'
 
-type ConvoResponse = {
-  archived: ConvoItemType
-  unarchived: ConvoItemType
+type ChatsResponse = {
+  archived: ChatListItemType<true>
+  unarchived: ChatListItemType
 }
 
-export interface ConvoStoreType {
-  unarchived: ConvoItemType[]
-  archived: ConvoItemType<true>[]
+export interface ChatListStoreType {
+  unarchived: ChatListItemType[]
+  archived: ChatListItemType<true>[]
 
-  initConvo: () => Promise<void>
+  initChatList: () => Promise<void>
 
-  updateConvo: (receiverId: number, latestMsg: ConvoItemType['latestMsg']) => void
-  updateConvoStatus: (
+  insertUnarchivedChat: (newItem: ChatListItemType) => void
+
+  updateChatListItemMessage: (receiverId: number, latestMsg: ChatListItemType['latestMsg']) => void
+
+  updateChatListItemMessageStatus: (
     receiverId: number,
     messageId: number,
     latestMsgStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
   ) => void
 
-  searchConvo: (receiverId: number) => ConvoItemType<boolean> | null
+  updateChatListItemMessagePin: (receiverId: number, pinned: boolean) => void
 
-  insertUnarchivedConvo: (newItem: ConvoItemType) => void
+  clearChatListItemMessage: (receiverId: number) => void
 
-  deleteConvo: (receiverId: number, archived?: boolean) => void
+  searchChat: (receiverId: number) => ChatListItemType<boolean> | null
 
-  clearConvoLatestMsg: (receiverId: number) => void
+  archiveChat: (receiverId: number) => void
 
-  archiveRoom: (receiverId: number) => void
-  unarchiveRoom: (receiverId: number) => void
-  updateConvoPin: (receiverId: number, pinned: boolean) => void
+  unarchiveChat: (receiverId: number) => void
+
+  deleteChat: (receiverId: number, archived?: boolean) => void
 }
 
-export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
+export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
   unarchived: [],
 
   archived: [],
 
-  async initConvo() {
-    const { unarchived, archived }: ConvoResponse = await _fetch('chats')
+  async initChatList() {
+    const { unarchived, archived }: ChatsResponse = await _fetch('chats')
     set(() => ({ unarchived, archived }))
   },
 
-  updateConvo(receiverId, latestMsg) {
-    set((state: ConvoStoreType) => {
+  insertUnarchivedChat(newItem) {
+    set(state => {
+      state.unarchived.push(newItem)
+      state.unarchived.sort(sortConvoCompareFn)
+    })
+  },
+
+  updateChatListItemMessage(receiverId, latestMsg) {
+    set(state => {
       let idx = findRoomIndex(receiverId, state.archived)
       if (idx !== null) {
-        let convoItem = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
+        let convoItem = state.archived.splice(idx, 1)[0] as unknown as ChatListItemType<false>
         convoItem.chat.archived = false
         state.unarchived.push(convoItem)
         _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
@@ -61,7 +71,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     })
   },
 
-  updateConvoStatus(receiverId, messageId, latestMsgStatus) {
+  updateChatListItemMessageStatus(receiverId, messageId, latestMsgStatus) {
     set(state => {
       let idx = findRoomIndex(receiverId, state.unarchived)
       if (idx !== null) {
@@ -78,7 +88,19 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     })
   },
 
-  clearConvoLatestMsg(receiverId) {
+  updateChatListItemMessagePin(receiverId, pinned) {
+    set(state => {
+      const idx = findRoomIndex(receiverId, state.unarchived)
+      if (idx === null) return
+      const convo = state.unarchived[idx]
+      convo.chat.pinned = pinned
+      state.unarchived.sort(sortConvoCompareFn)
+      if (pinned) _fetch(`chats/${receiverId}/pin`, { method: 'PATCH' })
+      else _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
+    })
+  },
+
+  clearChatListItemMessage(receiverId) {
     set(state => {
       let idx = findRoomIndex(receiverId, state.unarchived)
       if (idx !== null) state.unarchived[idx].latestMsg = null
@@ -88,7 +110,7 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     })
   },
 
-  searchConvo(receiverId) {
+  searchChat(receiverId) {
     const convo = get().unarchived
     let idx = convo.findIndex(item => item.receiver.id === receiverId)
     if (idx !== -1) return convo[idx]
@@ -100,18 +122,11 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     return null
   },
 
-  insertUnarchivedConvo(newItem) {
-    set((state: ConvoStoreType) => {
-      state.unarchived.push(newItem)
-      state.unarchived.sort(sortConvoCompareFn)
-    })
-  },
-
-  archiveRoom(receiverId) {
-    set((state: ConvoStoreType) => {
+  archiveChat(receiverId) {
+    set(state => {
       const idx = findRoomIndex(receiverId, state.unarchived)
       if (idx === null) return
-      const convo = state.unarchived.splice(idx, 1)[0] as unknown as ConvoItemType<true>
+      const convo = state.unarchived.splice(idx, 1)[0] as unknown as ChatListItemType<true>
       convo.chat.archived = true
       if (convo.chat.pinned) {
         convo.chat.pinned = false
@@ -123,11 +138,11 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     })
   },
 
-  unarchiveRoom(receiverId) {
-    set((state: ConvoStoreType) => {
+  unarchiveChat(receiverId) {
+    set(state => {
       const idx = findRoomIndex(receiverId, state.archived)
       if (idx === null) return
-      const convo = state.archived.splice(idx, 1)[0] as unknown as ConvoItemType<false>
+      const convo = state.archived.splice(idx, 1)[0] as unknown as ChatListItemType<false>
       convo.chat.archived = false
       state.unarchived.push(convo)
       state.unarchived.sort(sortConvoCompareFn)
@@ -135,8 +150,8 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
     })
   },
 
-  deleteConvo(receiverId, archived = false) {
-    set((state: ConvoStoreType) => {
+  deleteChat(receiverId, archived = false) {
+    set(state => {
       const list = archived ? state.archived : state.unarchived
       const idx = findRoomIndex(receiverId, list)
       if (idx === null) return
@@ -144,27 +159,15 @@ export const useConvoStore: Slice<ConvoStoreType> = (set, get) => ({
       // _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
     })
   },
-
-  updateConvoPin(receiverId, pinned) {
-    set((state: ConvoStoreType) => {
-      const idx = findRoomIndex(receiverId, state.unarchived)
-      if (idx === null) return
-      const convo = state.unarchived[idx]
-      convo.chat.pinned = pinned
-      state.unarchived.sort(sortConvoCompareFn)
-      if (pinned) _fetch(`chats/${receiverId}/pin`, { method: 'PATCH' })
-      else _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
-    })
-  },
 })
 
-function findRoomIndex(receiverId: number, list: ReadonlyArray<ConvoItemType<boolean>>): number | null {
+function findRoomIndex(receiverId: number, list: ReadonlyArray<ChatListItemType<boolean>>): number | null {
   const idx = list.findIndex(val => val.receiver.id === receiverId)
   if (idx === -1) return null
   return idx
 }
 
-const sortConvoCompareFn = (a: Readonly<ConvoItemType<boolean>>, b: Readonly<ConvoItemType<boolean>>) => {
+const sortConvoCompareFn = (a: Readonly<ChatListItemType<boolean>>, b: Readonly<ChatListItemType<boolean>>) => {
   // Pinned chats on top
   if (a.chat.pinned && !b.chat.pinned) return -1
   if (!a.chat.pinned && b.chat.pinned) return 1
