@@ -66,7 +66,7 @@ export interface SocketOnEventPayload {
   'receive-message': IReceiverOnMessage
   'sent': ISenderOnSent
   'delivered': ISenderOnDelivered
-  'read': ISenderOnRead
+  'read': ISenderOnRead[]
   'typing': IReceiverOnTyping
 }
 
@@ -75,7 +75,7 @@ export interface SocketEmitEventPayload {
   'send-message': ISenderEmitMessage
   'delivered': IReceiverEmitDelivered
   'typing': ISenderEmitTyping
-  'read': IReceiverEmitRead
+  'read': IReceiverEmitRead | IReceiverEmitRead[]
 }
 
 export type SocketOnEvent = keyof SocketOnEventPayload
