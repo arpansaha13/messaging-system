@@ -30,7 +30,7 @@ export class ContactRepository extends Repository<Contact> {
 
   getContactsByUserIdAndQuery(userId: User['id'], search: string) {
     return this.createQueryBuilder('contact')
-      .innerJoinAndSelect('contact.userInContact', 'userInContact')
+      .innerJoin('contact.userInContact', 'userInContact')
       .select([
         'contact.id',
         'contact.alias',
@@ -43,9 +43,19 @@ export class ContactRepository extends Repository<Contact> {
       .where('contact.user.id = :userId', { userId })
       .andWhere(
         new Brackets(qb => {
-          qb.where('contact.alias ILIKE :search', { search: `%${search}%` })
-            .orWhere('userInContact.globalName ILIKE :search', { search: `%${search}%` })
-            .orWhere('userInContact.username ILIKE :search', { search: `%${search}%` })
+          // Search the beginning of each word
+          // TODO: Find an efficient way to search
+          const params = {
+            firstWord: `${search}%`,
+            remainingWords: `% ${search}%`,
+          }
+
+          qb.where('contact.alias ILIKE :firstWord OR contact.alias ILIKE :remainingWords', params)
+            .orWhere(
+              'userInContact.globalName ILIKE :firstWord OR userInContact.globalName ILIKE :remainingWords',
+              params,
+            )
+            .orWhere('userInContact.username ILIKE :firstWord OR userInContact.username ILIKE :remainingWords', params)
         }),
       )
       .getMany()
