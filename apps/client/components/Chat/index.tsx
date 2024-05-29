@@ -1,6 +1,6 @@
-import ChatBody from './ChatBody'
-import ChatHeader from './ChatHeader'
-import ChatFooter from './ChatFooter'
+import ChatBody from './Body'
+import ChatHeader from './Header'
+import ChatFooter from './Footer'
 
 export default function Chat() {
   return (

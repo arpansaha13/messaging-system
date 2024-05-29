@@ -1,10 +1,20 @@
 import { useEffect, useRef } from 'react'
 import { shallow } from 'zustand/shallow'
+import { format } from 'date-fns'
+import { classNames } from '@arpansaha13/utils'
+import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
-import Message from './Message'
-import TempMessage from './TempMessage'
+import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import type { IMessage, IMessageSending } from '@pkg/types'
+
+interface MessageProps {
+  message: IMessage
+}
+
+interface TempMessageProps {
+  message: IMessageSending
+}
 
 export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
@@ -90,4 +100,42 @@ function Messages() {
   }
 
   return renderMap
+}
+
+function Message({ message }: Readonly<MessageProps>) {
+  const authUser = useAuthStore(state => state.authUser)!
+  const authUserIsSender = authUser.id === message.senderId
+
+  return (
+    <div
+      className={classNames(
+        'lg:max-w-lg xl:max-w-xl w-max mb-4 last:mb-0 px-2 pt-1.5 pb-2.5 text-sm rounded-lg text-gray-900 dark:text-gray-100 space-y-1.5 border-b border-gray-400/50 dark:border-none relative',
+        authUserIsSender ? 'bg-green-100 dark:bg-emerald-800 ml-auto' : 'bg-white dark:bg-slate-700',
+      )}
+    >
+      <span className="break-words">{message.content}</span>
+
+      <div className="min-w-[4.5rem] text-xs text-gray-800 dark:text-gray-300 inline-flex items-end justify-end">
+        <p className="flex items-center absolute right-2 bottom-1">
+          <span className="mr-1">{format(message.createdAt, 'h:mm a')}</span>
+          {authUserIsSender && <MsgStatusIcon status={message.status} />}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function TempMessage({ message }: Readonly<TempMessageProps>) {
+  return (
+    <div className="lg:max-w-lg xl:max-w-xl w-max mb-4 last:mb-0 px-2 pt-1.5 pb-2.5 text-sm rounded-lg text-gray-900 dark:text-gray-100 space-y-1.5 border-b border-gray-400/50 dark:border-none relative bg-green-100 dark:bg-emerald-800 ml-auto">
+      <span className="break-words">{message.content}</span>
+
+      <div className="min-w-[4.5rem] text-xs text-gray-800 dark:text-gray-300 inline-flex items-end justify-end">
+        <p className="flex items-center absolute right-2 bottom-1">
+          <span className="mr-1">{format(message.createdInClientAt, 'h:mm a')}</span>
+          <MsgStatusIcon status={message.status} />
+        </p>
+      </div>
+    </div>
+  )
 }
