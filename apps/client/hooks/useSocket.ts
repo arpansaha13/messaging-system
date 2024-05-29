@@ -10,6 +10,7 @@ import { MessageStatus } from '@pkg/types'
 import type {
   IChatListItem,
   IMessage,
+  IReceiverEmitRead,
   SocketEmitEvent,
   SocketEmitEventPayload,
   SocketOnEvent,
@@ -89,17 +90,22 @@ export function useSocketInit() {
 
     if (isNullOrUndefined(messages)) return
 
+    const readEventPayload: IReceiverEmitRead[] = []
+
     for (const message of messages.values()) {
       if (message.senderId === authUser.id || message.status === MessageStatus.READ) continue
 
-      socketWrapper.emit('read', {
+      readEventPayload.push({
         messageId: message.id,
         senderId: activeChat.receiver.id,
         receiverId: authUser.id,
       })
+
       updateChatListItemMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
       updateMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
+
+    socket.emit('read', readEventPayload)
   }, [activeChat, authUser, userMessagesMap])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
@@ -203,9 +209,11 @@ export function useSocketInit() {
       updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
-    socketWrapper.on('read', payload => {
-      updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
-      updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
+    socketWrapper.on('read', payloadArray => {
+      payloadArray.forEach(p => {
+        updateChatListItemMessageStatus(p.receiverId, p.messageId, p.status)
+        updateMessageStatus(p.receiverId, p.messageId, p.status)
+      })
     })
 
     socketWrapper.on('typing', payload => {

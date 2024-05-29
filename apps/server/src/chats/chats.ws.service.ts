@@ -8,7 +8,7 @@ import { Message } from 'src/messages/message.entity'
 import { MessageRepository } from 'src/messages/message.repository'
 import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-recipient.entity'
 import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
-import type { EntityManager } from 'typeorm'
+import { In, type EntityManager } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
 import type {
   IReceiverEmitDelivered,
@@ -150,19 +150,25 @@ export class ChatsWsService {
     })
   }
 
-  async handleRead(payload: IReceiverEmitRead, server: Server) {
+  async handleRead(payload: IReceiverEmitRead | IReceiverEmitRead[], server: Server) {
+    const payloadArray = Array.isArray(payload) ? payload : [payload]
+
     await this.messageRecipientRepository.update(
-      { id: payload.messageId, receiver: { id: payload.receiverId } },
+      {
+        id: In(payloadArray.map(p => p.messageId)),
+        receiver: { id: In(payloadArray.map(p => p.receiverId)) },
+      },
       { status: MessageStatus.READ },
     )
 
-    const senderSocketId = this.clients.get(payload.senderId)
-
-    server.to(senderSocketId).emit('read', {
-      messageId: payload.messageId,
-      receiverId: payload.receiverId,
+    const readPayloadToSender = payloadArray.map(p => ({
+      messageId: p.messageId,
+      receiverId: p.receiverId,
       status: MessageStatus.READ,
-    })
+    }))
+
+    const senderSocketId = this.clients.get(payloadArray[0].senderId)
+    server.to(senderSocketId).emit('read', readPayloadToSender)
   }
 
   handleTyping(payload: ISenderEmitTyping, server: Server) {
