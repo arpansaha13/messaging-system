@@ -1,15 +1,13 @@
-import { InputHTMLAttributes, memo, useRef, type Dispatch, type SetStateAction } from 'react'
-// Icons
-import { ArrowLeftIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/solid'
-import { classNames } from '@arpansaha13/utils'
+import { memo, useRef } from 'react'
+import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/solid'
 
-interface SearchBarProps extends InputHTMLAttributes<HTMLInputElement> {
+interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string
   value: string
-  setValue: Dispatch<SetStateAction<string>>
+  setValue: React.Dispatch<React.SetStateAction<string>>
 }
 
-const SearchBar = ({ value, setValue, id, ...attrs }: SearchBarProps) => {
+const SearchBar = ({ id, value, setValue, ...attrs }: SearchBarProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   function clear() {
@@ -22,6 +20,7 @@ const SearchBar = ({ value, setValue, id, ...attrs }: SearchBarProps) => {
       <label htmlFor={id} className="sr-only">
         Search
       </label>
+
       <div className="relative">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">
           <MagnifyingGlassIcon
@@ -29,6 +28,7 @@ const SearchBar = ({ value, setValue, id, ...attrs }: SearchBarProps) => {
             aria-hidden="true"
           />
         </div>
+
         <input
           ref={inputRef}
           id={id}
@@ -37,7 +37,8 @@ const SearchBar = ({ value, setValue, id, ...attrs }: SearchBarProps) => {
           value={value}
           onChange={e => setValue(e.target.value)}
         />
-        <div className={classNames(value ? 'absolute inset-y-0 right-0 flex items-center pr-2' : 'hidden')}>
+
+        <div className={value ? 'absolute inset-y-0 right-0 flex items-center pr-2' : 'hidden'}>
           <button onClick={clear}>
             <XMarkIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" aria-hidden="true" />
           </button>

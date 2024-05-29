@@ -1,9 +1,7 @@
-import { Type } from 'class-transformer'
-import { IsNotEmpty, IsNumber } from 'class-validator'
+import { IsNotEmpty, IsString } from 'class-validator'
 
 export class UserSearchQuery {
-  @Type(() => Number)
   @IsNotEmpty()
-  @IsNumber()
-  search: number
+  @IsString()
+  text: string
 }

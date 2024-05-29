@@ -23,8 +23,8 @@ export class UserController {
   }
 
   @Get('/search')
-  findUsers(@Req() request: Request, @Query() query: UserSearchQuery): Promise<User> {
-    return this.userService.findUsers(request.user.id, query.search)
+  findUsers(@Req() request: Request, @Query() query: UserSearchQuery): Promise<User[]> {
+    return this.userService.findUsers(request.user.id, query)
   }
 
   @Get('/:userId')
