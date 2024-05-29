@@ -1,18 +1,22 @@
-import { memo, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
 // import { MicrophoneIcon } from '@heroicons/react/24/solid'
 // import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
-import TextArea from './TextArea'
 import { useSocket } from '~/hooks/useSocket'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
 import { generateHash } from '~/utils/generateHash'
 import { MessageStatus } from '@pkg/types'
-import type { KeyboardEvent } from 'react'
 import type { ISenderEmitTyping, IMessageSending } from '@pkg/types'
 
-const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) => {
+interface TextAreaProps {
+  value: string
+  setValue: React.Dispatch<React.SetStateAction<string>>
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void
+}
+
+const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: React.KeyboardEvent) => {
   if (metaKey || ctrlKey || altKey) return false
   // 0...9
   if (keyCode >= 48 && keyCode <= 57) return true
@@ -22,7 +26,7 @@ const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: KeyboardEvent) =
   return false
 }
 
-const ChatFooter = () => {
+export default function ChatFooter() {
   const { socket } = useSocket()
 
   const authUser = useAuthStore(state => state.authUser)!
@@ -61,7 +65,7 @@ const ChatFooter = () => {
     [value],
   )
 
-  function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (isReady() && isTypedCharGood(e)) {
       socket.emit('typing', typingPayload(true))
     }
@@ -127,4 +131,36 @@ const ChatFooter = () => {
   )
 }
 
-export default memo(ChatFooter)
+function TextArea({ value, setValue, onKeyDown }: TextAreaProps) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setValue(e.target.value)
+  }
+
+  // Shift focus to the textarea on every render
+  useEffect(() => {
+    inputRef.current?.focus()
+  })
+
+  return (
+    <div>
+      <label htmlFor="type-area" className="sr-only">
+        Type a message
+      </label>
+      <div className="relative">
+        <input
+          ref={inputRef}
+          type="text"
+          id="type-area"
+          name="type-area"
+          className="block w-full rounded-lg bg-white dark:bg-gray-700/70 text-sm text-gray-500 dark:text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none shadow-sm shadow-gray-300/30 dark:shadow-none"
+          placeholder="Type a message"
+          value={value}
+          onChange={handleChange}
+          onKeyDown={onKeyDown}
+        />
+      </div>
+    </div>
+  )
+}
