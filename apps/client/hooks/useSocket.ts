@@ -46,7 +46,6 @@ export function useSocketInit() {
     activeChat,
     userMessagesMap,
     getUserMessagesMap,
-    getActiveChat,
     setTyping,
     updateMessageStatus,
     updateChatListItemMessage,
@@ -62,7 +61,6 @@ export function useSocketInit() {
       state.activeChat,
       state.userMessagesMap,
       state.getUserMessagesMap,
-      state.getActiveChat,
       state.setTypingState,
       state.updateMessageStatus,
       state.updateChatListItemMessage,
@@ -154,7 +152,11 @@ export function useSocketInit() {
         insertUnarchivedChat(convo)
       }
 
-      socketWrapper.emit('delivered', { messageId: message.id, receiverId: authUser.id, senderId: payload.senderId })
+      socketWrapper.emit('delivered', {
+        messageId: message.id,
+        receiverId: authUser.id,
+        senderId: payload.senderId,
+      })
 
       // No need to update status if the chat has never been fetched
       // Because they will arrive with proper data whenever fetched (updated on server)
@@ -162,19 +164,6 @@ export function useSocketInit() {
       if (!updatedChats.has(payload.senderId)) return
 
       upsertMessages(payload.senderId, [message])
-
-      const updatedActiveChat = getActiveChat()
-      const chatIsOpen = updatedActiveChat && updatedActiveChat.receiver.id === payload.senderId
-
-      if (chatIsOpen) {
-        socketWrapper.emit('read', {
-          receiverId: authUser.id,
-          senderId: payload.senderId,
-          messageId: payload.messageId,
-        })
-        updateChatListItemMessageStatus(payload.senderId, payload.messageId, payload.status)
-        updateMessageStatus(payload.senderId, payload.messageId, payload.status)
-      }
     })
 
     socketWrapper.on('sent', async payload => {
