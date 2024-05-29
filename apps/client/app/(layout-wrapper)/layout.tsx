@@ -3,14 +3,14 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { forwardRef, useEffect, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import {
   ArchiveBoxIcon,
   ChatBubbleBottomCenterTextIcon,
   ChatBubbleOvalLeftEllipsisIcon,
   Cog6ToothIcon,
-  UserPlusIcon,
+  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline'
 import { useDark } from '~/hooks/useDark'
 import { useSocketInit } from '~/hooks/useSocket'
@@ -24,6 +24,36 @@ import type { AuthUserResType } from '@pkg/types'
 interface LayoutWrapperProps {
   children: React.ReactNode
 }
+
+const links = Object.freeze([
+  {
+    to: '/',
+    icon: ChatBubbleOvalLeftEllipsisIcon,
+  },
+  {
+    to: '/contacts',
+    icon: ChatBubbleBottomCenterTextIcon,
+  },
+  {
+    to: '/search',
+    icon: MagnifyingGlassIcon,
+  },
+  {
+    to: '/archived',
+    icon: ArchiveBoxIcon,
+  },
+  {
+    to: '/settings',
+    icon: Cog6ToothIcon,
+  },
+])
+
+const LinkIcon = forwardRef((props: any, ref) => {
+  const { idx, ...remaining } = props
+  const IconComponent = links[idx].icon
+
+  return <IconComponent ref={ref} {...remaining} />
+})
 
 export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
   useDark()
@@ -58,25 +88,15 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
       <Notification />
 
       <nav className="flex-shrink-0 py-4 w-16 h-full flex flex-col items-center bg-gray-100 dark:bg-gray-900 shadow-md">
-        <Link href="/" className="block">
-          <ChatBubbleOvalLeftEllipsisIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
-
-        <Link href="/contacts" className="mt-3 block">
-          <ChatBubbleBottomCenterTextIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
-
-        <Link href="/add-contact" className="mt-3 block">
-          <UserPlusIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
-
-        <Link href="/archived" className="mt-auto block">
-          <ArchiveBoxIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
-
-        <Link href="/settings" className="mt-3 block">
-          <Cog6ToothIcon className="w-6 h-6 flex-shrink-0" />
-        </Link>
+        {links.map((link, i) => (
+          <Link
+            key={link.to}
+            href={link.to}
+            className="block mt-4 first:mt-0 [&:nth-child(4)]:mt-auto hover:text-emerald-500 transition-colors"
+          >
+            <LinkIcon idx={i} className="w-6 h-6 flex-shrink-0" />
+          </Link>
+        ))}
 
         <Link href="/settings/profile" className="mt-4 block">
           <Avatar src={authUser.dp} width={2} height={2} />
