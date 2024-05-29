@@ -5,7 +5,7 @@ import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import SearchBar from '~common/SearchBar'
-import ContactListItem from '~/components/ContactList/ContactListItem'
+import SearchListItem from '~common/SearchListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { IContact } from '@pkg/types'
@@ -60,7 +60,14 @@ export default function Page() {
 
   return (
     <div className="py-2">
-      <SearchBar id="search" name="search" placeholder="Search" type="text" value={value} setValue={setValue} />
+      <SearchBar
+        id="search"
+        name="search"
+        placeholder="Search contacts"
+        type="text"
+        value={value}
+        setValue={setValue}
+      />
 
       {isNullOrUndefined(searchResults) ? (
         <Contacts handleClick={handleClick} />
@@ -71,7 +78,7 @@ export default function Page() {
   )
 }
 
-function Contacts({ handleClick }: ContactsProps) {
+function Contacts({ handleClick }: Readonly<ContactsProps>) {
   const contacts = useStore(state => state.contacts)
 
   return Object.keys(contacts).map(letter => (
@@ -83,18 +90,32 @@ function Contacts({ handleClick }: ContactsProps) {
 
       <ul>
         {contacts[letter as keyof typeof contacts].map(contact => (
-          <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
+          <SearchListItem
+            key={contact.contactId}
+            image={contact.dp}
+            title={contact.alias}
+            subtitle={`${contact.globalName} • @${contact.username}`}
+            text={contact.bio}
+            onClick={() => handleClick(contact)}
+          />
         ))}
       </ul>
     </div>
   ))
 }
 
-function SearchResults({ results, handleClick }: SearchResultsProps) {
+function SearchResults({ results, handleClick }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(contact => (
-        <ContactListItem key={contact.contactId} {...contact} onClick={() => handleClick(contact)} />
+        <SearchListItem
+          key={contact.contactId}
+          image={contact.dp}
+          title={contact.alias}
+          subtitle={`${contact.globalName} • @${contact.username}`}
+          text={contact.bio}
+          onClick={() => handleClick(contact)}
+        />
       ))}
     </ul>
   )
