@@ -11,7 +11,7 @@ interface DropDownProps {
   }[]
 }
 
-const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
+export default function ChatListItemDropDown({ menuItems }: DropDownProps) {
   return (
     <Menu as="div" className="relative text-left">
       {({ open }) => (
@@ -19,7 +19,7 @@ const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
           <div className="h-full flex items-center">
             <Menu.Button
               className="inline-flex items-center justify-center focus:outline-none"
-              onClick={(e: MouseEvent) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <ChevronDownIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
             </Menu.Button>
@@ -67,5 +67,3 @@ const ConvoItemDropDown = ({ menuItems }: DropDownProps) => {
     </Menu>
   )
 }
-// Frequently updates when parent re-renders.
-export default ConvoItemDropDown
