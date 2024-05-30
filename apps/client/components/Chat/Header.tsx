@@ -3,61 +3,49 @@ import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
 // import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Avatar from '~common/Avatar'
-import HeaderDropDown from '../HeaderDropDown'
 import { useStore } from '~/store'
 
 const ChatHeader = () => {
-  const [typingState, activeChat, clearChatListItemMessage, clearMessages] = useStore(
-    state => [state.typingState, state.activeChat!, state.clearChatListItemMessage, state.clearMessages],
-    shallow,
-  )
+  const [typingState, activeChat] = useStore(state => [state.typingState, state.activeChat!], shallow)
 
-  const chatMenuItems = [
-    // {
-    //   slot: 'Contact info',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
-    // {
-    //   slot: 'Select Messages',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
-    // {
-    //   slot: 'Close chat',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
-    // {
-    //   slot: 'Mute notifications',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
-    // {
-    //   slot: 'Disappearing messages',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
-    // Show 'Clear messages' only if the room exists
-    {
-      slot: 'Clear messages',
-      onClick() {
-        clearMessages(activeChat.receiver.id)
-        clearChatListItemMessage(activeChat.receiver.id)
-      },
-    },
-    // {
-    //   slot: 'Delete chat',
-    //   onClick() {
-    //     console.log('clicked')
-    //   },
-    // },
-  ]
+  // const chatMenuItems = [
+  //   {
+  //     slot: 'Contact info',
+  //     onClick() {
+  //       console.log('clicked')
+  //     },
+  //   },
+  //   {
+  //     slot: 'Select Messages',
+  //     onClick() {
+  //       console.log('clicked')
+  //     },
+  //   },
+  //   {
+  //     slot: 'Close chat',
+  //     onClick() {
+  //       console.log('clicked')
+  //     },
+  //   },
+  //   {
+  //     slot: 'Mute notifications',
+  //     onClick() {
+  //       console.log('clicked')
+  //     },
+  //   },
+  //   {
+  //     slot: 'Disappearing messages',
+  //     onClick() {
+  //       console.log('clicked')
+  //     },
+  //   },
+  //   {
+  //     slot: 'Delete chat',
+  //     onClick() {
+  //       console.log('clicked')
+  //     },
+  //   },
+  // ]
 
   return (
     <>
@@ -86,13 +74,11 @@ const ChatHeader = () => {
         </div>
       </div>
 
-      <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-2">
-        {/* <button className="p-2 btn-icon">
+      {/* <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-2">
+        <button className="p-2 btn-icon">
           <MagnifyingGlassIcon className="w-6 h-6 flex-shrink-0" />
-        </button> */}
-
-        <HeaderDropDown menuItems={chatMenuItems} width={14.5} />
-      </div>
+        </button>
+      </div> */}
     </>
   )
 }
