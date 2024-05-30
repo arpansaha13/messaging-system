@@ -3,8 +3,8 @@
 import { shallow } from 'zustand/shallow'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
-import ConvoItemTemplate from '~/components/Convo/ConvoItemTemplate'
-import ConvoItemDropDown from '~/components/Convo/ConvoItemDropDown'
+import ChatListItemTemplate from '~/components/ChatListItem/Template'
+import ChatListItemDropDown from '~/components/ChatListItem/DropDown'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { IChatListItem } from '@pkg/types'
@@ -79,21 +79,17 @@ function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedCo
       },
     },
     {
-      slot: !pinned ? 'Pin chat' : 'Unpin chat',
+      slot: pinned ? 'Unpin chat' : 'Pin chat',
       onClick() {
-        if (!pinned) {
-          updateChatListItemMessagePin(userId, true)
-        } else {
-          updateChatListItemMessagePin(userId, false)
-        }
+        updateChatListItemMessagePin(userId, !pinned)
       },
     },
   ]
 
   return (
-    <ConvoItemTemplate {...remainingProps} userId={userId}>
+    <ChatListItemTemplate {...remainingProps} userId={userId}>
       {pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
-      <ConvoItemDropDown menuItems={menuItems} />
-    </ConvoItemTemplate>
+      <ChatListItemDropDown menuItems={menuItems} />
+    </ChatListItemTemplate>
   )
 }

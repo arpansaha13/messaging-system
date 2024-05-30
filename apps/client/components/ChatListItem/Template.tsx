@@ -8,7 +8,7 @@ import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
 import type { IChatListItem } from '@pkg/types'
 
-interface ConvoItemTemplateProps {
+interface ChatListItemTemplateProps {
   userId: number
   alias: string | null
   dp: string | null
@@ -18,7 +18,7 @@ interface ConvoItemTemplateProps {
   onClick: () => void
 }
 
-export default function ConvoItemTemplate(props: Readonly<ConvoItemTemplateProps>) {
+export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplateProps>) {
   const { userId, alias, dp, latestMsg, globalName, children, onClick } = props
 
   const authUser = useAuthStore(state => state.authUser)!
