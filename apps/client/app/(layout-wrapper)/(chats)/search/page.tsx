@@ -6,6 +6,7 @@ import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
+import GlobalName from '~/components/GlobalName'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { IUser } from '@pkg/types'
@@ -74,8 +75,8 @@ function SearchResults({ results, handleClick }: Readonly<SearchResultsProps>) {
         <StackedListItem
           key={user.id}
           image={user.dp}
-          title={user.contact ? user.contact.alias : user.globalName}
-          subtitle={user.contact ? `${user.globalName} • ${user.username}` : `@${user.username}`}
+          title={user.contact ? user.contact.alias : <GlobalName name={user.globalName} />}
+          subtitle={user.contact ? `${user.globalName} • @${user.username}` : `@${user.username}`}
           text={user.bio}
           onClick={() => handleClick(user)}
         />

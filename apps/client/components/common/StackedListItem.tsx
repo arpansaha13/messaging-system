@@ -5,8 +5,8 @@ import type { IContextMenuItem } from '@pkg/types'
 
 interface StackedListItemProps {
   image: string | null
-  title: string
-  subtitle: string
+  title: string | React.ReactNode
+  subtitle: string | React.ReactNode
   text: string
   menuItems?: IContextMenuItem[]
   onClick: () => void

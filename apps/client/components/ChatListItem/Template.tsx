@@ -4,7 +4,8 @@ import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import Avatar from '~common/Avatar'
 import ContextMenu from '~common/ContextMenu'
-import MsgStatusIcon from '../MsgStatusIcon'
+import GlobalName from '~/components/GlobalName'
+import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
@@ -90,9 +91,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
 
         <div className="ml-4 py-3 w-full">
           <div className="flex justify-between items-center">
-            <p className="text-base text-black dark:text-gray-50">
-              {alias ?? <span className="italic">{`~${globalName}`}</span>}
-            </p>
+            <p className="text-base text-black dark:text-gray-50">{alias ?? <GlobalName name={globalName} />}</p>
             {latestMsg && (
               <p
                 className={classNames(
