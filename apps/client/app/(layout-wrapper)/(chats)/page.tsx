@@ -46,14 +46,25 @@ export default function Page() {
 }
 
 function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedConvoItemProps) {
-  const [activeChat, setActiveChat, archiveChat, deleteMessages, deleteChat, updateChatListItemMessagePin] = useStore(
+  const [
+    activeChat,
+    setActiveChat,
+    archiveChat,
+    clearMessages,
+    deleteMessages,
+    deleteChat,
+    clearChatListItemMessage,
+    updateChatListItemMessagePin,
+  ] = useStore(
     state => [
       // `activeRoom` will be null when no chats are active
       state.activeChat,
       state.setActiveChat,
       state.archiveChat,
+      state.clearMessages,
       state.deleteMessages,
       state.deleteChat,
+      state.clearChatListItemMessage,
       state.updateChatListItemMessagePin,
     ],
     shallow,
@@ -61,9 +72,22 @@ function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedCo
 
   const menuItems = [
     {
+      slot: pinned ? 'Unpin chat' : 'Pin chat',
+      onClick() {
+        updateChatListItemMessagePin(userId, !pinned)
+      },
+    },
+    {
       slot: 'Archive chat',
       onClick() {
         archiveChat(userId)
+      },
+    },
+    {
+      slot: 'Clear messages',
+      onClick() {
+        clearMessages(userId)
+        clearChatListItemMessage(userId)
       },
     },
     {
@@ -75,12 +99,6 @@ function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedCo
         if (activeChat && activeChat.receiver.id === userId) {
           setActiveChat(null)
         }
-      },
-    },
-    {
-      slot: pinned ? 'Unpin chat' : 'Pin chat',
-      onClick() {
-        updateChatListItemMessagePin(userId, !pinned)
       },
     },
   ]
