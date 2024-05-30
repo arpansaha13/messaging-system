@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import Avatar from '~common/Avatar'
+import ContextMenu from '~common/ContextMenu'
 import MsgStatusIcon from '../MsgStatusIcon'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
@@ -15,16 +17,27 @@ interface ChatListItemTemplateProps {
   latestMsg: IChatListItem['latestMsg']
   globalName: string
   children: React.ReactNode
-  onClick: () => void
+  menuItems?: {
+    slot: string | React.ReactNode
+    onClick: () => void
+  }[]
+  onClick: (e: React.MouseEvent) => void
 }
 
 export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplateProps>) {
-  const { userId, alias, dp, latestMsg, globalName, children, onClick } = props
-
-  const authUser = useAuthStore(state => state.authUser)!
+  const { userId, alias, dp, latestMsg, globalName, children, menuItems, onClick } = props
 
   // If no chat is selected `activeChat` will be null
   const [activeChat] = useStore(state => [state.activeChat], shallow)
+  const authUser = useAuthStore(state => state.authUser)!
+
+  const [open, setOpen] = useState(false)
+  const [position, setPosition] = useState({ top: 0, left: 0 })
+
+  const authUserIsSender = authUser.id === latestMsg?.senderId
+  const unread = isUnread(authUser.id, latestMsg)
+
+  const DROPDOWN_WIDTH = 192
 
   function getDateTime() {
     const diff = differenceInCalendarDays(new Date(), new Date(latestMsg!.createdAt))
@@ -34,25 +47,49 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
     return format(latestMsg!.createdAt, 'dd/MM/yy')
   }
 
-  const authUserIsSender = authUser.id === latestMsg?.senderId
-  const unread = isUnread(authUser.id, latestMsg)
+  function onContextMenu(e: React.MouseEvent) {
+    e.preventDefault()
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    let left = e.clientX - rect.left
+    let top = e.clientY - rect.top
+
+    // Handle overflow to the right
+    {
+      const dropDownRight = DROPDOWN_WIDTH + e.clientX
+
+      if (dropDownRight > rect.right) {
+        const excess = dropDownRight - rect.right
+        left -= excess
+      }
+    }
+    // TODO: handle overflow at the bottom
+
+    setOpen(true)
+    setPosition({ top, left })
+  }
+
+  function onBlur() {
+    setOpen(false)
+  }
 
   return (
-    <li>
-      <div
+    <li className="relative">
+      <button
         className={classNames(
-          'px-3 w-full text-left flex items-center relative rounded',
+          'px-3 w-full text-left flex items-center rounded',
           userId === activeChat?.receiver.id
             ? 'bg-gray-300/60 dark:bg-gray-700/90'
             : 'hover:bg-gray-200/60 dark:hover:bg-gray-600/40',
           unread ? 'font-semibold' : '',
         )}
+        onBlur={onBlur}
         onClick={onClick}
+        onContextMenu={onContextMenu}
       >
-        <span className="absolute inset-0" />
         <Avatar src={dp} />
 
-        <div className="ml-4 py-3 w-full border-b border-gray-200 dark:border-gray-700">
+        <div className="ml-4 py-3 w-full">
           <div className="flex justify-between items-center">
             <p className="text-base text-black dark:text-gray-50">
               {alias ?? <span className="italic">{`~${globalName}`}</span>}
@@ -78,10 +115,15 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
               {latestMsg && authUserIsSender && <MsgStatusIcon status={latestMsg.status} />}
               {latestMsg && <span className="line-clamp-1">{latestMsg.content}</span>}
             </p>
-            <div className="flex-shrink-0 flex items-center text-gray-500 dark:text-gray-400">{children}</div>
+            <div className="flex-shrink-0 flex items-center text-gray-500 dark:text-gray-400">
+              {/* Icons */}
+              {children}
+            </div>
           </div>
         </div>
-      </div>
+      </button>
+
+      {menuItems && <ContextMenu open={open} position={position} menuItems={menuItems} />}
     </li>
   )
 }

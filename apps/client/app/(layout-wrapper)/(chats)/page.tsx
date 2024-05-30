@@ -4,7 +4,6 @@ import { shallow } from 'zustand/shallow'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import ChatListItemTemplate from '~/components/ChatListItem/Template'
-import ChatListItemDropDown from '~/components/ChatListItem/DropDown'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { IChatListItem } from '@pkg/types'
@@ -87,9 +86,8 @@ function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedCo
   ]
 
   return (
-    <ChatListItemTemplate {...remainingProps} userId={userId}>
+    <ChatListItemTemplate userId={userId} menuItems={menuItems} {...remainingProps}>
       {pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
-      <ChatListItemDropDown menuItems={menuItems} />
     </ChatListItemTemplate>
   )
 }
