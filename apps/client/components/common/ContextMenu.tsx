@@ -1,17 +1,15 @@
 import { Fragment } from 'react'
 import { Menu, MenuItem, Transition } from '@headlessui/react'
+import type { IContextMenuItem } from '@pkg/types'
 
 interface ContextMenuProps {
   open: boolean
   position: Record<'top' | 'left', number>
-  menuItems: {
-    slot: string | React.ReactNode
-    onClick: () => void
-  }[]
+  items: IContextMenuItem[]
 }
 
 export default function ContextMenu(props: Readonly<ContextMenuProps>) {
-  const { open, position, menuItems } = props
+  const { open, position, items } = props
 
   return (
     <Menu>
@@ -32,14 +30,14 @@ export default function ContextMenu(props: Readonly<ContextMenuProps>) {
           style={{ top: `${position.top}px`, left: `${position.left}px` }}
         >
           <div className="px-0.5 py-1.5">
-            {menuItems.map((menuItem, i) => (
+            {items.map((item, i) => (
               <MenuItem
                 key={i}
                 as="button"
                 className="block w-full px-6 py-2.5 text-sm text-left rounded hover:bg-gray-200 dark:hover:bg-gray-900/70 transition-colors"
-                onClick={menuItem.onClick}
+                onClick={item.onClick}
               >
-                {menuItem.slot}
+                {item.slot}
               </MenuItem>
             ))}
           </div>

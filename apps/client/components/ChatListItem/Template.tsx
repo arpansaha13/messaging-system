@@ -8,7 +8,7 @@ import MsgStatusIcon from '../MsgStatusIcon'
 import { useStore } from '~/store'
 import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
-import type { IChatListItem } from '@pkg/types'
+import type { IChatListItem, IContextMenuItem } from '@pkg/types'
 
 interface ChatListItemTemplateProps {
   userId: number
@@ -16,11 +16,8 @@ interface ChatListItemTemplateProps {
   dp: string | null
   latestMsg: IChatListItem['latestMsg']
   globalName: string
-  children: React.ReactNode
-  menuItems?: {
-    slot: string | React.ReactNode
-    onClick: () => void
-  }[]
+  children?: React.ReactNode
+  menuItems?: IContextMenuItem[]
   onClick: (e: React.MouseEvent) => void
 }
 
@@ -47,30 +44,34 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
     return format(latestMsg!.createdAt, 'dd/MM/yy')
   }
 
-  function onContextMenu(e: React.MouseEvent) {
-    e.preventDefault()
+  const eventHandlers = {
+    onClick,
+    ...(menuItems && {
+      onBlur: () => {
+        setOpen(false)
+      },
+      onContextMenu: (e: React.MouseEvent) => {
+        e.preventDefault()
 
-    const rect = e.currentTarget.getBoundingClientRect()
-    let left = e.clientX - rect.left
-    let top = e.clientY - rect.top
+        const rect = e.currentTarget.getBoundingClientRect()
+        let left = e.clientX - rect.left
+        let top = e.clientY - rect.top
 
-    // Handle overflow to the right
-    {
-      const dropDownRight = DROPDOWN_WIDTH + e.clientX
+        // Handle overflow to the right
+        {
+          const dropDownRight = DROPDOWN_WIDTH + e.clientX
 
-      if (dropDownRight > rect.right) {
-        const excess = dropDownRight - rect.right
-        left -= excess
-      }
-    }
-    // TODO: handle overflow at the bottom
+          if (dropDownRight > rect.right) {
+            const excess = dropDownRight - rect.right
+            left -= excess
+          }
+        }
+        // TODO: handle overflow at the bottom
 
-    setOpen(true)
-    setPosition({ top, left })
-  }
-
-  function onBlur() {
-    setOpen(false)
+        setOpen(true)
+        setPosition({ top, left })
+      },
+    }),
   }
 
   return (
@@ -83,9 +84,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
             : 'hover:bg-gray-200/60 dark:hover:bg-gray-600/40',
           unread ? 'font-semibold' : '',
         )}
-        onBlur={onBlur}
-        onClick={onClick}
-        onContextMenu={onContextMenu}
+        {...eventHandlers}
       >
         <Avatar src={dp} />
 
@@ -123,7 +122,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
         </div>
       </button>
 
-      {menuItems && <ContextMenu open={open} position={position} menuItems={menuItems} />}
+      {menuItems && <ContextMenu open={open} position={position} items={menuItems} />}
     </li>
   )
 }

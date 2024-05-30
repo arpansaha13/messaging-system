@@ -40,3 +40,8 @@ export interface IContact {
   globalName: string
   username: string
 }
+
+export interface IContextMenuItem {
+  slot: string | React.ReactNode
+  onClick: () => void
+}

@@ -5,7 +5,7 @@ import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import SearchBar from '~common/SearchBar'
-import SearchListItem from '~common/SearchListItem'
+import StackedListItem from '~common/StackedListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { IUser } from '@pkg/types'
@@ -71,7 +71,7 @@ function SearchResults({ results, handleClick }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(user => (
-        <SearchListItem
+        <StackedListItem
           key={user.id}
           image={user.dp}
           title={user.contact ? user.contact.alias : user.globalName}

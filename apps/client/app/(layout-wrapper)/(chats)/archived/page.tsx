@@ -1,11 +1,10 @@
 'use client'
 
 import { shallow } from 'zustand/shallow'
-import ConvoItemTemplate from '~/components/Convo/ConvoItemTemplate'
-import ConvoItemDropDown from '~/components/Convo/ConvoItemDropDown'
+import ChatListItemTemplate from '~/components/ChatListItem/Template'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { IChatListItem } from '@pkg/types'
+import type { IChatListItem, IContextMenuItem } from '@pkg/types'
 
 interface ArchivedConvoItemProps {
   userId: number
@@ -55,7 +54,7 @@ function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps
     shallow,
   )
 
-  const menuItems = [
+  const menuItems: IContextMenuItem[] = [
     {
       slot: 'Unarchive chat',
       onClick() {
@@ -75,9 +74,5 @@ function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps
     },
   ]
 
-  return (
-    <ConvoItemTemplate {...remainingProps} userId={userId}>
-      <ConvoItemDropDown menuItems={menuItems} />
-    </ConvoItemTemplate>
-  )
+  return <ChatListItemTemplate userId={userId} menuItems={menuItems} {...remainingProps} />
 }
