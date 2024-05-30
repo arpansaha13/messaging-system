@@ -3,6 +3,7 @@ import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
 // import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Avatar from '~common/Avatar'
+import GlobalName from '~/components/GlobalName'
 import { useStore } from '~/store'
 
 const ChatHeader = () => {
@@ -54,7 +55,7 @@ const ChatHeader = () => {
 
         <div>
           <p className="text-gray-800 dark:text-gray-50 font-semibold">
-            {activeChat.contact?.alias ?? <span className="italic">{`~${activeChat.receiver.globalName}`}</span>}
+            {activeChat.contact?.alias ?? <GlobalName name={activeChat.receiver.globalName} />}
           </p>
           <p
             className={classNames(
