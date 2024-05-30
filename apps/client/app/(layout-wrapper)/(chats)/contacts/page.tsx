@@ -5,10 +5,10 @@ import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import SearchBar from '~common/SearchBar'
-import SearchListItem from '~common/SearchListItem'
+import StackedListItem from '~common/StackedListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { IContact } from '@pkg/types'
+import type { IContact, IContextMenuItem } from '@pkg/types'
 
 interface ContactsProps {
   handleClick: (contact: IContact) => void
@@ -25,6 +25,8 @@ export default function Page() {
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
   const [searchResults, setSearchResults] = useState<IContact[] | null>(null)
+
+  const menuItems: IContextMenuItem[] = []
 
   useDebounce(
     () => {
@@ -90,7 +92,7 @@ function Contacts({ handleClick }: Readonly<ContactsProps>) {
 
       <ul>
         {contacts[letter as keyof typeof contacts].map(contact => (
-          <SearchListItem
+          <StackedListItem
             key={contact.contactId}
             image={contact.dp}
             title={contact.alias}
@@ -108,7 +110,7 @@ function SearchResults({ results, handleClick }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(contact => (
-        <SearchListItem
+        <StackedListItem
           key={contact.contactId}
           image={contact.dp}
           title={contact.alias}

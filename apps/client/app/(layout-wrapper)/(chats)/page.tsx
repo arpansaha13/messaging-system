@@ -6,7 +6,7 @@ import pinIcon from '@iconify-icons/mdi/pin'
 import ChatListItemTemplate from '~/components/ChatListItem/Template'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { IChatListItem } from '@pkg/types'
+import type { IChatListItem, IContextMenuItem } from '@pkg/types'
 
 export interface UnarchivedConvoItemProps {
   userId: number
@@ -70,7 +70,7 @@ function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedCo
     shallow,
   )
 
-  const menuItems = [
+  const menuItems: IContextMenuItem[] = [
     {
       slot: pinned ? 'Unpin chat' : 'Pin chat',
       onClick() {
