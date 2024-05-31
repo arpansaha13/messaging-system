@@ -5,3 +5,9 @@ export async function PATCH(request: Request) {
 
   return res
 }
+
+export async function DELETE(request: Request) {
+  const res = await rfetch(request)
+
+  return res
+}
