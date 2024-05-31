@@ -14,12 +14,12 @@ import {
 } from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { ContactService } from 'src/contacts/contact.service'
-import { AddToContactDto } from './dto/add-to-contact.dto'
+import { AddContactDto } from './dto/add-contact.dto'
 import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
 import { DeleteContactParamDto } from './dto/delete-contact-param.dto'
 import { EditAliasBodyDto, EditAliasParamDto } from './dto/edit-alias.dto'
 import type { Request } from 'express'
-import type { Contact } from './contact.entity'
+import type { IContact } from '@pkg/types'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())
@@ -30,7 +30,7 @@ export class ContactController {
   getContacts(
     @Req() request: Request,
     @Query() query: GetContactsQueryDto,
-  ): Promise<Contact[] | Record<string, Contact[]>> {
+  ): Promise<IContact[] | Record<string, IContact[]>> {
     if (query.search) {
       return this.contactService.getContactsByQuery(request.user, query.search)
     }
@@ -38,8 +38,9 @@ export class ContactController {
   }
 
   @Post()
-  addToContacts(@Req() request: Request, @Body() contact: AddToContactDto): Promise<string> {
-    return this.contactService.addToContacts(request.user, contact.userIdToAdd, contact.alias)
+  @HttpCode(HttpStatus.CREATED)
+  addContact(@Req() request: Request, @Body() contact: AddContactDto): Promise<IContact> {
+    return this.contactService.addContact(request.user, contact.userIdToAdd, contact.alias)
   }
 
   @Patch('/:contactId')

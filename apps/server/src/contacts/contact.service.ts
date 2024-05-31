@@ -1,21 +1,18 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'src/users/user.entity'
-import { UserRepository } from 'src/users/user.repository'
 import { ContactRepository } from './contact.repository'
+import type { IContact } from '@pkg/types'
 
 @Injectable()
 export class ContactService {
   constructor(
-    @InjectRepository(UserRepository)
-    private userRepository: UserRepository,
-
     @InjectRepository(ContactRepository)
     private contactRepository: ContactRepository,
   ) {}
 
   // TODO: fix response types
-  async getContacts(authUser: User): Promise<Record<string, any[]>> {
+  async getContacts(authUser: User): Promise<Record<string, IContact[]>> {
     const contactsRes = await this.contactRepository.getContactsByUserId(authUser.id)
 
     const newContacts = {}
@@ -38,7 +35,7 @@ export class ContactService {
     return newContacts
   }
 
-  async getContactsByQuery(authUser: User, search: string): Promise<any[]> {
+  async getContactsByQuery(authUser: User, search: string): Promise<IContact[]> {
     const res = await this.contactRepository.getContactsByUserIdAndQuery(authUser.id, search)
 
     return res.map(resItem => ({
@@ -52,25 +49,35 @@ export class ContactService {
     }))
   }
 
-  async addToContacts(authUser: User, userIdToAdd: number, alias: string): Promise<string> {
+  async addContact(authUser: User, userIdToAdd: number, alias: string): Promise<IContact> {
     if (authUser.id === userIdToAdd) {
       throw new BadRequestException('Invalid user ids.')
     }
 
-    if (await this.contactRepository.existsByUserIds(authUser.id, userIdToAdd)) {
-      throw new ConflictException('Given contact is already added.')
-    }
+    const newContact = await this.contactRepository.manager.transaction(async txnManager => {
+      if (await this.contactRepository.existsByUserIds(authUser.id, userIdToAdd)) {
+        throw new ConflictException('Given contact is already added.')
+      }
 
-    const userToAdd = await this.userRepository.findOneBy({ id: userIdToAdd })
-    if (userToAdd === null) {
-      throw new BadRequestException('Invalid user id.')
-    }
+      const userToAdd = await txnManager.findOneBy(User, { id: userIdToAdd })
+      if (userToAdd === null) {
+        throw new BadRequestException('Invalid user id.')
+      }
 
-    try {
-      await this.contactRepository.createContact(authUser, userToAdd, alias)
-      return `${alias} has been added to contacts.`
-    } catch (error) {
-      throw new InternalServerErrorException()
+      return this.contactRepository.createContact(authUser, userToAdd, alias).catch(err => {
+        console.error(err)
+        throw new InternalServerErrorException()
+      })
+    })
+
+    return {
+      contactId: newContact.id,
+      alias: alias,
+      userId: userIdToAdd,
+      dp: newContact.userInContact.dp,
+      bio: newContact.userInContact.bio,
+      username: newContact.userInContact.username,
+      globalName: newContact.userInContact.globalName,
     }
   }
 
