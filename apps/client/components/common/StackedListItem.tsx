@@ -61,7 +61,7 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
   return (
     <li className="relative">
       <button
-        className="px-3 w-full text-left hover:bg-gray-200/60 dark:hover:bg-gray-600/40 flex items-center"
+        className="px-3 w-full text-left hover:bg-gray-200/80 dark:hover:bg-gray-600/40 flex items-center rounded transition-colors"
         {...eventHandlers}
       >
         <Avatar src={image} />

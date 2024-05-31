@@ -35,7 +35,7 @@ function BaseButton(props: Readonly<BaseButtonProps>) {
       className={classNames(
         'flex w-full justify-center rounded-md border py-2 px-4 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors relative',
         !secondary
-          ? 'text-gray-950 dark:text-white bg-emerald-600 hover:bg-emerald-700 border-transparent'
+          ? 'text-white bg-emerald-600 hover:bg-emerald-700 border-transparent'
           : 'text-gray-900 dark:text-gray-100 border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
         disabled && 'opacity-70',
         stretch && 'w-full',
