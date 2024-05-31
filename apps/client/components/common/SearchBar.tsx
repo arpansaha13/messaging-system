@@ -21,25 +21,27 @@ const SearchBar = ({ id, value, setValue, ...attrs }: SearchBarProps) => {
         Search
       </label>
 
-      <div className="relative">
+      <div className="group relative rounded-lg overflow-hidden">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">
           <MagnifyingGlassIcon
-            className="pointer-events-none h-4 w-4 text-gray-600 dark:text-gray-400"
+            className="pointer-events-none h-4 w-4 text-gray-600 dark:text-gray-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-500 transition-colors"
             aria-hidden="true"
           />
         </div>
+
+        <span className="absolute inset-x-0 bottom-0 h-0.5 group-focus-within:bg-emerald-600 dark:group-focus-within:bg-emerald-500 transition-colors" />
 
         <input
           ref={inputRef}
           id={id}
           {...attrs}
-          className="block w-full rounded-lg text-gray-600 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 py-2 pl-16 pr-8 text-sm shadow dark:shadow-gray-950/40 border-none placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
+          className="block w-full text-gray-600 dark:text-gray-200 bg-gray-200 dark:bg-gray-800 py-2 pl-12 pr-8 text-sm shadow dark:shadow-gray-950/40 border-none placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
           value={value}
           onChange={e => setValue(e.target.value)}
         />
 
         <div className={value ? 'absolute inset-y-0 right-0 flex items-center pr-2' : 'hidden'}>
-          <button onClick={clear}>
+          <button type="button" onClick={clear}>
             <XMarkIcon className="h-4 w-4 text-gray-600 dark:text-gray-400" aria-hidden="true" />
           </button>
         </div>

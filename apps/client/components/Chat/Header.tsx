@@ -1,52 +1,12 @@
 import { memo } from 'react'
 import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
-// import { MagnifyingGlassIcon } from '@heroicons/react/20/solid'
 import Avatar from '~common/Avatar'
 import GlobalName from '~/components/GlobalName'
 import { useStore } from '~/store'
 
 const ChatHeader = () => {
   const [typingState, activeChat] = useStore(state => [state.typingState, state.activeChat!], shallow)
-
-  // const chatMenuItems = [
-  //   {
-  //     slot: 'Contact info',
-  //     onClick() {
-  //       console.log('clicked')
-  //     },
-  //   },
-  //   {
-  //     slot: 'Select Messages',
-  //     onClick() {
-  //       console.log('clicked')
-  //     },
-  //   },
-  //   {
-  //     slot: 'Close chat',
-  //     onClick() {
-  //       console.log('clicked')
-  //     },
-  //   },
-  //   {
-  //     slot: 'Mute notifications',
-  //     onClick() {
-  //       console.log('clicked')
-  //     },
-  //   },
-  //   {
-  //     slot: 'Disappearing messages',
-  //     onClick() {
-  //       console.log('clicked')
-  //     },
-  //   },
-  //   {
-  //     slot: 'Delete chat',
-  //     onClick() {
-  //       console.log('clicked')
-  //     },
-  //   },
-  // ]
 
   return (
     <>
@@ -74,12 +34,6 @@ const ChatHeader = () => {
           </p>
         </div>
       </div>
-
-      {/* <div className="flex items-center text-gray-900 dark:text-gray-400 space-x-2">
-        <button className="p-2 btn-icon">
-          <MagnifyingGlassIcon className="w-6 h-6 flex-shrink-0" />
-        </button>
-      </div> */}
     </>
   )
 }

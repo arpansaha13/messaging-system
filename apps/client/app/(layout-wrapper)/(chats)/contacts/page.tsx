@@ -132,7 +132,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
         <h3>{letter}</h3>
       </div>
 
-      <ul>
+      <ul className="space-y-1">
         {contacts[letter].map(contact => (
           <StackedListItem
             key={contact.contactId}
@@ -152,7 +152,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
 
 function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResultsProps>) {
   return (
-    <ul className="py-3">
+    <ul className="py-3 space-y-1">
       {results.map(contact => (
         <StackedListItem
           key={contact.contactId}
@@ -209,6 +209,12 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
         <div className="mt-4 mx-auto text-center flex justify-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
         </div>
+
+        {contact && (
+          <div className="mt-2">
+            <p className="text-sm text-center font-medium text-gray-500 dark:text-gray-300">{contact?.alias}</p>
+          </div>
+        )}
 
         <div className="mt-2">
           <p className="text-sm text-center text-gray-500 dark:text-gray-300">{contact?.bio}</p>
@@ -267,6 +273,12 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
         <div className="mt-4 mx-auto text-center flex justify-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
         </div>
+
+        {contact && (
+          <div className="mt-2">
+            <p className="text-sm font-medium text-center text-gray-500 dark:text-gray-300">{contact?.alias}</p>
+          </div>
+        )}
 
         <div className="mt-2">
           <p className="text-sm text-center text-gray-500 dark:text-gray-300">{contact?.bio}</p>

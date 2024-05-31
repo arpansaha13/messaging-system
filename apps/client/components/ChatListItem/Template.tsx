@@ -79,10 +79,10 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
     <li className="relative">
       <button
         className={classNames(
-          'px-3 w-full text-left flex items-center rounded',
+          'px-3 w-full text-left flex items-center rounded transition-colors',
           userId === activeChat?.receiver.id
-            ? 'bg-gray-300/60 dark:bg-gray-700/90'
-            : 'hover:bg-gray-200/60 dark:hover:bg-gray-600/40',
+            ? 'bg-gray-300/65 hover:bg-gray-400/40 dark:bg-gray-700/80 dark:hover:bg-gray-600/80'
+            : 'hover:bg-gray-200/80 dark:hover:bg-gray-600/40',
           unread ? 'font-semibold' : '',
         )}
         {...eventHandlers}

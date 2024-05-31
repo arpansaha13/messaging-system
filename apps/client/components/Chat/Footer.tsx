@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
-// import { MicrophoneIcon } from '@heroicons/react/24/solid'
-// import { PaperClipIcon, FaceSmileIcon } from '@heroicons/react/24/outline'
 import { useSocket } from '~/hooks/useSocket'
 import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
@@ -111,23 +109,9 @@ export default function ChatFooter() {
   }, [activeChat])
 
   return (
-    <>
-      {/* <button className="p-1 btn-icon">
-        <FaceSmileIcon className="w-7 h-7 flex-shrink-0" />
-      </button>
-
-      <button className="p-2 rounded-full hover:bg-gray-700/70 btn-icon">
-        <PaperClipIcon className="w-6 h-6 flex-shrink-0" />
-      </button> */}
-
-      <div className="px-1 flex-grow">
-        <TextArea value={value} setValue={setValue} onKeyDown={handleKeyDown} />
-      </div>
-
-      {/* <button className="p-2 btn-icon">
-        <MicrophoneIcon className="w-6 h-6 flex-shrink-0" />
-      </button> */}
-    </>
+    <div className="px-1 flex-grow">
+      <TextArea value={value} setValue={setValue} onKeyDown={handleKeyDown} />
+    </div>
   )
 }
 
@@ -154,7 +138,7 @@ function TextArea({ value, setValue, onKeyDown }: TextAreaProps) {
           type="text"
           id="type-area"
           name="type-area"
-          className="block w-full rounded-lg bg-white dark:bg-gray-700/70 text-sm text-gray-500 dark:text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none shadow-sm shadow-gray-300/30 dark:shadow-none"
+          className="block w-full rounded-lg bg-white dark:bg-gray-700/70 text-sm text-gray-500 dark:text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none shadow"
           placeholder="Type a message"
           value={value}
           onChange={handleChange}

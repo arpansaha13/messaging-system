@@ -13,7 +13,7 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
 
   return (
     <div className="p-2 flex h-full gap-2">
-      <section className="p-2 flex-shrink-0 w-[26rem] h-full bg-white dark:bg-gray-900 shadow-md space-y-2 flex flex-col rounded overflow-hidden">
+      <section className="p-2 flex-shrink-0 w-[26rem] h-full bg-gray-100 dark:bg-gray-900 shadow-md space-y-2 flex flex-col rounded overflow-hidden">
         <div className="flex-grow overflow-y-auto scrollbar">{children}</div>
       </section>
 
