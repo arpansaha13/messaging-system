@@ -1,8 +1,22 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common'
 import { AuthGuard } from '@nestjs/passport'
 import { ContactService } from 'src/contacts/contact.service'
 import { AddToContactDto } from './dto/add-to-contact.dto'
 import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
+import { DeleteContactParamDto } from './dto/delete-contact-param.dto'
 import { EditAliasBodyDto, EditAliasParamDto } from './dto/edit-alias.dto'
 import type { Request } from 'express'
 import type { Contact } from './contact.entity'
@@ -29,11 +43,14 @@ export class ContactController {
   }
 
   @Patch('/:contactId')
-  editAlias(
-    @Req() request: Request,
-    @Param() params: EditAliasParamDto,
-    @Body() data: EditAliasBodyDto,
-  ): Promise<void> {
-    return this.contactService.editAlias(request.user, params.contactId, data.new_alias)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  editAlias(@Param() params: EditAliasParamDto, @Body() data: EditAliasBodyDto): Promise<void> {
+    return this.contactService.editAlias(params.contactId, data.new_alias)
+  }
+
+  @Delete('/:contactId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteContact(@Param() params: DeleteContactParamDto): Promise<void> {
+    return this.contactService.deleteContact(params.contactId)
   }
 }

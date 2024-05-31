@@ -20,6 +20,8 @@ export interface ChatListStoreType {
 
   upsertActiveChatContact: (receiverId: number, newContact: Pick<IContact, 'contactId' | 'alias'>) => void
 
+  deleteActiveChatContact: (receiverId: number) => void
+
   initChatList: () => Promise<void>
 
   insertUnarchivedChat: (newItem: IChatListItem) => void
@@ -35,6 +37,8 @@ export interface ChatListStoreType {
   updateChatListItemMessagePin: (receiverId: number, pinned: boolean) => void
 
   upsertChatListItemContact: (receiverId: number, newContact: Pick<IContact, 'contactId' | 'alias'>) => void
+
+  deleteChatListItemContact: (receiverId: number) => void
 
   clearChatListItemMessage: (receiverId: number) => void
 
@@ -75,6 +79,16 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
       } else {
         state.activeChat.contact.alias = newContact.alias
       }
+    })
+  },
+
+  deleteActiveChatContact(receiverId) {
+    set(state => {
+      if (isNullOrUndefined(state.activeChat)) return
+      if (state.activeChat.receiver.id !== receiverId) return
+      if (isNullOrUndefined(state.activeChat.contact)) return
+
+      state.activeChat.contact = null
     })
   },
 
@@ -155,6 +169,25 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
       } else {
         convo.contact.alias = newContact.alias
       }
+    })
+  },
+
+  deleteChatListItemContact(receiverId) {
+    set(state => {
+      let idx = findRoomIndex(receiverId, state.unarchived)
+      let convo: IChatListItem
+
+      if (idx === null) {
+        idx = findRoomIndex(receiverId, state.archived)!
+        if (idx === null) return
+        convo = state.archived[idx]
+      } else {
+        convo = state.unarchived[idx]
+      }
+
+      if (isNullOrUndefined(convo.contact)) return
+
+      convo.contact = null
     })
   },
 

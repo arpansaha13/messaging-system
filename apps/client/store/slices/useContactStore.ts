@@ -11,6 +11,8 @@ export interface ContactStoreType {
   initContactStore: () => Promise<void>
 
   updateContactAlias: (contact: IContact, newAlias: IContact['alias']) => void
+
+  deleteContact: (contact: IContact) => void
 }
 
 export const useContactStore: Slice<ContactStoreType> = set => ({
@@ -27,7 +29,7 @@ export const useContactStore: Slice<ContactStoreType> = set => ({
       const newFirstLetter = newAlias.charAt(0).toUpperCase()
 
       const contactsWithOldFirstLetter = state.contacts[oldFirstLetter]
-      const idx = state.contacts[oldFirstLetter].findIndex(c => c.contactId === contact.contactId)
+      const idx = contactsWithOldFirstLetter.findIndex(c => c.contactId === contact.contactId)
 
       if (idx === -1) return
 
@@ -55,6 +57,24 @@ export const useContactStore: Slice<ContactStoreType> = set => ({
         method: 'PATCH',
         body: { new_alias: newAlias },
       })
+    })
+  },
+
+  deleteContact(contact) {
+    set(state => {
+      const firstLetter = contact.alias.charAt(0).toUpperCase()
+      const contactsWithFirstLetter = state.contacts[firstLetter]
+
+      const idx = contactsWithFirstLetter.findIndex(c => c.contactId === contact.contactId)
+      if (idx === -1) return
+
+      contactsWithFirstLetter.splice(idx, 1)
+
+      if (contactsWithFirstLetter.length === 0) {
+        delete state.contacts[firstLetter]
+      }
+
+      _fetch(`/contacts/${contact.contactId}`, { method: 'DELETE' })
     })
   },
 })

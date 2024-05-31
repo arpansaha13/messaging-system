@@ -6,6 +6,7 @@ import { shallow } from 'zustand/shallow'
 import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import BaseInput from '~base/BaseInput'
+import BaseButton from '~base/BaseButton'
 import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
@@ -26,7 +27,13 @@ interface SearchResultsProps {
   handleClick: (contact: IContact) => void
 }
 
-interface EditAliasModal {
+interface EditAliasModalProps {
+  open: boolean
+  contact: IContact | null
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+interface DeleteContactModalProps {
   open: boolean
   contact: IContact | null
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
@@ -38,7 +45,8 @@ export default function Page() {
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
   const [editAliasModalOpen, setEditAliasModalOpen] = useState(false)
-  const [editAliasModalPayload, setEditAliasModalPayload] = useState<IContact | null>(null)
+  const [deleteContactModalOpen, setDeleteContactModalOpen] = useState(false)
+  const [modalPayload, setModalPayload] = useState<IContact | null>(null)
   const [searchResults, setSearchResults] = useState<IContact[] | null>(null)
 
   const menuItems: IContextMenuItem[] = [
@@ -46,7 +54,14 @@ export default function Page() {
       slot: 'Edit Alias',
       onClick: (_, payload: IContact) => {
         setEditAliasModalOpen(true)
-        setEditAliasModalPayload(payload)
+        setModalPayload(payload)
+      },
+    },
+    {
+      slot: 'Delete Contact',
+      onClick: (_, payload: IContact) => {
+        setDeleteContactModalOpen(true)
+        setModalPayload(payload)
       },
     },
   ]
@@ -100,7 +115,9 @@ export default function Page() {
         <SearchResults results={searchResults} menuItems={menuItems} handleClick={handleClick} />
       )}
 
-      <EditAliasModal open={editAliasModalOpen} contact={editAliasModalPayload} setOpen={setEditAliasModalOpen} />
+      <EditAliasModal open={editAliasModalOpen} contact={modalPayload} setOpen={setEditAliasModalOpen} />
+
+      <DeleteContactModal open={deleteContactModalOpen} contact={modalPayload} setOpen={setDeleteContactModalOpen} />
     </div>
   )
 }
@@ -116,7 +133,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
       </div>
 
       <ul>
-        {contacts[letter as keyof typeof contacts].map(contact => (
+        {contacts[letter].map(contact => (
           <StackedListItem
             key={contact.contactId}
             image={contact.dp}
@@ -152,7 +169,7 @@ function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResul
   )
 }
 
-function EditAliasModal(props: Readonly<EditAliasModal>) {
+function EditAliasModal(props: Readonly<EditAliasModalProps>) {
   const { open, contact, setOpen } = props
 
   const [updateContactAlias, upsertChatListItemContact, upsertActiveChatContact] = useStore(
@@ -208,19 +225,67 @@ function EditAliasModal(props: Readonly<EditAliasModal>) {
           />
 
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+            <BaseButton type="submit" className="sm:col-start-2">
+              Save new alias
+            </BaseButton>
+
+            <BaseButton secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
+              Cancel
+            </BaseButton>
+          </div>
+        </form>
+      </div>
+    </Modal>
+  )
+}
+
+function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
+  const { open, contact, setOpen } = props
+
+  const [deleteContact, deleteChatListItemContact, deleteActiveChatContact] = useStore(
+    state => [state.deleteContact, state.deleteChatListItemContact, state.deleteActiveChatContact],
+    shallow,
+  )
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    deleteContact(contact!)
+    deleteChatListItemContact(contact!.userId)
+    deleteActiveChatContact(contact!.userId)
+
+    setOpen(false)
+  }
+
+  return (
+    <Modal open={open} setOpen={setOpen}>
+      <div className="mt-3 sm:mt-5">
+        <DialogTitle as="h3" className="text-lg text-center font-medium leading-6 text-gray-900 dark:text-white">
+          Delete contact
+        </DialogTitle>
+
+        <div className="mt-4 mx-auto text-center flex justify-center">
+          <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
+        </div>
+
+        <div className="mt-2">
+          <p className="text-sm text-center text-gray-500 dark:text-gray-300">{contact?.bio}</p>
+        </div>
+
+        <p className="mt-2 text-center">Are you sure you want to delete this contact?</p>
+
+        <form className="mt-4" onSubmit={onSubmit}>
+          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
             <button
               type="submit"
-              className="inline-flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm"
+              className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors sm:col-start-2"
             >
-              Save new alias
+              Delete
             </button>
-            <button
-              type="button"
-              className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-50 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm"
-              onClick={() => setOpen(false)}
-            >
+
+            <BaseButton secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
               Cancel
-            </button>
+            </BaseButton>
           </div>
         </form>
       </div>

@@ -74,7 +74,11 @@ export class ContactService {
     }
   }
 
-  async editAlias(authUser: User, contactId: number, newAlias: string) {
+  async editAlias(contactId: number, newAlias: string) {
     await this.contactRepository.update({ id: contactId }, { alias: newAlias })
+  }
+
+  async deleteContact(contactId: number) {
+    await this.contactRepository.delete({ id: contactId })
   }
 }
