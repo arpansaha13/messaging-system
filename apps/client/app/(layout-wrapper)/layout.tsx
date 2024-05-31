@@ -55,6 +55,8 @@ const LinkIcon = forwardRef((props: any, ref) => {
   return <IconComponent ref={ref} {...remaining} />
 })
 
+LinkIcon.displayName = 'LinkIcon'
+
 export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
   useDark()
   useSocketInit()

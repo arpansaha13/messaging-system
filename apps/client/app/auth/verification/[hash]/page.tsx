@@ -2,7 +2,6 @@
 
 // import { Metadata } from 'next'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import LinkNotExpired from './not-expired'
 
 // export const metadata: Metadata = {
@@ -10,8 +9,6 @@ import LinkNotExpired from './not-expired'
 // }
 
 export default function VerificationPage() {
-  const router = useRouter()
-
   // TODO: block this page if authenticated
 
   // TODO: check if link is expired

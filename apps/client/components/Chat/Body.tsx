@@ -36,7 +36,7 @@ export default function ChatBody() {
         upsertMessages(activeChat.receiver.id, chatRes)
       })
     }
-  }, [activeChat])
+  }, [activeChat, getUserMessagesMap, upsertMessages])
 
   // Keep scroll position at bottom.
   // Rerun this effect whenever a new message is pushed.
