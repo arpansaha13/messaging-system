@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
-import type { IContact } from '@pkg/types'
+import type { IContact, IUser } from '@pkg/types'
 import type { Slice } from '../types.store'
 
 export interface ContactStoreType {
@@ -9,6 +9,8 @@ export interface ContactStoreType {
 
   /** Initialize the contacts map. */
   initContactStore: () => Promise<void>
+
+  insertContact: (userToAdd: IUser, alias: IContact['alias']) => Promise<IContact>
 
   updateContactAlias: (contact: IContact, newAlias: IContact['alias']) => void
 
@@ -21,6 +23,26 @@ export const useContactStore: Slice<ContactStoreType> = set => ({
   async initContactStore() {
     const res: Record<string, IContact[]> = await _fetch('contacts')
     set({ contacts: res })
+  },
+
+  async insertContact(userToAdd, alias) {
+    const newContact = await _fetch(`/contacts`, {
+      method: 'POST',
+      body: { userIdToAdd: userToAdd.id, alias },
+    })
+
+    set(state => {
+      const firstLetter = alias.charAt(0).toUpperCase()
+
+      if (isNullOrUndefined(state.contacts[firstLetter])) {
+        state.contacts[firstLetter] = [newContact]
+      } else {
+        state.contacts[firstLetter].push(newContact)
+        state.contacts[firstLetter].sort(sortCompareFn)
+      }
+    })
+
+    return newContact
   },
 
   updateContactAlias(contact, newAlias) {
