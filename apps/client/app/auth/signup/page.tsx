@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
