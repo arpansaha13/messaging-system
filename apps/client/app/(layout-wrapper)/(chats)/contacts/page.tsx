@@ -3,20 +3,33 @@
 import { useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
+import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
+import BaseInput from '~base/BaseInput'
+import Modal from '~common/Modal'
+import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
+import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@pkg/types'
 
 interface ContactsProps {
+  menuItems: IContextMenuItem[]
   handleClick: (contact: IContact) => void
 }
 
 interface SearchResultsProps {
   results: IContact[]
+  menuItems: IContextMenuItem[]
   handleClick: (contact: IContact) => void
+}
+
+interface EditAliasModal {
+  open: boolean
+  contact: IContact | null
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function Page() {
@@ -24,9 +37,19 @@ export default function Page() {
 
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
+  const [editAliasModalOpen, setEditAliasModalOpen] = useState(false)
+  const [editAliasModalPayload, setEditAliasModalPayload] = useState<IContact | null>(null)
   const [searchResults, setSearchResults] = useState<IContact[] | null>(null)
 
-  const menuItems: IContextMenuItem[] = []
+  const menuItems: IContextMenuItem[] = [
+    {
+      slot: 'Edit Alias',
+      onClick: (_, payload: IContact) => {
+        setEditAliasModalOpen(true)
+        setEditAliasModalPayload(payload)
+      },
+    },
+  ]
 
   useDebounce(
     () => {
@@ -72,15 +95,17 @@ export default function Page() {
       />
 
       {isNullOrUndefined(searchResults) ? (
-        <Contacts handleClick={handleClick} />
+        <Contacts menuItems={menuItems} handleClick={handleClick} />
       ) : (
-        <SearchResults results={searchResults} handleClick={handleClick} />
+        <SearchResults results={searchResults} menuItems={menuItems} handleClick={handleClick} />
       )}
+
+      <EditAliasModal open={editAliasModalOpen} contact={editAliasModalPayload} setOpen={setEditAliasModalOpen} />
     </div>
   )
 }
 
-function Contacts({ handleClick }: Readonly<ContactsProps>) {
+function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
   const contacts = useStore(state => state.contacts)
 
   return Object.keys(contacts).map(letter => (
@@ -98,6 +123,8 @@ function Contacts({ handleClick }: Readonly<ContactsProps>) {
             title={contact.alias}
             subtitle={`${contact.globalName} • @${contact.username}`}
             text={contact.bio}
+            menuItems={menuItems}
+            payload={contact}
             onClick={() => handleClick(contact)}
           />
         ))}
@@ -106,7 +133,7 @@ function Contacts({ handleClick }: Readonly<ContactsProps>) {
   ))
 }
 
-function SearchResults({ results, handleClick }: Readonly<SearchResultsProps>) {
+function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(contact => (
@@ -116,9 +143,87 @@ function SearchResults({ results, handleClick }: Readonly<SearchResultsProps>) {
           title={contact.alias}
           subtitle={`${contact.globalName} • @${contact.username}`}
           text={contact.bio}
+          menuItems={menuItems}
+          payload={contact}
           onClick={() => handleClick(contact)}
         />
       ))}
     </ul>
+  )
+}
+
+function EditAliasModal(props: Readonly<EditAliasModal>) {
+  const { open, contact, setOpen } = props
+
+  const [updateContactAlias, upsertChatListItemContact, upsertActiveChatContact] = useStore(
+    state => [state.updateContactAlias, state.upsertChatListItemContact, state.upsertActiveChatContact],
+    shallow,
+  )
+
+  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+
+    const formData = getFormData(e.currentTarget)
+
+    if (contact!.alias === formData.new_alias) {
+      setOpen(false)
+      return
+    }
+
+    const newContact = {
+      contactId: contact!.contactId,
+      alias: formData.new_alias as string,
+    }
+
+    updateContactAlias(contact!, formData.new_alias as string)
+    upsertChatListItemContact(contact!.userId, newContact)
+    upsertActiveChatContact(contact!.userId, newContact)
+
+    setOpen(false)
+  }
+
+  return (
+    <Modal open={open} setOpen={setOpen}>
+      <div className="mt-3 sm:mt-5">
+        <DialogTitle as="h3" className="text-lg text-center font-medium leading-6 text-gray-900 dark:text-white">
+          Edit contact alias
+        </DialogTitle>
+
+        <div className="mt-4 mx-auto text-center flex justify-center">
+          <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
+        </div>
+
+        <div className="mt-2">
+          <p className="text-sm text-center text-gray-500 dark:text-gray-300">{contact?.bio}</p>
+        </div>
+
+        <form className="mt-4" onSubmit={onSubmit}>
+          <BaseInput
+            label="By what name would you like to save this contact?"
+            id="new_alias"
+            name="new_alias"
+            type="text"
+            required
+            defaultValue={contact?.alias}
+          />
+
+          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+            <button
+              type="submit"
+              className="inline-flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm"
+            >
+              Save new alias
+            </button>
+            <button
+              type="button"
+              className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white dark:bg-gray-700 px-4 py-2 text-base font-medium text-gray-700 dark:text-gray-50 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </Modal>
   )
 }

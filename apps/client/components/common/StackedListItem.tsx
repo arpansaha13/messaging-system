@@ -10,10 +10,16 @@ interface StackedListItemProps {
   text: string
   menuItems?: IContextMenuItem[]
   onClick: () => void
+
+  /**
+   * This payload will be passed to the menuItem.onClick method
+   * for identification of the concerned list-item
+   */
+  payload?: any
 }
 
 export default function StackedListItem(props: Readonly<StackedListItemProps>) {
-  const { image, title, subtitle, text, menuItems, onClick } = props
+  const { image, title, subtitle, text, menuItems, payload, onClick } = props
 
   const [open, setOpen] = useState(false)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -74,7 +80,7 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
         </div>
       </button>
 
-      {menuItems && <ContextMenu open={open} position={position} items={menuItems} />}
+      {menuItems && <ContextMenu open={open} position={position} payload={payload} items={menuItems} />}
     </li>
   )
 }

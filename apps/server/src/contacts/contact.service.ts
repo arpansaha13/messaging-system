@@ -73,4 +73,8 @@ export class ContactService {
       throw new InternalServerErrorException()
     }
   }
+
+  async editAlias(authUser: User, contactId: number, newAlias: string) {
+    await this.contactRepository.update({ id: contactId }, { alias: newAlias })
+  }
 }

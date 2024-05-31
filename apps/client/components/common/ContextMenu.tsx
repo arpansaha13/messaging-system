@@ -6,10 +6,16 @@ interface ContextMenuProps {
   open: boolean
   position: Record<'top' | 'left', number>
   items: IContextMenuItem[]
+
+  /**
+   * This payload will be passed to the menuItem.onClick method
+   * for identification of the concerned list-item
+   */
+  payload?: any
 }
 
 export default function ContextMenu(props: Readonly<ContextMenuProps>) {
-  const { open, position, items } = props
+  const { open, position, items, payload } = props
 
   return (
     <Menu>
@@ -35,7 +41,7 @@ export default function ContextMenu(props: Readonly<ContextMenuProps>) {
                 key={i}
                 as="button"
                 className="block w-full px-6 py-2.5 text-sm text-left rounded hover:bg-gray-200 dark:hover:bg-gray-900/70 transition-colors"
-                onClick={item.onClick}
+                onClick={e => item.onClick(e, payload)}
               >
                 {item.slot}
               </MenuItem>
