@@ -1,6 +1,7 @@
 import _fetch from '~/utils/_fetch'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import type { Slice } from '~/store/types.store'
-import type { IChatListItem, MessageStatus } from '@pkg/types'
+import type { IChatListItem, IContact, MessageStatus } from '@pkg/types'
 
 type ChatsResponse = {
   archived: IChatListItem
@@ -17,6 +18,8 @@ export interface ChatListStoreType {
 
   setActiveChat: (newChatInfo: ChatListStoreType['activeChat']) => void
 
+  upsertActiveChatContact: (receiverId: number, newContact: Pick<IContact, 'contactId' | 'alias'>) => void
+
   initChatList: () => Promise<void>
 
   insertUnarchivedChat: (newItem: IChatListItem) => void
@@ -30,6 +33,8 @@ export interface ChatListStoreType {
   ) => void
 
   updateChatListItemMessagePin: (receiverId: number, pinned: boolean) => void
+
+  upsertChatListItemContact: (receiverId: number, newContact: Pick<IContact, 'contactId' | 'alias'>) => void
 
   clearChatListItemMessage: (receiverId: number) => void
 
@@ -55,6 +60,22 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
 
   setActiveChat(activeChat) {
     set({ activeChat })
+  },
+
+  upsertActiveChatContact(receiverId, newContact) {
+    set(state => {
+      if (isNullOrUndefined(state.activeChat)) return
+      if (state.activeChat.receiver.id !== receiverId) return
+
+      if (isNullOrUndefined(state.activeChat.contact)) {
+        state.activeChat.contact = {
+          id: newContact.contactId,
+          alias: newContact.alias,
+        }
+      } else {
+        state.activeChat.contact.alias = newContact.alias
+      }
+    })
   },
 
   async initChatList() {
@@ -113,6 +134,27 @@ export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
       state.unarchived.sort(sortConvoCompareFn)
       if (pinned) _fetch(`chats/${receiverId}/pin`, { method: 'PATCH' })
       else _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
+    })
+  },
+
+  upsertChatListItemContact(receiverId, newContact) {
+    set(state => {
+      let idx = findRoomIndex(receiverId, state.unarchived)
+      let convo: IChatListItem
+
+      if (idx === null) {
+        idx = findRoomIndex(receiverId, state.archived)!
+        if (idx === null) return
+        convo = state.archived[idx]
+      } else {
+        convo = state.unarchived[idx]
+      }
+
+      if (isNullOrUndefined(convo.contact)) {
+        convo.contact = { id: newContact.contactId, alias: newContact.alias }
+      } else {
+        convo.contact.alias = newContact.alias
+      }
     })
   },
 
