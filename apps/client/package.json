@@ -9,7 +9,7 @@
     "pretty": "prettier --write \"./**/*.{js,jsx,ts,tsx,css}\" \"!**/.next/**\""
   },
   "dependencies": {
-    "@arpansaha13/utils": "^0.6.0",
+    "@arpansaha13/utils": "^0.7.0",
     "@headlessui/react": "^2.0.4",
     "@heroicons/react": "^2.1.3",
     "@iconify-icons/mdi": "^1.2.48",
