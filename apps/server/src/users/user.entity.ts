@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany } from 'typeorm'
+import { Column, Entity, OneToMany, type Relation } from 'typeorm'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { Contact } from 'src/contacts/contact.entity'
 
@@ -23,5 +23,5 @@ export class User extends BaseEntity {
   password: string
 
   @OneToMany(() => Contact, contact => contact.user)
-  contacts: Contact[]
+  contacts: Relation<Contact>[]
 }

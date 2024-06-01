@@ -1,4 +1,4 @@
-import { Column, ManyToOne, Entity, PrimaryGeneratedColumn, JoinColumn } from 'typeorm'
+import { Column, ManyToOne, Entity, PrimaryGeneratedColumn, JoinColumn, type Relation } from 'typeorm'
 import { User } from 'src/users/user.entity'
 
 @Entity({ name: 'chats' })
@@ -8,11 +8,11 @@ export class Chat {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
-  sender: User
+  sender: Relation<User>
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'receiver_id', referencedColumnName: 'id' })
-  receiver: User
+  receiver: Relation<User>
 
   @Column({ name: 'cleared_at', type: 'timestamptz', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   clearedAt: Date

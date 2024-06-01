@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, type Relation } from 'typeorm'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { User } from 'src/users/user.entity'
 import { MessageRecipient } from 'src/message-recipient/message-recipient.entity'
@@ -10,8 +10,8 @@ export class Message extends BaseEntity {
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
-  sender: User
+  sender: Relation<User>
 
   @OneToMany(() => MessageRecipient, recipient => recipient.message)
-  recipients: MessageRecipient[]
+  recipients: Relation<MessageRecipient>[]
 }

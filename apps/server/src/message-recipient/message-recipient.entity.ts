@@ -1,5 +1,5 @@
 import { Message } from 'src/messages/message.entity'
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { Column, Entity, JoinColumn, ManyToOne, type Relation } from 'typeorm'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { User } from 'src/users/user.entity'
 
@@ -13,7 +13,7 @@ export enum MessageStatus {
 export class MessageRecipient extends BaseEntity {
   @ManyToOne(() => Message, msg => msg.recipients)
   @JoinColumn({ name: 'message_id', referencedColumnName: 'id' })
-  message: Message
+  message: Relation<Message>
 
   @Column({ name: 'status', nullable: false, default: MessageStatus.SENT })
   status: MessageStatus
