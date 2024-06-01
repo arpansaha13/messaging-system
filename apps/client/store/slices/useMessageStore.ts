@@ -94,7 +94,11 @@ export const useMessageStore: Slice<MessageStoreType> = (set, get) => ({
   clearMessages(receiverId) {
     set(state => {
       _fetch(`chats/${receiverId}/clear`, { method: 'DELETE' })
-      state.userMessagesMap.delete(receiverId)
+
+      // Map.clear() instead of Map.delete()
+      // Deleting will cause another api call when this chat is opened
+      state.userMessagesMap.get(receiverId)?.clear()
+
       state.tempMessagesMap.delete(receiverId)
     })
   },
