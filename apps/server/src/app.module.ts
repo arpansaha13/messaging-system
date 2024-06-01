@@ -36,6 +36,7 @@ import type { EnvVariables } from 'src/env.types'
         password: configService.get('TYPEORM_PASSWORD'),
         database: configService.get('TYPEORM_DATABASE'),
         url: configService.get('TYPEORM_DATABASE_URL'),
+        ssl: configService.get('NODE_ENV') === 'development' ? false : { rejectUnauthorized: false },
       }),
     }),
   ],
