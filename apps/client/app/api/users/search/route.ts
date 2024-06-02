@@ -1,7 +1,6 @@
-import { type NextRequest } from 'next/server'
-import rfetch from '~api/utils/rfetch'
+import _response from '~api/utils/_response'
 
-export async function GET(request: NextRequest) {
-  const res = await rfetch(request)
+export async function GET(request: Request) {
+  const res = await _response(request)
   return res
 }
