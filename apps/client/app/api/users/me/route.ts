@@ -1,13 +1,13 @@
-import rfetch from '~api/utils/rfetch'
+import _response from '~api/utils/_response'
 
 export async function GET(request: Request) {
-  const res = await rfetch(request)
+  const res = await _response(request)
 
   return res
 }
 
 export async function PATCH(request: Request) {
-  const res = await rfetch(request)
+  const res = await _response(request)
 
   return res
 }
