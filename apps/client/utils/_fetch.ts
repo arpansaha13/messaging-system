@@ -4,15 +4,14 @@ export default async function _fetch(url: string, options?: RequestOptions) {
   const request = createRequest(url, options)
   const res = await fetch(request)
 
-  const textData = await res.text()
+  if (res.status === 204 || res.body === null) return null
+
   let jsonData: any = null
 
-  if (textData) {
-    try {
-      jsonData = JSON.parse(textData)
-    } catch {
-      jsonData = { message: textData }
-    }
+  try {
+    jsonData = await res.json()
+  } catch {
+    return jsonData
   }
 
   if (res.status >= 400) throw jsonData
