@@ -4,18 +4,19 @@ export default async function _fetch(url: string, options?: RequestOptions) {
   const request = createRequest(url, options)
   const res = await fetch(request)
 
+  if (res.status >= 500) throw new Error('Something went wrong!', { cause: 'Server Error' })
   if (res.status === 204 || res.body === null) return null
 
-  let jsonData: any = null
+  let data: any = await res.text()
 
   try {
-    jsonData = await res.json()
+    data = JSON.parse(data)
   } catch {
-    return jsonData
+    if (res.status < 400) return data // text data
   }
 
-  if (res.status >= 400) throw jsonData
-  return jsonData
+  if (res.status >= 400) throw new Error(data.message ?? data)
+  return data
 }
 
 export function createRequest(url: string, options?: RequestOptions) {
