@@ -55,16 +55,16 @@ const Field = (props: Readonly<FieldProps>) => {
           ref={contentRef}
           contentEditable={editState}
           suppressContentEditableWarning={true}
-          className="flex-grow text-base text-gray-900 dark:text-gray-200 focus:border-none focus:outline-none"
+          className="flex-grow text-base text-gray-900 focus:border-none focus:outline-none dark:text-gray-200"
           onKeyDown={handleKeyDown}
         >
           {content}
         </p>
         <button onClick={() => setEditState(b => !b)}>
           {editState ? (
-            <CheckIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <CheckIcon className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
           ) : (
-            <PencilIcon className="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+            <PencilIcon className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
           )}
         </button>
       </div>
@@ -97,7 +97,7 @@ export default function Page() {
   }, [globalName, bio, authUser])
 
   return (
-    <div className="px-8 py-6 space-y-10">
+    <div className="space-y-10 px-8 py-6">
       <div className="flex justify-center">
         <Avatar src={authUser.dp} width={12.5} height={12.5} />
       </div>

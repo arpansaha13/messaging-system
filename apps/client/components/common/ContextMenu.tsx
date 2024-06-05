@@ -88,7 +88,7 @@ export function ContextMenu(props: Readonly<ContextMenuProps>) {
         {/* MenuItems */}
         {/* Headless UI doesn't support context menu (open on right click) yet */}
         <div
-          className="absolute z-10 w-48 origin-top rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 shadow-md shadow-gray-700 dark:shadow-black/70 focus:outline-none"
+          className="absolute z-10 w-48 origin-top rounded-md bg-gray-50 text-gray-800 shadow-md focus:outline-none dark:bg-gray-800 dark:text-gray-100 dark:shadow-black/70"
           style={{ top: `${position.top}px`, left: `${position.left}px` }}
         >
           <div className="px-0.5 py-1.5">
@@ -97,7 +97,7 @@ export function ContextMenu(props: Readonly<ContextMenuProps>) {
                 key={i}
                 as="button"
                 type="button"
-                className="block w-full px-6 py-2.5 text-sm text-left rounded hover:bg-gray-200 dark:hover:bg-gray-900/70 transition-colors"
+                className="block w-full rounded px-6 py-2.5 text-left text-sm transition-colors hover:bg-gray-200 dark:hover:bg-gray-900/70"
                 onClick={e => {
                   handleClick(e, item)
                 }}

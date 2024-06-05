@@ -9,8 +9,8 @@ export default function Loading() {
   ]
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="flex h-28 space-x-8 relative">
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="relative flex h-28 space-x-8">
         {logos.map(logo => (
           <Image
             key={logo.src}

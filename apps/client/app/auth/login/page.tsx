@@ -59,7 +59,7 @@ export default function SignInPage() {
   return (
     <>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto w-auto h-16 relative">
+        <div className="relative mx-auto h-16 w-auto">
           <Image src="/react-logo.svg" alt="React logo" priority={true} fill={true} className="object-contain" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
@@ -68,7 +68,7 @@ export default function SignInPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-gray-100 dark:bg-gray-900/90 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-gray-100 px-4 py-8 shadow sm:rounded-lg sm:px-10 dark:bg-gray-900/90">
           <form ref={formRef} className="space-y-6" onSubmit={login}>
             <BaseInput id="email" name="email" type="email" autoComplete="email" required label="Email address" />
 
@@ -99,7 +99,7 @@ export default function SignInPage() {
               <div className="text-sm">
                 <span className="text-gray-800 dark:text-gray-100">Don&apos;t have an account?</span>{' '}
                 <Link href="/auth/signup">
-                  <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Sign up</span>
+                  <span className="cursor-pointer font-medium text-emerald-600 hover:text-emerald-500">Sign up</span>
                 </Link>
               </div>
             </div>

@@ -98,7 +98,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
     <div className="flex h-screen">
       <Notification />
 
-      <nav className="flex-shrink-0 py-4 w-16 h-full flex flex-col gap-0.5 items-center bg-gray-100 dark:bg-gray-900 shadow-md">
+      <nav className="flex h-full w-16 flex-shrink-0 flex-col items-center gap-0.5 bg-gray-100 py-4 shadow-md dark:bg-gray-900">
         {navItems.map((navItem, i) => {
           if (navItem.type === 'separator') {
             return <Separator key={i} className="w-4/5" />
@@ -109,20 +109,20 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
               <Link
                 href={navItem.to}
                 className={classNames(
-                  'block w-max mx-auto p-2 transition-colors rounded',
+                  'mx-auto block w-max rounded p-2 transition-colors',
                   pathname === navItem.to &&
                     'bg-emerald-300 text-emerald-900 dark:bg-emerald-800 dark:text-emerald-200',
                 )}
               >
                 <span className="sr-only">{navItem.name}</span>
-                <LinkIcon idx={i} className="w-6 h-6 flex-shrink-0" />
+                <LinkIcon idx={i} className="h-6 w-6 flex-shrink-0" />
               </Link>
             </LinkWrapper>
           )
         })}
 
         <LinkWrapper>
-          <Link href="/settings/profile" className="mx-auto block w-max mx-wuto">
+          <Link href="/settings/profile" className="mx-wuto mx-auto block w-max">
             <Avatar src={authUser.dp} width={2} height={2} />
           </Link>
         </LinkWrapper>
@@ -142,8 +142,8 @@ function Loading() {
   ]
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="flex h-28 space-x-8 relative">
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="relative flex h-28 space-x-8">
         {logos.map(logo => (
           <Image
             key={logo.src}
@@ -172,10 +172,10 @@ LinkIcon.displayName = 'LinkIcon'
 
 function LinkWrapper({ children }: Readonly<LinkWrapperProps>) {
   return (
-    <div className="group relative w-full [&:nth-child(4)]:mt-auto last:mt-4">
+    <div className="group relative w-full last:mt-4 [&:nth-child(4)]:mt-auto">
       {children}
 
-      <span className="w-2 h-2 rounded-full group-hover:bg-gray-900 dark:group-hover:bg-gray-100 absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 transition-colors" />
+      <span className="absolute left-0 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors group-hover:bg-gray-900 dark:group-hover:bg-gray-100" />
     </div>
   )
 }

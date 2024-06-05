@@ -14,7 +14,7 @@ export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
   return (
     <html lang="en">
       {/* Browser extensions like grammarly will add attributes on body causing hydration warnings */}
-      <body suppressHydrationWarning className="w-screen h-screen">
+      <body suppressHydrationWarning className="h-screen w-screen">
         {children}
       </body>
     </html>

@@ -20,17 +20,17 @@ export default function Page() {
       <div className="flex gap-6">
         <div>
           <button
-            className={classNames('block w-12 h-12 rounded-full bg-gray-50', !isDark && 'ring ring-indigo-400')}
+            className={classNames('block h-12 w-12 rounded-full bg-gray-50', !isDark && 'ring ring-indigo-400')}
             onClick={switchToLight}
           />
-          <p className="mt-1 text-sm text-center">Light</p>
+          <p className="mt-1 text-center text-sm">Light</p>
         </div>
         <div>
           <button
-            className={classNames('block w-12 h-12 rounded-full bg-gray-700', isDark && 'ring ring-indigo-400')}
+            className={classNames('block h-12 w-12 rounded-full bg-gray-700', isDark && 'ring ring-indigo-400')}
             onClick={switchToDark}
           />
-          <p className="mt-1 text-sm text-center">Dark</p>
+          <p className="mt-1 text-center text-sm">Dark</p>
         </div>
       </div>
     </>

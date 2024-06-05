@@ -128,7 +128,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
   return Object.keys(contacts).map(letter => (
     <div key={letter} className="relative">
       {/* Size of image = h-12 w-12 */}
-      <div className="mx-3 my-2 h-12 w-12 flex items-center justify-center font-medium text-gray-500 dark:text-emerald-500">
+      <div className="mx-3 my-2 flex h-12 w-12 items-center justify-center font-medium text-gray-500 dark:text-emerald-500">
         <h3>{letter}</h3>
       </div>
 
@@ -152,7 +152,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
 
 function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResultsProps>) {
   return (
-    <ul className="py-3 space-y-1">
+    <ul className="space-y-1 py-3">
       {results.map(contact => (
         <StackedListItem
           key={contact.contactId}
@@ -202,22 +202,22 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
   return (
     <Modal open={open} setOpen={setOpen}>
       <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-lg text-center font-medium leading-6 text-gray-900 dark:text-white">
+        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
           Edit contact alias
         </DialogTitle>
 
-        <div className="mt-4 mx-auto text-center flex justify-center">
+        <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
         </div>
 
         {contact && (
           <div className="mt-2">
-            <p className="text-sm text-center font-medium text-gray-500 dark:text-gray-300">{contact?.alias}</p>
+            <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-300">{contact?.alias}</p>
           </div>
         )}
 
         <div className="mt-2">
-          <p className="text-sm text-center text-gray-500 dark:text-gray-300">{contact?.bio}</p>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-300">{contact?.bio}</p>
         </div>
 
         <form className="mt-4" onSubmit={onSubmit}>
@@ -266,22 +266,22 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
   return (
     <Modal open={open} setOpen={setOpen}>
       <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-lg text-center font-medium leading-6 text-gray-900 dark:text-white">
+        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
           Delete contact
         </DialogTitle>
 
-        <div className="mt-4 mx-auto text-center flex justify-center">
+        <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
         </div>
 
         {contact && (
           <div className="mt-2">
-            <p className="text-sm font-medium text-center text-gray-500 dark:text-gray-300">{contact?.alias}</p>
+            <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-300">{contact?.alias}</p>
           </div>
         )}
 
         <div className="mt-2">
-          <p className="text-sm text-center text-gray-500 dark:text-gray-300">{contact?.bio}</p>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-300">{contact?.bio}</p>
         </div>
 
         <p className="mt-2 text-center">Are you sure you want to delete this contact?</p>
@@ -290,7 +290,7 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
             <button
               type="submit"
-              className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors sm:col-start-2"
+              className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:col-start-2"
             >
               Delete
             </button>

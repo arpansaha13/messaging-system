@@ -12,7 +12,7 @@ interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BaseButtonLoader = () => (
-  <div className="absolute w-6 aspect-square border-y-2 border-gray-50 rounded-full animate-spin" />
+  <div className="absolute aspect-square w-6 animate-spin rounded-full border-y-2 border-gray-50" />
 )
 
 function BaseButton(props: Readonly<BaseButtonProps>) {
@@ -33,10 +33,10 @@ function BaseButton(props: Readonly<BaseButtonProps>) {
       disabled={disabled || loading} // disable while loading
       {...attrs}
       className={classNames(
-        'flex w-full justify-center rounded-md border py-2 px-4 text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors relative',
+        'relative flex w-full justify-center rounded-md border px-4 py-2 text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2',
         !secondary
-          ? 'text-white bg-emerald-600 hover:bg-emerald-700 border-transparent'
-          : 'text-gray-900 dark:text-gray-100 border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50',
+          ? 'border-transparent bg-emerald-600 text-white hover:bg-emerald-700'
+          : 'border-gray-300 text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800/50',
         disabled && 'opacity-70',
         stretch && 'w-full',
         className,

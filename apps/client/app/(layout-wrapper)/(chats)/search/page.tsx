@@ -159,24 +159,24 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
   return (
     <Modal open={open} setOpen={setOpen}>
       <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-lg text-center font-medium leading-6 text-gray-900 dark:text-white">
+        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
           Add to Contacts
         </DialogTitle>
 
-        <div className="mt-4 mx-auto text-center flex justify-center">
+        <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar src={user?.dp} alt={`display picture of ${user?.globalName}`} width={6} height={6} />
         </div>
 
         {user && (
           <div className="mt-2">
-            <p className="text-sm text-center font-medium text-gray-500 dark:text-gray-300">
+            <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-300">
               <GlobalName name={user.globalName} /> • @{user.username}
             </p>
           </div>
         )}
 
         <div className="mt-2">
-          <p className="text-sm text-center text-gray-500 dark:text-gray-300">{user?.bio}</p>
+          <p className="text-center text-sm text-gray-500 dark:text-gray-300">{user?.bio}</p>
         </div>
 
         <form className="mt-4" onSubmit={onSubmit}>

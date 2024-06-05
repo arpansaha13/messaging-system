@@ -45,7 +45,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
         <li className="relative">
           <button
             className={classNames(
-              'px-3 w-full text-left flex items-center rounded transition-colors',
+              'flex w-full items-center rounded px-3 text-left transition-colors',
               userId === activeChat?.receiver.id
                 ? 'bg-gray-300/65 hover:bg-gray-400/40 dark:bg-gray-700/80 dark:hover:bg-gray-600/80'
                 : 'hover:bg-gray-200/80 dark:hover:bg-gray-600/40',
@@ -56,13 +56,13 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
           >
             <Avatar src={dp} />
 
-            <div className="ml-4 py-3 w-full">
-              <div className="flex justify-between items-center">
+            <div className="ml-4 w-full py-3">
+              <div className="flex items-center justify-between">
                 <p className="text-base text-black dark:text-gray-50">{alias ?? <GlobalName name={globalName} />}</p>
                 {latestMsg && (
                   <p
                     className={classNames(
-                      'text-xs flex items-end',
+                      'flex items-end text-xs',
                       unread ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-400',
                     )}
                   >
@@ -70,17 +70,17 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
                   </p>
                 )}
               </div>
-              <div className="flex justify-between items-center text-gray-600 dark:text-gray-400">
+              <div className="flex items-center justify-between text-gray-600 dark:text-gray-400">
                 <p
                   className={classNames(
-                    'flex items-center text-sm space-x-1',
+                    'flex items-center space-x-1 text-sm',
                     latestMsg === null ? 'h-5' : '', // same as line-height of 'text-sm'
                   )}
                 >
                   {latestMsg && authUserIsSender && <MsgStatusIcon status={latestMsg.status} />}
                   {latestMsg && <span className="line-clamp-1">{latestMsg.content}</span>}
                 </p>
-                <div className="flex-shrink-0 flex items-center text-gray-500 dark:text-gray-400">
+                <div className="flex flex-shrink-0 items-center text-gray-500 dark:text-gray-400">
                   {/* Icons */}
                   {children}
                 </div>

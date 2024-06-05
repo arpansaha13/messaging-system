@@ -76,7 +76,7 @@ export default function SignUpPage() {
   return (
     <>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto w-auto h-16 relative">
+        <div className="relative mx-auto h-16 w-auto">
           <Image src="/react-logo.svg" alt="React logo" priority={true} fill={true} className="object-contain" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
@@ -84,9 +84,9 @@ export default function SignUpPage() {
         </h2>
       </div>
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl">
-        <div className="bg-gray-100 dark:bg-gray-900/90 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-gray-100 px-4 py-8 shadow sm:rounded-lg sm:px-10 dark:bg-gray-900/90">
           <form ref={formRef} className="space-y-6" onSubmit={signUp}>
-            <div className="pb-2 grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6 pb-2">
               <BaseInput id="email" name="email" type="email" autoComplete="email" required label="Email address" />
 
               <BaseInput
@@ -134,7 +134,7 @@ export default function SignUpPage() {
               <div className="text-sm">
                 <span className="text-gray-800 dark:text-gray-100">Already have an account?</span>{' '}
                 <Link href="/auth/login">
-                  <span className="font-medium text-emerald-600 hover:text-emerald-500 cursor-pointer">Login</span>
+                  <span className="cursor-pointer font-medium text-emerald-600 hover:text-emerald-500">Login</span>
                 </Link>
               </div>
             </div>

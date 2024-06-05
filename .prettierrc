@@ -8,5 +8,14 @@
   "bracketSameLine": false,
   "jsxSingleQuote": false,
   "trailingComma": "all",
-  "printWidth": 120
+  "printWidth": 120,
+  "plugins": [
+    "prettier-plugin-tailwindcss"
+  ],
+  "tailwindFunctions": [
+    "classNames",
+    "cn"
+  ],
+  "tailwindPreserveWhitespace": false,
+  "tailwindPreserveDuplicates": false
 }
