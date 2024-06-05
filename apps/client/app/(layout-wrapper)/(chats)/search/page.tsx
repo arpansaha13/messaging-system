@@ -49,7 +49,7 @@ export default function Page() {
   const menuItems: IContextMenuItem[] = [
     {
       slot: 'Add to Contacts',
-      onClick: (_, payload) => {
+      action: (_, payload) => {
         setAddContactModalOpen(true)
         setModalPayload(payload)
       },

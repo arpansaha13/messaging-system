@@ -69,6 +69,10 @@ export function ContextMenu(props: Readonly<ContextMenuProps>) {
   const { items, payload } = props
   const { open, position } = useContext(ContextMenuContext)!
 
+  function handleClick(e: React.MouseEvent, item: IContextMenuItem) {
+    item.action(e, payload)
+  }
+
   return (
     <Menu>
       <Transition
@@ -94,7 +98,9 @@ export function ContextMenu(props: Readonly<ContextMenuProps>) {
                 as="button"
                 type="button"
                 className="block w-full px-6 py-2.5 text-sm text-left rounded hover:bg-gray-200 dark:hover:bg-gray-900/70 transition-colors"
-                onClick={e => item.onClick(e, payload)}
+                onClick={e => {
+                  handleClick(e, item)
+                }}
               >
                 {item.slot}
               </MenuItem>
