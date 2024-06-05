@@ -5,7 +5,10 @@ import { ConfigService } from '@nestjs/config'
 import type { EnvVariables } from 'src/env.types'
 
 export class SocketIoAdapter extends IoAdapter {
-  constructor(private app: INestApplicationContext, private configService: ConfigService<EnvVariables>) {
+  constructor(
+    private app: INestApplicationContext,
+    private configService: ConfigService<EnvVariables>,
+  ) {
     super(app)
   }
 
