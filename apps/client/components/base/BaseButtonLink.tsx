@@ -11,7 +11,7 @@ interface BaseButtonProps extends LinkProps {
 }
 
 const BaseButtonLoader = () => (
-  <div className="absolute w-6 aspect-square border-y-2 border-gray-50 rounded-full animate-spin" />
+  <div className="absolute aspect-square w-6 animate-spin rounded-full border-y-2 border-gray-50" />
 )
 
 function BaseButton({ children, loading = false, disabled = false, stretch = false, ...attrs }: BaseButtonProps) {
@@ -19,7 +19,7 @@ function BaseButton({ children, loading = false, disabled = false, stretch = fal
     <Link
       {...attrs}
       className={classNames(
-        'flex w-full justify-center rounded-md border border-transparent bg-emerald-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-colors relative',
+        'relative flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2',
         disabled && 'opacity-70',
         stretch && 'w-full',
       )}

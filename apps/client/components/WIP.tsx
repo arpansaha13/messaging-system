@@ -5,7 +5,7 @@ import githubBoxIcon from '@iconify-icons/mdi/github-box'
 
 export default function WIP() {
   return (
-    <div className="p-4 w-screen h-screen flex flex-col items-center justify-center">
+    <div className="flex h-screen w-screen flex-col items-center justify-center p-4">
       <div className="grid grid-cols-2 gap-8">
         <div className="relative">
           <Image src="/nextjs-icon.svg" alt="nextjs-logo" width="80" height="80" />
@@ -22,8 +22,8 @@ export default function WIP() {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-2xl text-center text-gray-50">Work in progress</h2>
-        <p className="mt-2 text-sm text-center text-gray-400">
+        <h2 className="text-center text-2xl text-gray-50">Work in progress</h2>
+        <p className="mt-2 text-center text-sm text-gray-400">
           The view for smaller screens is still a work in progress. Kindly view this deployment on a larger screen.
         </p>
       </div>
@@ -32,10 +32,10 @@ export default function WIP() {
         href="https://github.com/arpansaha13/whatsapp-clone"
         target="_blank"
         rel="noreferrer"
-        className="mt-8 p-1 block shadow shadow-gray-600 rounded-lg"
+        className="mt-8 block rounded-lg p-1 shadow shadow-gray-600"
       >
         <div className="flex rounded-md shadow-sm">
-          <div className="flex-shrink-0 flex items-center justify-center w-16 rounded-l-md shadow-sm shadow-gray-600">
+          <div className="flex w-16 flex-shrink-0 items-center justify-center rounded-l-md shadow-sm shadow-gray-600">
             <Icon icon={githubBoxIcon} className="flex-shrink-0" color="inherit" width={64} height={64} />
           </div>
 

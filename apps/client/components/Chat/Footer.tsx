@@ -109,7 +109,7 @@ export default function ChatFooter() {
   }, [activeChat])
 
   return (
-    <div className="px-1 flex-grow">
+    <div className="flex-grow px-1">
       <TextArea value={value} setValue={setValue} onKeyDown={handleKeyDown} />
     </div>
   )
@@ -138,7 +138,7 @@ function TextArea({ value, setValue, onKeyDown }: TextAreaProps) {
           type="text"
           id="type-area"
           name="type-area"
-          className="block w-full rounded-lg bg-white dark:bg-gray-700/70 text-sm text-gray-500 dark:text-gray-200 px-3 py-2.5 border-none placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none shadow"
+          className="block w-full rounded-lg border-none bg-white px-3 py-2.5 text-sm text-gray-500 placeholder-gray-400 shadow focus:border-none focus:outline-none focus:ring-0 dark:bg-gray-700/70 dark:text-gray-200"
           placeholder="Type a message"
           value={value}
           onChange={handleChange}

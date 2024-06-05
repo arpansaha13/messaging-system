@@ -47,7 +47,7 @@ export default function ChatBody() {
   }, [elRef, userMessagesMap, tempMessagesMap])
 
   return (
-    <div ref={elRef} className="px-20 py-4 overflow-y-scroll scrollbar">
+    <div ref={elRef} className="scrollbar overflow-y-scroll px-20 py-4">
       {userMessagesMap.has(activeChat.receiver.id) && <Messages />}
     </div>
   )
@@ -109,14 +109,14 @@ function Message({ message }: Readonly<MessageProps>) {
   return (
     <div
       className={classNames(
-        'lg:max-w-lg xl:max-w-xl w-max mb-4 last:mb-0 px-2 pt-1.5 pb-2.5 text-sm rounded-lg text-gray-900 dark:text-gray-100 space-y-1.5 border-b border-gray-400/50 dark:border-none relative',
-        authUserIsSender ? 'bg-green-100 dark:bg-emerald-800 ml-auto' : 'bg-white dark:bg-slate-700',
+        'relative mb-4 w-max space-y-1.5 rounded-lg border-b border-gray-400/50 px-2 pb-2.5 pt-1.5 text-sm text-gray-900 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:text-gray-100',
+        authUserIsSender ? 'ml-auto bg-green-100 dark:bg-emerald-800' : 'bg-white dark:bg-slate-700',
       )}
     >
       <span className="break-words">{message.content}</span>
 
-      <div className="min-w-[4.5rem] text-xs text-gray-800 dark:text-gray-300 inline-flex items-end justify-end">
-        <p className="flex items-center absolute right-2 bottom-1">
+      <div className="inline-flex min-w-[4.5rem] items-end justify-end text-xs text-gray-800 dark:text-gray-300">
+        <p className="absolute bottom-1 right-2 flex items-center">
           <span className="mr-1">{format(message.createdAt, 'h:mm a')}</span>
           {authUserIsSender && <MsgStatusIcon status={message.status} />}
         </p>
@@ -127,11 +127,11 @@ function Message({ message }: Readonly<MessageProps>) {
 
 function TempMessage({ message }: Readonly<TempMessageProps>) {
   return (
-    <div className="lg:max-w-lg xl:max-w-xl w-max mb-4 last:mb-0 px-2 pt-1.5 pb-2.5 text-sm rounded-lg text-gray-900 dark:text-gray-100 space-y-1.5 border-b border-gray-400/50 dark:border-none relative bg-green-100 dark:bg-emerald-800 ml-auto">
+    <div className="relative mb-4 ml-auto w-max space-y-1.5 rounded-lg border-b border-gray-400/50 bg-green-100 px-2 pb-2.5 pt-1.5 text-sm text-gray-900 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:bg-emerald-800 dark:text-gray-100">
       <span className="break-words">{message.content}</span>
 
-      <div className="min-w-[4.5rem] text-xs text-gray-800 dark:text-gray-300 inline-flex items-end justify-end">
-        <p className="flex items-center absolute right-2 bottom-1">
+      <div className="inline-flex min-w-[4.5rem] items-end justify-end text-xs text-gray-800 dark:text-gray-300">
+        <p className="absolute bottom-1 right-2 flex items-center">
           <span className="mr-1">{format(message.createdInClientAt, 'h:mm a')}</span>
           <MsgStatusIcon status={message.status} />
         </p>

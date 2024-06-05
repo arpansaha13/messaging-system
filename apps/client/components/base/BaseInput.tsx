@@ -20,11 +20,11 @@ export default function BaseInput(props: BaseInputProps) {
         <input
           ref={innerRef}
           {...inputAttrs}
-          className="block w-full appearance-none rounded-md border border-gray-300 bg-gray-50 dark:bg-gray-800/70 px-3 py-2 text placeholder-gray-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm"
+          className="text block w-full appearance-none rounded-md border border-gray-300 bg-gray-50 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-emerald-500 sm:text-sm dark:bg-gray-800/70"
         />
       </div>
       {validationError !== null && (
-        <p className="text-xs text-red-400 absolute -bottom-5 left-0.5">{validationError}</p>
+        <p className="absolute -bottom-5 left-0.5 text-xs text-red-400">{validationError}</p>
       )}
     </div>
   )

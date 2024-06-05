@@ -16,7 +16,7 @@ export default function VerificationPage() {
   return (
     <>
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="mx-auto w-auto h-16 relative">
+        <div className="relative mx-auto h-16 w-auto">
           <Image src="/react-logo.svg" alt="React logo" priority={true} fill={true} className="object-contain" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
@@ -25,7 +25,7 @@ export default function VerificationPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-gray-100 dark:bg-gray-900/90 py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-gray-100 px-4 py-8 shadow sm:rounded-lg sm:px-10 dark:bg-gray-900/90">
           <LinkNotExpired />
         </div>
       </div>

@@ -55,21 +55,21 @@ function StackedListItemButton(props: Readonly<StackedListItemButtonProps>) {
 
   return (
     <button
-      className="px-3 w-full text-left hover:bg-gray-200/80 dark:hover:bg-gray-600/40 flex items-center rounded transition-colors"
+      className="flex w-full items-center rounded px-3 text-left transition-colors hover:bg-gray-200/80 dark:hover:bg-gray-600/40"
       {...eventHandlers}
     >
       <Avatar src={image} />
 
-      <div className="ml-4 py-3 w-full">
+      <div className="ml-4 w-full py-3">
         <div className="flex justify-between">
           <p className="text-base text-black dark:text-gray-50">{title}</p>
         </div>
         <div className="flex justify-between">
-          <p className="text-sm text-gray-500 dark:text-gray-400 italic">{subtitle}</p>
+          <p className="text-sm italic text-gray-500 dark:text-gray-400">{subtitle}</p>
         </div>
         <div className="mt-1 flex justify-between">
           {/* TODO: Make a slot for icons */}
-          <p className="flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-1 line-clamp-1">{text}</p>
+          <p className="line-clamp-1 flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400">{text}</p>
         </div>
       </div>
     </button>

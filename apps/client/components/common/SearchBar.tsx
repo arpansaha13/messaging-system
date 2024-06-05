@@ -21,21 +21,21 @@ const SearchBar = ({ id, value, setValue, ...attrs }: SearchBarProps) => {
         Search
       </label>
 
-      <div className="group relative rounded-lg overflow-hidden">
+      <div className="group relative overflow-hidden rounded-lg">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">
           <MagnifyingGlassIcon
-            className="pointer-events-none h-4 w-4 text-gray-600 dark:text-gray-400 group-focus-within:text-emerald-600 dark:group-focus-within:text-emerald-500 transition-colors"
+            className="pointer-events-none h-4 w-4 text-gray-600 transition-colors group-focus-within:text-emerald-600 dark:text-gray-400 dark:group-focus-within:text-emerald-500"
             aria-hidden="true"
           />
         </div>
 
-        <span className="absolute inset-x-0 bottom-0 h-0.5 group-focus-within:bg-emerald-600 dark:group-focus-within:bg-emerald-500 transition-colors" />
+        <span className="absolute inset-x-0 bottom-0 h-0.5 transition-colors group-focus-within:bg-emerald-600 dark:group-focus-within:bg-emerald-500" />
 
         <input
           ref={inputRef}
           id={id}
           {...attrs}
-          className="block w-full text-gray-600 dark:text-gray-200 bg-gray-200 dark:bg-gray-800 py-2 pl-12 pr-8 text-sm shadow dark:shadow-gray-950/40 border-none placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-none"
+          className="block w-full border-none bg-gray-200 py-2 pl-12 pr-8 text-sm text-gray-600 placeholder-gray-500 shadow focus:border-none focus:outline-none focus:ring-0 dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-400 dark:shadow-gray-950/40"
           value={value}
           onChange={e => setValue(e.target.value)}
         />

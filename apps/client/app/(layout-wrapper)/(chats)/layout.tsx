@@ -12,12 +12,12 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
   const activeChat = useStore(state => state.activeChat)
 
   return (
-    <div className="p-2 flex h-full gap-2">
-      <section className="p-2 flex-shrink-0 w-[26rem] h-full bg-gray-100 dark:bg-gray-900 shadow-md space-y-2 flex flex-col rounded overflow-hidden">
-        <div className="flex-grow overflow-y-auto scrollbar">{children}</div>
+    <div className="flex h-full gap-2 p-2">
+      <section className="flex h-full w-[26rem] flex-shrink-0 flex-col space-y-2 overflow-hidden rounded bg-gray-100 p-2 shadow-md dark:bg-gray-900">
+        <div className="scrollbar flex-grow overflow-y-auto">{children}</div>
       </section>
 
-      <section className="flex-grow h-full bg-gray-100 dark:bg-gray-800 shadow-md rounded overflow-hidden">
+      <section className="h-full flex-grow overflow-hidden rounded bg-gray-100 shadow-md dark:bg-gray-800">
         {!isNullOrUndefined(activeChat) && <Chat />}
       </section>
     </div>
