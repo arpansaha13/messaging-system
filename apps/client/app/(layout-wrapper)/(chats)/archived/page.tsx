@@ -57,13 +57,13 @@ function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps
   const menuItems: IContextMenuItem[] = [
     {
       slot: 'Unarchive chat',
-      onClick() {
+      action: () => {
         unarchiveChat(userId)
       },
     },
     {
       slot: 'Delete chat',
-      onClick() {
+      action: () => {
         deleteMessages(userId)
         deleteChat(userId, true)
         // If active room is being deleted

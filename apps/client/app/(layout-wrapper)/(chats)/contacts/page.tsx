@@ -52,14 +52,14 @@ export default function Page() {
   const menuItems: IContextMenuItem[] = [
     {
       slot: 'Edit Alias',
-      onClick: (_, payload: IContact) => {
+      action: (_, payload: IContact) => {
         setEditAliasModalOpen(true)
         setModalPayload(payload)
       },
     },
     {
       slot: 'Delete Contact',
-      onClick: (_, payload: IContact) => {
+      action: (_, payload: IContact) => {
         setDeleteContactModalOpen(true)
         setModalPayload(payload)
       },

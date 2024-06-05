@@ -43,5 +43,5 @@ export interface IContact {
 
 export interface IContextMenuItem {
   slot: string | React.ReactNode
-  onClick: (e: React.MouseEvent, payload?: any) => void
+  action: (e: React.MouseEvent, payload?: any) => void
 }

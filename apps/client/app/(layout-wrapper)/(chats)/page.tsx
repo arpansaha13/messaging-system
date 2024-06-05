@@ -73,26 +73,26 @@ function UnarchivedConvoItem({ userId, pinned, ...remainingProps }: UnarchivedCo
   const menuItems: IContextMenuItem[] = [
     {
       slot: pinned ? 'Unpin chat' : 'Pin chat',
-      onClick() {
+      action: () => {
         updateChatListItemMessagePin(userId, !pinned)
       },
     },
     {
       slot: 'Archive chat',
-      onClick() {
+      action: () => {
         archiveChat(userId)
       },
     },
     {
       slot: 'Clear messages',
-      onClick() {
+      action: () => {
         clearMessages(userId)
         clearChatListItemMessage(userId)
       },
     },
     {
       slot: 'Delete chat',
-      onClick() {
+      action: () => {
         deleteMessages(userId)
         deleteChat(userId, false)
         // If active room is being deleted
