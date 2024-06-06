@@ -6,7 +6,7 @@
     "build": "pnpm prebuild && nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "db:init": "pnpm migration:run && pnpm db:seed",
-    "db:seed": "node src/seed.mjs",
+    "db:seed": "node seed/index.mjs",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
