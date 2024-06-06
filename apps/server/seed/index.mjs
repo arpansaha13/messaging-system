@@ -114,6 +114,8 @@ const users = [
   },
 ]
 
+const chats = []
+
 async function seed() {
   await client.connect()
 
@@ -137,23 +139,42 @@ async function seed() {
   console.groupEnd()
   console.log()
 
-  const chats = []
-
   async function insertUsers() {
-    for (const user of users) {
-      const result = await client.query(
-        `INSERT INTO users (global_name, username, email, dp, bio, password)
-        VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        Object.values(user),
-      )
-      user.id = result.rows[0].id
-    }
-    console.log('inserted users')
+    const values = []
+    const placeholders = users
+      .map((user, i) => {
+        const index = i * 6
+        values.push(...Object.values(user))
+        return `($${index + 1}, $${index + 2}, $${index + 3}, $${index + 4}, $${index + 5}, $${index + 6})`
+      })
+      .join(', ')
+
+    const query = `
+      INSERT INTO users (global_name, username, email, dp, bio, password)
+      VALUES ${placeholders}
+      RETURNING id
+    `
+
+    const result = await client.query(query, values) // bulk insert users
+
+    result.rows.forEach((row, i) => {
+      users[i].id = row.id
+    })
+
+    return result.rows.length
   }
 
   async function insertChats() {
+    const chatEntries = []
+    let chatsInsertCount = 0
+
     for (let i = 0; i < users.length; i++) {
-      for (let j = i + 1; j < users.length; j++) {
+      for (let j = 0; j < users.length; j++) {
+        if (i === j) continue
+
+        // 60% chance of this chat to exist
+        if (faker.number.int({ min: 0, max: 10 }) < 4) continue
+
         const user1 = users[i]
         const user2 = users[j]
 
@@ -162,82 +183,223 @@ async function seed() {
           [user1, user2],
           [user2, user1],
         ]) {
-          const result = await client.query(
-            `INSERT INTO chats (sender_id, receiver_id, cleared_at, muted, archived, pinned)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-            [
-              sender.id,
-              receiver.id,
-              faker.date.past(),
-              faker.datatype.boolean(),
-              faker.datatype.boolean(),
-              faker.datatype.boolean(),
-            ],
-          )
-          chats.push({ id: result.rows[0].id, sender, receiver })
+          chatEntries.push({
+            sender_id: sender.id,
+            receiver_id: receiver.id,
+            cleared_at: faker.date.past(),
+            muted: faker.datatype.boolean(),
+            archived: faker.datatype.boolean(),
+            pinned: faker.datatype.boolean(),
+          })
+
+          // 20 at a time
+          if (chatEntries.length === 20) {
+            await bulkInsertChats(chatEntries)
+            chatsInsertCount += chatEntries.length
+            chatEntries.length = 0 // Clear the array
+          }
         }
       }
     }
-    console.log('inserted chats')
+
+    // Insert remaining chat entries
+    if (chatEntries.length > 0) {
+      await bulkInsertChats(chatEntries)
+      chatsInsertCount += chatEntries.length
+    }
+
+    return chatsInsertCount
+
+    async function bulkInsertChats(entries) {
+      const values = []
+      const placeholders = entries
+        .map((entry, i) => {
+          const offset = i * 6
+          values.push(entry.sender_id, entry.receiver_id, entry.cleared_at, entry.muted, entry.archived, entry.pinned)
+          return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6})`
+        })
+        .join(', ')
+
+      const query = `
+        INSERT INTO chats (sender_id, receiver_id, cleared_at, muted, archived, pinned)
+        VALUES ${placeholders}
+        RETURNING id
+      `
+
+      const result = await client.query(query, values)
+      result.rows.forEach((row, i) => {
+        chats.push({ id: row.id, sender_id: entries[i].sender_id, receiver_id: entries[i].receiver_id })
+      })
+    }
   }
 
   async function insertMessages() {
+    const messageEntries = []
+    const messageRecipientEntries = []
+    let messagesInsertCount = 0
+    let recipientsInsertCount = 0
+
     for (const chat of chats) {
-      const messageCount = faker.number.int({ min: 1, max: 10 })
+      const messageCount = faker.number.int({ min: 0, max: 100 })
+
       for (let i = 0; i < messageCount; i++) {
-        const sender = [chat.sender, chat.receiver][faker.number.int({ min: 0, max: 1 })]
-        const receiver = sender.id === chat.sender.id ? chat.receiver : chat.sender
+        const sender_id = faker.helpers.arrayElement([chat.sender_id, chat.receiver_id])
+        const receiver_id = sender_id === chat.sender_id ? chat.receiver_id : chat.sender_id
         const createdAt = faker.date.past()
-        const updatedAt = new Date()
+        const updatedAt = faker.date.between({ from: createdAt, to: new Date() })
 
-        const result = await client.query(
-          `INSERT INTO messages (content, sender_id, created_at, updated_at)
-           VALUES ($1, $2, $3, $4) RETURNING id`,
-          [faker.lorem.sentence(), sender.id, createdAt, updatedAt],
-        )
-        const messageId = result.rows[0].id
+        const message = {
+          content: faker.lorem.sentence(),
+          sender_id: sender_id,
+          created_at: createdAt,
+          updated_at: updatedAt,
+        }
+        messageEntries.push(message)
 
-        await client.query(
-          `INSERT INTO message_recipients (message_id, receiver_id, status, created_at, updated_at)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [
-            messageId,
-            receiver.id,
-            ['SENT', 'DELIVERED', 'READ'][faker.number.int({ min: 0, max: 2 })],
-            createdAt,
-            updatedAt,
-          ],
-        )
+        const recipient = {
+          receiver_id: receiver_id,
+          status: faker.helpers.arrayElement(['SENT', 'DELIVERED', 'READ']),
+          created_at: createdAt,
+          updated_at: updatedAt,
+        }
+        messageRecipientEntries.push(recipient)
+
+        if (messageEntries.length === 20) {
+          await bulkInsertMessagesAndRecipients(messageEntries, messageRecipientEntries)
+          messagesInsertCount += messageEntries.length
+          recipientsInsertCount += messageRecipientEntries.length
+          messageEntries.length = 0 // Clear the array
+          messageRecipientEntries.length = 0 // Clear the array
+        }
       }
     }
-    console.log('inserted messages')
+
+    // Insert remaining messages and recipients
+    if (messageEntries.length > 0) {
+      await bulkInsertMessagesAndRecipients(messageEntries, messageRecipientEntries)
+      messagesInsertCount += messageEntries.length
+      recipientsInsertCount += messageRecipientEntries.length
+    }
+
+    return { messagesInsertCount, recipientsInsertCount }
+
+    async function bulkInsertMessagesAndRecipients(messages, recipients) {
+      const messageValues = []
+      const messagePlaceholders = messages
+        .map((message, index) => {
+          const offset = index * 4
+          messageValues.push(message.content, message.sender_id, message.created_at, message.updated_at)
+          return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4})`
+        })
+        .join(', ')
+
+      const messageQuery = `
+        INSERT INTO messages (content, sender_id, created_at, updated_at)
+        VALUES ${messagePlaceholders}
+        RETURNING id
+      `
+
+      const messageResult = await client.query(messageQuery, messageValues)
+      const messageIds = messageResult.rows.map(row => row.id)
+
+      const recipientValues = []
+      const recipientPlaceholders = recipients
+        .map((recipient, i) => {
+          const offset = i * 5
+          recipientValues.push(
+            messageIds[i],
+            recipient.receiver_id,
+            recipient.status,
+            recipient.created_at,
+            recipient.updated_at,
+          )
+          return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`
+        })
+        .join(', ')
+
+      const recipientQuery = `
+        INSERT INTO message_recipients (message_id, receiver_id, status, created_at, updated_at)
+        VALUES ${recipientPlaceholders}
+      `
+
+      await client.query(recipientQuery, recipientValues)
+    }
   }
 
   async function insertContacts() {
+    const contactEntries = []
+    const maxContacts = 50
+    let contactsInsertCount = 0
+
     for (const user of users) {
       const existingContacts = new Set([user.id])
-      const numberOfContacts = faker.number.int({ min: 0, max: users.length - 1 })
+      const numberOfContacts = faker.number.int({ min: 0, max: Math.min(maxContacts, users.length - 1) })
 
       for (let i = 0; i < numberOfContacts; i++) {
         const possibleContacts = users.filter(u => !existingContacts.has(u.id))
-        const contactUser = possibleContacts[faker.number.int({ min: 0, max: possibleContacts.length - 1 })]
+        const contactUser = faker.helpers.arrayElement(possibleContacts)
         existingContacts.add(contactUser.id)
 
-        await client.query(
-          `INSERT INTO contacts
-          (user_id, user_id_in_contact, alias, created_at, updated_at)
-          VALUES ($1, $2, $3, $4, $5)`,
-          [user.id, contactUser.id, faker.person.fullName(), faker.date.past(), faker.date.past()],
-        )
+        contactEntries.push({
+          user_id: user.id,
+          user_id_in_contact: contactUser.id,
+          alias: faker.person.fullName(),
+          created_at: faker.date.past(),
+          updated_at: faker.date.past(),
+        })
+
+        // 20 at a time
+        if (contactEntries.length === 20) {
+          await bulkInsertContacts(contactEntries)
+          contactsInsertCount += contactEntries.length
+          contactEntries.length = 0 // Clear the array
+        }
       }
     }
-    console.log('inserted contacts')
+
+    // Insert remaining contact entries
+    if (contactEntries.length > 0) {
+      await bulkInsertContacts(contactEntries)
+      contactsInsertCount += contactEntries.length
+    }
+
+    return contactsInsertCount
+
+    async function bulkInsertContacts(entries) {
+      const values = []
+      const placeholders = entries
+        .map((entry, index) => {
+          const offset = index * 5
+          values.push(entry.user_id, entry.user_id_in_contact, entry.alias, entry.created_at, entry.updated_at)
+          return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`
+        })
+        .join(', ')
+
+      const query = `
+        INSERT INTO contacts
+        (user_id, user_id_in_contact, alias, created_at, updated_at)
+        VALUES ${placeholders}
+      `
+
+      await client.query(query, values)
+    }
   }
 
-  await insertUsers()
-  await insertChats()
-  await insertMessages()
-  await insertContacts()
+  console.log('inserting users...')
+  const usersInsertCount = await insertUsers()
+  console.log(`inserted ${usersInsertCount} users\n`)
+
+  console.log('inserting chats...')
+  const chatsInsertCount = await insertChats()
+  console.log(`inserted ${chatsInsertCount} chats\n`)
+
+  console.log('inserting messages...')
+  const { messagesInsertCount, recipientsInsertCount } = await insertMessages()
+  console.log(`inserted ${messagesInsertCount} messages and ${recipientsInsertCount} message-recipients\n`)
+
+  console.log('inserting contacts...')
+  const contactsInsertCount = await insertContacts()
+  console.log(`inserted ${contactsInsertCount} contacts`)
 
   await client.end()
 }
