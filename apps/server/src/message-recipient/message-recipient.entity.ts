@@ -11,14 +11,14 @@ export enum MessageStatus {
 
 @Entity({ name: 'message_recipients' })
 export class MessageRecipient extends BaseEntity {
-  @ManyToOne(() => Message, msg => msg.recipients)
+  @ManyToOne(() => Message, msg => msg.recipients, { nullable: false })
   @JoinColumn({ name: 'message_id', referencedColumnName: 'id' })
   message: Relation<Message>
 
   @Column({ name: 'status', nullable: false, default: MessageStatus.SENT })
   status: MessageStatus
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'receiver_id', referencedColumnName: 'id' })
   receiver: User
 }

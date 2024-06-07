@@ -6,11 +6,11 @@ export class Chat {
   @PrimaryGeneratedColumn({ name: 'id' })
   id: number
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
   sender: Relation<User>
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'receiver_id', referencedColumnName: 'id' })
   receiver: Relation<User>
 
