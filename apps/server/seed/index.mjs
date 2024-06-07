@@ -392,6 +392,13 @@ async function seed() {
     return count
   }
 
+  async function printDatabaseSize() {
+    const result = await client.query(`
+      SELECT pg_size_pretty(pg_database_size(current_database())) AS size
+    `)
+    console.log(`Database size: ${result.rows[0].size}`)
+  }
+
   console.time('Seeding completed in')
 
   console.log('inserting users...')
@@ -412,6 +419,7 @@ async function seed() {
 
   console.log()
   console.timeEnd('Seeding completed in')
+  await printDatabaseSize()
 
   await client.end()
 }
