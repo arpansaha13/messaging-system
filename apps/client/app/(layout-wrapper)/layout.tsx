@@ -18,7 +18,6 @@ import { useSocketInit } from '~/hooks/useSocket'
 import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import Notification from '~common/Notification'
-import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { AuthUserResType } from '@pkg/types'
@@ -71,8 +70,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   const router = useRouter()
   const pathname = usePathname()
 
-  const [authUser, setAuthUser] = useAuthStore(state => [state.authUser!, state.setAuthUser], shallow)
-  const [initChatList, initContactStore] = useStore(state => [state.initChatList, state.initContactStore], shallow)
+  const [authUser, setAuthUser, initChatList, initContactStore] = useStore(state => [state.authUser!, state.setAuthUser, state.initChatList, state.initContactStore], shallow)
 
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 

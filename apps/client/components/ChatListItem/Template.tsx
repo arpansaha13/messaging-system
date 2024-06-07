@@ -6,7 +6,6 @@ import { ContextMenu, ContextMenuWrapper } from '~common/ContextMenu'
 import GlobalName from '~/components/GlobalName'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
-import { useAuthStore } from '~/store/useAuthStore'
 import isUnread from '~/utils/isUnread'
 import type { IChatListItem, IContextMenuItem } from '@pkg/types'
 
@@ -25,8 +24,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
   const { userId, alias, dp, latestMsg, globalName, children, menuItems, onClick } = props
 
   // If no chat is selected `activeChat` will be null
-  const [activeChat] = useStore(state => [state.activeChat], shallow)
-  const authUser = useAuthStore(state => state.authUser)!
+  const [authUser, activeChat] = useStore(state => [state.authUser!, state.activeChat], shallow)
 
   const authUserIsSender = authUser.id === latestMsg?.senderId
   const unread = isUnread(authUser.id, latestMsg)

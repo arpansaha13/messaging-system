@@ -4,7 +4,6 @@ import { format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
-import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import type { IMessage, IMessageSending } from '@pkg/types'
 
@@ -103,7 +102,7 @@ function Messages() {
 }
 
 function Message({ message }: Readonly<MessageProps>) {
-  const authUser = useAuthStore(state => state.authUser)!
+  const authUser = useStore(state => state.authUser)!
   const authUserIsSender = authUser.id === message.senderId
 
   return (

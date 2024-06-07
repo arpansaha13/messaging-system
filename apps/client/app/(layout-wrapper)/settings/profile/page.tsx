@@ -5,7 +5,7 @@ import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 import Avatar from '~common/Avatar'
-import { useAuthStore } from '~/store/useAuthStore'
+import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import type { IAuthUser } from '@pkg/types'
@@ -73,7 +73,7 @@ const Field = (props: Readonly<FieldProps>) => {
 }
 
 export default function Page() {
-  const [authUser, setAuthUser] = useAuthStore(state => [state.authUser!, state.setAuthUser], shallow)
+  const [authUser, setAuthUser] = useStore(state => [state.authUser!, state.setAuthUser], shallow)
 
   const [editingBio, setEditBio] = useState(false)
   const [editingDisplayName, setEditDisplayName] = useState(false)

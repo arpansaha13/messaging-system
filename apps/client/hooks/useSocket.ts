@@ -3,7 +3,6 @@ import io from 'socket.io-client'
 import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
-import { useAuthStore } from '~/store/useAuthStore'
 import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
 import { MessageStatus } from '@pkg/types'
@@ -41,8 +40,8 @@ const socketWrapper = {
  * This hook is meant to be run only once during app initialization.
  */
 export function useSocketInit() {
-  const authUser = useAuthStore(state => state.authUser)!
   const [
+    authUser,
     activeChat,
     userMessagesMap,
     getUserMessagesMap,
@@ -58,6 +57,7 @@ export function useSocketInit() {
     insertUnarchivedChat,
   ] = useStore(
     state => [
+      state.authUser!,
       state.activeChat,
       state.userMessagesMap,
       state.getUserMessagesMap,

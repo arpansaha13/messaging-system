@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { shallow } from 'zustand/shallow'
 import { useSocket } from '~/hooks/useSocket'
-import { useAuthStore } from '~/store/useAuthStore'
 import { useStore } from '~/store'
 import { generateHash } from '~/utils/generateHash'
 import { MessageStatus } from '@pkg/types'
@@ -27,9 +26,9 @@ const isTypedCharGood = ({ keyCode, metaKey, ctrlKey, altKey }: React.KeyboardEv
 export default function ChatFooter() {
   const { socket } = useSocket()
 
-  const authUser = useAuthStore(state => state.authUser)!
-  const [activeChat, addDraft, drafts, removeDraft, unarchiveChat, upsertTempMessages] = useStore(
+  const [authUser, activeChat, addDraft, drafts, removeDraft, unarchiveChat, upsertTempMessages] = useStore(
     state => [
+      state.authUser!,
       state.activeChat!,
       state.addDraft,
       state.drafts,
