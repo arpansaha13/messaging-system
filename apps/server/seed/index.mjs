@@ -385,21 +385,33 @@ async function seed() {
     }
   }
 
+  async function run(fn) {
+    console.time(fn.name)
+    const count = await fn()
+    console.timeEnd(fn.name)
+    return count
+  }
+
+  console.time('Seeding completed in')
+
   console.log('inserting users...')
-  const usersInsertCount = await insertUsers()
+  const usersInsertCount = await run(insertUsers)
   console.log(`inserted ${usersInsertCount} users\n`)
 
   console.log('inserting chats...')
-  const chatsInsertCount = await insertChats()
+  const chatsInsertCount = await run(insertChats)
   console.log(`inserted ${chatsInsertCount} chats\n`)
 
   console.log('inserting messages...')
-  const { messagesInsertCount, recipientsInsertCount } = await insertMessages()
+  const { messagesInsertCount, recipientsInsertCount } = await run(insertMessages)
   console.log(`inserted ${messagesInsertCount} messages and ${recipientsInsertCount} message-recipients\n`)
 
   console.log('inserting contacts...')
-  const contactsInsertCount = await insertContacts()
+  const contactsInsertCount = await run(insertContacts)
   console.log(`inserted ${contactsInsertCount} contacts`)
+
+  console.log()
+  console.timeEnd('Seeding completed in')
 
   await client.end()
 }
