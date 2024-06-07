@@ -8,7 +8,7 @@ export class Message extends BaseEntity {
   @Column({ nullable: false })
   content: string
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
   sender: Relation<User>
 

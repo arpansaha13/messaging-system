@@ -5,9 +5,9 @@ export class Session {
   @PrimaryGeneratedColumn('uuid')
   key: string
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: false })
   token: string
 
-  @Column({ name: 'expires_at' })
+  @Column({ name: 'expires_at', nullable: false })
   expiresAt: Date
 }
