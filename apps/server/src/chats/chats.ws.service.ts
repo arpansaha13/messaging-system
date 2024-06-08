@@ -2,10 +2,8 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { User } from 'src/users/user.entity'
-import { UserRepository } from 'src/users/user.repository'
 import { Chat } from './chats.entity'
 import { Message } from 'src/messages/message.entity'
-import { MessageRepository } from 'src/messages/message.repository'
 import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-recipient.entity'
 import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
 import { In, type EntityManager } from 'typeorm'
@@ -24,12 +22,6 @@ export class ChatsWsService {
     @InjectEntityManager()
     private readonly manager: EntityManager,
 
-    @InjectRepository(UserRepository)
-    private readonly userRepository: UserRepository,
-
-    @InjectRepository(MessageRepository)
-    private readonly messageRepository: MessageRepository,
-
     @InjectRepository(MessageRecipientRepository)
     private readonly messageRecipientRepository: MessageRecipientRepository,
   ) {}
@@ -44,7 +36,7 @@ export class ChatsWsService {
     }
   }
 
-  addSession(payload: ISessionConnect, socket: Socket) {
+  handleConnect(payload: ISessionConnect, socket: Socket) {
     // If the same user connects again it will overwrite previous data in map.
     // Which means multiple connections are not possible currently.
     // TODO: support multiple connections
@@ -71,29 +63,29 @@ export class ChatsWsService {
         const [senderToReceiverChatExists, receiverToSenderChatExists] = await Promise.all([
           txnManager.exists(Chat, {
             where: {
-              sender: { id: payload.senderId },
-              receiver: { id: payload.receiverId },
+              sender_id: payload.senderId,
+              receiver_id: payload.receiverId,
             },
           }),
           txnManager.exists(Chat, {
             where: {
-              sender: { id: payload.receiverId },
-              receiver: { id: payload.senderId },
+              sender_id: payload.receiverId,
+              receiver_id: payload.senderId,
             },
           }),
         ])
 
         if (!senderToReceiverChatExists) {
           const senderToReceiver = new Chat()
-          senderToReceiver.sender = sender
-          senderToReceiver.receiver = receiver
+          senderToReceiver.sender_id = sender.id
+          senderToReceiver.receiver_id = receiver.id
           await txnManager.save(senderToReceiver)
         }
 
         if (!receiverToSenderChatExists) {
           const receiverToSender = new Chat()
-          receiverToSender.sender = receiver
-          receiverToSender.receiver = sender
+          receiverToSender.sender_id = receiver.id
+          receiverToSender.receiver_id = sender.id
           await txnManager.save(receiverToSender)
         }
 

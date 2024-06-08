@@ -51,7 +51,7 @@ export class MessageService {
   // }
   async getMessagesByUserId(authUser: User, receiverId: User['id']): Promise<Message[]> {
     const chat = await this.chatRepository.findOne({
-      where: { sender: { id: authUser.id }, receiver: { id: receiverId } },
+      where: { sender_id: authUser.id, receiver_id: receiverId },
     })
 
     if (isNullOrUndefined(chat)) return []

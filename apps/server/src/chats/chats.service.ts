@@ -122,7 +122,7 @@ export class ChatsService {
   }
 
   async deleteChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {
-    await this.chatRepository.delete({ sender: { id: authUserId }, receiver: { id: receiverId } })
+    await this.chatRepository.delete({ sender_id: authUserId, receiver_id: receiverId })
   }
 
   async updatePin(authUserId: User['id'], receiverId: User['id'], newValue: boolean): Promise<void> {
@@ -159,7 +159,6 @@ function createChatListItem(chat: any, message: any | null, contact: any | null)
       globalName: chat.receiver_global_name,
     },
     chat: {
-      id: chat.id,
       muted: chat.muted,
       pinned: chat.pinned,
       archived: chat.archived,
