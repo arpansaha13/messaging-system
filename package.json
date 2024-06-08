@@ -1,7 +1,7 @@
 {
-  "name": "whatsapp-clone-monorepo",
+  "name": "messaging-system-monorepo",
   "author": "Arpan Saha <https://github.com/arpansaha13>",
-  "description": "A Whatsapp Clone project.",
+  "description": "A messaging system project.",
   "version": "1.0.0",
   "type": "module",
   "private": true,

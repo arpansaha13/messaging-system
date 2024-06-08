@@ -4,6 +4,6 @@ import { Controller, Get } from '@nestjs/common'
 export class AppController {
   @Get()
   home(): string {
-    return 'NestJs server for my WhatsApp Clone project.'
+    return 'NestJs server for my Messaging System project.'
   }
 }

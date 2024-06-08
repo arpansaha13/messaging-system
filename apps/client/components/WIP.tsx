@@ -29,7 +29,7 @@ export default function WIP() {
       </div>
 
       <a
-        href="https://github.com/arpansaha13/whatsapp-clone"
+        href="https://github.com/arpansaha13/messaging-system"
         target="_blank"
         rel="noreferrer"
         className="mt-8 block rounded-lg p-1 shadow shadow-gray-600"

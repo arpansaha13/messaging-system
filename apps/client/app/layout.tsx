@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import '~/styles/globals.css'
 
 export const metadata: Metadata = {
-  title: 'WhatsApp Clone',
-  description: 'A WhatsApp Clone project',
+  title: 'Messaging System',
+  description: 'A Messaging System project',
 }
 
 interface RootLayoutProps {
