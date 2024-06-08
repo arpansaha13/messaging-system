@@ -107,7 +107,7 @@ export class AuthService {
       await this.manager.transaction(async txnManager => {
         const hashedPwd = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
 
-        if (await this.userRepository.exists({ where: { email: credentials.email } })) {
+        if (await txnManager.exists(User, { where: { email: credentials.email } })) {
           throw new ConflictException('This email is already registered.')
         }
 
