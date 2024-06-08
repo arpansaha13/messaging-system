@@ -52,12 +52,12 @@ export default function SignUpPage() {
       method: 'POST',
       body: formData,
     })
-      .then((res: any) => {
+      .then(() => {
         setNotification({
           show: true,
           status: 'success',
           title: 'Account created!',
-          description: res.message,
+          description: 'Please verify your account using the link sent to your email.',
         })
       })
       .catch(err => {

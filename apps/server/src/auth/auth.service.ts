@@ -96,7 +96,7 @@ export class AuthService {
     }
   }
 
-  async signUp(credentials: SignUpDto): Promise<string> {
+  async signUp(credentials: SignUpDto): Promise<void> {
     // TODO: Verify if the hash already exists in db
     const hash = this.generateHash()
     const otp = this.generateOtp()
@@ -126,7 +126,6 @@ export class AuthService {
       })
 
       await this.mailService.sendVerificationMail(credentials.email, credentials.globalName, hash, otp)
-      return 'Please verify your account using the link sent to your email.'
     } catch (error) {
       if (error.status === 409) throw error
       console.log(error)
@@ -182,7 +181,7 @@ export class AuthService {
     return { valid: isValid }
   }
 
-  async verifyAccount(hash: string, otp: string): Promise<string> {
+  async verifyAccount(hash: string, otp: string): Promise<void> {
     try {
       await this.manager.transaction(async txnManager => {
         const unverifiedUser = await txnManager.findOne(UnverifiedUser, {
@@ -205,8 +204,6 @@ export class AuthService {
         await txnManager.save(newUser)
         await txnManager.delete(UnverifiedUser, { hash })
       })
-
-      return 'Account verification successful.'
     } catch (error) {
       if (error.status < 600) {
         throw error
