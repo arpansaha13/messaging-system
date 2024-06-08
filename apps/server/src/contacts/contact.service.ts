@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'src/users/user.entity'
 import { ContactRepository } from './contact.repository'
 import type { IContact } from '@pkg/types'
+import { Contact } from './contact.entity'
 
 @Injectable()
 export class ContactService {
@@ -55,7 +56,14 @@ export class ContactService {
     }
 
     const newContact = await this.contactRepository.manager.transaction(async txnManager => {
-      if (await this.contactRepository.existsByUserIds(authUser.id, userIdToAdd)) {
+      const contactExists = await txnManager.exists(Contact, {
+        where: {
+          user: { id: authUser.id },
+          userInContact: { id: userIdToAdd },
+        },
+      })
+
+      if (contactExists) {
         throw new ConflictException('Given contact is already added.')
       }
 
@@ -64,10 +72,17 @@ export class ContactService {
         throw new BadRequestException('Invalid user id.')
       }
 
-      return this.contactRepository.createContact(authUser, userToAdd, alias).catch(err => {
+      const newContact = new Contact()
+      newContact.user = authUser
+      newContact.userInContact = userToAdd
+      newContact.alias = alias
+
+      try {
+        return txnManager.save(newContact)
+      } catch (err) {
         console.error(err)
         throw new InternalServerErrorException()
-      })
+      }
     })
 
     return {
