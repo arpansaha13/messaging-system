@@ -11,9 +11,8 @@ export class ChatRepository extends Repository<Chat> {
 
   getChatsOfUser(userId: User['id']) {
     return this.createQueryBuilder('chat')
-      .where('chat.sender.id = :userId', { userId })
-      .select('chat.id', 'id')
-      .addSelect('chat.muted', 'muted')
+      .where('chat.sender_id = :userId', { userId })
+      .select('chat.muted', 'muted')
       .addSelect('chat.pinned', 'pinned')
       .addSelect('chat.archived', 'archived')
       .addSelect('chat.clearedAt', 'clearedAt')
@@ -22,16 +21,15 @@ export class ChatRepository extends Repository<Chat> {
       .addSelect('receiver.bio')
       .addSelect('receiver.username')
       .addSelect('receiver.globalName')
-      .innerJoin('chat.receiver', 'receiver')
+      .innerJoin('chat.receiver_id', 'receiver')
       .getRawMany()
   }
 
   getChatOfUserByReceiverId(userId: User['id'], receiverId: User['id']) {
     return this.createQueryBuilder('chat')
-      .where('chat.sender.id = :userId', { userId })
-      .andWhere('chat.receiver.id = :receiverId', { receiverId })
-      .select('chat.id', 'id')
-      .addSelect('chat.muted', 'muted')
+      .where('chat.sender_id = :userId', { userId })
+      .andWhere('chat.receiver_id = :receiverId', { receiverId })
+      .select('chat.muted', 'muted')
       .addSelect('chat.pinned', 'pinned')
       .addSelect('chat.archived', 'archived')
       .addSelect('chat.clearedAt', 'clearedAt')
@@ -40,7 +38,7 @@ export class ChatRepository extends Repository<Chat> {
       .addSelect('receiver.bio')
       .addSelect('receiver.username')
       .addSelect('receiver.globalName')
-      .innerJoin('chat.receiver', 'receiver')
+      .innerJoin('chat.receiver_id', 'receiver')
       .getRawOne()
   }
 
@@ -49,13 +47,11 @@ export class ChatRepository extends Repository<Chat> {
     return chat.clearedAt
   }
 
-  updateChatOptions(senderId: User['id'], receiverId: User['id'], partialEntity: Partial<Chat>): Promise<UpdateResult> {
-    return this.update(
-      {
-        sender: { id: senderId },
-        receiver: { id: receiverId },
-      },
-      partialEntity,
-    )
+  updateChatOptions(
+    sender_id: User['id'],
+    receiver_id: User['id'],
+    partialEntity: Partial<Chat>,
+  ): Promise<UpdateResult> {
+    return this.update({ sender_id, receiver_id }, partialEntity)
   }
 }

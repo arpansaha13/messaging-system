@@ -19,8 +19,8 @@ export class ChatsGateway {
   private readonly server: Server<SocketOnEventPayload>
 
   @SubscribeMessage<SocketEmitEvent>('session-connect')
-  addSession(@MessageBody() payload: ISessionConnect, @ConnectedSocket() socket: Socket) {
-    this.chatsService.addSession(payload, socket)
+  handleConnect(@MessageBody() payload: ISessionConnect, @ConnectedSocket() socket: Socket) {
+    this.chatsService.handleConnect(payload, socket)
   }
 
   @SubscribeMessage('disconnect')

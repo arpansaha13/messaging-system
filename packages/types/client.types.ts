@@ -9,7 +9,6 @@ export interface IChatListItem {
   latestMsg: IMessage | null
   receiver: IUser
   chat: {
-    id: number
     muted: boolean
     archived: boolean
     pinned: boolean

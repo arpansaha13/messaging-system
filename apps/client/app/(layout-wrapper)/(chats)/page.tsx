@@ -31,7 +31,7 @@ export default function Page() {
     <ul className="space-y-1">
       {unarchived.map(convoItem => (
         <UnarchivedConvoItem
-          key={convoItem.chat.id}
+          key={convoItem.receiver.id}
           userId={convoItem.receiver.id}
           dp={convoItem.receiver.dp}
           globalName={convoItem.receiver.globalName}

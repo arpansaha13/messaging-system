@@ -169,7 +169,7 @@ async function seed() {
     let chatsInsertCount = 0
 
     for (let i = 0; i < users.length; i++) {
-      for (let j = 0; j < users.length; j++) {
+      for (let j = i + 1; j < users.length; j++) {
         if (i === j) continue
 
         // 60% chance of this chat to exist
@@ -223,12 +223,12 @@ async function seed() {
       const query = `
         INSERT INTO chats (sender_id, receiver_id, cleared_at, muted, archived, pinned)
         VALUES ${placeholders}
-        RETURNING id
+        RETURNING sender_id, receiver_id
       `
 
       const result = await client.query(query, values)
-      result.rows.forEach((row, i) => {
-        chats.push({ id: row.id, sender_id: entries[i].sender_id, receiver_id: entries[i].receiver_id })
+      result.rows.forEach(row => {
+        chats.push({ sender_id: row.sender_id, receiver_id: row.receiver_id })
       })
     }
   }
