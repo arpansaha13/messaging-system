@@ -5,7 +5,7 @@ import Image from 'next/image'
 import LinkNotExpired from './not-expired'
 
 // export const metadata: Metadata = {
-//   title: 'WhatsApp Clone | Verification',
+//   title: 'Messaging System | Verification',
 // }
 
 export default function VerificationPage() {

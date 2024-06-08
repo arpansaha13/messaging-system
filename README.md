@@ -1,10 +1,6 @@
 <h1 align="center">
-  Whatsapp Clone
+  Messaging System
 </h1>
-
-<p align="center">
-  A Whatsapp Clone project made with NextJs and NestJs.
-</p>
 
 <div align="center">
   <img
@@ -31,4 +27,5 @@
 - Pin and unpin.
 - Archive and unarchive.
 - Clear messages and delete chat.
+- User search and contacts.
 - Light and dark mode.

@@ -13,7 +13,7 @@ import type { FormEvent } from 'react'
 import { useMap } from 'react-use'
 
 // export const metadata: Metadata = {
-//   title: 'WhatsApp Clone | Sign up',
+//   title: 'Messaging System | Sign up',
 // }
 
 export default function SignUpPage() {

@@ -21,7 +21,7 @@ export class UnverifiedUser extends BaseEntityNoPk {
   @Column({ nullable: true })
   dp: string
 
-  @Column({ nullable: false, default: 'Hey there! I am using WhatsApp.' })
+  @Column({ nullable: false, default: 'Hey there!.' })
   bio: string
 
   @Column({ nullable: false })

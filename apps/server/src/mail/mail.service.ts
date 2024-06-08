@@ -14,7 +14,7 @@ export class MailService {
 
     await this.mailerService.sendMail({
       to: email,
-      subject: 'Welcome to my WhatsApp Clone project!',
+      subject: 'Welcome to my Messaging System project!',
       template: './verification', // `.hbs` extension is appended automatically
       context: {
         // ✏️ filling curly brackets with content

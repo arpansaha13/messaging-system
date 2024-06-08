@@ -20,7 +20,7 @@ import { MailService } from './mail.service'
           },
         },
         defaults: {
-          from: `"WhatsApp Clone" <${config.get('MAIL_FROM')}>`,
+          from: `"Messaging System" <${config.get('MAIL_FROM')}>`,
         },
         template: {
           dir: join(__dirname, 'templates'),

@@ -1,6 +1,5 @@
 'use client'
 
-// import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -14,7 +13,7 @@ import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
 
 // export const metadata: Metadata = {
-//   title: 'WhatsApp Clone | Sign in',
+//   title: 'Messaging System | Sign in',
 // }
 
 export default function SignInPage() {
