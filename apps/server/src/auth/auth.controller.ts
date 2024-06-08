@@ -13,8 +13,9 @@ export class AuthController {
   }
 
   @Post('/sign-up')
-  signUp(@Body() credentials: SignUpDto): Promise<string> {
-    return this.authService.signUp(credentials)
+  @HttpCode(HttpStatus.CREATED)
+  async signUp(@Body() credentials: SignUpDto): Promise<void> {
+    await this.authService.signUp(credentials)
   }
 
   @Post('/login')
@@ -28,13 +29,13 @@ export class AuthController {
   }
 
   @Get('/validate-link/account/:hash')
-  validateVerificationLink(@Param() params: VerifyAccountParams) {
+  validateVerificationLink(@Param() params: VerifyAccountParams): Promise<{ valid: boolean }> {
     return this.authService.validateVerificationLink(params.hash)
   }
 
-  @HttpCode(HttpStatus.CREATED)
   @Post('/verification/:hash')
-  verifyAccount(@Param() params: VerifyAccountParams, @Body() body: VerifyAccountDto): Promise<string> {
-    return this.authService.verifyAccount(params.hash, body.otp)
+  @HttpCode(HttpStatus.CREATED)
+  async verifyAccount(@Param() params: VerifyAccountParams, @Body() body: VerifyAccountDto): Promise<void> {
+    await this.authService.verifyAccount(params.hash, body.otp)
   }
 }
