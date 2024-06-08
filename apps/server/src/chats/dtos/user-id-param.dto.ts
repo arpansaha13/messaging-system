@@ -1,10 +1,10 @@
 import { Type } from 'class-transformer'
 import { IsNotEmpty, IsNumber } from 'class-validator'
-import type { Chat } from '../chats.entity'
+import type { User } from 'src/users/user.entity'
 
-export class ChatIdParam {
+export class UserIdParam {
   @IsNotEmpty()
   @Type(() => Number)
   @IsNumber()
-  receiverId: Chat['id']
+  receiverId: User['id']
 }
