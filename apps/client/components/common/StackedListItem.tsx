@@ -21,7 +21,6 @@ interface StackedListItemProps {
 interface StackedListItemButtonProps extends Pick<StackedListItemProps, 'image' | 'title' | 'subtitle' | 'text'> {
   eventHandlers: {
     onClick: () => void
-    onBlur?: () => void
     onContextMenu?: (e: React.MouseEvent) => void
   }
 }
@@ -31,7 +30,7 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
 
   if (isNullOrUndefined(menuItems)) {
     return (
-      <li className="relative">
+      <li>
         <StackedListItemButton {...remainingProps} eventHandlers={{ onClick }} />
       </li>
     )
@@ -39,9 +38,9 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
 
   return (
     <ContextMenuWrapper>
-      {({ onBlur, onContextMenu }) => (
+      {({ onContextMenu }) => (
         <li className="relative">
-          <StackedListItemButton {...remainingProps} eventHandlers={{ onBlur, onClick, onContextMenu }} />
+          <StackedListItemButton {...remainingProps} eventHandlers={{ onClick, onContextMenu }} />
 
           <ContextMenu payload={payload} items={menuItems} />
         </li>

@@ -39,7 +39,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
 
   return (
     <ContextMenuWrapper>
-      {contextMenuHandlers => (
+      {({ onContextMenu }) => (
         <li className="relative">
           <button
             className={classNames(
@@ -50,7 +50,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
               unread ? 'font-semibold' : '',
             )}
             onClick={onClick}
-            {...contextMenuHandlers}
+            onContextMenu={onContextMenu}
           >
             <Avatar src={dp} />
 
