@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import io from 'socket.io-client'
 import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
@@ -16,30 +16,41 @@ import type {
   SocketOnEventPayload,
 } from '@pkg/types'
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_IO_BASE_URL!
+interface ISocketWrapper {
+  emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
 
-const socket = io(SOCKET_URL, { autoConnect: true })
+  on<T extends SocketOnEvent>(event: T, listener: (payload: SocketOnEventPayload[T]) => void): void
 
-/** A socket wrapper to allow type security. */
-const socketWrapper = {
-  emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void) {
-    if (ack) socket.emit(event, payload, ack)
-    else socket.emit(event, payload)
-  },
-  on<T extends SocketOnEvent>(event: T, listener: (payload: SocketOnEventPayload[T]) => void) {
-    socket.on(event as any, listener)
-  },
-  off(event: SocketOnEvent) {
-    socket.off(event)
-  },
+  off(event: SocketOnEvent): void
 }
 
-/**
- * Initialize web socket.
- *
- * This hook is meant to be run only once during app initialization.
- */
-export function useSocketInit() {
+interface ISocketContext {
+  isConnected: boolean
+  socket: ISocketWrapper
+}
+
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_IO_BASE_URL!
+
+function useSocketInit() {
+  const socket = useMemo(() => io(SOCKET_URL, { autoConnect: true }), [])
+
+  /** A socket wrapper to allow type security. */
+  const socketWrapper = useMemo<ISocketWrapper>(
+    () => ({
+      emit(event, payload, ack) {
+        if (ack) socket.emit(event, payload, ack)
+        else socket.emit(event, payload)
+      },
+      on(event, listener) {
+        socket.on(event as any, listener)
+      },
+      off(event) {
+        socket.off(event)
+      },
+    }),
+    [socket],
+  )
+
   const [
     authUser,
     activeChat,
@@ -103,8 +114,17 @@ export function useSocketInit() {
       updateMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
 
-    socket.emit('read', readEventPayload)
-  }, [activeChat, authUser, userMessagesMap])
+    socketWrapper.emit('read', readEventPayload)
+  }, [
+    authUser,
+    activeChat,
+    socketWrapper,
+    userMessagesMap,
+    searchChat,
+    getUserMessagesMap,
+    updateMessageStatus,
+    updateChatListItemMessageStatus,
+  ])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
@@ -141,9 +161,9 @@ export function useSocketInit() {
         senderId: payload.senderId,
         status: MessageStatus.DELIVERED,
       }
-      const convoExists = !isNullOrUndefined(searchChat(payload.senderId))
+      const chatExists = !isNullOrUndefined(searchChat(payload.senderId))
 
-      if (convoExists) {
+      if (chatExists) {
         unarchiveChat(payload.senderId)
         updateChatListItemMessage(payload.senderId, message)
       } else {
@@ -177,9 +197,9 @@ export function useSocketInit() {
         status: payload.status,
       }
 
-      const convoExists = !isNullOrUndefined(searchChat(payload.receiverId))
+      const chatExists = !isNullOrUndefined(searchChat(payload.receiverId))
 
-      if (convoExists) {
+      if (chatExists) {
         updateChatListItemMessage(payload.receiverId, message)
       } else {
         const convo: IChatListItem = await _fetch(`chats/${payload.receiverId}`)
@@ -221,10 +241,19 @@ export function useSocketInit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser])
 
-  return { isConnected, socket: socketWrapper }
+  return { isConnected, socketWrapper }
 }
 
-/** Returns the socket wrapper. */
+const SocketContext = createContext<ISocketContext | null>(null)
+
+export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isConnected, socketWrapper } = useSocketInit()
+
+  const contextValue = useMemo(() => ({ isConnected, socket: socketWrapper }), [isConnected, socketWrapper])
+
+  return <SocketContext.Provider value={contextValue}>{children}</SocketContext.Provider>
+}
+
 export function useSocket() {
-  return { socket: socketWrapper }
+  return useContext(SocketContext)
 }
