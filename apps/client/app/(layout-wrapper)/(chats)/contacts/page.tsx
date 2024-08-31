@@ -128,7 +128,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
   return Object.keys(contacts).map(letter => (
     <div key={letter} className="relative">
       {/* Size of image = h-12 w-12 */}
-      <div className="mx-3 my-2 flex h-12 w-12 items-center justify-center font-medium text-gray-500 dark:text-emerald-500">
+      <div className="dark:text-brand-500 mx-3 my-2 flex h-12 w-12 items-center justify-center font-medium text-gray-500">
         <h3>{letter}</h3>
       </div>
 

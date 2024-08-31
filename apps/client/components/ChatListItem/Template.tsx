@@ -61,7 +61,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
                   <p
                     className={classNames(
                       'flex items-end text-xs',
-                      unread ? 'text-emerald-600' : 'text-gray-500 dark:text-gray-400',
+                      unread ? 'text-brand-600' : 'text-gray-500 dark:text-gray-400',
                     )}
                   >
                     <span>{getDateTime()}</span>

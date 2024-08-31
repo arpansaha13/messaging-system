@@ -19,7 +19,7 @@ function BaseButton({ children, loading = false, disabled = false, stretch = fal
     <Link
       {...attrs}
       className={classNames(
-        'relative flex w-full justify-center rounded-md border border-transparent bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2',
+        'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500 relative flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
         disabled && 'opacity-70',
         stretch && 'w-full',
       )}

@@ -82,7 +82,7 @@ export default function SignInPage() {
 
             {/* <div className="flex items-center justify-end">
               <div className="text-sm">
-                <a href="#" className="font-medium text-emerald-600 hover:text-emerald-500">
+                <a href="#" className="font-medium text-brand-600 hover:text-brand-500">
                   Forgot your password?
                 </a>
               </div>
@@ -98,7 +98,7 @@ export default function SignInPage() {
               <div className="text-sm">
                 <span className="text-gray-800 dark:text-gray-100">Don&apos;t have an account?</span>{' '}
                 <Link href="/auth/signup">
-                  <span className="cursor-pointer font-medium text-emerald-600 hover:text-emerald-500">Sign up</span>
+                  <span className="text-brand-600 hover:text-brand-500 cursor-pointer font-medium">Sign up</span>
                 </Link>
               </div>
             </div>

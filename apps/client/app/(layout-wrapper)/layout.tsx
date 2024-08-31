@@ -111,8 +111,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
                   href={navItem.to}
                   className={classNames(
                     'mx-auto block w-max rounded p-2 transition-colors',
-                    pathname === navItem.to &&
-                      'bg-emerald-300 text-emerald-900 dark:bg-emerald-800 dark:text-emerald-200',
+                    pathname === navItem.to && 'bg-brand-300 text-brand-900 dark:bg-brand-800 dark:text-brand-200',
                   )}
                 >
                   <span className="sr-only">{navItem.name}</span>

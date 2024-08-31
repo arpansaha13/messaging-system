@@ -24,12 +24,12 @@ const SearchBar = ({ id, value, setValue, ...attrs }: SearchBarProps) => {
       <div className="group relative overflow-hidden rounded-lg">
         <div className="absolute inset-y-0 left-0 flex items-center pl-3">
           <MagnifyingGlassIcon
-            className="pointer-events-none h-4 w-4 text-gray-600 transition-colors group-focus-within:text-emerald-600 dark:text-gray-400 dark:group-focus-within:text-emerald-500"
+            className="group-focus-within:text-brand-600 dark:group-focus-within:text-brand-500 pointer-events-none h-4 w-4 text-gray-600 transition-colors dark:text-gray-400"
             aria-hidden="true"
           />
         </div>
 
-        <span className="absolute inset-x-0 bottom-0 h-0.5 transition-colors group-focus-within:bg-emerald-600 dark:group-focus-within:bg-emerald-500" />
+        <span className="group-focus-within:bg-brand-600 dark:group-focus-within:bg-brand-500 absolute inset-x-0 bottom-0 h-0.5 transition-colors" />
 
         <input
           ref={inputRef}

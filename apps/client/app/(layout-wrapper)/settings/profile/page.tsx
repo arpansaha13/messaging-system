@@ -44,11 +44,11 @@ const Field = (props: Readonly<FieldProps>) => {
 
   return (
     <>
-      <h3 className="mb-5 text-sm font-medium text-emerald-600">{heading}</h3>
+      <h3 className="text-brand-600 mb-5 text-sm font-medium">{heading}</h3>
       <div
         className={classNames(
           'mb-8 flex pb-1 shadow-[0_2px_0px_0px] transition-shadow',
-          editState ? 'shadow-emerald-700' : 'shadow-transparent',
+          editState ? 'shadow-brand-700' : 'shadow-transparent',
         )}
       >
         <p
