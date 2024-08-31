@@ -5,7 +5,7 @@ import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { IMessage, IMessageSending } from '@pkg/types'
+import type { IMessage, IMessageSending } from '@shared/types'
 
 interface MessageProps {
   message: IMessage

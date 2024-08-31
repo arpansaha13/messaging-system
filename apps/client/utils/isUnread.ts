@@ -1,5 +1,5 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { type IChatListItem, MessageStatus } from '@pkg/types'
+import { type IChatListItem, MessageStatus } from '@shared/types'
 
 export default function isUnread(authUserId: number, latestMsg: IChatListItem['latestMsg']) {
   let unread = false

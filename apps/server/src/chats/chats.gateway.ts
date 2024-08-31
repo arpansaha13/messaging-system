@@ -9,7 +9,7 @@ import type {
   ISenderEmitTyping,
   SocketEmitEvent,
   SocketOnEventPayload,
-} from '@pkg/types'
+} from '@shared/types'
 
 @WebSocketGateway()
 export class ChatsGateway {

@@ -3,7 +3,7 @@ import { AuthGuard } from '@nestjs/passport'
 import { ChatsService } from './chats.service'
 import { UserIdParam } from './dtos/user-id-param.dto'
 import type { Request } from 'express'
-import type { IChatListItem } from '@pkg/types'
+import type { IChatListItem } from '@shared/types'
 import type { IChatsResponse } from './interfaces/chats-response.interface'
 
 @UseGuards(AuthGuard())

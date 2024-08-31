@@ -28,7 +28,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-    "@pkg/types": "workspace:^",
+    "@shared/types": "workspace:*",
     "@types/node": "^20.12.12",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",

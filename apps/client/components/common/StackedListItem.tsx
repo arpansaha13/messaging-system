@@ -1,7 +1,7 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import Avatar from '~common/Avatar'
 import { ContextMenu, ContextMenuWrapper } from '~common/ContextMenu'
-import type { IContextMenuItem } from '@pkg/types'
+import type { IContextMenuItem } from '@shared/types'
 
 interface StackedListItemProps {
   image: string | null

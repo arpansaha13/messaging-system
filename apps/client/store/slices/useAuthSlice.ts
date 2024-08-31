@@ -1,4 +1,4 @@
-import type { IAuthUser } from '@pkg/types'
+import type { IAuthUser } from '@shared/types'
 import type { Slice } from '~/store/types.store'
 
 export interface AuthStoreType {

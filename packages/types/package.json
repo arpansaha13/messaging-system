@@ -1,5 +1,5 @@
 {
-  "name": "@pkg/types",
+  "name": "@shared/types",
   "version": "1.0.0",
   "exports": {
     "import": "./index.ts",

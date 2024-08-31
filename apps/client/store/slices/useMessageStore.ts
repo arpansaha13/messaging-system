@@ -1,8 +1,8 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
-import type { MessageStatus } from '@pkg/types'
+import type { MessageStatus } from '@shared/types'
 import type { Slice } from '~/store/types.store'
-import type { IMessage, IMessageSending } from '@pkg/types'
+import type { IMessage, IMessageSending } from '@shared/types'
 
 export interface MessageStoreType {
   /**

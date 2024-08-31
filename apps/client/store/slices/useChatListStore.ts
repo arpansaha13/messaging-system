@@ -1,7 +1,7 @@
 import _fetch from '~/utils/_fetch'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import type { Slice } from '~/store/types.store'
-import type { IChatListItem, IContact, MessageStatus } from '@pkg/types'
+import type { IChatListItem, IContact, MessageStatus } from '@shared/types'
 
 type ChatsResponse = {
   archived: IChatListItem

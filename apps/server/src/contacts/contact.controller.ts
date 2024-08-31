@@ -19,7 +19,7 @@ import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
 import { DeleteContactParamDto } from './dto/delete-contact-param.dto'
 import { EditAliasBodyDto, EditAliasParamDto } from './dto/edit-alias.dto'
 import type { Request } from 'express'
-import type { IContact } from '@pkg/types'
+import type { IContact } from '@shared/types'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())

@@ -14,7 +14,7 @@ import type {
   ISenderEmitMessage,
   ISessionConnect,
   ISenderEmitTyping,
-} from '@pkg/types'
+} from '@shared/types'
 
 @Injectable()
 export class ChatsWsService {

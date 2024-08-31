@@ -4,8 +4,8 @@ import { shallow } from 'zustand/shallow'
 import { useSocket } from '~/providers/SocketProvider'
 import { useStore } from '~/store'
 import { generateHash } from '~/utils/generateHash'
-import { MessageStatus } from '@pkg/types'
-import type { ISenderEmitTyping, IMessageSending } from '@pkg/types'
+import { MessageStatus } from '@shared/types'
+import type { ISenderEmitTyping, IMessageSending } from '@shared/types'
 
 interface TextAreaProps {
   value: string

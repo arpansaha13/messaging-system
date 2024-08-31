@@ -1,4 +1,4 @@
-import type { IUser } from '@pkg/types'
+import type { IUser } from '@shared/types'
 
 interface GlobalNameProps {
   name: IUser['globalName']

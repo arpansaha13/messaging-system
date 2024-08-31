@@ -4,7 +4,7 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { ChatRepository } from './chats.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
-import type { IChatListItem } from '@pkg/types'
+import type { IChatListItem } from '@shared/types'
 import type { User } from 'src/users/user.entity'
 import type { IChatsResponse } from './interfaces/chats-response.interface'
 

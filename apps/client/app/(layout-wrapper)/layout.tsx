@@ -20,7 +20,7 @@ import Separator from '~common/Separator'
 import Notification from '~common/Notification'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
-import type { AuthUserResType } from '@pkg/types'
+import type { AuthUserResType } from '@shared/types'
 
 interface LayoutWrapperProps {
   children: React.ReactNode

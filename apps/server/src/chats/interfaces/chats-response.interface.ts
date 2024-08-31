@@ -1,4 +1,4 @@
-import { IChatListItem } from '@pkg/types'
+import { IChatListItem } from '@shared/types'
 
 export interface IChatsResponse {
   unarchived: IChatListItem[]

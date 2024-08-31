@@ -1,4 +1,4 @@
-import type { RequestOptions } from '@pkg/types'
+import type { RequestOptions } from '@shared/types'
 
 export default async function _fetch(url: string, options?: RequestOptions) {
   const request = createRequest(url, options)

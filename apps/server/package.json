@@ -55,7 +55,7 @@
     "@faker-js/faker": "^8.4.1",
     "@nestjs/schematics": "^10.1.1",
     "@nestjs/testing": "^10.3.8",
-    "@pkg/types": "workspace:^",
+    "@shared/types": "workspace:*",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.7",
