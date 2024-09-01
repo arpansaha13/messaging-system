@@ -17,8 +17,6 @@ import { useMap } from 'react-use'
 // }
 
 export default function SignUpPage() {
-  // TODO: block this page if authenticated
-
   const [setNotification] = useStore(state => [state.setNotification], shallow)
 
   const formRef = useRef<HTMLFormElement>(null)

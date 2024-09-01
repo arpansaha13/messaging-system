@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { forwardRef, useEffect, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import {
@@ -66,7 +66,6 @@ const navItems = Object.freeze([
 
 export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
   useDark()
-  const router = useRouter()
   const pathname = usePathname()
 
   const [authUser, setAuthUser, initChatList, initContactStore] = useStore(
@@ -77,15 +76,9 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 
   useEffect(() => {
-    _fetch('auth/check-auth').then(({ valid }: any) => {
-      if (!valid) {
-        router.replace('/auth/login')
-      } else {
-        _fetch('users/me').then((authUserRes: AuthUserResType) => {
-          setAuthUser(authUserRes)
-          Promise.all([initChatList(), initContactStore()]).then(() => setLoaded(true))
-        })
-      }
+    _fetch('users/me').then((authUserRes: AuthUserResType) => {
+      setAuthUser(authUserRes)
+      Promise.all([initChatList(), initContactStore()]).then(() => setLoaded(true))
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

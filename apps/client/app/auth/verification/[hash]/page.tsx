@@ -9,8 +9,6 @@ import LinkNotExpired from './not-expired'
 // }
 
 export default function VerificationPage() {
-  // TODO: block this page if authenticated
-
   // TODO: check if link is expired
 
   return (

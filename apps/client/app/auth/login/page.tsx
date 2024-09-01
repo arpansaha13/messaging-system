@@ -19,8 +19,6 @@ import type { FormEvent } from 'react'
 export default function SignInPage() {
   const router = useRouter()
 
-  // TODO: block this page if authenticated
-
   const [toggleNotification, setNotification] = useStore(
     state => [state.toggleNotification, state.setNotification],
     shallow,

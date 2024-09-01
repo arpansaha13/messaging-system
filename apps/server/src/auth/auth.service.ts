@@ -146,7 +146,7 @@ export class AuthService {
       const session = await this.sessionService.createSession({ token, expiresAt: new Date(Date.now() + maxAge) })
 
       res.cookie(this.configService.get('AUTH_COOKIE_NAME'), session.key, {
-        path: '/api',
+        // path: '/api',
         secure: true,
         sameSite: true,
         httpOnly: true,
@@ -166,7 +166,7 @@ export class AuthService {
       await this.sessionService.deleteSession(sessionKey)
 
       res.cookie(this.configService.get('AUTH_COOKIE_NAME'), '', {
-        path: '/api',
+        // path: '/api',
         secure: true,
         httpOnly: true,
         maxAge: 0,
