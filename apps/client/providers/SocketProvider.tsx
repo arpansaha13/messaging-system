@@ -6,13 +6,12 @@ import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
 import { MessageStatus } from '@shared/types'
+import { SocketEmitEvent, SocketOnEvent } from '@shared/types'
 import type {
   IChatListItem,
   IMessage,
   IReceiverEmitRead,
-  SocketEmitEvent,
   SocketEmitEventPayload,
-  SocketOnEvent,
   SocketOnEventPayload,
 } from '@shared/types'
 
@@ -114,7 +113,7 @@ function useSocketInit() {
       updateMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
     }
 
-    socketWrapper.emit('read', readEventPayload)
+    socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
   }, [
     authUser,
     activeChat,
@@ -141,19 +140,19 @@ function useSocketInit() {
       return count + 1
     })
 
-    if (socket.connected) socketWrapper.emit('session-connect', { userId: authUser.id })
+    if (socket.connected) socketWrapper.emit(SocketEmitEvent.SESSION_CONNECT, { userId: authUser.id })
 
-    socketWrapper.on('connect', () => {
+    socketWrapper.on(SocketOnEvent.CONNECT, () => {
       setIsConnected(true)
-      socketWrapper.emit('session-connect', { userId: authUser.id })
+      socketWrapper.emit(SocketEmitEvent.SESSION_CONNECT, { userId: authUser.id })
     })
 
-    socketWrapper.on('disconnect', () => {
+    socketWrapper.on(SocketOnEvent.DISCONNECT, () => {
       // Note: We cannot emit events after disconnection.
       setIsConnected(false)
     })
 
-    socketWrapper.on('receive-message', async payload => {
+    socketWrapper.on(SocketOnEvent.RECEIVE_MESSAGE, async payload => {
       const message: IMessage = {
         id: payload.messageId,
         content: payload.content,
@@ -172,7 +171,7 @@ function useSocketInit() {
         insertUnarchivedChat(convo)
       }
 
-      socketWrapper.emit('delivered', {
+      socketWrapper.emit(SocketEmitEvent.DELIVERED, {
         messageId: message.id,
         receiverId: authUser.id,
         senderId: payload.senderId,
@@ -186,7 +185,7 @@ function useSocketInit() {
       upsertMessages(payload.senderId, [message])
     })
 
-    socketWrapper.on('sent', async payload => {
+    socketWrapper.on(SocketOnEvent.SENT, async payload => {
       const tempMessage = getTempMessage(payload.receiverId, payload.hash)
 
       const message: IMessage = {
@@ -213,30 +212,30 @@ function useSocketInit() {
       upsertMessages(payload.receiverId, [message])
     })
 
-    socketWrapper.on('delivered', payload => {
+    socketWrapper.on(SocketOnEvent.DELIVERED, payload => {
       updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
       updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
     })
 
-    socketWrapper.on('read', payloadArray => {
+    socketWrapper.on(SocketOnEvent.READ, payloadArray => {
       payloadArray.forEach(p => {
         updateChatListItemMessageStatus(p.receiverId, p.messageId, p.status)
         updateMessageStatus(p.receiverId, p.messageId, p.status)
       })
     })
 
-    socketWrapper.on('typing', payload => {
+    socketWrapper.on(SocketOnEvent.TYPING, payload => {
       setTyping(payload.senderId, payload.isTyping)
     })
 
     return () => {
-      socketWrapper.off('connect')
-      socketWrapper.off('disconnect')
-      socketWrapper.off('receive-message')
-      socketWrapper.off('sent')
-      socketWrapper.off('delivered')
-      socketWrapper.off('read')
-      socketWrapper.off('typing')
+      socketWrapper.off(SocketOnEvent.CONNECT)
+      socketWrapper.off(SocketOnEvent.DISCONNECT)
+      socketWrapper.off(SocketOnEvent.RECEIVE_MESSAGE)
+      socketWrapper.off(SocketOnEvent.SENT)
+      socketWrapper.off(SocketOnEvent.DELIVERED)
+      socketWrapper.off(SocketOnEvent.READ)
+      socketWrapper.off(SocketOnEvent.TYPING)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authUser])

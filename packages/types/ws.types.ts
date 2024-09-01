@@ -60,23 +60,38 @@ export interface ISenderEmitTyping {
 
 export type IReceiverOnTyping = ISenderEmitTyping
 
+export enum SocketOnEvent {
+  CONNECT = 'connect',
+  DISCONNECT = 'disconnect',
+  RECEIVE_MESSAGE = 'receive-message',
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read',
+  TYPING = 'typing',
+}
+
+export enum SocketEmitEvent {
+  SESSION_CONNECT = 'session-connect',
+  SEND_MESSAGE = 'send-message',
+  DELIVERED = 'delivered',
+  TYPING = 'typing',
+  READ = 'read',
+}
+
 export interface SocketOnEventPayload {
-  'connect': never
-  'disconnect': never
-  'receive-message': IReceiverOnMessage
-  'sent': ISenderOnSent
-  'delivered': ISenderOnDelivered
-  'read': ISenderOnRead[]
-  'typing': IReceiverOnTyping
+  [SocketOnEvent.CONNECT]: never
+  [SocketOnEvent.DISCONNECT]: never
+  [SocketOnEvent.RECEIVE_MESSAGE]: IReceiverOnMessage
+  [SocketOnEvent.SENT]: ISenderOnSent
+  [SocketOnEvent.DELIVERED]: ISenderOnDelivered
+  [SocketOnEvent.READ]: ISenderOnRead[]
+  [SocketOnEvent.TYPING]: IReceiverOnTyping
 }
 
 export interface SocketEmitEventPayload {
-  'session-connect': ISessionConnect
-  'send-message': ISenderEmitMessage
-  'delivered': IReceiverEmitDelivered
-  'typing': ISenderEmitTyping
-  'read': IReceiverEmitRead | IReceiverEmitRead[]
+  [SocketEmitEvent.SESSION_CONNECT]: ISessionConnect
+  [SocketEmitEvent.SEND_MESSAGE]: ISenderEmitMessage
+  [SocketEmitEvent.DELIVERED]: IReceiverEmitDelivered
+  [SocketEmitEvent.TYPING]: ISenderEmitTyping
+  [SocketEmitEvent.READ]: IReceiverEmitRead | IReceiverEmitRead[]
 }
-
-export type SocketOnEvent = keyof SocketOnEventPayload
-export type SocketEmitEvent = keyof SocketEmitEventPayload

@@ -1,9 +1,11 @@
 {
   "name": "@shared/types",
-  "version": "1.0.0",
   "exports": {
-    "import": "./index.ts",
-    "require": "./index.ts",
-    "types": "./index.ts"
+    "import": "./dist/index.js",
+    "require": "./dist/index.js",
+    "types": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
   }
 }
