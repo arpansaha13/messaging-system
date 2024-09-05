@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { shallow } from 'zustand/shallow'
-import { format } from 'date-fns'
+import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
@@ -13,6 +13,10 @@ interface MessageProps {
 
 interface TempMessageProps {
   message: IMessageSending
+}
+
+interface FormattedDateProps {
+  dateString: Date | string
 }
 
 export default function ChatBody() {
@@ -106,18 +110,21 @@ function Message({ message }: Readonly<MessageProps>) {
   const authUserIsSender = authUser.id === message.senderId
 
   return (
-    <div
-      className={classNames(
-        'relative mb-4 w-max space-y-1.5 rounded-lg border-b border-gray-400/50 px-2 pb-2.5 pt-1.5 text-sm text-gray-900 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:text-gray-100',
-        authUserIsSender ? 'dark:bg-brand-800 ml-auto bg-green-100' : 'bg-white dark:bg-slate-700',
-      )}
-    >
-      <span className="break-words">{message.content}</span>
-
-      <div className="inline-flex min-w-[4.5rem] items-end justify-end text-xs text-gray-800 dark:text-gray-300">
-        <p className="absolute bottom-1 right-2 flex items-center">
-          <span className="mr-1">{format(message.createdAt, 'h:mm a')}</span>
-          {authUserIsSender && <MsgStatusIcon status={message.status} />}
+    <div className={classNames('mb-4 w-max', authUserIsSender && 'ml-auto')}>
+      <div
+        className={classNames(
+          'relative min-w-full space-y-1.5 rounded-lg border-b border-gray-400/50 p-2 text-sm text-gray-900 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:text-gray-100',
+          authUserIsSender ? 'dark:bg-brand-800 bg-green-100' : 'bg-white dark:bg-slate-700',
+        )}
+      >
+        <p className="break-words">{message.content}</p>
+      </div>
+      <div className={classNames('mt-0.5 flex', authUserIsSender && 'justify-end')}>
+        <p className={classNames('flex min-w-[4.5rem] items-center gap-1', authUserIsSender && 'justify-end')}>
+          <FormattedDate dateString={message.createdAt} />
+          <span className="inline-flex size-4 flex-shrink-0 items-center">
+            {authUserIsSender && <MsgStatusIcon status={message.status} />}
+          </span>
         </p>
       </div>
     </div>
@@ -126,15 +133,38 @@ function Message({ message }: Readonly<MessageProps>) {
 
 function TempMessage({ message }: Readonly<TempMessageProps>) {
   return (
-    <div className="dark:bg-brand-800 relative mb-4 ml-auto w-max space-y-1.5 rounded-lg border-b border-gray-400/50 bg-green-100 px-2 pb-2.5 pt-1.5 text-sm text-gray-900 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:text-gray-100">
-      <span className="break-words">{message.content}</span>
-
-      <div className="inline-flex min-w-[4.5rem] items-end justify-end text-xs text-gray-800 dark:text-gray-300">
-        <p className="absolute bottom-1 right-2 flex items-center">
-          <span className="mr-1">{format(message.createdInClientAt, 'h:mm a')}</span>
-          <MsgStatusIcon status={message.status} />
+    <div className="mb-4 ml-auto w-max">
+      <div className="dark:bg-brand-800 relative min-w-full space-y-1.5 rounded-lg border-b border-gray-400/50 bg-green-100 p-2 text-sm text-gray-900 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:text-gray-100">
+        <p className="break-words">{message.content}</p>
+      </div>
+      <div className="mt-0.5 flex justify-end">
+        <p className="flex min-w-[4.5rem] items-center justify-end gap-1">
+          <FormattedDate dateString={message.createdInClientAt} />
+          <span className="inline-flex size-4 flex-shrink-0 items-center">
+            <MsgStatusIcon status={message.status} />
+          </span>
         </p>
       </div>
     </div>
+  )
+}
+
+function FormattedDate(props: Readonly<FormattedDateProps>) {
+  const { dateString } = props
+  const formattedTime = useMemo(() => format(dateString, 'hh:mm a'), [dateString])
+  const formattedDate = useMemo(() => {
+    const diff = differenceInCalendarDays(new Date(), new Date(dateString))
+
+    if (diff < 1) return 'Today at'
+    if (diff === 1) return 'Yesterday at'
+    return format(dateString, 'dd/MM/yy')
+  }, [dateString])
+
+  return (
+    <span className="text-xs text-gray-800 dark:text-gray-400">
+      <time>
+        {formattedDate} {formattedTime}
+      </time>
+    </span>
   )
 }
