@@ -4,12 +4,13 @@ import type { InputHTMLAttributes, RefObject } from 'react'
 interface BaseInputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string
   label: string
+  type?: InputHTMLAttributes<HTMLInputElement>['type']
   innerRef?: RefObject<HTMLInputElement>
   validationError?: string | null
 }
 
-export default function BaseInput(props: BaseInputProps) {
-  const { label, innerRef, validationError = null, ...inputAttrs } = props
+export default function BaseInput(props: Readonly<BaseInputProps>) {
+  const { label, innerRef, validationError = null, type = 'text', ...inputAttrs } = props
 
   return (
     <div className="relative">
@@ -20,7 +21,9 @@ export default function BaseInput(props: BaseInputProps) {
         <input
           ref={innerRef}
           {...inputAttrs}
-          className="text focus:border-brand-500 focus:ring-brand-500 block w-full appearance-none rounded-md border border-gray-300 bg-gray-50 px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none sm:text-sm dark:bg-gray-800/70"
+          type={type}
+          pattern={getInputPattern(type)}
+          className="text focus:border-brand-500 focus:ring-brand-500 user-invalid:border-red-500 user-invalid:focus:border-red-500 user-invalid:focus:ring-red-500 block w-full appearance-none rounded-md border border-gray-300 bg-gray-50 px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none sm:text-sm dark:bg-gray-800/70"
         />
       </div>
       {validationError !== null && (
@@ -28,4 +31,10 @@ export default function BaseInput(props: BaseInputProps) {
       )}
     </div>
   )
+}
+
+function getInputPattern(type: string) {
+  if (type === 'email') {
+    return "(?!(^[.-].*|[^@]*.@|.*.{2,}.*)|^.{254}.)([a-zA-Z0-9!#$%&'*+/=?^_`{|}~.-]+@)(?!-.*|.*-.)([a-zA-Z0-9-]{1,63}.)+[a-zA-Z]{2,15}"
+  }
 }
