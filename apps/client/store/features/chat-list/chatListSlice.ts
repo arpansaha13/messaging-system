@@ -1,57 +1,15 @@
-import _fetch from '~/utils/_fetch'
 import { isNullOrUndefined } from '@arpansaha13/utils'
+import _fetch from '~/utils/_fetch'
+import type { IChatListItem } from '@shared/types'
 import type { Slice } from '~/store/types.store'
-import type { IChatListItem, IContact, MessageStatus } from '@shared/types'
+import type { ChatListSliceType } from './types.ts'
 
 type ChatsResponse = {
   archived: IChatListItem
   unarchived: IChatListItem
 }
 
-export interface ChatListStoreType {
-  unarchived: IChatListItem[]
-  archived: IChatListItem[]
-
-  activeChat: Pick<IChatListItem, 'receiver' | 'contact'> | null
-
-  getActiveChat: () => ChatListStoreType['activeChat']
-
-  setActiveChat: (newChatInfo: ChatListStoreType['activeChat']) => void
-
-  upsertActiveChatContact: (receiverId: number, newContact: Pick<IContact, 'contactId' | 'alias'>) => void
-
-  deleteActiveChatContact: (receiverId: number) => void
-
-  initChatList: () => Promise<void>
-
-  insertUnarchivedChat: (newItem: IChatListItem) => void
-
-  updateChatListItemMessage: (receiverId: number, latestMsg: IChatListItem['latestMsg']) => void
-
-  updateChatListItemMessageStatus: (
-    receiverId: number,
-    messageId: number,
-    latestMsgStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
-  ) => void
-
-  updateChatListItemMessagePin: (receiverId: number, pinned: boolean) => void
-
-  upsertChatListItemContact: (receiverId: number, newContact: Pick<IContact, 'contactId' | 'alias'>) => void
-
-  deleteChatListItemContact: (receiverId: number) => void
-
-  clearChatListItemMessage: (receiverId: number) => void
-
-  searchChat: (receiverId: number) => IChatListItem | null
-
-  archiveChat: (receiverId: number) => void
-
-  unarchiveChat: (receiverId: number) => void
-
-  deleteChat: (receiverId: number, archived?: boolean) => void
-}
-
-export const useChatListStore: Slice<ChatListStoreType> = (set, get) => ({
+export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
   unarchived: [],
 
   archived: [],

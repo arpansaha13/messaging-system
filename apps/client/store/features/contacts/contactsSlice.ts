@@ -1,23 +1,10 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
-import type { IContact, IUser } from '@shared/types'
-import type { Slice } from '../types.store'
+import type { IContact } from '@shared/types'
+import type { Slice } from '~/store/types.store'
+import type { ContactSliceType } from './types'
 
-export interface ContactStoreType {
-  /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */
-  contacts: Record<string, IContact[]>
-
-  /** Initialize the contacts map. */
-  initContactStore: () => Promise<void>
-
-  insertContact: (userToAdd: IUser, alias: IContact['alias']) => Promise<IContact>
-
-  updateContactAlias: (contact: IContact, newAlias: IContact['alias']) => void
-
-  deleteContact: (contact: IContact) => void
-}
-
-export const useContactStore: Slice<ContactStoreType> = set => ({
+export const contactSlice: Slice<ContactSliceType> = set => ({
   contacts: {},
 
   async initContactStore() {

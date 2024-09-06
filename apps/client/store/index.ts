@@ -1,33 +1,40 @@
 import { enableMapSet } from 'immer'
 import { immer } from 'zustand/middleware/immer'
 import { createWithEqualityFn } from 'zustand/traditional'
-import { type AuthStoreType, useAuthStore } from './slices/useAuthSlice'
-import { type ChatListStoreType, useChatListStore } from './slices/useChatListStore'
-import { type MessageStoreType, useMessageStore } from './slices/useMessageStore'
-import { type ContactStoreType, useContactStore } from './slices/useContactStore'
-import { type DraftStoreType, useDraftStore } from './slices/useDraftStore'
-import { type NotificationStateType, useNotificationState } from './slices/useNotificationState'
-import { type TypingStateType, useTypingState } from './slices/useTypingState'
+import { authSlice } from './features/auth/authSlice'
+import { chatListSlice } from './features/chat-list/chatListSlice'
+import { contactSlice } from './features/contacts/contactsSlice'
+import { messageSlice } from './features/messages/messagesSlice'
+import { draftSlice } from './features/drafts/draftsSlice'
+import { notificationSlice } from './features/notification/notificationSlice'
+import { typingSlice } from './features/typing/typingSlice'
+import type { AuthSliceType } from './features/auth/types'
+import type { ChatListSliceType } from './features/chat-list/types'
+import type { ContactSliceType } from './features/contacts/types'
+import type { MessageSliceType } from './features/messages/types'
+import type { DraftSliceType } from './features/drafts/types'
+import type { NotificationSliceType } from './features/notification/types'
+import type { TypingSliceType } from './features/typing/types'
 
 export interface StoreType
-  extends AuthStoreType,
-    ChatListStoreType,
-    MessageStoreType,
-    ContactStoreType,
-    DraftStoreType,
-    NotificationStateType,
-    TypingStateType {}
+  extends AuthSliceType,
+    ChatListSliceType,
+    ContactSliceType,
+    MessageSliceType,
+    DraftSliceType,
+    NotificationSliceType,
+    TypingSliceType {}
 
 enableMapSet()
 
 export const useStore = createWithEqualityFn<StoreType>()(
   immer((...a) => ({
-    ...useAuthStore(...a),
-    ...useChatListStore(...a),
-    ...useMessageStore(...a),
-    ...useContactStore(...a),
-    ...useDraftStore(...a),
-    ...useNotificationState(...a),
-    ...useTypingState(...a),
+    ...authSlice(...a),
+    ...chatListSlice(...a),
+    ...contactSlice(...a),
+    ...messageSlice(...a),
+    ...draftSlice(...a),
+    ...notificationSlice(...a),
+    ...typingSlice(...a),
   })),
 )

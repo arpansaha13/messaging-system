@@ -1,37 +1,10 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
-import type { MessageStatus } from '@shared/types'
-import type { Slice } from '~/store/types.store'
 import type { IMessage, IMessageSending } from '@shared/types'
+import type { Slice } from '~/store/types.store'
+import type { MessageSliceType } from './types'
 
-export interface MessageStoreType {
-  /**
-   * Messages mapped with receiver (user) id
-   * Each message is mapped with their messageId.
-   */
-  userMessagesMap: Map<number, Map<number, IMessage>>
-  getUserMessagesMap: () => MessageStoreType['userMessagesMap']
-
-  /** Messages that are newly created and are being sent. */
-  tempMessagesMap: Map<number, Map<string, IMessageSending>>
-
-  upsertMessages: (receiverId: number, messages: IMessage[]) => void
-  upsertTempMessages: (receiverId: number, messages: IMessageSending[]) => void
-
-  updateMessageStatus: (
-    receiverId: number,
-    messageId: number,
-    newStatus: Exclude<MessageStatus, MessageStatus.SENDING>,
-  ) => void
-
-  clearMessages: (receiverId: number) => void
-  deleteMessages: (receiverId: number) => void
-
-  getTempMessage: (receiverId: number, hash: string) => IMessageSending
-  deleteTempMessage: (receiverId: number, hash: string) => void
-}
-
-export const useMessageStore: Slice<MessageStoreType> = (set, get) => ({
+export const messageSlice: Slice<MessageSliceType> = (set, get) => ({
   userMessagesMap: new Map(),
 
   getUserMessagesMap() {
