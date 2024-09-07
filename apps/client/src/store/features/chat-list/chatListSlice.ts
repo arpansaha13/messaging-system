@@ -3,7 +3,7 @@ import _fetch from '~/utils/_fetch'
 import type { IChatsResponse } from '@shared/types'
 import type { IChatListItem } from '@shared/types/client'
 import type { Slice } from '~/store/types.store'
-import type { ChatListSliceType } from './types.ts'
+import type { ChatListSliceType } from './types'
 
 export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
   unarchived: [],

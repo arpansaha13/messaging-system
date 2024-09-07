@@ -1,4 +1,4 @@
-import BaseButtonLink from '~/components/base/BaseButtonLink'
+import BaseButtonLink from '~base/BaseButtonLink'
 
 export default function LinkExpired() {
   return (
