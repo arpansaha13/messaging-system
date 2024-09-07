@@ -1,35 +1,50 @@
 import rfetch from '~api/utils/rfetch'
 
-interface Options {
-  status: number
-  statusText: string
-  data: any
-  setCookie: string[]
-}
+/**
+ * Fires a fetch request and returns a response.
+ * Use this overload if the body does not need to be modified.
+ */
+async function _response(request: Request): Promise<Response>;
 
-export default async function _response(request: Request) {
-  const res = await rfetch(request)
+/**
+ * Returns a response object with the provided body.
+ * Use this overload if the body needs to be modified.
+ */
+async function _response(res: Response, body: any): Promise<Response>;
 
-  const { status, statusText } = res
-  const setCookie = res.headers.getSetCookie()
-
-  if (status === 204 || res.body === null) {
-    return createResponse({ data: null, status, statusText, setCookie })
+async function _response(requestOrRes: Request | Response, body?: any): Promise<Response> {
+  if (requestOrRes instanceof Request) {
+    const res = await rfetch(requestOrRes)
+    const resBody = await getBody(res)
+    return createResponse(res, resBody)
   }
 
-  let data = await res.text()
+  if (requestOrRes instanceof Response && body !== undefined) {
+    return createResponse(requestOrRes, body)
+  }
+
+  throw new Error("Unsupported parameters in _response().")
+}
+
+export default _response
+
+async function getBody(res: Response) {
+  if (res.status === 204 || res.body === null) {
+    return null
+  }
+
+  let body = await res.text()
 
   try {
-    data = JSON.parse(data)
-  } catch {
-    return createResponse({ data, status, statusText, setCookie }) // text data
+    body = JSON.parse(body)
+  } finally {
+    return body // text data
   }
-
-  return createResponse({ data, status, statusText, setCookie })
 }
 
-function createResponse(options: Options): Response {
-  const { data, setCookie, status, statusText } = options
+function createResponse(res: Response, body: any): Response {
+  const { status, statusText } = res
+  const setCookie = res.headers.getSetCookie()
 
   const responseInit: ResponseInit = { status, statusText }
 
@@ -43,9 +58,9 @@ function createResponse(options: Options): Response {
     responseInit.headers = headers
   }
 
-  if (data === null || typeof data === 'string') {
-    return new Response(data, responseInit)
+  if (body === null || typeof body === 'string') {
+    return new Response(body, responseInit)
   }
 
-  return Response.json(data, responseInit)
+  return Response.json(body, responseInit)
 }
