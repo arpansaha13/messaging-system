@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
-import type { IContact } from '@shared/types'
+import type { IContact } from '@shared/types/client'
 import type { Slice } from '~/store/types.store'
 import type { ContactSliceType } from './types'
 

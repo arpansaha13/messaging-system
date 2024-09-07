@@ -15,7 +15,7 @@ import GlobalName from '~/components/GlobalName'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
-import type { IContact, IContextMenuItem, IUser } from '@shared/types'
+import type { IContact, IContextMenuItem, IUser } from '@shared/types/client'
 
 interface IUserSearchResult extends IUser {
   contact: {

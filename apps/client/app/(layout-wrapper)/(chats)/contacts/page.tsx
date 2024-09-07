@@ -14,7 +14,7 @@ import StackedListItem from '~common/StackedListItem'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import getFormData from '~/utils/getFormData'
-import type { IContact, IContextMenuItem } from '@shared/types'
+import type { IContact, IContextMenuItem } from '@shared/types/client'
 
 interface ContactsProps {
   menuItems: IContextMenuItem[]

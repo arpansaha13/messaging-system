@@ -1,7 +1,7 @@
-export * from './client.types'
-export * from './message.types'
-export * from './response.types'
-export * from './ws.types'
+export * from './socket'
+export * from './message'
+export * from './response-from-backend'
+export * from './response-from-next-server'
 
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE'

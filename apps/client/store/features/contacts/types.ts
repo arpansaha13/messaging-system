@@ -1,4 +1,4 @@
-import type { IContact, IUser } from '@shared/types'
+import type { IContact, IUser } from '@shared/types/client'
 
 export interface ContactSliceType {
   /** List of all contacts of the authorized user, grouped by the first letter of the contact-aliases. */

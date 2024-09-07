@@ -1,4 +1,4 @@
-import type { IAuthUser } from '@shared/types'
+import type { IAuthUser } from '@shared/types/client'
 
 export interface AuthSliceType {
   authUser: IAuthUser | null

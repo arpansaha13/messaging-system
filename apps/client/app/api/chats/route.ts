@@ -1,13 +1,16 @@
 import _response from '~api/utils/_response'
 import rfetch from '../utils/rfetch'
 import { formatChatListItemResponse } from './format'
+import type { IChatsResponse, IChatsResponseFromBE } from '@shared/types'
 
 export async function GET(request: Request) {
   const res = await rfetch(request)
-  const { archived, unarchived } = await res.json()
+  const { archived, unarchived }: IChatsResponseFromBE = await res.json()
 
-  const formattedArchived = archived.map((a: any) => formatChatListItemResponse(a))
-  const formattedUnarchived = unarchived.map((u: any) => formatChatListItemResponse(u))
+  const formattedArchived = archived.map(a => formatChatListItemResponse(a))
+  const formattedUnarchived = unarchived.map(u => formatChatListItemResponse(u))
 
-  return _response(res, { archived: formattedArchived, unarchived: formattedUnarchived })
+  const newBody: IChatsResponse = { archived: formattedArchived, unarchived: formattedUnarchived }
+
+  return _response(res, newBody)
 }

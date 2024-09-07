@@ -7,7 +7,7 @@ import GlobalName from '~/components/GlobalName'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
 import isUnread from '~/utils/isUnread'
-import type { IChatListItem, IContextMenuItem } from '@shared/types'
+import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 interface ChatListItemTemplateProps {
   userId: number

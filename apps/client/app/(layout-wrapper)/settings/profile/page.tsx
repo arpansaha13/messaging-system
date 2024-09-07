@@ -8,7 +8,7 @@ import Avatar from '~common/Avatar'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
-import type { IAuthUser } from '@shared/types'
+import type { IAuthUser } from '@shared/types/client'
 
 interface FieldProps {
   heading: string

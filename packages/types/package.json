@@ -1,9 +1,16 @@
 {
   "name": "@shared/types",
   "exports": {
-    "import": "./dist/index.js",
-    "require": "./dist/index.js",
-    "types": "./dist/index.js"
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.js"
+    },
+    "./client": {
+      "import": "./dist/client/index.js",
+      "require": "./dist/client/index.js",
+      "types": "./dist/client/index.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"

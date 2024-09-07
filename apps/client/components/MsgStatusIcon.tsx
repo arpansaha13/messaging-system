@@ -1,9 +1,7 @@
-// Icons
 import { Icon } from '@iconify/react'
 import alarmIcon from '@iconify-icons/mdi/alarm'
 import checkIcon from '@iconify-icons/mdi/check'
 import checkAllIcon from '@iconify-icons/mdi/check-all'
-// Enum
 import { MessageStatus } from '@shared/types'
 
 export default function MsgStatusIcon({ status }: { status: MessageStatus }) {

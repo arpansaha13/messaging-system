@@ -1,13 +1,9 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import _fetch from '~/utils/_fetch'
-import type { IChatListItem } from '@shared/types'
+import type { IChatsResponse } from '@shared/types'
+import type { IChatListItem } from '@shared/types/client'
 import type { Slice } from '~/store/types.store'
 import type { ChatListSliceType } from './types.ts'
-
-type ChatsResponse = {
-  archived: IChatListItem
-  unarchived: IChatListItem
-}
 
 export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
   unarchived: [],
@@ -51,7 +47,7 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
   },
 
   async initChatList() {
-    const { unarchived, archived }: ChatsResponse = await _fetch('chats')
+    const { unarchived, archived }: IChatsResponse = await _fetch('chats')
     set(() => ({ unarchived, archived }))
   },
 

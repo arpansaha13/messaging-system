@@ -1,6 +1,8 @@
-import { IChatListItem } from '@shared/types';
 
-export function formatChatListItemResponse(body: any): IChatListItem {
+import type { IChatListItemResponseFromBE } from '@shared/types';
+import type { IChatListItem } from '@shared/types/client';
+
+export function formatChatListItemResponse(body: IChatListItemResponseFromBE): IChatListItem {
   const {chat, message, contact} = body
 
   return {

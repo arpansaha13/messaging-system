@@ -4,7 +4,7 @@ import { shallow } from 'zustand/shallow'
 import { useSocket } from '~/providers/SocketProvider'
 import { useStore } from '~/store'
 import { generateHash } from '~/utils/generateHash'
-import { MessageStatus } from '@shared/types'
+import { MessageStatus, SocketEmitEvent } from '@shared/types'
 import type { ISenderEmitTyping, IMessageSending } from '@shared/types'
 
 interface TextAreaProps {
@@ -56,7 +56,7 @@ export default function ChatFooter() {
         isFirstRun.current = false
         return
       }
-      socket.emit('typing', typingPayload(false))
+      socket.emit(SocketEmitEvent.TYPING, typingPayload(false))
     },
     1000,
     [value],
@@ -64,7 +64,7 @@ export default function ChatFooter() {
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (isReady() && isTypedCharGood(e)) {
-      socket.emit('typing', typingPayload(true))
+      socket.emit(SocketEmitEvent.TYPING, typingPayload(true))
     }
     if (e.key === 'Enter' && value) {
       unarchiveChat(activeChat.receiver.id)
@@ -85,7 +85,7 @@ export default function ChatFooter() {
       ])
 
       setValue('')
-      socket.emit('send-message', {
+      socket.emit(SocketEmitEvent.SEND_MESSAGE, {
         ...newMessage,
         receiverId: activeChat.receiver.id,
       })

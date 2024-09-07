@@ -4,8 +4,8 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { ChatRepository } from './chats.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
+import type { IChatListItemResponseFromBE, IChatsResponseFromBE } from '@shared/types'
 import type { User } from 'src/users/user.entity'
-import type { IChatsResponse } from './interfaces/chats-response.interface'
 
 @Injectable()
 export class ChatsService {
@@ -20,7 +20,7 @@ export class ChatsService {
     private readonly messageRepository: MessageRepository,
   ) {}
 
-  async getChatsOfUser(userId: User['id']): Promise<any> {
+  async getChatsOfUser(userId: User['id']): Promise<IChatsResponseFromBE> {
     const chats = await this.chatRepository.getChatsOfUser(userId)
 
     const promises = []
@@ -94,7 +94,7 @@ export class ChatsService {
     return res
   }
 
-  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']): Promise<IChatsResponse> {
+  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']): Promise<IChatListItemResponseFromBE> {
     const chat = await this.chatRepository.getChatOfUserByReceiverId(userId, receiverId)
 
     if (isNullOrUndefined(chat)) {

@@ -1,4 +1,5 @@
-import type { IChatListItem, IContact, MessageStatus } from '@shared/types'
+import type { MessageStatus } from '@shared/types'
+import type { IChatListItem, IContact } from '@shared/types/client'
 
 export interface ChatListSliceType {
   unarchived: IChatListItem[]

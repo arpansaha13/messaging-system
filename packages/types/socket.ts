@@ -1,4 +1,4 @@
-import type { MessageStatus } from './message.types'
+import type { MessageStatus } from './message'
 
 export interface ISessionConnect {
   userId: number

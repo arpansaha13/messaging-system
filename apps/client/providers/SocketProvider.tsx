@@ -5,15 +5,14 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
 import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
-import { MessageStatus } from '@shared/types'
-import { SocketEmitEvent, SocketOnEvent } from '@shared/types'
+import { MessageStatus, SocketEmitEvent, SocketOnEvent } from '@shared/types'
 import type {
-  IChatListItem,
   IMessage,
   IReceiverEmitRead,
   SocketEmitEventPayload,
   SocketOnEventPayload,
 } from '@shared/types'
+import type { IChatListItem } from '@shared/types/client'
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
