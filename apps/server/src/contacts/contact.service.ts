@@ -1,9 +1,8 @@
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { User } from 'src/users/user.entity'
-import { ContactRepository } from './contact.repository'
-import type { IContact } from '@shared/types'
 import { Contact } from './contact.entity'
+import { ContactRepository } from './contact.repository'
 
 @Injectable()
 export class ContactService {
@@ -12,45 +11,15 @@ export class ContactService {
     private contactRepository: ContactRepository,
   ) {}
 
-  // TODO: fix response types
-  async getContacts(authUser: User): Promise<Record<string, IContact[]>> {
-    const contactsRes = await this.contactRepository.getContactsByUserId(authUser.id)
-
-    const newContacts = {}
-
-    for (const contactResItem of contactsRes) {
-      const letter = contactResItem.alias[0]
-      if (typeof newContacts[letter] === 'undefined') newContacts[letter] = []
-
-      newContacts[letter].push({
-        alias: contactResItem.alias,
-        contactId: contactResItem.id,
-        userId: contactResItem.userInContact.id,
-        bio: contactResItem.userInContact.bio,
-        dp: contactResItem.userInContact.dp,
-        username: contactResItem.userInContact.username,
-        globalName: contactResItem.userInContact.globalName,
-      })
-    }
-
-    return newContacts
+  async getContacts(authUser: User): Promise<any> {
+    return this.contactRepository.getContactsByUserId(authUser.id)
   }
 
-  async getContactsByQuery(authUser: User, search: string): Promise<IContact[]> {
-    const res = await this.contactRepository.getContactsByUserIdAndQuery(authUser.id, search)
-
-    return res.map(resItem => ({
-      alias: resItem.alias,
-      contactId: resItem.id,
-      userId: resItem.userInContact.id,
-      bio: resItem.userInContact.bio,
-      dp: resItem.userInContact.dp,
-      username: resItem.userInContact.username,
-      globalName: resItem.userInContact.globalName,
-    }))
+  async getContactsByQuery(authUser: User, search: string): Promise<any[]> {
+    return this.contactRepository.getContactsByUserIdAndQuery(authUser.id, search)
   }
 
-  async addContact(authUser: User, userIdToAdd: number, alias: string): Promise<IContact> {
+  async addContact(authUser: User, userIdToAdd: number, alias: string): Promise<any> {
     if (authUser.id === userIdToAdd) {
       throw new BadRequestException('Invalid user ids.')
     }
@@ -67,7 +36,11 @@ export class ContactService {
         throw new ConflictException('Given contact is already added.')
       }
 
-      const userToAdd = await txnManager.findOneBy(User, { id: userIdToAdd })
+      const userToAdd = await txnManager.findOne(User, {
+        select: ['id', 'dp', 'bio', 'username', 'globalName'],
+        where: { id: userIdToAdd },
+      })
+
       if (userToAdd === null) {
         throw new BadRequestException('Invalid user id.')
       }
@@ -86,13 +59,9 @@ export class ContactService {
     })
 
     return {
-      contactId: newContact.id,
-      alias: alias,
-      userId: userIdToAdd,
-      dp: newContact.userInContact.dp,
-      bio: newContact.userInContact.bio,
-      username: newContact.userInContact.username,
-      globalName: newContact.userInContact.globalName,
+      id: newContact.id,
+      alias: newContact.alias,
+      userInContact: newContact.userInContact,
     }
   }
 
