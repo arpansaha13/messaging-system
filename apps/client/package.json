@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "format": "prettier --write \"./**/*.{js,jsx,ts,tsx,css}\" \"!**/.next/**\""
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css}\""
   },
   "dependencies": {
     "@arpansaha13/utils": "^0.8.0",

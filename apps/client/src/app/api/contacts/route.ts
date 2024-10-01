@@ -9,15 +9,18 @@ export async function GET(request: Request) {
   const hasSearchParams = new URL(request.url).searchParams.size > 0
 
   if (hasSearchParams) {
-    return _response(res, body.map<IContact>((contact) => ({
-      alias: contact.alias,
-      contactId: contact.id,
-      userId: contact.userInContact.id,
-      bio: contact.userInContact.bio,
-      dp: contact.userInContact.dp,
-      username: contact.userInContact.username,
-      globalName: contact.userInContact.globalName,
-    })))
+    return _response(
+      res,
+      body.map<IContact>(contact => ({
+        alias: contact.alias,
+        contactId: contact.id,
+        userId: contact.userInContact.id,
+        bio: contact.userInContact.bio,
+        dp: contact.userInContact.dp,
+        username: contact.userInContact.username,
+        globalName: contact.userInContact.globalName,
+      })),
+    )
   }
 
   const newContacts: Record<string, IContact[]> = {}

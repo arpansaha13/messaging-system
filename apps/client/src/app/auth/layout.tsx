@@ -5,7 +5,9 @@ interface AuthLayoutProps {
   children: ReactNode
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default function AuthLayout(props: Readonly<AuthLayoutProps>) {
+  const { children } = props
+
   return (
     <>
       <Notification />

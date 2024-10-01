@@ -1,4 +1,3 @@
-
 import type { Slice } from '~/store/types.store'
 import type { AuthSliceType } from './types'
 

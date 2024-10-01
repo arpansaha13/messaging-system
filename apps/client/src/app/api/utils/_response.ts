@@ -4,13 +4,13 @@ import rfetch from '~api/utils/rfetch'
  * Fires a fetch request and returns a response.
  * Use this overload if the body does not need to be modified.
  */
-async function _response(request: Request): Promise<Response>;
+async function _response(request: Request): Promise<Response>
 
 /**
  * Returns a response object with the provided body.
  * Use this overload if the body needs to be modified.
  */
-async function _response(res: Response, body: any): Promise<Response>;
+async function _response(res: Response, body: any): Promise<Response>
 
 async function _response(requestOrRes: Request | Response, body?: any): Promise<Response> {
   if (requestOrRes instanceof Request) {
@@ -23,7 +23,7 @@ async function _response(requestOrRes: Request | Response, body?: any): Promise<
     return createResponse(requestOrRes, body)
   }
 
-  throw new Error("Unsupported parameters in _response().")
+  throw new Error('Unsupported parameters in _response().')
 }
 
 export default _response
