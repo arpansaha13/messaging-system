@@ -11,7 +11,6 @@ import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
 import ChatListItemTemplate from '~/components/ChatListItem/Template'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>

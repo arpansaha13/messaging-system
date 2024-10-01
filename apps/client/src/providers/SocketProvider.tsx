@@ -3,16 +3,10 @@ import io from 'socket.io-client'
 import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
 import isUnread from '~/utils/isUnread'
+import { _getChatsWith } from '~/utils/api'
 import { MessageStatus, SocketEmitEvent, SocketOnEvent } from '@shared/types'
-import type {
-  IMessage,
-  IReceiverEmitRead,
-  SocketEmitEventPayload,
-  SocketOnEventPayload,
-} from '@shared/types'
-import type { IChatListItem } from '@shared/types/client'
+import type { IMessage, IReceiverEmitRead, SocketEmitEventPayload, SocketOnEventPayload } from '@shared/types'
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
@@ -165,7 +159,7 @@ function useSocketInit() {
         unarchiveChat(payload.senderId)
         updateChatListItemMessage(payload.senderId, message)
       } else {
-        const convo: IChatListItem = await _fetch(`chats/${payload.senderId}`)
+        const convo = await _getChatsWith(payload.senderId)
         convo.latestMsg = message
         insertUnarchivedChat(convo)
       }
@@ -200,7 +194,7 @@ function useSocketInit() {
       if (chatExists) {
         updateChatListItemMessage(payload.receiverId, message)
       } else {
-        const convo: IChatListItem = await _fetch(`chats/${payload.receiverId}`)
+        const convo = await _getChatsWith(payload.receiverId)
         convo.latestMsg = message
         insertUnarchivedChat(convo)
       }

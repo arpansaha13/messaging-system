@@ -3,7 +3,6 @@
 import { shallow } from 'zustand/shallow'
 import ChatListItemTemplate from '~/components/ChatListItem/Template'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 interface ArchivedConvoItemProps {

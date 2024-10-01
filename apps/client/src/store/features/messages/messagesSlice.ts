@@ -1,8 +1,8 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import _fetch from '~/utils/_fetch'
 import type { IMessage, IMessageSending } from '@shared/types'
 import type { Slice } from '~/store/types.store'
 import type { MessageSliceType } from './types'
+import { _clearMessages, _deleteMessages } from '~/utils/api'
 
 export const messageSlice: Slice<MessageSliceType> = (set, get) => ({
   userMessagesMap: new Map(),
@@ -66,7 +66,7 @@ export const messageSlice: Slice<MessageSliceType> = (set, get) => ({
 
   clearMessages(receiverId) {
     set(state => {
-      _fetch(`chats/${receiverId}/clear`, { method: 'DELETE' })
+      _clearMessages(receiverId)
 
       // Map.clear() instead of Map.delete()
       // Deleting will cause another api call when this chat is opened
@@ -78,7 +78,7 @@ export const messageSlice: Slice<MessageSliceType> = (set, get) => ({
 
   deleteMessages(receiverId) {
     set(state => {
-      _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
+      _deleteMessages(receiverId)
       state.userMessagesMap.delete(receiverId)
       state.tempMessagesMap.delete(receiverId)
     })

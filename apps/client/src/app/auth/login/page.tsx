@@ -8,9 +8,14 @@ import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _login } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
+
+interface ILoginFormData {
+  email: string
+  password: string
+}
 
 // export const metadata: Metadata = {
 //   title: 'Messaging System | Sign in',
@@ -32,12 +37,9 @@ export default function SignInPage() {
     e.preventDefault()
     setLoading(true)
 
-    const formData = getFormData(formRef.current!)
+    const formData = getFormData<ILoginFormData>(formRef.current)
 
-    _fetch('auth/login', {
-      method: 'POST',
-      body: formData,
-    })
+    _login(formData)
       .then(() => {
         router.replace('/')
         toggleNotification(false)

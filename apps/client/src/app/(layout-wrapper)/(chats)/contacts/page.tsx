@@ -12,7 +12,7 @@ import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _getContacts } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
 
@@ -76,7 +76,7 @@ export default function Page() {
         setSearchResults(null)
         return
       }
-      _fetch(`contacts?search=${value}`).then(setSearchResults)
+      _getContacts(value).then(setSearchResults)
     },
     1000,
     [value],

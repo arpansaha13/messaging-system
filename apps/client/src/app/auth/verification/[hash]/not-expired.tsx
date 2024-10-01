@@ -5,7 +5,7 @@ import { useStore } from '~/store'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import BaseButtonLink from '~base/BaseButtonLink'
-import _fetch from '~/utils/_fetch'
+import { _verification } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 
 enum VerificationStatus {
@@ -15,6 +15,10 @@ enum VerificationStatus {
 
 interface OtpFormProps {
   setStatus: React.Dispatch<React.SetStateAction<VerificationStatus>>
+}
+
+interface IVerificationFormData {
+  otp: string
 }
 
 export default function LinkNotExpired() {
@@ -36,14 +40,11 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
   function verifyAccount(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    const formData = getFormData(formRef.current!)
+    const formData = getFormData<IVerificationFormData>(formRef.current)
 
     setLoading(true)
 
-    _fetch(`auth/verification/${params.hash}`, {
-      method: 'POST',
-      body: formData,
-    })
+    _verification(params.hash as string, formData)
       .then(() => {
         setStatus(VerificationStatus.VERIFIED)
         toggleNotification(false)

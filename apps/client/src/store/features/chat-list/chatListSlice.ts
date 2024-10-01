@@ -1,6 +1,5 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import _fetch from '~/utils/_fetch'
-import type { IChatsResponse } from '@shared/types'
+import { _archiveChat, _getChats, _pinChat, _unarchiveChat, _unpinChat } from '~/utils/api'
 import type { IChatListItem } from '@shared/types/client'
 import type { Slice } from '~/store/types.store'
 import type { ChatListSliceType } from './types'
@@ -47,7 +46,7 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
   },
 
   async initChatList() {
-    const { unarchived, archived }: IChatsResponse = await _fetch('chats')
+    const { unarchived, archived } = await _getChats()
     set(() => ({ unarchived, archived }))
   },
 
@@ -65,7 +64,7 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
         let convoItem = state.archived.splice(idx, 1)[0] as unknown as IChatListItem
         convoItem.chat.archived = false
         state.unarchived.push(convoItem)
-        _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
+        _unarchiveChat(receiverId)
       }
       idx = findRoomIndex(receiverId, state.unarchived)
       if (idx !== null) {
@@ -100,8 +99,8 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
       const convo = state.unarchived[idx]
       convo.chat.pinned = pinned
       state.unarchived.sort(sortConvoCompareFn)
-      if (pinned) _fetch(`chats/${receiverId}/pin`, { method: 'PATCH' })
-      else _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
+      if (pinned) _pinChat(receiverId)
+      else _unpinChat(receiverId)
     })
   },
 
@@ -175,11 +174,11 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
       convo.chat.archived = true
       if (convo.chat.pinned) {
         convo.chat.pinned = false
-        _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
+        _unpinChat(receiverId)
       }
       state.archived.push(convo)
       state.archived.sort(sortConvoCompareFn)
-      _fetch(`chats/${receiverId}/archive`, { method: 'PATCH' })
+      _archiveChat(receiverId)
     })
   },
 
@@ -191,7 +190,7 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
       convo.chat.archived = false
       state.unarchived.push(convo)
       state.unarchived.sort(sortConvoCompareFn)
-      _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
+      _unarchiveChat(receiverId)
     })
   },
 
@@ -201,7 +200,7 @@ export const chatListSlice: Slice<ChatListSliceType> = (set, get) => ({
       const idx = findRoomIndex(receiverId, list)
       if (idx === null) return
       list.splice(idx, 1)
-      // _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
+      // _deleteMessages(receiverId)
     })
   },
 })

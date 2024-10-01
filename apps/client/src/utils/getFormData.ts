@@ -1,9 +1,9 @@
-export default function getFormData(formEl: HTMLFormElement) {
+export default function getFormData<T extends Record<string, any>>(formEl: HTMLFormElement | null) {
   if (formEl === null) {
     console.warn('"formEl" is null in getFormData().')
-    return {}
+    return {} as T
   }
 
   const formData = new FormData(formEl)
-  return Object.fromEntries(formData.entries())
+  return Object.fromEntries(formData.entries()) as T
 }

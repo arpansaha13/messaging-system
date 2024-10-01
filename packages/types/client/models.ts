@@ -30,6 +30,13 @@ export interface IAuthUser extends IUser {
   deletedAt: string
 }
 
+export interface IUserSearchResult extends IUser {
+  contact: {
+    id: number
+    alias: string
+  } | null
+}
+
 export interface IContact {
   contactId: number
   userId: number

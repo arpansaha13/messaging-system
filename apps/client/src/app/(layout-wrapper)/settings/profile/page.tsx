@@ -6,7 +6,7 @@ import { classNames } from '@arpansaha13/utils'
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 import Avatar from '~common/Avatar'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _patchMe } from '~/utils/api'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import type { IAuthUser } from '@shared/types/client'
 
@@ -87,12 +87,7 @@ export default function Page() {
     if (authUser.globalName !== globalName) data.globalName = globalName
     if (Object.keys(data).length === 0) return
 
-    _fetch('users/me', {
-      body: data,
-      method: 'PATCH',
-    }).then((res: IAuthUser) => {
-      setAuthUser(res)
-    })
+    _patchMe(data).then(res => setAuthUser(res))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globalName, bio, authUser])
 

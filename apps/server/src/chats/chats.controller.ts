@@ -8,7 +8,7 @@ import type { IChatListItemResponseFromBE, IChatsResponseFromBE } from '@shared/
 @UseGuards(AuthGuard())
 @Controller('chats')
 export class ChatsController {
-  constructor(private chatService: ChatsService) {}
+  constructor(private readonly chatService: ChatsService) {}
 
   @Get()
   getChatsOfUser(@Req() request: Request): Promise<IChatsResponseFromBE> {
@@ -16,7 +16,10 @@ export class ChatsController {
   }
 
   @Get('/:receiverId')
-  getChatOfUserWithReceiver(@Req() request: Request, @Param() params: UserIdParam): Promise<IChatListItemResponseFromBE> {
+  getChatOfUserWithReceiver(
+    @Req() request: Request,
+    @Param() params: UserIdParam,
+  ): Promise<IChatListItemResponseFromBE> {
     return this.chatService.getChatOfUserWithReceiver(request.user.id, params.receiverId)
   }
 

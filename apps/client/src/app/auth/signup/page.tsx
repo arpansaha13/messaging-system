@@ -2,15 +2,22 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useMap } from 'react-use'
 import { useRef, useState } from 'react'
 import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _signup } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { FormEvent } from 'react'
-import { useMap } from 'react-use'
+
+interface ISignupFormData {
+  email: string
+  globalName: string
+  password: string
+  confirmPassword: string
+}
 
 // export const metadata: Metadata = {
 //   title: 'Messaging System | Sign up',
@@ -30,7 +37,7 @@ export default function SignUpPage() {
   function signUp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    const formData = getFormData(formRef.current!)
+    const formData = getFormData<ISignupFormData>(formRef.current)
 
     if (formData.password !== formData.confirmPassword) {
       const msg = 'Password and confirm password do not match'
@@ -46,10 +53,7 @@ export default function SignUpPage() {
 
     setLoading(true)
 
-    _fetch('auth/sign-up', {
-      method: 'POST',
-      body: formData,
-    })
+    _signup(formData)
       .then(() => {
         setNotification({
           show: true,

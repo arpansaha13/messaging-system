@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import { classNames } from '@arpansaha13/utils'
 import Separator from '~common/Separator'
-import _fetch from '~/utils/_fetch'
+import { _logout } from '~/utils/api'
 
 interface SettingsLayoutProps {
   children: React.ReactNode
@@ -26,7 +26,7 @@ export default function SettingsLayout({ children }: Readonly<SettingsLayoutProp
   ]
 
   async function logout() {
-    await _fetch('auth/logout', { method: 'POST' })
+    await _logout()
     window.location.reload()
   }
 

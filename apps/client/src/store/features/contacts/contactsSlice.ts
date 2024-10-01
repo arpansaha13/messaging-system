@@ -1,5 +1,5 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import _fetch from '~/utils/_fetch'
+import { _deleteContacts, _getContacts, _patchContacts, _postContacts } from '~/utils/api'
 import type { IContact } from '@shared/types/client'
 import type { Slice } from '~/store/types.store'
 import type { ContactSliceType } from './types'
@@ -8,15 +8,12 @@ export const contactSlice: Slice<ContactSliceType> = set => ({
   contacts: {},
 
   async initContactStore() {
-    const res: Record<string, IContact[]> = await _fetch('contacts')
+    const res = await _getContacts()
     set({ contacts: res })
   },
 
   async insertContact(userToAdd, alias) {
-    const newContact = await _fetch(`/contacts`, {
-      method: 'POST',
-      body: { userIdToAdd: userToAdd.id, alias },
-    })
+    const newContact = await _postContacts({ userIdToAdd: userToAdd.id, alias })
 
     set(state => {
       const firstLetter = alias.charAt(0).toUpperCase()
@@ -62,10 +59,7 @@ export const contactSlice: Slice<ContactSliceType> = set => ({
         }
       }
 
-      _fetch(`/contacts/${contact.contactId}`, {
-        method: 'PATCH',
-        body: { new_alias: newAlias },
-      })
+      _patchContacts(contact.contactId, { new_alias: newAlias })
     })
   },
 
@@ -83,7 +77,7 @@ export const contactSlice: Slice<ContactSliceType> = set => ({
         delete state.contacts[firstLetter]
       }
 
-      _fetch(`/contacts/${contact.contactId}`, { method: 'DELETE' })
+      _deleteContacts(contact.contactId)
     })
   },
 })

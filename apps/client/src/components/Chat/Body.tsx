@@ -4,7 +4,7 @@ import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _getMessages } from '~/utils/api'
 import type { IMessage, IMessageSending } from '@shared/types'
 
 interface MessageProps {
@@ -35,7 +35,7 @@ export default function ChatBody() {
 
   useEffect(() => {
     if (!getUserMessagesMap().has(activeChat.receiver.id)) {
-      _fetch(`messages/${activeChat.receiver.id}`).then((chatRes: IMessage[]) => {
+      _getMessages(activeChat.receiver.id).then(chatRes => {
         upsertMessages(activeChat.receiver.id, chatRes)
       })
     }

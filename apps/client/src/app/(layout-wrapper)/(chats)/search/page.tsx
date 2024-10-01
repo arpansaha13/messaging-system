@@ -13,16 +13,9 @@ import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
 import GlobalName from '~/components/GlobalName'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _getUsers } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
-import type { IContact, IContextMenuItem, IUser } from '@shared/types/client'
-
-interface IUserSearchResult extends IUser {
-  contact: {
-    id: number
-    alias: string
-  } | null
-}
+import type { IContact, IContextMenuItem, IUserSearchResult } from '@shared/types/client'
 
 interface SearchResultsProps {
   results: IUserSearchResult[]
@@ -66,7 +59,7 @@ export default function Page() {
         setSearchResults(null)
         return
       }
-      _fetch(`users/search?text=${value}`).then(setSearchResults)
+      _getUsers(value).then(setSearchResults)
     },
     1000,
     [value],

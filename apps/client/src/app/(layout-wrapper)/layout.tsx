@@ -19,7 +19,7 @@ import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import Notification from '~common/Notification'
 import { useStore } from '~/store'
-import _fetch from '~/utils/_fetch'
+import { _getMe } from '~/utils/api'  
 import type { AuthUserResType } from '@shared/types'
 
 interface LayoutWrapperProps {
@@ -76,7 +76,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 
   useEffect(() => {
-    _fetch('users/me').then((authUserRes: AuthUserResType) => {
+    _getMe().then((authUserRes: AuthUserResType) => {
       setAuthUser(authUserRes)
       Promise.all([initChatList(), initContactStore()]).then(() => setLoaded(true))
     })
