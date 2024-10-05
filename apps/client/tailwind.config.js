@@ -25,6 +25,9 @@ module.exports = {
           950: '#022c22',
         },
       },
+      spacing: {
+        scrollbar: '0.375rem',
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],

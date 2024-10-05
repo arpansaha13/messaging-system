@@ -14,6 +14,7 @@ import { classNames } from '@arpansaha13/utils'
 import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import AddGroup from '~/components/group/add-group'
+import { useOverflow } from '~/hooks/useOverflow'
 import { useStore } from '~/store'
 import { _getMe } from '~/utils/api'
 
@@ -110,10 +111,13 @@ const LinkIcon = forwardRef((props: any, ref) => {
 
 LinkIcon.displayName = 'LinkIcon'
 
-function LinkWrapper({ children, className, el: Element = 'div' }: Readonly<LinkWrapperProps>) {
+function LinkWrapper(props: Readonly<LinkWrapperProps>) {
+  const { children, className, el: Element = 'div' } = props
+
   return (
     <Element className={classNames('group relative w-full', className)}>
       {children}
+
       <span className="absolute left-0 top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors group-hover:bg-gray-900 dark:group-hover:bg-gray-100" />
     </Element>
   )
@@ -122,16 +126,18 @@ function LinkWrapper({ children, className, el: Element = 'div' }: Readonly<Link
 function GroupList() {
   const pathname = usePathname()
   const groupsRef = useRef<HTMLDivElement>(null)
+  const { isOverflowingY } = useOverflow(groupsRef)
   const [groups] = useStore(state => [state.groups], shallow)
 
   return (
     <div ref={groupsRef} className={'scrollbar w-full flex-grow overflow-y-auto'}>
+      {/* scrollbar-width = 0.375rem */}
       <ul>
         {groups.map(group => {
           const href = `/groups/${group.id}`
 
           return (
-            <LinkWrapper key={group.id} el="li">
+            <LinkWrapper key={group.id} el="li" className={classNames(isOverflowingY && 'pl-scrollbar')}>
               <Link
                 href={href}
                 className={classNames(
@@ -146,7 +152,7 @@ function GroupList() {
         })}
       </ul>
 
-      <div className="mx-auto w-max">
+      <div className={classNames('mx-auto w-max', isOverflowingY && 'pl-scrollbar')}>
         <AddGroup />
       </div>
     </div>

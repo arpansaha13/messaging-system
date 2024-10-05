@@ -28,7 +28,7 @@ body {
 .scrollbar::-webkit-scrollbar,
 .scrollbar::-webkit-scrollbar-track,
 .scrollbar::-webkit-scrollbar-track-piece {
-  @apply w-1.5 bg-transparent;
+  @apply w-scrollbar bg-transparent;
 }
 .scrollbar::-webkit-scrollbar-button {
   @apply hidden;
