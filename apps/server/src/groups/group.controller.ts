@@ -10,6 +10,11 @@ import type { Group } from 'src/groups/group.entity'
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 
+  @Get()
+  async getGroupsOfUser(@Req() request: Request): Promise<Group[]> {
+    return this.groupService.getGroupsOfUser(request.user)
+  }
+
   @Post()
   async createGroup(@Req() request: Request, @Body() createGroupDto: CreateGroupDto): Promise<Group> {
     return this.groupService.createGroup(request.user, createGroupDto)
