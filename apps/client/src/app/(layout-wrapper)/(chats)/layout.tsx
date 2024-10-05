@@ -2,7 +2,7 @@
 
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
-import Chat from '~/components/Chat'
+import Chat from '~/components/chat'
 
 interface ChatsLayoutProps {
   children: React.ReactNode

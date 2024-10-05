@@ -3,13 +3,13 @@ import type { DraftSliceType } from './types'
 
 /** Store for the draft messages that were not sent or removed. */
 export const draftSlice: Slice<DraftSliceType> = set => ({
-  drafts: new Map<number, string>(),
-  addDraft(receiverId: number, draft: string) {
+  drafts: new Map(),
+  addDraft(receiverId, draft) {
     set(state => {
       state.drafts.set(receiverId, draft)
     })
   },
-  removeDraft(receiverId: number) {
+  removeDraft(receiverId) {
     set(state => {
       state.drafts.delete(receiverId)
     })

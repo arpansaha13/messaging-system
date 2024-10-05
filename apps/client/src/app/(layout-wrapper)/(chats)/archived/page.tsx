@@ -1,7 +1,7 @@
 'use client'
 
 import { shallow } from 'zustand/shallow'
-import ChatListItemTemplate from '~/components/ChatListItem/Template'
+import ChatListItemTemplate from '~/components/chat-list-item/Template'
 import { useStore } from '~/store'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 

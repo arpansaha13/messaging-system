@@ -9,7 +9,7 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import BaseButton from '~base/BaseButton'
 import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
-import ChatListItemTemplate from '~/components/ChatListItem/Template'
+import ChatListItemTemplate from '~/components/chat-list-item/Template'
 import { useStore } from '~/store'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 

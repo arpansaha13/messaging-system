@@ -18,7 +18,7 @@ import { SocketProvider } from '~/providers/SocketProvider'
 import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import Notification from '~common/Notification'
-import AddGroup from '~/components/Group/AddGroup'
+import AddGroup from '~/components/group/add-group'
 import { useStore } from '~/store'
 import { _getMe } from '~/utils/api'
 

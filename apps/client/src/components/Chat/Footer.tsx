@@ -39,7 +39,7 @@ export default function ChatFooter() {
     shallow,
   )
 
-  const [value, setValue] = useState('')
+  const [inputValue, setInputValue] = useState('')
   const prevReceiverId = useRef(activeChat.receiver.id ?? null)
 
   function typingPayload(isTyping: boolean): ISenderEmitTyping {
@@ -59,19 +59,19 @@ export default function ChatFooter() {
       socket.emit(SocketEmitEvent.TYPING, typingPayload(false))
     },
     1000,
-    [value],
+    [inputValue],
   )
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (isReady() && isTypedCharGood(e)) {
       socket.emit(SocketEmitEvent.TYPING, typingPayload(true))
     }
-    if (e.key === 'Enter' && value) {
+    if (e.key === 'Enter' && inputValue) {
       unarchiveChat(activeChat.receiver.id)
 
       const newMessage = {
         hash: generateHash(),
-        content: value,
+        content: inputValue,
         senderId: authUser.id,
         status: MessageStatus.SENDING,
       } as IMessageSending
@@ -84,7 +84,7 @@ export default function ChatFooter() {
         },
       ])
 
-      setValue('')
+      setInputValue('')
       socket.emit(SocketEmitEvent.SEND_MESSAGE, {
         ...newMessage,
         receiverId: activeChat.receiver.id,
@@ -94,13 +94,13 @@ export default function ChatFooter() {
 
   useEffect(() => {
     // Store the draft, if any, when `activeChat` changes
-    if (prevReceiverId.current !== null && value) {
-      addDraft(prevReceiverId.current, value)
-      setValue('')
+    if (prevReceiverId.current !== null && inputValue) {
+      addDraft(prevReceiverId.current, inputValue)
+      setInputValue('')
     }
     // Retrieve the draft, if any
     if (activeChat !== null && drafts.has(activeChat.receiver.id)) {
-      setValue(drafts.get(activeChat.receiver.id)!)
+      setInputValue(drafts.get(activeChat.receiver.id)!)
       removeDraft(activeChat.receiver.id)
     }
     prevReceiverId.current = activeChat?.receiver.id ?? null
@@ -109,7 +109,7 @@ export default function ChatFooter() {
 
   return (
     <div className="flex-grow px-1">
-      <TextArea value={value} setValue={setValue} onKeyDown={handleKeyDown} />
+      <TextArea value={inputValue} setValue={setInputValue} onKeyDown={handleKeyDown} />
     </div>
   )
 }
