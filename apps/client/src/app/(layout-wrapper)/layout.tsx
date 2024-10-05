@@ -18,6 +18,7 @@ import { SocketProvider } from '~/providers/SocketProvider'
 import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import Notification from '~common/Notification'
+import AddGroup from '~/components/Group/AddGroup'
 import { useStore } from '~/store'
 import { _getMe } from '~/utils/api'
 
@@ -48,13 +49,18 @@ const navItems = Object.freeze([
     name: 'Search',
     icon: MagnifyingGlassIcon,
   },
+  { type: 'separator' as const },
+  {
+    type: 'add-group' as const,
+  },
+  { type: 'spacer' as const },
+  { type: 'separator' as const },
   {
     type: 'link' as const,
     to: '/archived',
     name: 'Archived',
     icon: ArchiveBoxIcon,
   },
-  { type: 'separator' as const },
   {
     type: 'link' as const,
     to: '/settings/profile',
@@ -75,9 +81,10 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 
   useEffect(() => {
-    _getMe().then(authUserRes => {
+    _getMe().then(async authUserRes => {
       setAuthUser(authUserRes)
-      Promise.all([initChatList(), initContactStore()]).then(() => setLoaded(true))
+      await Promise.all([initChatList(), initContactStore()])
+      setLoaded(true)
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -95,6 +102,14 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
           {navItems.map((navItem, i) => {
             if (navItem.type === 'separator') {
               return <Separator key={i} className="w-4/5" />
+            }
+
+            if (navItem.type === 'spacer') {
+              return <div key={i} className="flex-grow" />
+            }
+
+            if (navItem.type === 'add-group') {
+              return <AddGroup key={i} />
             }
 
             return (
@@ -165,7 +180,7 @@ LinkIcon.displayName = 'LinkIcon'
 
 function LinkWrapper({ children }: Readonly<LinkWrapperProps>) {
   return (
-    <div className="group relative w-full last:mt-4 [&:nth-child(4)]:mt-auto">
+    <div className="group relative w-full last:mt-4">
       {children}
 
       <span className="absolute left-0 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-colors group-hover:bg-gray-900 dark:group-hover:bg-gray-100" />

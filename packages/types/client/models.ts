@@ -51,3 +51,9 @@ export interface IContextMenuItem {
   slot: string | React.ReactNode
   action: (e: React.MouseEvent, payload?: any) => void
 }
+
+export interface IGroup {
+  id: number
+  name: string
+  founder: IUser
+}
