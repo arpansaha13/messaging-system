@@ -5,6 +5,7 @@ import { GroupRepository } from './group.repository'
 import { CreateGroupDto } from './dto/create-group.dto'
 import { UserGroup } from 'src/user_group/user-group.entity'
 import { UserGroupRepository } from 'src/user_group/user-group.repository'
+import { Channel } from 'src/channels/channel.entity'
 import type { User } from 'src/users/user.entity'
 import type { EntityManager } from 'typeorm'
 
@@ -45,6 +46,11 @@ export class GroupService {
       newUserGroup.group = newGroup
       newUserGroup.user = authUser
       await txnManager.save(UserGroup, newUserGroup)
+
+      const newChannel = new Channel()
+      newChannel.name = 'default'
+      newChannel.group = newGroup
+      await txnManager.save(Channel, newChannel)
 
       return newGroup
     })
