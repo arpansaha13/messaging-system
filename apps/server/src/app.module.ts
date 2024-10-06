@@ -6,6 +6,7 @@ import { UserModule } from './users/user.module'
 import { AuthModule } from 'src/auth/auth.module'
 import { ChatsModule } from './chats/chats.module'
 import { GroupModule } from './groups/group.module'
+import { ChannelModule } from './channels/channel.module'
 import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
 import { AppController } from './app.controller'
@@ -18,6 +19,7 @@ import type { EnvVariables } from 'src/env.types'
     UserModule,
     ChatsModule,
     GroupModule,
+    ChannelModule,
     MessageModule,
     ContactModule,
 

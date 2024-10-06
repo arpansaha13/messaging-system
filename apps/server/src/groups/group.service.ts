@@ -6,6 +6,7 @@ import { CreateGroupDto } from './dto/create-group.dto'
 import { UserGroup } from 'src/user_group/user-group.entity'
 import { UserGroupRepository } from 'src/user_group/user-group.repository'
 import { Channel } from 'src/channels/channel.entity'
+import { ChannelRepository } from 'src/channels/channel.repository'
 import type { User } from 'src/users/user.entity'
 import type { EntityManager } from 'typeorm'
 
@@ -17,6 +18,9 @@ export class GroupService {
 
     @InjectRepository(GroupRepository)
     private groupRepository: GroupRepository,
+
+    @InjectRepository(ChannelRepository)
+    private channelRepository: ChannelRepository,
 
     @InjectRepository(UserGroupRepository)
     private userGroupRepository: UserGroupRepository,
@@ -56,5 +60,9 @@ export class GroupService {
     })
 
     return newGroup
+  }
+
+  getChannelsOfGroup(groupId: Group['id']) {
+    return this.channelRepository.getChannelsByGroupId(groupId)
   }
 }

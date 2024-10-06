@@ -57,3 +57,8 @@ export interface IGroup {
   name: string
   founder: IUser
 }
+
+export interface IChannel {
+  id: number
+  name: string
+}

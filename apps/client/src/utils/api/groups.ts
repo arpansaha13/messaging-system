@@ -12,3 +12,7 @@ export function _getGroups(): Promise<IGroup[]> {
 export function _postGroups(body: IPostCreateGroupBody): Promise<IGroup> {
   return _fetch('groups', { method: 'POST', body })
 }
+
+export function _getChannelsOfGroup(groupId: IGroup['id']) {
+  return _fetch(`groups/${groupId}/channels`)
+}
