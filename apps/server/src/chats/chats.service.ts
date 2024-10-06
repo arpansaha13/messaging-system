@@ -78,9 +78,9 @@ export class ChatsService {
       if (!a.chat.pinned && b.chat.pinned) return 1
 
       // Cleared convo's at bottom
-      if (a.message !== null && b.message === null) return -1
-      if (a.message === null && b.message !== null) return 1
-      if (a.message === null && b.message === null) return 0
+      if (isNullOrUndefined(a.message) && isNullOrUndefined(b.message)) return 0
+      if (isNullOrUndefined(b.message)) return -1
+      if (isNullOrUndefined(a.message)) return 1
 
       // Latest convo on top
       if (new Date(a.message!.createdAt) > new Date(b.message!.createdAt)) return -1
