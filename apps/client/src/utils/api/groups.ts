@@ -9,6 +9,10 @@ export function _getGroups(): Promise<IGroup[]> {
   return _fetch('groups')
 }
 
+export function _getGroup(groupId: IGroup['id']): Promise<IGroup> {
+  return _fetch(`groups/${groupId}`)
+}
+
 export function _postGroups(body: IPostCreateGroupBody): Promise<IGroup> {
   return _fetch('groups', { method: 'POST', body })
 }

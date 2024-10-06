@@ -3,7 +3,7 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useStore } from '~/store'
 import Chat from '~/components/chat'
-import { Window, WindowBody, WindowPanel } from '~/components/window'
+import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
 
 interface ChatsLayoutProps {
   children: React.ReactNode
@@ -14,7 +14,10 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
 
   return (
     <Window>
-      <WindowPanel className="w-[26rem]">{children}</WindowPanel>
+      <WindowPanel className="w-[26rem]">
+        <WindowPanelBody>{children}</WindowPanelBody>
+      </WindowPanel>
+
       <WindowBody>{!isNullOrUndefined(activeChat) && <Chat />}</WindowBody>
     </Window>
   )

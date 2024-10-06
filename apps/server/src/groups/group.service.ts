@@ -39,6 +39,13 @@ export class GroupService {
     return userGroups.map(ug => ug.group)
   }
 
+  getGroup(groupId: Group['id']): Promise<Group> {
+    return this.groupRepository.findOne({
+      where: { id: groupId },
+      relations: { founder: true },
+    })
+  }
+
   async createGroup(authUser: User, createGroupDto: CreateGroupDto): Promise<Group> {
     const newGroup = await this.manager.transaction(async txnManager => {
       let newGroup = new Group()

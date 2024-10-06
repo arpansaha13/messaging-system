@@ -17,6 +17,11 @@ export class GroupController {
     return this.groupService.getGroupsOfUser(request.user)
   }
 
+  @Get('/:groupId')
+  getGroup(@Param() params: GroupIdParam): Promise<Group> {
+    return this.groupService.getGroup(params.groupId)
+  }
+
   @Get('/:groupId/channels')
   getChannelsOfGroup(@Param() params: GroupIdParam): Promise<Channel[]> {
     return this.groupService.getChannelsOfGroup(params.groupId)
