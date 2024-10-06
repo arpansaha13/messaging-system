@@ -19,7 +19,7 @@ export class ContactService {
     return this.contactRepository.getContactsByUserIdAndQuery(authUser.id, search)
   }
 
-  async addContact(authUser: User, userIdToAdd: number, alias: string): Promise<any> {
+  async addContact(authUser: User, userIdToAdd: User['id'], alias: Contact['alias']): Promise<any> {
     if (authUser.id === userIdToAdd) {
       throw new BadRequestException('Invalid user ids.')
     }
@@ -65,11 +65,11 @@ export class ContactService {
     }
   }
 
-  async editAlias(contactId: number, newAlias: string) {
+  async editAlias(contactId: Contact['id'], newAlias: Contact['alias']) {
     await this.contactRepository.update({ id: contactId }, { alias: newAlias })
   }
 
-  async deleteContact(contactId: number) {
+  async deleteContact(contactId: Contact['id']) {
     await this.contactRepository.delete({ id: contactId })
   }
 }

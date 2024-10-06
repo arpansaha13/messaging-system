@@ -1,11 +1,13 @@
 import { IsEmail, IsNotEmpty, IsStrongPassword, MaxLength, MinLength } from 'class-validator'
 import { Match } from 'src/common/decorators/match.decorator'
 import { IsAlphaWithSpaces } from 'src/common/decorators/is-alpha-with-spaces.decorator'
+import type { User } from 'src/users/user.entity'
+import type { UnverifiedUser } from './unverified-user.entity'
 
 export class SignUpDto {
   @IsNotEmpty()
   @IsEmail()
-  email: string
+  email: User['email']
 
   // TODO: Allow username to be edited. Use this validator there.
   // @MinLength(4)
@@ -33,36 +35,36 @@ export class SignUpDto {
       },
     },
   )
-  password: string
+  password: User['password']
 
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(30)
   @Match('password', { message: 'Password and confirm-password do not match.' })
-  confirmPassword: string
+  confirmPassword: User['password']
 
   @IsNotEmpty()
   @MinLength(1)
   @MaxLength(20)
   @IsAlphaWithSpaces({ message: 'Name should only contain alphabets and spaces' })
-  globalName: string
+  globalName: User['globalName']
 }
 
 export class LoginDto {
   @IsNotEmpty()
   @IsEmail()
-  email: string
+  email: User['email']
 
   @IsNotEmpty()
-  password: string
+  password: User['password']
 }
 
 export class VerifyAccountDto {
   @IsNotEmpty()
-  otp: string
+  otp: UnverifiedUser['otp']
 }
 
 export class VerifyAccountParams {
   @IsNotEmpty()
-  hash: string
+  hash: UnverifiedUser['hash']
 }

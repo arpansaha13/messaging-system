@@ -1,6 +1,7 @@
 import _fetch from './_fetch'
 import type { IMessage } from '@shared/types'
+import type { IUser } from '@shared/types/client'
 
-export function _getMessages(receiverId: number): Promise<IMessage[]> {
+export function _getMessages(receiverId: IUser['id']): Promise<IMessage[]> {
   return _fetch(`messages/${receiverId}`)
 }

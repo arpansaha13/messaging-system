@@ -17,7 +17,7 @@ import type { Request, Response } from 'express'
 import type { EnvVariables } from 'src/env.types'
 
 interface JwtPayload {
-  user_id: number
+  user_id: User['id']
 }
 
 @Injectable()
@@ -60,7 +60,7 @@ export class AuthService {
     return result
   }
 
-  private generateUsername(globalName: string) {
+  private generateUsername(globalName: UnverifiedUser['globalName']) {
     const HASH_LENGTH = 6
     const hash = this.generateHash(HASH_LENGTH)
     const separator = '-'
@@ -176,12 +176,12 @@ export class AuthService {
     return res.status(200).send()
   }
 
-  async validateVerificationLink(hash: string) {
+  async validateVerificationLink(hash: UnverifiedUser['hash']) {
     const isValid = await this.unverifiedUserRepository.exists({ where: { hash } })
     return { valid: isValid }
   }
 
-  async verifyAccount(hash: string, otp: string): Promise<void> {
+  async verifyAccount(hash: UnverifiedUser['hash'], otp: UnverifiedUser['otp']): Promise<void> {
     try {
       await this.manager.transaction(async txnManager => {
         const unverifiedUser = await txnManager.findOne(UnverifiedUser, {

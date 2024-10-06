@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { IContact } from '@shared/types/client'
 import _fetch from './_fetch'
+import type { IContact } from '@shared/types/client'
 
 interface IPostContactsBody {
   userIdToAdd: number
@@ -25,10 +25,10 @@ export function _postContacts(body: IPostContactsBody): Promise<IContact> {
   return _fetch('contacts', { method: 'POST', body })
 }
 
-export function _patchContacts(contactId: number, body: IPatchContactsBody): Promise<void> {
+export function _patchContacts(contactId: IContact['contactId'], body: IPatchContactsBody): Promise<void> {
   return _fetch(`contacts/${contactId}`, { method: 'PATCH', body })
 }
 
-export function _deleteContacts(contactId: number): Promise<void> {
+export function _deleteContacts(contactId: IContact['contactId']): Promise<void> {
   return _fetch(`contacts/${contactId}`, { method: 'DELETE' })
 }

@@ -17,19 +17,19 @@ export class UserService {
     private contactRepository: ContactRepository,
   ) {}
 
-  async getUserById(userId: number): Promise<User> {
+  async getUserById(userId: User['id']): Promise<User> {
     const user = await this.userRepository.findOneBy({ id: userId })
     if (user === null) throw new NotFoundException('User could not be found.')
     return user
   }
 
-  async updateUserInfo(userId: number, data: UpdateUserInfoDto): Promise<User> {
+  async updateUserInfo(userId: User['id'], data: UpdateUserInfoDto): Promise<User> {
     const updateResult = await this.userRepository.update(userId, { ...data })
     if (updateResult.affected) return this.getUserById(userId)
     else throw new NotFoundException()
   }
 
-  async findUsers(authUserId: number, query: UserSearchQuery): Promise<User[]> {
+  async findUsers(authUserId: User['id'], query: UserSearchQuery): Promise<User[]> {
     if (!query.text) return []
 
     const users = await this.userRepository.getUsersByQuery(authUserId, query.text)

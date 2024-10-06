@@ -1,35 +1,35 @@
 import _fetch from './_fetch'
 import type { IChatsResponse } from '@shared/types'
-import type { IChatListItem } from '@shared/types/client'
+import type { IChatListItem, IUser } from '@shared/types/client'
 
 export function _getChats(): Promise<IChatsResponse> {
   return _fetch('chats')
 }
 
-export function _getChatsWith(receiverId: number): Promise<IChatListItem> {
+export function _getChatsWith(receiverId: IUser['id']): Promise<IChatListItem> {
   return _fetch(`chats/${receiverId}`)
 }
 
-export function _archiveChat(receiverId: number): Promise<void> {
+export function _archiveChat(receiverId: IUser['id']): Promise<void> {
   return _fetch(`chats/${receiverId}/archive`, { method: 'PATCH' })
 }
 
-export function _unarchiveChat(receiverId: number): Promise<void> {
+export function _unarchiveChat(receiverId: IUser['id']): Promise<void> {
   return _fetch(`chats/${receiverId}/unarchive`, { method: 'PATCH' })
 }
 
-export function _pinChat(receiverId: number): Promise<void> {
+export function _pinChat(receiverId: IUser['id']): Promise<void> {
   return _fetch(`chats/${receiverId}/pin`, { method: 'PATCH' })
 }
 
-export function _unpinChat(receiverId: number): Promise<void> {
+export function _unpinChat(receiverId: IUser['id']): Promise<void> {
   return _fetch(`chats/${receiverId}/unpin`, { method: 'PATCH' })
 }
 
-export function _clearMessages(receiverId: number): Promise<void> {
+export function _clearMessages(receiverId: IUser['id']): Promise<void> {
   return _fetch(`chats/${receiverId}/clear`, { method: 'DELETE' })
 }
 
-export function _deleteMessages(receiverId: number): Promise<void> {
+export function _deleteMessages(receiverId: IUser['id']): Promise<void> {
   return _fetch(`chats/${receiverId}/delete`, { method: 'DELETE' })
 }

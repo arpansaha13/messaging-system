@@ -16,11 +16,11 @@ export class SessionService {
     return this.sessionRepository.save(session)
   }
 
-  async getSessionById(key: string): Promise<Session | null> {
+  async getSessionById(key: Session['key']): Promise<Session | null> {
     return this.sessionRepository.findOne({ where: { key } })
   }
 
-  async deleteSession(key: string): Promise<void> {
+  async deleteSession(key: Session['key']): Promise<void> {
     await this.sessionRepository.delete({ key })
   }
 }
