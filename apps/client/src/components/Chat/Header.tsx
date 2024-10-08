@@ -1,12 +1,13 @@
-import { memo } from 'react'
-import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
 import Avatar from '~common/Avatar'
 import GlobalName from '~/components/GlobalName'
-import { useStore } from '~/store'
+import { useAppSelector } from '~/store/hooks'
+import { selectTypingState } from '~/store/features/typing/typing.slice'
+import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 
 const ChatHeader = () => {
-  const [typingState, activeChat] = useStore(state => [state.typingState, state.activeChat!], shallow)
+  const activeChat = useAppSelector(selectActiveChat)!
+  const isTyping = useAppSelector(state => selectTypingState(state, activeChat.receiver.id))
 
   return (
     <>
@@ -20,15 +21,10 @@ const ChatHeader = () => {
           <p
             className={classNames(
               'overflow-hidden text-xs transition-[height] duration-200',
-              typingState[activeChat.receiver.id] ? 'h-4' : 'h-0 delay-150',
+              isTyping ? 'h-4' : 'h-0 delay-150',
             )}
           >
-            <span
-              className={classNames(
-                'transition-opacity',
-                typingState[activeChat.receiver.id] ? 'opacity-100 delay-200' : 'opacity-0',
-              )}
-            >
+            <span className={classNames('transition-opacity', isTyping ? 'opacity-100 delay-200' : 'opacity-0')}>
               typing...
             </span>
           </p>
@@ -37,4 +33,5 @@ const ChatHeader = () => {
     </>
   )
 }
-export default memo(ChatHeader)
+
+export default ChatHeader

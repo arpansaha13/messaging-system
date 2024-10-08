@@ -1,9 +1,26 @@
-import type { Slice } from '~/store/types.store'
-import type { AuthSliceType } from './types'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import type { IAuthUser } from '@shared/types/client'
 
-export const authSlice: Slice<AuthSliceType> = set => ({
+interface IAuthSlice {
+  authUser: IAuthUser | null
+}
+
+const initialState: IAuthSlice = {
   authUser: null,
-  setAuthUser(authUser) {
-    set({ authUser })
+}
+
+export const authSlice = createSlice({
+  name: 'auth',
+  initialState,
+  reducers: {
+    setAuthUser: (state, action: PayloadAction<IAuthUser | null>) => {
+      state.authUser = action.payload
+    },
+  },
+  selectors: {
+    selectAuthUser: slice => slice.authUser,
   },
 })
+
+export const { setAuthUser } = authSlice.actions
+export const { selectAuthUser } = authSlice.selectors

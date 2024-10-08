@@ -6,8 +6,9 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import GroupAvatar from '~common/GroupAvatar'
 import ChannelListItemTemplate from '~/components/channel-list-item/Template'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
-import { useStore } from '~/store'
-import { _getChannelsOfGroup, _getGroup } from '~/utils/api'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { insertChannels, selectChannels } from '~/store/features/channels/channel.slice'
+import { _getGroup, _getChannelsOfGroup } from '~/utils/api'
 import type { IGroup } from '@shared/types/client'
 
 interface GroupsLayoutProps {
@@ -17,19 +18,19 @@ interface GroupsLayoutProps {
 export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) {
   const params = useParams()
   const [group, setGroup] = useState<IGroup | null>(null)
-  const [channelsMap, insertChannels] = useStore(state => [state.channelsMap, state.insertChannels])
 
+  const dispatch = useAppDispatch()
   const groupId = useMemo(() => parseInt(params.groupId as string), [params.groupId])
-  const channels = useMemo(() => (groupId ? (channelsMap.get(groupId) ?? []) : []), [groupId, channelsMap])
+  const channels = useAppSelector(state => selectChannels(state, groupId))
 
   useEffect(() => {
     if (groupId) {
       Promise.all([_getGroup(groupId), _getChannelsOfGroup(groupId)]).then(res => {
         setGroup(res[0])
-        insertChannels(groupId, res[1])
+        dispatch(insertChannels({ groupId, channels: res[1] }))
       })
     }
-  }, [groupId, insertChannels])
+  }, [groupId, dispatch])
 
   if (isNullOrUndefined(group)) return null
 
@@ -47,11 +48,13 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
         </div>
 
         <WindowPanelBody>
-          <ul>
-            {channels.map(channel => (
-              <ChannelListItemTemplate key={channel.id} channelName={channel.name} />
-            ))}
-          </ul>
+          {channels && (
+            <ul>
+              {channels.map(channel => (
+                <ChannelListItemTemplate key={channel.id} channelName={channel.name} />
+              ))}
+            </ul>
+          )}
         </WindowPanelBody>
       </WindowPanel>
 

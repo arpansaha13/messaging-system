@@ -1,11 +1,12 @@
-import { shallow } from 'zustand/shallow'
 import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import Avatar from '~common/Avatar'
 import { ContextMenu, ContextMenuWrapper } from '~common/ContextMenu'
 import GlobalName from '~/components/GlobalName'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
-import { useStore } from '~/store'
+import { useAppSelector } from '~/store/hooks'
+import { selectAuthUser } from '~/store/features/auth/auth.slice'
+import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 import isUnread from '~/utils/isUnread'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
@@ -24,7 +25,8 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
   const { userId, alias, dp, latestMsg, globalName, children, menuItems, onClick } = props
 
   // If no chat is selected `activeChat` will be null
-  const [authUser, activeChat] = useStore(state => [state.authUser!, state.activeChat], shallow)
+  const authUser = useAppSelector(selectAuthUser)!
+  const activeChat = useAppSelector(selectActiveChat)
 
   const authUserIsSender = authUser.id === latestMsg?.senderId
   const unread = isUnread(authUser.id, latestMsg)

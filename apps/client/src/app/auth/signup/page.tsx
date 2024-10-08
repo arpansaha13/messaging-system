@@ -2,15 +2,14 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRef, useState, type FormEvent } from 'react'
 import { useMap } from 'react-use'
-import { useRef, useState } from 'react'
-import { shallow } from 'zustand/shallow'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
-import { useStore } from '~/store'
+import { useAppDispatch } from '~/store/hooks'
+import { setNotification } from '~/store/features/notification/notification.slice'
 import { _signup } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
-import type { FormEvent } from 'react'
 
 interface ISignupFormData {
   email: string
@@ -24,8 +23,7 @@ interface ISignupFormData {
 // }
 
 export default function SignUpPage() {
-  const [setNotification] = useStore(state => [state.setNotification], shallow)
-
+  const dispatch = useAppDispatch()
   const formRef = useRef<HTMLFormElement>(null)
   const [loading, setLoading] = useState<boolean>(false)
 
@@ -55,22 +53,26 @@ export default function SignUpPage() {
 
     _signup(formData)
       .then(() => {
-        setNotification({
-          show: true,
-          status: 'success',
-          title: 'Account created!',
-          description: 'Please verify your account using the link sent to your email.',
-        })
+        dispatch(
+          setNotification({
+            show: true,
+            status: 'success',
+            title: 'Account created!',
+            description: 'Please verify your account using the link sent to your email.',
+          }),
+        )
       })
       .catch(err => {
         const message: string | Array<string> = err.message
 
-        setNotification({
-          show: true,
-          status: 'error',
-          title: 'Sign up failed!',
-          description: typeof message === 'string' ? message : message[0],
-        })
+        dispatch(
+          setNotification({
+            show: true,
+            status: 'error',
+            title: 'Sign up failed!',
+            description: typeof message === 'string' ? message : message[0],
+          }),
+        )
       })
       .finally(() => setLoading(false))
   }

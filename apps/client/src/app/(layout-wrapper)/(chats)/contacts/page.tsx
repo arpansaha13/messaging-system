@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
-import { shallow } from 'zustand/shallow'
 import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import BaseInput from '~base/BaseInput'
@@ -11,7 +10,15 @@ import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import {
+  setActiveChat,
+  upsertChatListItemContact,
+  upsertActiveChatContact,
+  deleteChatListItemContact,
+  deleteActiveChatContact,
+} from '~/store/features/chat-list/chat-list.slice'
+import { selectContacts, updateContactAlias, deleteContact } from '~/store/features/contacts/contact.slice'
 import { _getContacts } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
@@ -40,7 +47,7 @@ interface DeleteContactModalProps {
 }
 
 export default function Page() {
-  const [setActiveChat] = useStore(state => [state.setActiveChat], shallow)
+  const dispatch = useAppDispatch()
 
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
@@ -83,19 +90,21 @@ export default function Page() {
   )
 
   function handleClick(contact: IContact) {
-    setActiveChat({
-      contact: {
-        id: contact.contactId,
-        alias: contact.alias,
-      },
-      receiver: {
-        id: contact.userId,
-        dp: contact.dp,
-        bio: contact.bio,
-        username: contact.username,
-        globalName: contact.globalName,
-      },
-    })
+    dispatch(
+      setActiveChat({
+        contact: {
+          id: contact.contactId,
+          alias: contact.alias,
+        },
+        receiver: {
+          id: contact.userId,
+          dp: contact.dp,
+          bio: contact.bio,
+          username: contact.username,
+          globalName: contact.globalName,
+        },
+      }),
+    )
   }
 
   return (
@@ -123,7 +132,7 @@ export default function Page() {
 }
 
 function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
-  const contacts = useStore(state => state.contacts)
+  const contacts = useAppSelector(selectContacts)
 
   return Object.keys(contacts).map(letter => (
     <div key={letter} className="relative">
@@ -172,10 +181,7 @@ function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResul
 function EditAliasModal(props: Readonly<EditAliasModalProps>) {
   const { open, contact, setOpen } = props
 
-  const [updateContactAlias, upsertChatListItemContact, upsertActiveChatContact] = useStore(
-    state => [state.updateContactAlias, state.upsertChatListItemContact, state.upsertActiveChatContact],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -192,9 +198,9 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
       alias: formData.new_alias as string,
     }
 
-    updateContactAlias(contact!, formData.new_alias as string)
-    upsertChatListItemContact(contact!.userId, newContact)
-    upsertActiveChatContact(contact!.userId, newContact)
+    dispatch(updateContactAlias({ contact: contact!, newAlias: formData.new_alias as string }))
+    dispatch(upsertChatListItemContact({ receiverId: contact!.userId, newContact }))
+    dispatch(upsertActiveChatContact({ receiverId: contact!.userId, newContact }))
 
     setOpen(false)
   }
@@ -248,17 +254,14 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
 function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
   const { open, contact, setOpen } = props
 
-  const [deleteContact, deleteChatListItemContact, deleteActiveChatContact] = useStore(
-    state => [state.deleteContact, state.deleteChatListItemContact, state.deleteActiveChatContact],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    deleteContact(contact!)
-    deleteChatListItemContact(contact!.userId)
-    deleteActiveChatContact(contact!.userId)
+    dispatch(deleteContact(contact!))
+    dispatch(deleteChatListItemContact(contact!.userId))
+    dispatch(deleteActiveChatContact(contact!.userId))
 
     setOpen(false)
   }

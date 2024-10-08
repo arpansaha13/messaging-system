@@ -1,11 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { shallow } from 'zustand/shallow'
 import { classNames } from '@arpansaha13/utils'
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 import Avatar from '~common/Avatar'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { setAuthUser, selectAuthUser } from '~/store/features/auth/auth.slice'
 import { _patchMe } from '~/utils/api'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import type { IAuthUser } from '@shared/types/client'
@@ -73,7 +73,8 @@ const Field = (props: Readonly<FieldProps>) => {
 }
 
 export default function Page() {
-  const [authUser, setAuthUser] = useStore(state => [state.authUser!, state.setAuthUser], shallow)
+  const dispatch = useAppDispatch()
+  const authUser = useAppSelector(selectAuthUser)!
 
   const [editingBio, setEditBio] = useState(false)
   const [editingDisplayName, setEditDisplayName] = useState(false)
@@ -87,9 +88,9 @@ export default function Page() {
     if (authUser.globalName !== globalName) data.globalName = globalName
     if (Object.keys(data).length === 0) return
 
-    _patchMe(data).then(res => setAuthUser(res))
+    _patchMe(data).then(res => dispatch(setAuthUser(res)))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [globalName, bio, authUser])
+  }, [globalName, bio, authUser, dispatch])
 
   return (
     <div className="space-y-10 px-8 py-6">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { shallow } from 'zustand/shallow'
 import { DialogTitle } from '@headlessui/react'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
@@ -10,7 +9,15 @@ import BaseButton from '~base/BaseButton'
 import Modal from '~common/Modal'
 import Avatar from '~common/Avatar'
 import ChatListItemTemplate from '~/components/chat-list-item/Template'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import {
+  deleteChat,
+  archiveChat,
+  setActiveChat,
+  clearChatListItemMessage,
+  updateChatListItemMessagePin,
+} from '~/store/features/chat-list/chat-list.slice'
+import { clearMessages, deleteMessages } from '~/store/features/messages/message.slice'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>
@@ -29,16 +36,19 @@ interface DeleteChatListItemModalProps {
 }
 
 export default function Page() {
-  const [unarchived, setActiveChat] = useStore(state => [state.unarchived, state.setActiveChat], shallow)
+  const dispatch = useAppDispatch()
+  const unarchived = useAppSelector(state => state.chatList.unarchived)
 
   const [deleteChatModalOpen, setDeleteChatModalOpen] = useState(false)
   const [deleteChatModalPayload, setDeleteChatModalPayload] = useState<DeleteChatModalPayload | null>(null)
 
   async function handleClick(chatListItem: IChatListItem) {
-    setActiveChat({
-      contact: chatListItem.contact,
-      receiver: chatListItem.receiver,
-    })
+    dispatch(
+      setActiveChat({
+        contact: chatListItem.contact,
+        receiver: chatListItem.receiver,
+      }),
+    )
   }
 
   return (
@@ -67,34 +77,28 @@ export default function Page() {
 function UnarchivedChatListItem(props: Readonly<UnarchivedChatListItemProps>) {
   const { chatListItem, setDeleteChatModalOpen, setDeleteChatModalPayload } = props
 
-  const [archiveChat, clearMessages, clearChatListItemMessage, updateChatListItemMessagePin] = useStore(
-    state => [
-      state.archiveChat,
-      state.clearMessages,
-      state.clearChatListItemMessage,
-      state.updateChatListItemMessagePin,
-    ],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
 
   const menuItems: IContextMenuItem[] = [
     {
       slot: chatListItem.chat.pinned ? 'Unpin chat' : 'Pin chat',
       action: () => {
-        updateChatListItemMessagePin(chatListItem.receiver.id, !chatListItem.chat.pinned)
+        dispatch(
+          updateChatListItemMessagePin({ receiverId: chatListItem.receiver.id, pinned: !chatListItem.chat.pinned }),
+        )
       },
     },
     {
       slot: 'Archive chat',
       action: () => {
-        archiveChat(chatListItem.receiver.id)
+        dispatch(archiveChat(chatListItem.receiver.id))
       },
     },
     {
       slot: 'Clear messages',
       action: () => {
-        clearMessages(chatListItem.receiver.id)
-        clearChatListItemMessage(chatListItem.receiver.id)
+        dispatch(clearMessages(chatListItem.receiver.id))
+        dispatch(clearChatListItemMessage(chatListItem.receiver.id))
       },
     },
     {
@@ -127,22 +131,20 @@ function UnarchivedChatListItem(props: Readonly<UnarchivedChatListItemProps>) {
 function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) {
   const { open, payload, setOpen } = props
 
-  const [activeChat, setActiveChat, deleteMessages, deleteChat] = useStore(
-    state => [state.activeChat, state.setActiveChat, state.deleteMessages, state.deleteChat],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
+  const activeChat = useAppSelector(state => state.chatList.activeChat)
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     if (isNullOrUndefined(payload)) return
 
-    deleteMessages(payload.receiver.id)
-    deleteChat(payload.receiver.id, false)
+    dispatch(deleteMessages(payload.receiver.id))
+    dispatch(deleteChat({ receiverId: payload.receiver.id, archived: false }))
 
     // If active room is being deleted
     if (activeChat && activeChat.receiver.id === payload.receiver.id) {
-      setActiveChat(null)
+      dispatch(setActiveChat(null))
     }
 
     setOpen(false)

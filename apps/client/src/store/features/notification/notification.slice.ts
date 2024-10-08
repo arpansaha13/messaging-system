@@ -1,24 +1,40 @@
-import type { Slice } from '~/store/types.store'
-import type { NotificationSliceType } from './types'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
-/** The global notification component is used only in the auth layout (for now). The global notification will show or hide with content depending on the state of this store. */
-export const notificationSlice: Slice<NotificationSliceType> = set => ({
+interface Notification {
+  status: 'success' | 'error'
+  title: string
+  description: string
+  show: boolean
+}
+
+interface NotificationSliceType {
+  notification: Notification
+}
+
+const initialState: NotificationSliceType = {
   notification: {
     status: 'success',
     title: '',
     description: '',
     show: false,
   },
-  setNotification(newState) {
-    set({ notification: { ...newState } })
+}
+
+export const notificationSlice = createSlice({
+  name: 'notification',
+  initialState,
+  reducers: {
+    setNotification: (state, action: PayloadAction<Notification>) => {
+      state.notification = { ...action.payload }
+    },
+    toggleNotification: (state, action: PayloadAction<boolean | undefined>) => {
+      state.notification.show = action.payload !== undefined ? action.payload : !state.notification.show
+    },
   },
-  toggleNotification(bool) {
-    set(state => {
-      if (typeof bool !== 'undefined') {
-        state.notification.show = bool
-      } else {
-        state.notification.show = !state.notification.show
-      }
-    })
+  selectors: {
+    selectNotification: slice => slice.notification,
   },
 })
+
+export const { setNotification, toggleNotification } = notificationSlice.actions
+export const { selectNotification } = notificationSlice.selectors

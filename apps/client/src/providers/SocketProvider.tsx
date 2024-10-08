@@ -1,12 +1,30 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import io from 'socket.io-client'
-import { shallow } from 'zustand/shallow'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import {
+  updateChatListItemMessage,
+  updateChatListItemMessageStatus,
+  unarchiveChat,
+  insertUnarchivedChat,
+  selectActiveChat,
+  selectArchived,
+  selectUnarchived,
+} from '~/store/features/chat-list/chat-list.slice'
+import {
+  deleteTempMessage,
+  selectTempMessagesMap,
+  selectUserMessagesMap,
+  updateMessageStatus,
+  upsertMessages,
+} from '~/store/features/messages/message.slice'
 import isUnread from '~/utils/isUnread'
 import { _getChatsWith } from '~/utils/api'
 import { MessageStatus, SocketEmitEvent, SocketOnEvent } from '@shared/types'
 import type { IMessage, IReceiverEmitRead, SocketEmitEventPayload, SocketOnEventPayload } from '@shared/types'
+import { IChatListItem, IUser } from '@shared/types/client'
+import { selectAuthUser } from '~/store/features/auth/auth.slice'
+import { setTypingState } from '~/store/features/typing/typing.slice'
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
@@ -22,6 +40,10 @@ interface ISocketContext {
 }
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_IO_BASE_URL!
+
+function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
+  return chatList.find(item => item.receiver.id === receiverId) ?? null
+}
 
 function useSocketInit() {
   const socket = useMemo(() => io(SOCKET_URL, { autoConnect: true }), [])
@@ -43,50 +65,23 @@ function useSocketInit() {
     [socket],
   )
 
-  const [
-    authUser,
-    activeChat,
-    userMessagesMap,
-    getUserMessagesMap,
-    setTyping,
-    updateMessageStatus,
-    updateChatListItemMessage,
-    updateChatListItemMessageStatus,
-    searchChat,
-    upsertMessages,
-    getTempMessage,
-    deleteTempMessage,
-    unarchiveChat,
-    insertUnarchivedChat,
-  ] = useStore(
-    state => [
-      state.authUser!,
-      state.activeChat,
-      state.userMessagesMap,
-      state.getUserMessagesMap,
-      state.setTypingState,
-      state.updateMessageStatus,
-      state.updateChatListItemMessage,
-      state.updateChatListItemMessageStatus,
-      state.searchChat,
-      state.upsertMessages,
-      state.getTempMessage,
-      state.deleteTempMessage,
-      state.unarchiveChat,
-      state.insertUnarchivedChat,
-    ],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
+  const authUser = useAppSelector(selectAuthUser)!
+  const activeChat = useAppSelector(selectActiveChat)
+  const archivedChatList = useAppSelector(selectArchived)
+  const unarchivedChatList = useAppSelector(selectUnarchived)
+  const userMessagesMap = useAppSelector(selectUserMessagesMap)
+  const tempMessagesMap = useAppSelector(selectTempMessagesMap)
 
   useEffect(() => {
     if (isNullOrUndefined(activeChat)) return
 
-    const convo = searchChat(activeChat.receiver.id)!
+    const convo =
+      searchChat(unarchivedChatList, activeChat.receiver.id) ?? searchChat(archivedChatList, activeChat.receiver.id)!
 
     if (isNullOrUndefined(convo)) return
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
-    const userMessagesMap = getUserMessagesMap()
     const messages = userMessagesMap.get(activeChat.receiver.id)
 
     if (isNullOrUndefined(messages)) return
@@ -102,21 +97,23 @@ function useSocketInit() {
         receiverId: authUser.id,
       })
 
-      updateChatListItemMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
-      updateMessageStatus(activeChat.receiver.id, message.id, MessageStatus.READ)
+      dispatch(
+        updateChatListItemMessageStatus({
+          receiverId: activeChat.receiver.id,
+          messageId: message.id,
+          latestMsgStatus: MessageStatus.READ,
+        }),
+      )
+      dispatch(
+        updateMessageStatus({
+          receiverId: activeChat.receiver.id,
+          messageId: message.id,
+          newStatus: MessageStatus.READ,
+        }),
+      )
     }
-
     socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
-  }, [
-    authUser,
-    activeChat,
-    socketWrapper,
-    userMessagesMap,
-    searchChat,
-    getUserMessagesMap,
-    updateMessageStatus,
-    updateChatListItemMessageStatus,
-  ])
+  }, [activeChat, archivedChatList, authUser.id, dispatch, socketWrapper, unarchivedChatList, userMessagesMap])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
@@ -153,15 +150,22 @@ function useSocketInit() {
         senderId: payload.senderId,
         status: MessageStatus.DELIVERED,
       }
-      const chatExists = !isNullOrUndefined(searchChat(payload.senderId))
+      const chatExists = !isNullOrUndefined(
+        searchChat(unarchivedChatList, payload.senderId) || searchChat(archivedChatList, payload.senderId),
+      )
 
       if (chatExists) {
-        unarchiveChat(payload.senderId)
-        updateChatListItemMessage(payload.senderId, message)
+        dispatch(unarchiveChat(payload.senderId))
+        dispatch(
+          updateChatListItemMessage({
+            receiverId: payload.senderId,
+            latestMsg: message,
+          }),
+        )
       } else {
         const convo = await _getChatsWith(payload.senderId)
         convo.latestMsg = message
-        insertUnarchivedChat(convo)
+        dispatch(insertUnarchivedChat(convo))
       }
 
       socketWrapper.emit(SocketEmitEvent.DELIVERED, {
@@ -172,53 +176,103 @@ function useSocketInit() {
 
       // No need to update status if the chat has never been fetched
       // Because they will arrive with proper data whenever fetched (updated on server)
-      const updatedChats = getUserMessagesMap()
-      if (!updatedChats.has(payload.senderId)) return
+      if (!userMessagesMap.has(payload.senderId)) return
 
-      upsertMessages(payload.senderId, [message])
+      dispatch(
+        upsertMessages({
+          newMessages: [message],
+          receiverId: payload.senderId,
+        }),
+      )
     })
 
     socketWrapper.on(SocketOnEvent.SENT, async payload => {
-      const tempMessage = getTempMessage(payload.receiverId, payload.hash)
+      const tempMessage = tempMessagesMap.get(payload.receiverId)!.get(payload.hash)!
 
       const message: IMessage = {
         id: payload.messageId,
-        content: tempMessage.content,
-        createdAt: payload.createdAt,
         senderId: authUser.id,
         status: payload.status,
+        content: tempMessage.content,
+        createdAt: payload.createdAt,
       }
 
-      const chatExists = !isNullOrUndefined(searchChat(payload.receiverId))
+      const chatExists = !isNullOrUndefined(
+        searchChat(unarchivedChatList, payload.receiverId) || searchChat(archivedChatList, payload.receiverId),
+      )
 
       if (chatExists) {
-        updateChatListItemMessage(payload.receiverId, message)
+        dispatch(
+          updateChatListItemMessage({
+            receiverId: payload.receiverId,
+            latestMsg: message,
+          }),
+        )
       } else {
         const convo = await _getChatsWith(payload.receiverId)
         convo.latestMsg = message
-        insertUnarchivedChat(convo)
+        dispatch(insertUnarchivedChat(convo))
       }
 
       // Temp message should be deleted after fetching the new convo
       // Otherwise there will be a delay for "sent" message to appear until the fetch is complete
-      deleteTempMessage(payload.receiverId, payload.hash)
-      upsertMessages(payload.receiverId, [message])
+      dispatch(
+        deleteTempMessage({
+          receiverId: payload.receiverId,
+          hash: payload.hash,
+        }),
+      )
+      dispatch(
+        upsertMessages({
+          newMessages: [message],
+          receiverId: payload.receiverId,
+        }),
+      )
     })
 
     socketWrapper.on(SocketOnEvent.DELIVERED, payload => {
-      updateChatListItemMessageStatus(payload.receiverId, payload.messageId, payload.status)
-      updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
+      dispatch(
+        updateChatListItemMessageStatus({
+          messageId: payload.messageId,
+          receiverId: payload.receiverId,
+          latestMsgStatus: payload.status,
+        }),
+      )
+      dispatch(
+        updateMessageStatus({
+          receiverId: payload.receiverId,
+          messageId: payload.messageId,
+          newStatus: payload.status,
+        }),
+      )
     })
 
     socketWrapper.on(SocketOnEvent.READ, payloadArray => {
       payloadArray.forEach(p => {
-        updateChatListItemMessageStatus(p.receiverId, p.messageId, p.status)
-        updateMessageStatus(p.receiverId, p.messageId, p.status)
+        dispatch(
+          updateChatListItemMessageStatus({
+            messageId: p.messageId,
+            receiverId: p.receiverId,
+            latestMsgStatus: p.status,
+          }),
+        )
+        dispatch(
+          updateMessageStatus({
+            receiverId: p.receiverId,
+            messageId: p.messageId,
+            newStatus: p.status,
+          }),
+        )
       })
     })
 
     socketWrapper.on(SocketOnEvent.TYPING, payload => {
-      setTyping(payload.senderId, payload.isTyping)
+      dispatch(
+        setTypingState({
+          newState: payload.isTyping,
+          receiverId: payload.senderId,
+        }),
+      )
     })
 
     return () => {
@@ -231,7 +285,7 @@ function useSocketInit() {
       socketWrapper.off(SocketOnEvent.TYPING)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser])
+  }, [authUser, archivedChatList, unarchivedChatList, userMessagesMap, tempMessagesMap])
 
   return { isConnected, socketWrapper }
 }

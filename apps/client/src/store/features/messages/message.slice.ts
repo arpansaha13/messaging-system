@@ -1,0 +1,83 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { _clearMessages, _deleteMessages } from '~/utils/api'
+import type { IMessage, IMessageSending, MessageStatus } from '@shared/types'
+import type { IUser } from '@shared/types/client'
+
+interface IMessageSlice {
+  userMessagesMap: Map<IUser['id'], Map<IMessage['id'], IMessage>>
+
+  /** Messages that are newly created and are being sent. */
+  tempMessagesMap: Map<IUser['id'], Map<string, IMessageSending>>
+}
+
+const initialState: IMessageSlice = {
+  userMessagesMap: new Map(),
+  tempMessagesMap: new Map(),
+}
+
+export const messageSlice = createSlice({
+  name: 'message',
+  initialState,
+  reducers: {
+    upsertMessages: (state, action: PayloadAction<{ receiverId: IUser['id']; newMessages: IMessage[] }>) => {
+      const { receiverId, newMessages } = action.payload
+      let messages = state.userMessagesMap.get(receiverId) ?? new Map<IUser['id'], IMessage>()
+      newMessages.forEach(message => messages.set(message.id, message))
+      state.userMessagesMap.set(receiverId, messages)
+    },
+    upsertTempMessages: (state, action: PayloadAction<{ receiverId: IUser['id']; messages: IMessageSending[] }>) => {
+      const { receiverId, messages } = action.payload
+      let tempChat = state.tempMessagesMap.get(receiverId) ?? new Map<string, IMessageSending>()
+      messages.forEach(message => tempChat.set(message.hash, message))
+      state.tempMessagesMap.set(receiverId, tempChat)
+    },
+    updateMessageStatus: (
+      state,
+      action: PayloadAction<{
+        receiverId: IUser['id']
+        messageId: IMessage['id']
+        newStatus: Exclude<MessageStatus, MessageStatus.SENDING>
+      }>,
+    ) => {
+      const { receiverId, messageId, newStatus } = action.payload
+      const messages = state.userMessagesMap.get(receiverId)
+      const message = messages?.get(messageId)
+      if (message) message.status = newStatus
+    },
+    clearMessages: (state, action: PayloadAction<IUser['id']>) => {
+      const receiverId = action.payload
+      _clearMessages(receiverId)
+      state.userMessagesMap.get(receiverId)?.clear()
+      state.tempMessagesMap.delete(receiverId)
+    },
+    deleteMessages: (state, action: PayloadAction<IUser['id']>) => {
+      const receiverId = action.payload
+      _deleteMessages(receiverId)
+      state.userMessagesMap.delete(receiverId)
+      state.tempMessagesMap.delete(receiverId)
+    },
+    deleteTempMessage: (state, action: PayloadAction<{ receiverId: IUser['id']; hash: string }>) => {
+      const { receiverId, hash } = action.payload
+      const tempChat = state.tempMessagesMap.get(receiverId)
+      tempChat?.delete(hash)
+    },
+  },
+  selectors: {
+    selectUserMessagesMap: slice => slice.userMessagesMap,
+    selectTempMessagesMap: slice => slice.tempMessagesMap,
+    selectMessages: (slice, userId: IUser['id']) => slice.userMessagesMap.get(userId),
+    selectTempMessages: (slice, userId: IUser['id']) => slice.tempMessagesMap.get(userId),
+  },
+})
+
+export const {
+  upsertMessages,
+  upsertTempMessages,
+  updateMessageStatus,
+  clearMessages,
+  deleteMessages,
+  deleteTempMessage,
+} = messageSlice.actions
+
+export const { selectUserMessagesMap, selectTempMessagesMap, selectMessages, selectTempMessages } =
+  messageSlice.selectors

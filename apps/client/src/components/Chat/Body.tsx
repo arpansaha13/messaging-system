@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { shallow } from 'zustand/shallow'
 import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
+import { selectTempMessagesMap, selectUserMessagesMap, upsertMessages } from '~/store/features/messages/message.slice'
 import { _getMessages } from '~/utils/api'
 import type { IMessage, IMessageSending } from '@shared/types'
+import { selectAuthUser } from '~/store/features/auth/auth.slice'
 
 interface MessageProps {
   message: IMessage
@@ -21,25 +23,23 @@ interface FormattedDateProps {
 
 export default function ChatBody() {
   const elRef = useRef<HTMLDivElement>(null)
-
-  const [userMessagesMap, tempMessagesMap, activeChat, getUserMessagesMap, upsertMessages] = useStore(
-    state => [
-      state.userMessagesMap,
-      state.tempMessagesMap,
-      state.activeChat!,
-      state.getUserMessagesMap,
-      state.upsertMessages,
-    ],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
+  const userMessagesMap = useAppSelector(selectUserMessagesMap)
+  const tempMessagesMap = useAppSelector(selectTempMessagesMap)
+  const activeChat = useAppSelector(selectActiveChat)!
 
   useEffect(() => {
-    if (!getUserMessagesMap().has(activeChat.receiver.id)) {
+    if (!userMessagesMap.has(activeChat.receiver.id)) {
       _getMessages(activeChat.receiver.id).then(chatRes => {
-        upsertMessages(activeChat.receiver.id, chatRes)
+        dispatch(
+          upsertMessages({
+            receiverId: activeChat.receiver.id,
+            newMessages: chatRes,
+          }),
+        )
       })
     }
-  }, [activeChat, getUserMessagesMap, upsertMessages])
+  }, [activeChat, userMessagesMap, dispatch])
 
   // Keep scroll position at bottom.
   // Rerun this effect whenever a new message is pushed.
@@ -57,10 +57,9 @@ export default function ChatBody() {
 }
 
 function Messages() {
-  const [userMessagesMap, tempMessagesMap, activeChat] = useStore(
-    state => [state.userMessagesMap, state.tempMessagesMap, state.activeChat!],
-    shallow,
-  )
+  const userMessagesMap = useAppSelector(selectUserMessagesMap)
+  const tempMessagesMap = useAppSelector(selectTempMessagesMap)
+  const activeChat = useAppSelector(selectActiveChat)!
 
   if (!userMessagesMap.has(activeChat.receiver.id) && !tempMessagesMap.has(activeChat.receiver.id)) return null
 
@@ -106,7 +105,7 @@ function Messages() {
 }
 
 function Message({ message }: Readonly<MessageProps>) {
-  const authUser = useStore(state => state.authUser)!
+  const authUser = useAppSelector(selectAuthUser)!
   const authUserIsSender = authUser.id === message.senderId
 
   return (

@@ -2,13 +2,16 @@
 
 import { Fragment, memo } from 'react'
 import { Transition } from '@headlessui/react'
-import { shallow } from 'zustand/shallow'
 import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline'
 import { XMarkIcon } from '@heroicons/react/20/solid'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { toggleNotification } from '~/store/features/notification/notification.slice'
 
 const Notification = () => {
-  const [notification, toggleNotification] = useStore(state => [state.notification, state.toggleNotification], shallow)
+  const dispatch = useAppDispatch()
+  const notification = useAppSelector(state => state.notification.notification)
+
+  const toggle = () => dispatch(toggleNotification(false))
 
   return (
     <>
@@ -45,7 +48,7 @@ const Notification = () => {
                     <button
                       type="button"
                       className="focus:ring-brand-500 inline-flex rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:bg-gray-700"
-                      onClick={() => toggleNotification(false)}
+                      onClick={toggle}
                     >
                       <span className="sr-only">Close</span>
                       <XMarkIcon className="h-5 w-5" aria-hidden="true" />

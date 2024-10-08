@@ -1,8 +1,10 @@
 'use client'
 
-import { shallow } from 'zustand/shallow'
 import ChatListItemTemplate from '~/components/chat-list-item/Template'
-import { useStore } from '~/store'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { deleteMessages } from '~/store/features/messages/message.slice'
+import { setActiveChat, unarchiveChat, deleteChat } from '~/store/features/chat-list/chat-list.slice'
+
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 interface ArchivedConvoItemProps {
@@ -15,12 +17,16 @@ interface ArchivedConvoItemProps {
 }
 
 export default function Page() {
-  const [archived, setActiveChat] = useStore(state => [state.archived, state.setActiveChat], shallow)
+  const dispatch = useAppDispatch()
+  const archived = useAppSelector(state => state.chatList.unarchived)
+
   async function handleClick(convoItem: IChatListItem) {
-    setActiveChat({
-      contact: convoItem.contact ?? null,
-      receiver: convoItem.receiver,
-    })
+    dispatch(
+      setActiveChat({
+        contact: convoItem.contact ?? null,
+        receiver: convoItem.receiver,
+      }),
+    )
   }
 
   return (
@@ -41,33 +47,24 @@ export default function Page() {
 }
 
 function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps) {
-  const [activeChat, setActiveChat, unarchiveChat, deleteMessages, deleteChat] = useStore(
-    state => [
-      // `activeRoom` will be null when no chats are active
-      state.activeChat,
-      state.setActiveChat,
-      state.unarchiveChat,
-      state.deleteMessages,
-      state.deleteChat,
-    ],
-    shallow,
-  )
+  const dispatch = useAppDispatch()
+  const activeChat = useAppSelector(state => state.chatList.activeChat)
 
   const menuItems: IContextMenuItem[] = [
     {
       slot: 'Unarchive chat',
       action: () => {
-        unarchiveChat(userId)
+        dispatch(unarchiveChat(userId))
       },
     },
     {
       slot: 'Delete chat',
       action: () => {
-        deleteMessages(userId)
-        deleteChat(userId, true)
+        dispatch(deleteMessages(userId))
+        dispatch(deleteChat({ receiverId: userId, archived: true }))
         // If active room is being deleted
         if (activeChat && activeChat.receiver.id === userId) {
-          setActiveChat(null)
+          dispatch(setActiveChat(null))
         }
       },
     },

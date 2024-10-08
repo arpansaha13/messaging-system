@@ -2,7 +2,6 @@
 
 import { useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
-import { shallow } from 'zustand/shallow'
 import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import BaseInput from '~base/BaseInput'
@@ -12,7 +11,13 @@ import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
 import GlobalName from '~/components/GlobalName'
-import { useStore } from '~/store'
+import { useAppDispatch } from '~/store/hooks'
+import {
+  setActiveChat,
+  upsertActiveChatContact,
+  upsertChatListItemContact,
+} from '~/store/features/chat-list/chat-list.slice'
+import { insertContact } from '~/store/features/contacts/contact.slice'
 import { _getUsers } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem, IUserSearchResult } from '@shared/types/client'
@@ -31,7 +36,7 @@ interface AddContactModalProps {
 }
 
 export default function Page() {
-  const [setActiveChat] = useStore(state => [state.setActiveChat], shallow)
+  const dispatch = useAppDispatch()
 
   const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
@@ -66,16 +71,18 @@ export default function Page() {
   )
 
   function handleClick(user: IUserSearchResult) {
-    setActiveChat({
-      contact: user.contact ?? null,
-      receiver: {
-        id: user.id,
-        dp: user.dp,
-        bio: user.bio,
-        username: user.username,
-        globalName: user.globalName,
-      },
-    })
+    dispatch(
+      setActiveChat({
+        contact: user.contact ?? null,
+        receiver: {
+          id: user.id,
+          dp: user.dp,
+          bio: user.bio,
+          username: user.username,
+          globalName: user.globalName,
+        },
+      }),
+    )
   }
 
   function updateSearchResults(newContact: IContact) {
@@ -127,11 +134,7 @@ function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResul
 function AddContactModal(props: Readonly<AddContactModalProps>) {
   const { open, user, setOpen, updateSearchResults } = props
 
-  const [insertContact, upsertChatListItemContact, upsertActiveChatContact] = useStore(
-    state => [state.insertContact, state.upsertChatListItemContact, state.upsertActiveChatContact],
-    shallow,
-  )
-
+  const dispatch = useAppDispatch()
   const [loading, setLoading] = useState(false)
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -140,9 +143,9 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
 
     const formData = getFormData(e.currentTarget)
 
-    const newContact = await insertContact(user!, formData.new_alias as string)
-    upsertChatListItemContact(user!.id, newContact)
-    upsertActiveChatContact(user!.id, newContact)
+    const newContact = await dispatch(insertContact({ userToAdd: user!, alias: formData.new_alias as string })).unwrap()
+    dispatch(upsertChatListItemContact({ receiverId: user!.id, newContact }))
+    dispatch(upsertActiveChatContact({ receiverId: user!.id, newContact }))
     updateSearchResults(newContact)
 
     setLoading(false)

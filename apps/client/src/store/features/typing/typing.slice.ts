@@ -1,11 +1,26 @@
-import type { Slice } from '~/store/types.store'
-import type { TypingSliceType } from './types'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import type { IUser } from '@shared/types/client'
 
-export const typingSlice: Slice<TypingSliceType> = set => ({
-  typingState: {},
-  setTypingState(receiverId, newState) {
-    set(state => {
-      state.typingState[receiverId] = newState
-    })
+interface TypingSliceType {
+  typingState: Map<IUser['id'], boolean>
+}
+
+const initialState: TypingSliceType = {
+  typingState: new Map(),
+}
+
+export const typingSlice = createSlice({
+  name: 'typing',
+  initialState,
+  reducers: {
+    setTypingState: (state, action: PayloadAction<{ receiverId: IUser['id']; newState: boolean }>) => {
+      state.typingState.set(action.payload.receiverId, action.payload.newState)
+    },
+  },
+  selectors: {
+    selectTypingState: (slice, userId: IUser['id']) => slice.typingState.get(userId),
   },
 })
+
+export const { setTypingState } = typingSlice.actions
+export const { selectTypingState } = typingSlice.selectors

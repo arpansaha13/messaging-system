@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { forwardRef, useRef } from 'react'
-import { shallow } from 'zustand/shallow'
 import {
   ArchiveBoxIcon,
   UsersIcon,
@@ -15,7 +14,9 @@ import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import AddGroup from '~/components/group/add-group'
 import { useOverflow } from '~/hooks/useOverflow'
-import { useStore } from '~/store'
+import { useAppSelector } from '~/store/hooks'
+import { selectAuthUser } from '~/store/features/auth/auth.slice'
+import { selectGroups } from '~/store/features/groups/group.slice'
 import { _getMe } from '~/utils/api'
 
 interface LinkWrapperProps {
@@ -64,7 +65,7 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname()
-  const [authUser] = useStore(state => [state.authUser!], shallow)
+  const authUser = useAppSelector(selectAuthUser)!
 
   return (
     <nav className="flex h-full w-16 flex-shrink-0 flex-col items-center gap-0.5 bg-gray-100 py-4 shadow-md dark:bg-gray-900">
@@ -127,7 +128,7 @@ function GroupList() {
   const pathname = usePathname()
   const groupsRef = useRef<HTMLDivElement>(null)
   const { isOverflowingY } = useOverflow(groupsRef)
-  const [groups] = useStore(state => [state.groups], shallow)
+  const groups = useAppSelector(selectGroups)
 
   return (
     <div ref={groupsRef} className={'scrollbar w-full flex-grow overflow-y-auto'}>

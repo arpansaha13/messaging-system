@@ -3,14 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState, useRef } from 'react'
-import { shallow } from 'zustand/shallow'
+import { useState, useRef, type FormEvent } from 'react'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
-import { useStore } from '~/store'
+import { useAppDispatch } from '~/store/hooks'
+import { toggleNotification, setNotification } from '~/store/features/notification/notification.slice'
 import { _login } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
-import type { FormEvent } from 'react'
 
 interface ILoginFormData {
   email: string
@@ -22,15 +21,10 @@ interface ILoginFormData {
 // }
 
 export default function SignInPage() {
+  const dispatch = useAppDispatch()
   const router = useRouter()
 
-  const [toggleNotification, setNotification] = useStore(
-    state => [state.toggleNotification, state.setNotification],
-    shallow,
-  )
-
   const formRef = useRef<HTMLFormElement>(null)
-
   const [loading, setLoading] = useState<boolean>(false)
 
   function login(e: FormEvent<HTMLFormElement>) {
@@ -42,15 +36,17 @@ export default function SignInPage() {
     _login(formData)
       .then(() => {
         router.replace('/')
-        toggleNotification(false)
+        dispatch(toggleNotification(false))
       })
       .catch(err => {
-        setNotification({
-          show: true,
-          status: 'error',
-          title: 'Sign in failed!',
-          description: err.message,
-        })
+        dispatch(
+          setNotification({
+            show: true,
+            status: 'error',
+            title: 'Sign in failed!',
+            description: err.message,
+          }),
+        )
       })
       .finally(() => setLoading(false))
   }

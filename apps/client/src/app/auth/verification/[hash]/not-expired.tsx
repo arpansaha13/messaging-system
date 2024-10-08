@@ -1,10 +1,10 @@
 import { useParams } from 'next/navigation'
-import { useRef, useState } from 'react'
-import { shallow } from 'zustand/shallow'
-import { useStore } from '~/store'
+import { type FormEvent, useRef, useState } from 'react'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import BaseButtonLink from '~base/BaseButtonLink'
+import { useAppDispatch } from '~/store/hooks'
+import { setNotification, toggleNotification } from '~/store/features/notification/notification.slice'
 import { _verification } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 
@@ -30,14 +30,11 @@ export default function LinkNotExpired() {
 
 const OtpForm = ({ setStatus }: OtpFormProps) => {
   const params = useParams()
+  const dispatch = useAppDispatch()
   const formRef = useRef<HTMLFormElement>(null)
   const [loading, setLoading] = useState<boolean>(false)
-  const [toggleNotification, setNotification] = useStore(
-    state => [state.toggleNotification, state.setNotification],
-    shallow,
-  )
 
-  function verifyAccount(e: React.FormEvent<HTMLFormElement>) {
+  function verifyAccount(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     const formData = getFormData<IVerificationFormData>(formRef.current)
@@ -47,15 +44,17 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
     _verification(params.hash as string, formData)
       .then(() => {
         setStatus(VerificationStatus.VERIFIED)
-        toggleNotification(false)
+        dispatch(toggleNotification(false))
       })
       .catch(err => {
-        setNotification({
-          show: true,
-          status: 'error',
-          title: 'Verification failed!',
-          description: err.message,
-        })
+        dispatch(
+          setNotification({
+            show: true,
+            status: 'error',
+            title: 'Verification failed!',
+            description: err.message,
+          }),
+        )
       })
       .finally(() => setLoading(false))
   }

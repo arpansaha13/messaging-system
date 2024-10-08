@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import { StoreProvider } from '~/providers/StoreProvider'
 import '~/styles/globals.css'
 
 export const metadata: Metadata = {
@@ -10,12 +11,14 @@ interface RootLayoutProps {
   children: React.ReactNode
 }
 
-export default function RootLayout({ children }: Readonly<RootLayoutProps>) {
+export default function RootLayout(props: Readonly<RootLayoutProps>) {
+  const { children } = props
+
   return (
     <html lang="en">
       {/* Browser extensions like grammarly will add attributes on body causing hydration warnings */}
       <body suppressHydrationWarning className="h-screen w-screen">
-        {children}
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   )
