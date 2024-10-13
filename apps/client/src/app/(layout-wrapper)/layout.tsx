@@ -6,7 +6,7 @@ import { useDark } from '~/hooks/useDark'
 import { SocketProvider } from '~/providers/SocketProvider'
 import Notification from '~common/Notification'
 import Navbar from '~/components/Navbar'
-import { useAppDispatch } from '~/store/hooks'
+import { useAppDispatch, usePrefetch } from '~/store/hooks'
 import { initGroupStore } from '~/store/features/groups/group.slice'
 import { initChatList } from '~/store/features/chat-list/chat-list.slice'
 import { initContactStore } from '~/store/features/contacts/contact.slice'
@@ -17,6 +17,7 @@ interface LayoutWrapperProps {
 
 export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
   useDark()
+  usePrefetch('getAuthUser', undefined)
 
   const dispatch = useAppDispatch()
   // const { data: authUser, isSuccess } = useGetAuthUserQuery()
