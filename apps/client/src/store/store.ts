@@ -3,7 +3,7 @@ import { combineSlices, configureStore } from '@reduxjs/toolkit'
 import { enableMapSet } from 'immer'
 import storage from 'redux-persist/lib/storage'
 import { FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, persistReducer } from 'redux-persist'
-import { authSlice } from './features/auth/auth.slice'
+import { darkModeSlice } from './features/dark/dark.slice'
 import { draftSlice } from './features/drafts/draft.slice'
 import { groupSlice } from './features/groups/group.slice'
 import { typingSlice } from './features/typing/typing.slice'
@@ -11,13 +11,12 @@ import { contactSlice } from './features/contacts/contact.slice'
 import { messageSlice } from './features/messages/message.slice'
 import { channelSlice } from './features/channels/channel.slice'
 import { chatListSlice } from './features/chat-list/chat-list.slice'
-import { darkModeSlice } from './features/dark/dark.slice'
 import { notificationSlice } from './features/notification/notification.slice'
+import { usersApiSlice } from './features/users/users.api.slice'
 
 enableMapSet()
 
 const rootReducer = combineSlices(
-  authSlice,
   draftSlice,
   groupSlice,
   typingSlice,
@@ -26,6 +25,7 @@ const rootReducer = combineSlices(
   channelSlice,
   chatListSlice,
   darkModeSlice,
+  usersApiSlice,
   notificationSlice,
 )
 
@@ -54,8 +54,7 @@ export const makeStore = () => {
             'channel.channelsMap',
           ],
         },
-      }),
-    // .concat(quotesApiSlice.middleware),
+      }).concat(usersApiSlice.middleware),
   })
 }
 

@@ -15,9 +15,8 @@ import Separator from '~common/Separator'
 import AddGroup from '~/components/group/add-group'
 import { useOverflow } from '~/hooks/useOverflow'
 import { useAppSelector } from '~/store/hooks'
-import { selectAuthUser } from '~/store/features/auth/auth.slice'
 import { selectGroups } from '~/store/features/groups/group.slice'
-import { _getMe } from '~/utils/api'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 
 interface LinkWrapperProps {
   children: React.ReactNode
@@ -65,7 +64,11 @@ const navItems = [
 
 export default function Navbar() {
   const pathname = usePathname()
-  const authUser = useAppSelector(selectAuthUser)!
+  const { data: authUser, isSuccess } = useGetAuthUserQuery()
+
+  if (!isSuccess) {
+    return null
+  }
 
   return (
     <nav className="flex h-full w-16 flex-shrink-0 flex-col items-center gap-0.5 bg-gray-100 py-4 shadow-md dark:bg-gray-900">

@@ -23,8 +23,8 @@ import { _getChatsWith } from '~/utils/api'
 import { MessageStatus, SocketEmitEvent, SocketOnEvent } from '@shared/types'
 import type { IMessage, IReceiverEmitRead, SocketEmitEventPayload, SocketOnEventPayload } from '@shared/types'
 import { IChatListItem, IUser } from '@shared/types/client'
-import { selectAuthUser } from '~/store/features/auth/auth.slice'
 import { setTypingState } from '~/store/features/typing/typing.slice'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
@@ -66,7 +66,7 @@ function useSocketInit() {
   )
 
   const dispatch = useAppDispatch()
-  const authUser = useAppSelector(selectAuthUser)!
+  const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const activeChat = useAppSelector(selectActiveChat)
   const archivedChatList = useAppSelector(selectArchived)
   const unarchivedChatList = useAppSelector(selectUnarchived)
@@ -74,7 +74,7 @@ function useSocketInit() {
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
 
   useEffect(() => {
-    if (isNullOrUndefined(activeChat)) return
+    if (isNullOrUndefined(activeChat) || !isSuccess) return
 
     const convo =
       searchChat(unarchivedChatList, activeChat.receiver.id) ?? searchChat(archivedChatList, activeChat.receiver.id)!
@@ -113,13 +113,13 @@ function useSocketInit() {
       )
     }
     socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
-  }, [activeChat, archivedChatList, authUser.id, dispatch, socketWrapper, unarchivedChatList, userMessagesMap])
+  }, [activeChat, archivedChatList, authUser, dispatch, isSuccess, socketWrapper, unarchivedChatList, userMessagesMap])
 
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
   const [, setHookRunCount] = useState<number>(0)
 
   useEffect(() => {
-    if (isNullOrUndefined(authUser)) return
+    if (!isSuccess) return
 
     setHookRunCount(count => {
       if (count > 1) {

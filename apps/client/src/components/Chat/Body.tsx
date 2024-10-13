@@ -3,11 +3,11 @@ import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 import { selectTempMessagesMap, selectUserMessagesMap, upsertMessages } from '~/store/features/messages/message.slice'
 import { _getMessages } from '~/utils/api'
 import type { IMessage, IMessageSending } from '@shared/types'
-import { selectAuthUser } from '~/store/features/auth/auth.slice'
 
 interface MessageProps {
   message: IMessage
@@ -105,8 +105,12 @@ function Messages() {
 }
 
 function Message({ message }: Readonly<MessageProps>) {
-  const authUser = useAppSelector(selectAuthUser)!
-  const authUserIsSender = authUser.id === message.senderId
+  const { data: authUser, isSuccess } = useGetAuthUserQuery()
+  const authUserIsSender = useMemo(() => authUser?.id === message.senderId, [authUser, message.senderId])
+
+  if (!isSuccess) {
+    return null
+  }
 
   return (
     <div className={classNames('mb-4 w-max', authUserIsSender && 'ml-auto')}>

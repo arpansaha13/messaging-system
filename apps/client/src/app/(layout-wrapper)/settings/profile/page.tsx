@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import { classNames } from '@arpansaha13/utils'
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 import Avatar from '~common/Avatar'
-import { useAppDispatch, useAppSelector } from '~/store/hooks'
-import { setAuthUser, selectAuthUser } from '~/store/features/auth/auth.slice'
+import { useAppDispatch } from '~/store/hooks'
 import { _patchMe } from '~/utils/api'
 import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
 import type { IAuthUser } from '@shared/types/client'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 
 interface FieldProps {
   heading: string
@@ -73,24 +73,28 @@ const Field = (props: Readonly<FieldProps>) => {
 }
 
 export default function Page() {
-  const dispatch = useAppDispatch()
-  const authUser = useAppSelector(selectAuthUser)!
-
+  const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const [editingBio, setEditBio] = useState(false)
   const [editingDisplayName, setEditDisplayName] = useState(false)
-  const [globalName, setDisplayName] = useState(authUser.globalName)
-  const [bio, setBio] = useState(authUser.bio)
+  const [globalName, setGlobalName] = useState(authUser?.globalName)
+  const [bio, setBio] = useState(authUser?.bio)
 
   useEffect(() => {
+    if (!isSuccess) return
+
     const data: Partial<Pick<IAuthUser, 'bio' | 'globalName'>> = {}
 
     if (authUser.bio !== bio) data.bio = bio
     if (authUser.globalName !== globalName) data.globalName = globalName
     if (Object.keys(data).length === 0) return
 
-    _patchMe(data).then(res => dispatch(setAuthUser(res)))
+    _patchMe(data)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [globalName, bio, authUser, dispatch])
+  }, [globalName, bio, authUser])
+
+  if (!isSuccess || !globalName || !bio) {
+    return null
+  }
 
   return (
     <div className="space-y-10 px-8 py-6">
@@ -102,14 +106,20 @@ export default function Page() {
         <Field
           heading="Your name"
           content={globalName}
-          setContent={setDisplayName}
+          setContent={setGlobalName as Dispatch<SetStateAction<string>>}
           editState={editingDisplayName}
           setEditState={setEditDisplayName}
         />
       </div>
 
       <div>
-        <Field heading="About" content={bio} setContent={setBio} editState={editingBio} setEditState={setEditBio} />
+        <Field
+          heading="About"
+          content={bio}
+          setContent={setBio as Dispatch<SetStateAction<string>>}
+          editState={editingBio}
+          setEditState={setEditBio}
+        />
       </div>
     </div>
   )

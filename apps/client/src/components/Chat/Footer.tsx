@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { useSocket } from '~/providers/SocketProvider'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
-import { selectAuthUser } from '~/store/features/auth/auth.slice'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { addDraft, removeDraft, selectDraft } from '~/store/features/drafts/draft.slice'
 import { upsertTempMessages } from '~/store/features/messages/message.slice'
 import { selectActiveChat, unarchiveChat } from '~/store/features/chat-list/chat-list.slice'
@@ -30,7 +30,7 @@ export default function ChatFooter() {
   const { socket } = useSocket()!
 
   const dispatch = useAppDispatch()
-  const authUser = useAppSelector(selectAuthUser)!
+  const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const activeChat = useAppSelector(selectActiveChat)!
   const draft = useAppSelector(state => selectDraft(state, activeChat.receiver.id))
 
@@ -39,7 +39,7 @@ export default function ChatFooter() {
 
   function typingPayload(isTyping: boolean): ISenderEmitTyping {
     return {
-      senderId: authUser.id,
+      senderId: authUser!.id,
       receiverId: activeChat.receiver.id,
       isTyping,
     }
@@ -67,7 +67,7 @@ export default function ChatFooter() {
       const newMessage = {
         hash: generateHash(),
         content: inputValue,
-        senderId: authUser.id,
+        senderId: authUser!.id,
         status: MessageStatus.SENDING,
       } as IMessageSending
 
@@ -101,6 +101,10 @@ export default function ChatFooter() {
     prevReceiverId.current = activeChat?.receiver.id ?? null
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeChat, dispatch])
+
+  if (!isSuccess) {
+    return null
+  }
 
   return (
     <div className="flex-grow px-1">

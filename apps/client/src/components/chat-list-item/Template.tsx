@@ -5,10 +5,12 @@ import { ContextMenu, ContextMenuWrapper } from '~common/ContextMenu'
 import GlobalName from '~/components/GlobalName'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useAppSelector } from '~/store/hooks'
-import { selectAuthUser } from '~/store/features/auth/auth.slice'
+
 import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 import isUnread from '~/utils/isUnread'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
+import { useMemo } from 'react'
 
 interface ChatListItemTemplateProps {
   userId: number
@@ -24,12 +26,13 @@ interface ChatListItemTemplateProps {
 export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplateProps>) {
   const { userId, alias, dp, latestMsg, globalName, children, menuItems, onClick } = props
 
+  const { data: authUser, isSuccess } = useGetAuthUserQuery()
+
   // If no chat is selected `activeChat` will be null
-  const authUser = useAppSelector(selectAuthUser)!
   const activeChat = useAppSelector(selectActiveChat)
 
-  const authUserIsSender = authUser.id === latestMsg?.senderId
-  const unread = isUnread(authUser.id, latestMsg)
+  const authUserIsSender = useMemo(() => authUser?.id === latestMsg?.senderId, [authUser, latestMsg?.senderId])
+  const unread = useMemo(() => authUser && isUnread(authUser.id, latestMsg), [authUser, latestMsg])
 
   function getDateTime() {
     const diff = differenceInCalendarDays(new Date(), new Date(latestMsg!.createdAt))
@@ -37,6 +40,10 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
     if (diff < 1) return format(latestMsg!.createdAt, 'h:mm a')
     if (diff === 1) return 'Yesterday'
     return format(latestMsg!.createdAt, 'dd/MM/yy')
+  }
+
+  if (!isSuccess) {
+    return null
   }
 
   return (

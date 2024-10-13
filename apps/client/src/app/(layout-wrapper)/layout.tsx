@@ -7,11 +7,9 @@ import { SocketProvider } from '~/providers/SocketProvider'
 import Notification from '~common/Notification'
 import Navbar from '~/components/Navbar'
 import { useAppDispatch } from '~/store/hooks'
-import { setAuthUser } from '~/store/features/auth/auth.slice'
 import { initGroupStore } from '~/store/features/groups/group.slice'
 import { initChatList } from '~/store/features/chat-list/chat-list.slice'
 import { initContactStore } from '~/store/features/contacts/contact.slice'
-import { _getMe } from '~/utils/api'
 
 interface LayoutWrapperProps {
   children: React.ReactNode
@@ -21,15 +19,15 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   useDark()
 
   const dispatch = useAppDispatch()
+  // const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 
   useEffect(() => {
-    _getMe().then(async authUserRes => {
-      dispatch(setAuthUser(authUserRes))
-      await Promise.all([dispatch(initChatList()), dispatch(initContactStore()), dispatch(initGroupStore())])
-      setLoaded(true)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // if (isSuccess) {
+    Promise.all([dispatch(initChatList()), dispatch(initContactStore()), dispatch(initGroupStore())]).then(() =>
+      setLoaded(true),
+    )
+    // }
   }, [dispatch])
 
   if (!hasLoaded) {

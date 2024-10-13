@@ -1,10 +1,6 @@
 import _fetch from './_fetch'
 import type { IAuthUser, IUserSearchResult } from '@shared/types/client'
 
-export function _getMe(): Promise<IAuthUser> {
-  return _fetch('users/me')
-}
-
 export function _patchMe(body: Partial<Pick<IAuthUser, 'bio' | 'globalName'>>): Promise<IAuthUser> {
   return _fetch('users/me', { body, method: 'PATCH' })
 }
