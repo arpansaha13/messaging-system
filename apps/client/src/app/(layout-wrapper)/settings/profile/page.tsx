@@ -1,46 +1,45 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { classNames } from '@arpansaha13/utils'
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
 import Avatar from '~common/Avatar'
-import { useAppDispatch } from '~/store/hooks'
-import { _patchMe } from '~/utils/api'
-import type { Dispatch, KeyboardEvent, SetStateAction } from 'react'
-import type { IAuthUser } from '@shared/types/client'
-import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
+import { useGetAuthUserQuery, usePatchAuthUserMutation } from '~/store/features/users/users.api.slice'
 
 interface FieldProps {
+  name: 'bio' | 'globalName'
   heading: string
   content: string
-  setContent: Dispatch<SetStateAction<string>>
-  editState: boolean
-  setEditState: Dispatch<SetStateAction<boolean>>
 }
 
 const Field = (props: Readonly<FieldProps>) => {
-  const { heading, content, setContent, editState, setEditState } = props
+  const { name, heading, content } = props
 
+  const [editing, setEditing] = useState(false)
+  const [patchAuthUser] = usePatchAuthUserMutation()
   const contentRef = useRef<HTMLParagraphElement>(null)
 
   function handleKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       e.preventDefault()
-      setEditState(false)
+      setEditing(false)
     }
   }
 
   useEffect(() => {
-    if (editState) {
-      contentRef.current?.focus()
+    const contentElement = contentRef.current
+    if (!contentElement) return
+
+    if (editing) {
+      contentElement.focus()
       return
     }
-    const newContent = contentRef.current?.textContent
-    if (!editState && newContent && content !== newContent) {
-      setContent(newContent)
+
+    const newContent = contentElement.textContent
+    if (newContent && content !== newContent) {
+      patchAuthUser({ [name]: newContent })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editState])
+  }, [content, editing, name, patchAuthUser])
 
   return (
     <>
@@ -48,20 +47,20 @@ const Field = (props: Readonly<FieldProps>) => {
       <div
         className={classNames(
           'mb-8 flex pb-1 shadow-[0_2px_0px_0px] transition-shadow',
-          editState ? 'shadow-brand-700' : 'shadow-transparent',
+          editing ? 'shadow-brand-700' : 'shadow-transparent',
         )}
       >
         <p
           ref={contentRef}
-          contentEditable={editState}
+          contentEditable={editing}
           suppressContentEditableWarning={true}
           className="flex-grow text-base text-gray-900 focus:border-none focus:outline-none dark:text-gray-200"
           onKeyDown={handleKeyDown}
         >
           {content}
         </p>
-        <button onClick={() => setEditState(b => !b)}>
-          {editState ? (
+        <button onClick={() => setEditing(b => !b)}>
+          {editing ? (
             <CheckIcon className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
           ) : (
             <PencilIcon className="h-5 w-5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
@@ -74,25 +73,8 @@ const Field = (props: Readonly<FieldProps>) => {
 
 export default function Page() {
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
-  const [editingBio, setEditBio] = useState(false)
-  const [editingDisplayName, setEditDisplayName] = useState(false)
-  const [globalName, setGlobalName] = useState(authUser?.globalName)
-  const [bio, setBio] = useState(authUser?.bio)
 
-  useEffect(() => {
-    if (!isSuccess) return
-
-    const data: Partial<Pick<IAuthUser, 'bio' | 'globalName'>> = {}
-
-    if (authUser.bio !== bio) data.bio = bio
-    if (authUser.globalName !== globalName) data.globalName = globalName
-    if (Object.keys(data).length === 0) return
-
-    _patchMe(data)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [globalName, bio, authUser])
-
-  if (!isSuccess || !globalName || !bio) {
+  if (!isSuccess) {
     return null
   }
 
@@ -103,23 +85,11 @@ export default function Page() {
       </div>
 
       <div>
-        <Field
-          heading="Your name"
-          content={globalName}
-          setContent={setGlobalName as Dispatch<SetStateAction<string>>}
-          editState={editingDisplayName}
-          setEditState={setEditDisplayName}
-        />
+        <Field name="globalName" heading="Your name" content={authUser.globalName} />
       </div>
 
       <div>
-        <Field
-          heading="About"
-          content={bio}
-          setContent={setBio as Dispatch<SetStateAction<string>>}
-          editState={editingBio}
-          setEditState={setEditBio}
-        />
+        <Field name="bio" heading="About" content={authUser.bio} />
       </div>
     </div>
   )
