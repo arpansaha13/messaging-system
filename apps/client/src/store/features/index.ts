@@ -8,6 +8,7 @@ import { channelSlice } from './channels/channel.slice'
 import { chatListSlice } from './chat-list/chat-list.slice'
 import { notificationSlice } from './notification/notification.slice'
 import { usersApiSlice } from './users/users.api.slice'
+import { groupsApiSlice } from './groups/groups.api.slice'
 
 export const slices = [
   darkModeSlice,
@@ -21,11 +22,14 @@ export const slices = [
   notificationSlice,
 ]
 
-export const apiSlices = [usersApiSlice] as const
+export const apiSlices = [usersApiSlice, groupsApiSlice] as const
 
-type ApiSlice = (typeof apiSlices)[number]
-export type EndpointNames = keyof ApiSlice['endpoints']
-export type EndpointSliceMap = Record<EndpointNames, ApiSlice>
+type UnionOfKeys<T> = T extends { endpoints: infer U } ? keyof U : never
+type AllKeys<T extends readonly any[]> = UnionOfKeys<T[number]>
+
+type ApiSliceArray = typeof apiSlices
+export type EndpointNames = AllKeys<ApiSliceArray>
+export type EndpointSliceMap = Record<EndpointNames, ApiSliceArray[number]>
 
 export const endpointSliceMap = {} as EndpointSliceMap
 

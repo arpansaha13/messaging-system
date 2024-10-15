@@ -1,15 +1,14 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
-import { isNullOrUndefined } from '@arpansaha13/utils'
+import { useEffect, useMemo } from 'react'
 import GroupAvatar from '~common/GroupAvatar'
 import ChannelListItemTemplate from '~/components/channel-list-item/Template'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { useGetGroupQuery } from '~/store/features/groups/groups.api.slice'
 import { insertChannels, selectChannels } from '~/store/features/channels/channel.slice'
-import { _getGroup, _getChannelsOfGroup } from '~/utils/api'
-import type { IGroup } from '@shared/types/client'
+import { _getChannelsOfGroup } from '~/utils/api'
 
 interface GroupsLayoutProps {
   children: React.ReactNode
@@ -17,22 +16,21 @@ interface GroupsLayoutProps {
 
 export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) {
   const params = useParams()
-  const [group, setGroup] = useState<IGroup | null>(null)
-
   const dispatch = useAppDispatch()
   const groupId = useMemo(() => parseInt(params.groupId as string), [params.groupId])
+  const { data: group, isSuccess } = useGetGroupQuery(groupId)
+
   const channels = useAppSelector(state => selectChannels(state, groupId))
 
   useEffect(() => {
     if (groupId) {
-      Promise.all([_getGroup(groupId), _getChannelsOfGroup(groupId)]).then(res => {
-        setGroup(res[0])
-        dispatch(insertChannels({ groupId, channels: res[1] }))
+      _getChannelsOfGroup(groupId).then(res => {
+        dispatch(insertChannels({ groupId, channels: res }))
       })
     }
   }, [groupId, dispatch])
 
-  if (isNullOrUndefined(group)) return null
+  if (!isSuccess) return null
 
   return (
     <Window>
