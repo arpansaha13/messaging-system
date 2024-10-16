@@ -4,7 +4,6 @@ import { groupSlice } from './groups/group.slice'
 import { typingSlice } from './typing/typing.slice'
 import { contactSlice } from './contacts/contact.slice'
 import { messageSlice } from './messages/message.slice'
-import { channelSlice } from './channels/channel.slice'
 import { chatListSlice } from './chat-list/chat-list.slice'
 import { notificationSlice } from './notification/notification.slice'
 import { usersApiSlice } from './users/users.api.slice'
@@ -17,7 +16,6 @@ export const slices = [
   typingSlice,
   contactSlice,
   messageSlice,
-  channelSlice,
   chatListSlice,
   notificationSlice,
 ]

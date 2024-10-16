@@ -1,14 +1,11 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import GroupAvatar from '~common/GroupAvatar'
 import ChannelListItemTemplate from '~/components/channel-list-item/Template'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
-import { useAppDispatch, useAppSelector } from '~/store/hooks'
-import { useGetGroupQuery } from '~/store/features/groups/groups.api.slice'
-import { insertChannels, selectChannels } from '~/store/features/channels/channel.slice'
-import { _getChannelsOfGroup } from '~/utils/api'
+import { useGetChannelsQuery, useGetGroupQuery } from '~/store/features/groups/groups.api.slice'
 
 interface GroupsLayoutProps {
   children: React.ReactNode
@@ -16,21 +13,11 @@ interface GroupsLayoutProps {
 
 export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) {
   const params = useParams()
-  const dispatch = useAppDispatch()
   const groupId = useMemo(() => parseInt(params.groupId as string), [params.groupId])
-  const { data: group, isSuccess } = useGetGroupQuery(groupId)
+  const { data: group, isSuccess: isFetchGroupSuccess } = useGetGroupQuery(groupId)
+  const { data: channels, isSuccess: isFetchChannelsSuccess } = useGetChannelsQuery(groupId)
 
-  const channels = useAppSelector(state => selectChannels(state, groupId))
-
-  useEffect(() => {
-    if (groupId) {
-      _getChannelsOfGroup(groupId).then(res => {
-        dispatch(insertChannels({ groupId, channels: res }))
-      })
-    }
-  }, [groupId, dispatch])
-
-  if (!isSuccess) return null
+  if (!isFetchGroupSuccess || !isFetchChannelsSuccess) return null
 
   return (
     <Window>

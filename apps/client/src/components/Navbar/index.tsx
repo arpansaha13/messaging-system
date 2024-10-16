@@ -136,7 +136,7 @@ function GroupList() {
   return (
     <div ref={groupsRef} className={'scrollbar w-full flex-grow overflow-y-auto'}>
       {/* scrollbar-width = 0.375rem */}
-      <ul>
+      <ul className="space-y-0.5">
         {groups.map(group => {
           const href = `/groups/${group.id}`
 
@@ -156,7 +156,7 @@ function GroupList() {
         })}
       </ul>
 
-      <div className={classNames('mx-auto w-max', isOverflowingY && 'pl-scrollbar')}>
+      <div className={classNames('mx-auto mt-0.5 w-max', isOverflowingY && 'pl-scrollbar')}>
         <AddGroup />
       </div>
     </div>
