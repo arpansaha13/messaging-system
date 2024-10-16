@@ -20,15 +20,12 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   usePrefetch('getAuthUser', undefined)
 
   const dispatch = useAppDispatch()
-  // const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const [hasLoaded, setLoaded] = useState<boolean>(false)
 
   useEffect(() => {
-    // if (isSuccess) {
     Promise.all([dispatch(initChatList()), dispatch(initContactStore()), dispatch(initGroupStore())]).then(() =>
       setLoaded(true),
     )
-    // }
   }, [dispatch])
 
   if (!hasLoaded) {

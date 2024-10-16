@@ -27,13 +27,20 @@ type AllKeys<T extends readonly any[]> = UnionOfKeys<T[number]>
 
 type ApiSliceArray = typeof apiSlices
 export type EndpointNames = AllKeys<ApiSliceArray>
-export type EndpointSliceMap = Record<EndpointNames, ApiSliceArray[number]>
+
+export type EndpointSliceMap = {
+  [K in EndpointNames]: ApiSliceArray extends readonly (infer U)[]
+    ? U extends { endpoints: Record<K, any> }
+      ? U
+      : never
+    : never
+}
 
 export const endpointSliceMap = {} as EndpointSliceMap
 
 apiSlices.forEach(apiSlice => {
-  const endpoints = Object.keys(apiSlice.endpoints) as Array<keyof typeof apiSlice.endpoints>
+  const endpoints = Object.keys(apiSlice.endpoints) as EndpointNames[]
   endpoints.forEach(endpointName => {
-    endpointSliceMap[endpointName as EndpointNames] = apiSlice
+    endpointSliceMap[endpointName] = apiSlice as any
   })
 })

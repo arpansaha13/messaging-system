@@ -19,7 +19,7 @@ export function usePrefetch<T extends EndpointNames>(
 ) {
   const dispatch = useAppDispatch()
   useEffect(() => {
-    const slice = endpointSliceMap['getAuthUser']
-    dispatch(slice.util.prefetch(endpoint, arg as any, options))
+    const slice = endpointSliceMap[endpoint]
+    dispatch(slice.util.prefetch(endpoint as any, arg as any, options))
   }, [arg, dispatch, endpoint, options])
 }
