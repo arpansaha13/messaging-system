@@ -1,16 +1,16 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { AUTH_USER_BASE_API_TAG, FETCH_BASE_URL } from '../constants'
+import { AUTH_USER_API_TAG, FETCH_BASE_URL } from '../constants'
 import type { IAuthUser } from '@shared/types/client'
 
 export const usersApiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: FETCH_BASE_URL }),
   reducerPath: 'users',
-  tagTypes: [AUTH_USER_BASE_API_TAG],
+  tagTypes: [AUTH_USER_API_TAG],
 
   endpoints: build => ({
     getAuthUser: build.query<IAuthUser, void>({
       query: () => '/users/me',
-      providesTags: () => [{ type: AUTH_USER_BASE_API_TAG }],
+      providesTags: () => [{ type: AUTH_USER_API_TAG }],
     }),
     patchAuthUser: build.mutation<IAuthUser, Partial<Pick<IAuthUser, 'bio' | 'globalName'>>>({
       query: body => ({
@@ -18,7 +18,7 @@ export const usersApiSlice = createApi({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [{ type: AUTH_USER_BASE_API_TAG }],
+      invalidatesTags: [{ type: AUTH_USER_API_TAG }],
     }),
   }),
 })

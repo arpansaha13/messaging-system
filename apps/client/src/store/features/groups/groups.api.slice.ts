@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { FETCH_BASE_URL, GROUP_BASE_API_TAG, GROUP_CHANNELS_API_TAG } from '../constants'
+import { ALL_GROUPS_API_TAG, FETCH_BASE_URL, GROUP_API_TAG, GROUP_CHANNELS_API_TAG } from '../constants'
 import type { IChannel, IGroup } from '@shared/types/client'
 
 interface IPostCreateGroupBody {
@@ -9,16 +9,16 @@ interface IPostCreateGroupBody {
 export const groupsApiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: FETCH_BASE_URL }),
   reducerPath: 'groups',
-  tagTypes: [GROUP_BASE_API_TAG, GROUP_CHANNELS_API_TAG],
+  tagTypes: [ALL_GROUPS_API_TAG, GROUP_API_TAG, GROUP_CHANNELS_API_TAG],
 
   endpoints: build => ({
     getGroups: build.query<IGroup[], void>({
       query: () => 'groups',
-      providesTags: (_result, _error) => [{ type: GROUP_BASE_API_TAG }],
+      providesTags: (_result, _error) => [{ type: ALL_GROUPS_API_TAG }],
     }),
     getGroup: build.query<IGroup, IGroup['id']>({
       query: groupId => `groups/${groupId}`,
-      providesTags: (_result, _error, id) => [{ type: GROUP_BASE_API_TAG, id }],
+      providesTags: (_result, _error, id) => [{ type: GROUP_API_TAG, id }],
     }),
     getChannels: build.query<IChannel[], IGroup['id']>({
       query: groupId => `groups/${groupId}/channels`,
@@ -30,7 +30,7 @@ export const groupsApiSlice = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [{ type: GROUP_BASE_API_TAG }],
+      invalidatesTags: [{ type: ALL_GROUPS_API_TAG }],
     }),
   }),
 })
