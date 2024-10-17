@@ -6,7 +6,12 @@ export const groupsApiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: FETCH_BASE_URL }),
   reducerPath: 'groups',
   tagTypes: [GROUP_BASE_API_TAG, GROUP_CHANNELS_API_TAG],
+
   endpoints: build => ({
+    getGroups: build.query<IGroup[], void>({
+      query: () => 'groups',
+      providesTags: (_result, _error) => [{ type: GROUP_BASE_API_TAG }],
+    }),
     getGroup: build.query<IGroup, IGroup['id']>({
       query: groupId => `groups/${groupId}`,
       providesTags: (_result, _error, id) => [{ type: GROUP_BASE_API_TAG, id }],
@@ -18,4 +23,4 @@ export const groupsApiSlice = createApi({
   }),
 })
 
-export const { useGetGroupQuery, useGetChannelsQuery } = groupsApiSlice
+export const { useGetGroupQuery, useGetGroupsQuery, useGetChannelsQuery } = groupsApiSlice

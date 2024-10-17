@@ -1,6 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { AppThunk } from '~/store/store'
-import { _getGroups } from '~/utils/api'
 import type { IGroup } from '@shared/types/client'
 
 interface GroupSliceType {
@@ -26,19 +24,7 @@ export const groupSlice = createSlice({
       }
       state.groups.splice(idx, 1)
     },
-    setGroups: (state, action: PayloadAction<IGroup[]>) => {
-      state.groups = action.payload
-    },
-  },
-  selectors: {
-    selectGroups: slice => slice.groups,
   },
 })
 
-export const { addGroup, removeGroup, setGroups } = groupSlice.actions
-export const { selectGroups } = groupSlice.selectors
-
-export const initGroupStore = (): AppThunk => async dispatch => {
-  const res = await _getGroups()
-  dispatch(setGroups(res))
-}
+export const { addGroup, removeGroup } = groupSlice.actions

@@ -7,7 +7,6 @@ import { SocketProvider } from '~/providers/SocketProvider'
 import Notification from '~common/Notification'
 import Navbar from '~/components/Navbar'
 import { useAppDispatch, usePrefetch } from '~/store/hooks'
-import { initGroupStore } from '~/store/features/groups/group.slice'
 import { initChatList } from '~/store/features/chat-list/chat-list.slice'
 import { initContactStore } from '~/store/features/contacts/contact.slice'
 
@@ -18,17 +17,16 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
   useDark()
   usePrefetch('getAuthUser', undefined)
+  usePrefetch('getGroups', undefined)
 
   const dispatch = useAppDispatch()
-  const [hasLoaded, setLoaded] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    Promise.all([dispatch(initChatList()), dispatch(initContactStore()), dispatch(initGroupStore())]).then(() =>
-      setLoaded(true),
-    )
+    Promise.all([dispatch(initChatList()), dispatch(initContactStore())]).then(() => setLoading(false))
   }, [dispatch])
 
-  if (!hasLoaded) {
+  if (loading) {
     return <Loading />
   }
 

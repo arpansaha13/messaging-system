@@ -14,14 +14,22 @@ import Avatar from '~common/Avatar'
 import Separator from '~common/Separator'
 import AddGroup from '~/components/group/add-group'
 import { useOverflow } from '~/hooks/useOverflow'
-import { useAppSelector } from '~/store/hooks'
-import { selectGroups } from '~/store/features/groups/group.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
+import { useGetGroupsQuery } from '~/store/features/groups/groups.api.slice'
 
 interface LinkWrapperProps {
-  children: React.ReactNode
   className?: string
+  children: React.ReactNode
   el?: keyof JSX.IntrinsicElements
+}
+
+interface OverflowContainerProps {
+  className?: string
+  children: ((isOverflowingY: boolean) => React.ReactNode) | React.ReactNode
+}
+
+interface GroupListProps {
+  isOverflowingY: boolean
 }
 
 const navItems = [
@@ -78,7 +86,19 @@ export default function Navbar() {
         }
 
         if (navItem.type === 'groups') {
-          return <GroupList key="groups" />
+          return (
+            <OverflowContainer key="groups" className="w-full flex-grow">
+              {isOverflowingY => (
+                <>
+                  <GroupList isOverflowingY={isOverflowingY} />
+
+                  <div className={classNames('mx-auto mt-0.5 w-max', isOverflowingY && 'pl-scrollbar')}>
+                    <AddGroup />
+                  </div>
+                </>
+              )}
+            </OverflowContainer>
+          )
         }
 
         return (
@@ -127,38 +147,47 @@ function LinkWrapper(props: Readonly<LinkWrapperProps>) {
   )
 }
 
-function GroupList() {
+function GroupList(props: Readonly<GroupListProps>) {
+  const { isOverflowingY } = props
+
   const pathname = usePathname()
-  const groupsRef = useRef<HTMLDivElement>(null)
-  const { isOverflowingY } = useOverflow(groupsRef)
-  const groups = useAppSelector(selectGroups)
+  const { data: groups, isSuccess } = useGetGroupsQuery()
+
+  if (!isSuccess) return null
 
   return (
-    <div ref={groupsRef} className={'scrollbar w-full flex-grow overflow-y-auto'}>
+    <ul className="space-y-0.5">
       {/* scrollbar-width = 0.375rem */}
-      <ul className="space-y-0.5">
-        {groups.map(group => {
-          const href = `/groups/${group.id}`
+      {groups.map(group => {
+        const href = `/groups/${group.id}`
 
-          return (
-            <LinkWrapper key={group.id} el="li" className={classNames(isOverflowingY && 'pl-scrollbar')}>
-              <Link
-                href={href}
-                className={classNames(
-                  'mx-auto flex size-10 items-center justify-center rounded transition-colors',
-                  href === pathname && 'bg-brand-300 text-brand-900 dark:bg-brand-800 dark:text-brand-200',
-                )}
-              >
-                <UserGroupIcon className="size-6 flex-shrink-0" />
-              </Link>
-            </LinkWrapper>
-          )
-        })}
-      </ul>
+        return (
+          <LinkWrapper key={group.id} el="li" className={classNames(isOverflowingY && 'pl-scrollbar')}>
+            <Link
+              href={href}
+              className={classNames(
+                'mx-auto flex size-10 items-center justify-center rounded transition-colors',
+                href === pathname && 'bg-brand-300 text-brand-900 dark:bg-brand-800 dark:text-brand-200',
+              )}
+            >
+              <UserGroupIcon className="size-6 flex-shrink-0" />
+            </Link>
+          </LinkWrapper>
+        )
+      })}
+    </ul>
+  )
+}
 
-      <div className={classNames('mx-auto mt-0.5 w-max', isOverflowingY && 'pl-scrollbar')}>
-        <AddGroup />
-      </div>
+function OverflowContainer(props: Readonly<OverflowContainerProps>) {
+  const { children, className } = props
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { isOverflowingY } = useOverflow(containerRef)
+
+  return (
+    <div ref={containerRef} className={classNames('scrollbar overflow-y-auto', className)}>
+      {children instanceof Function ? children(isOverflowingY) : children}
     </div>
   )
 }

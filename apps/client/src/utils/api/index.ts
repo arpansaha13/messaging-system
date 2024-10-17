@@ -12,4 +12,4 @@ export {
   _clearMessages,
   _deleteMessages,
 } from './chats'
-export { _getGroups, _postGroups } from './groups'
+export { _postGroups } from './groups'
