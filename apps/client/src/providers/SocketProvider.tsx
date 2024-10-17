@@ -72,6 +72,7 @@ function useSocketInit() {
   const unarchivedChatList = useAppSelector(selectUnarchived)
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
+  const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
 
   useEffect(() => {
     if (isNullOrUndefined(activeChat) || !isSuccess) return
@@ -115,20 +116,8 @@ function useSocketInit() {
     socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
   }, [activeChat, archivedChatList, authUser, dispatch, isSuccess, socketWrapper, unarchivedChatList, userMessagesMap])
 
-  const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
-  const [, setHookRunCount] = useState<number>(0)
-
   useEffect(() => {
     if (!isSuccess) return
-
-    setHookRunCount(count => {
-      if (count > 1) {
-        console.warn(
-          '`useSocketInit()` is run more than once. This will send multiple `session-connect` events to server. This hook is meant to be run only once during app initialization.',
-        )
-      }
-      return count + 1
-    })
 
     if (socket.connected) socketWrapper.emit(SocketEmitEvent.SESSION_CONNECT, { userId: authUser.id })
 
@@ -138,9 +127,17 @@ function useSocketInit() {
     })
 
     socketWrapper.on(SocketOnEvent.DISCONNECT, () => {
-      // Note: We cannot emit events after disconnection.
       setIsConnected(false)
     })
+
+    return () => {
+      socketWrapper.off(SocketOnEvent.CONNECT)
+      socketWrapper.off(SocketOnEvent.DISCONNECT)
+    }
+  }, [authUser, isSuccess, setIsConnected, socket.connected, socketWrapper])
+
+  useEffect(() => {
+    if (!isSuccess) return
 
     socketWrapper.on(SocketOnEvent.RECEIVE_MESSAGE, async payload => {
       const message: IMessage = {
@@ -186,6 +183,14 @@ function useSocketInit() {
       )
     })
 
+    return () => {
+      socketWrapper.off(SocketOnEvent.RECEIVE_MESSAGE)
+    }
+  }, [authUser, archivedChatList, dispatch, socketWrapper, unarchivedChatList, userMessagesMap, isSuccess])
+
+  useEffect(() => {
+    if (!isSuccess) return
+
     socketWrapper.on(SocketOnEvent.SENT, async payload => {
       const tempMessage = tempMessagesMap.get(payload.receiverId)!.get(payload.hash)!
 
@@ -230,6 +235,12 @@ function useSocketInit() {
       )
     })
 
+    return () => {
+      socketWrapper.off(SocketOnEvent.SENT)
+    }
+  }, [authUser, dispatch, isSuccess, socketWrapper, tempMessagesMap, archivedChatList, unarchivedChatList])
+
+  useEffect(() => {
     socketWrapper.on(SocketOnEvent.DELIVERED, payload => {
       dispatch(
         updateChatListItemMessageStatus({
@@ -247,6 +258,12 @@ function useSocketInit() {
       )
     })
 
+    return () => {
+      socketWrapper.off(SocketOnEvent.DELIVERED)
+    }
+  }, [dispatch, socketWrapper])
+
+  useEffect(() => {
     socketWrapper.on(SocketOnEvent.READ, payloadArray => {
       payloadArray.forEach(p => {
         dispatch(
@@ -266,6 +283,12 @@ function useSocketInit() {
       })
     })
 
+    return () => {
+      socketWrapper.off(SocketOnEvent.READ)
+    }
+  }, [dispatch, socketWrapper])
+
+  useEffect(() => {
     socketWrapper.on(SocketOnEvent.TYPING, payload => {
       dispatch(
         setTypingState({
@@ -276,16 +299,9 @@ function useSocketInit() {
     })
 
     return () => {
-      socketWrapper.off(SocketOnEvent.CONNECT)
-      socketWrapper.off(SocketOnEvent.DISCONNECT)
-      socketWrapper.off(SocketOnEvent.RECEIVE_MESSAGE)
-      socketWrapper.off(SocketOnEvent.SENT)
-      socketWrapper.off(SocketOnEvent.DELIVERED)
-      socketWrapper.off(SocketOnEvent.READ)
       socketWrapper.off(SocketOnEvent.TYPING)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser, archivedChatList, unarchivedChatList, userMessagesMap, tempMessagesMap])
+  }, [dispatch, socketWrapper])
 
   return { isConnected, socketWrapper }
 }
