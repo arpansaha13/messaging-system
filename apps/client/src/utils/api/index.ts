@@ -12,4 +12,3 @@ export {
   _clearMessages,
   _deleteMessages,
 } from './chats'
-export { _postGroups } from './groups'

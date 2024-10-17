@@ -2,10 +2,8 @@ import { DialogTitle } from '@headlessui/react'
 import BaseInput from '~base/BaseInput'
 import BaseButton from '~base/BaseButton'
 import Modal from '~common/Modal'
-import { useAppDispatch } from '~/store/hooks'
-import { addGroup } from '~/store/features/groups/group.slice'
+import { useAddGroupMutation } from '~/store/features/groups/groups.api.slice'
 import getFormData from '~/utils/getFormData'
-import { _postGroups } from '~/utils/api'
 import { useAddGroupContext } from './context'
 
 interface ICreateGroupFormData {
@@ -14,16 +12,12 @@ interface ICreateGroupFormData {
 
 export default function AddGroupModal() {
   const { open, setOpen } = useAddGroupContext()!
-  const dispatch = useAppDispatch()
+  const [addGroup] = useAddGroupMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-
     const formData = getFormData<ICreateGroupFormData>(e.currentTarget)
-
-    const newGroup = await _postGroups(formData)
-    dispatch(addGroup(newGroup))
-
+    await addGroup(formData)
     setOpen(false)
   }
 

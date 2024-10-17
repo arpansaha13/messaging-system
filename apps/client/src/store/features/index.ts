@@ -1,6 +1,5 @@
 import { darkModeSlice } from './dark/dark.slice'
 import { draftSlice } from './drafts/draft.slice'
-import { groupSlice } from './groups/group.slice'
 import { typingSlice } from './typing/typing.slice'
 import { contactSlice } from './contacts/contact.slice'
 import { messageSlice } from './messages/message.slice'
@@ -12,7 +11,6 @@ import { groupsApiSlice } from './groups/groups.api.slice'
 export const slices = [
   darkModeSlice,
   draftSlice,
-  groupSlice,
   typingSlice,
   contactSlice,
   messageSlice,
