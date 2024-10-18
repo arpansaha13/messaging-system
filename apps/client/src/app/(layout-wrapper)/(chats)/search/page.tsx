@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
@@ -18,7 +18,7 @@ import {
   upsertChatListItemContact,
 } from '~/store/features/chat-list/chat-list.slice'
 import { insertContact } from '~/store/features/contacts/contact.slice'
-import { _getUsers } from '~/utils/api'
+import { useLazySearchUsersQuery } from '~/store/features/users/users.api.slice'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem, IUserSearchResult } from '@shared/types/client'
 
@@ -38,9 +38,8 @@ interface AddContactModalProps {
 export default function Page() {
   const dispatch = useAppDispatch()
 
-  const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
-  const [searchResults, setSearchResults] = useState<IUserSearchResult[] | null>(null)
+  const [triggerSearch, { data: searchResults }] = useLazySearchUsersQuery()
   const [addContactModalOpen, setAddContactModalOpen] = useState(false)
   const [modalPayload, setModalPayload] = useState<IUserSearchResult | null>(null)
 
@@ -56,15 +55,7 @@ export default function Page() {
 
   useDebounce(
     () => {
-      if (isFirstRun.current) {
-        isFirstRun.current = false
-        return
-      }
-      if (value === '') {
-        setSearchResults(null)
-        return
-      }
-      _getUsers(value).then(setSearchResults)
+      triggerSearch(value)
     },
     1000,
     [value],
