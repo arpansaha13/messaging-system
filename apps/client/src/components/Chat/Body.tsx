@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { differenceInCalendarDays, format } from 'date-fns'
-import { classNames } from '@arpansaha13/utils'
+import { classNames, isNullOrUndefined } from '@arpansaha13/utils'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 import { selectTempMessagesMap, selectUserMessagesMap, upsertMessages } from '~/store/features/messages/message.slice'
+import { useChatContext } from './context'
 import { _getMessages } from '~/utils/api'
 import type { IMessage, IMessageSending } from '@shared/types'
 
@@ -26,20 +26,20 @@ export default function ChatBody() {
   const dispatch = useAppDispatch()
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
-  const activeChat = useAppSelector(selectActiveChat)!
+  const { data: receiver, isSuccess } = useChatContext()!
 
   useEffect(() => {
-    if (!userMessagesMap.has(activeChat.receiver.id)) {
-      _getMessages(activeChat.receiver.id).then(chatRes => {
+    if (!isNullOrUndefined(receiver) && !userMessagesMap.has(receiver.id)) {
+      _getMessages(receiver.id).then(chatRes => {
         dispatch(
           upsertMessages({
-            receiverId: activeChat.receiver.id,
+            receiverId: receiver.id,
             newMessages: chatRes,
           }),
         )
       })
     }
-  }, [activeChat, userMessagesMap, dispatch])
+  }, [receiver, userMessagesMap, dispatch])
 
   // Keep scroll position at bottom.
   // Rerun this effect whenever a new message is pushed.
@@ -49,9 +49,13 @@ export default function ChatBody() {
     }
   }, [elRef, userMessagesMap, tempMessagesMap])
 
+  if (!isSuccess) {
+    return null
+  }
+
   return (
     <div ref={elRef} className="scrollbar overflow-y-scroll px-20 py-4">
-      {userMessagesMap.has(activeChat.receiver.id) && <Messages />}
+      {userMessagesMap.has(receiver.id) && <Messages />}
     </div>
   )
 }
@@ -59,12 +63,12 @@ export default function ChatBody() {
 function Messages() {
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
-  const activeChat = useAppSelector(selectActiveChat)!
+  const { data: receiver } = useChatContext()!
 
-  if (!userMessagesMap.has(activeChat.receiver.id) && !tempMessagesMap.has(activeChat.receiver.id)) return null
+  if (!userMessagesMap.has(receiver.id) && !tempMessagesMap.has(receiver.id)) return null
 
-  const messages = userMessagesMap.get(activeChat.receiver.id) ?? new Map<string, IMessage>()
-  const tempMessages = tempMessagesMap.get(activeChat.receiver.id) ?? new Map<string, IMessageSending>()
+  const messages = userMessagesMap.get(receiver.id) ?? new Map<string, IMessage>()
+  const tempMessages = tempMessagesMap.get(receiver.id) ?? new Map<string, IMessageSending>()
 
   const messageItr = messages.values()
   const tempMessageItr = tempMessages.values()

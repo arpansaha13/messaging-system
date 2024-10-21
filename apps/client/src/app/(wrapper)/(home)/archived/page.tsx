@@ -1,9 +1,11 @@
 'use client'
 
+import { useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import ChatListItemTemplate from '~/components/chat-list-item/Template'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import { deleteMessages } from '~/store/features/messages/message.slice'
-import { setActiveChat, unarchiveChat, deleteChat } from '~/store/features/chat-list/chat-list.slice'
+import { unarchiveChat, deleteChat, selectArchived } from '~/store/features/chat-list/chat-list.slice'
 
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
@@ -13,21 +15,10 @@ interface ArchivedConvoItemProps {
   dp: string | null
   globalName: string
   latestMsg: IChatListItem['latestMsg']
-  onClick: () => void
 }
 
 export default function Page() {
-  const dispatch = useAppDispatch()
-  const archived = useAppSelector(state => state.chatList.unarchived)
-
-  async function handleClick(convoItem: IChatListItem) {
-    dispatch(
-      setActiveChat({
-        contact: convoItem.contact ?? null,
-        receiver: convoItem.receiver,
-      }),
-    )
-  }
+  const archived = useAppSelector(selectArchived)
 
   return (
     <ul>
@@ -39,7 +30,6 @@ export default function Page() {
           globalName={convoItem.receiver.globalName}
           alias={convoItem.contact?.alias ?? null}
           latestMsg={convoItem.latestMsg}
-          onClick={() => handleClick(convoItem)}
         />
       ))}
     </ul>
@@ -48,7 +38,9 @@ export default function Page() {
 
 function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps) {
   const dispatch = useAppDispatch()
-  const activeChat = useAppSelector(state => state.chatList.activeChat)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const receiverId = useMemo(() => (searchParams.has('to') ? parseInt(searchParams.get('to')!) : null), [searchParams])
 
   const menuItems: IContextMenuItem[] = [
     {
@@ -63,8 +55,11 @@ function ArchivedConvoItem({ userId, ...remainingProps }: ArchivedConvoItemProps
         dispatch(deleteMessages(userId))
         dispatch(deleteChat({ receiverId: userId, archived: true }))
         // If active room is being deleted
-        if (activeChat && activeChat.receiver.id === userId) {
-          dispatch(setActiveChat(null))
+        if (receiverId && receiverId === userId) {
+          const { pathname, searchParams } = new URL(window.location.href)
+          const params = new URLSearchParams(searchParams)
+          params.delete('to')
+          router.replace(`${pathname}?${params.toString()}`)
         }
       },
     },

@@ -1,17 +1,16 @@
 'use client'
 
-import { isNullOrUndefined } from '@arpansaha13/utils'
+import { useSearchParams } from 'next/navigation'
 import Chat from '~/components/chat'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
-import { useAppSelector } from '~/store/hooks'
-import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 
 interface ChatsLayoutProps {
   children: React.ReactNode
 }
 
 export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
-  const activeChat = useAppSelector(selectActiveChat)
+  const searchParams = useSearchParams()
+  const hasOpenChat = searchParams.get('to')
 
   return (
     <Window>
@@ -19,7 +18,7 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
         <WindowPanelBody>{children}</WindowPanelBody>
       </WindowPanel>
 
-      <WindowBody>{!isNullOrUndefined(activeChat) && <Chat />}</WindowBody>
+      <WindowBody>{hasOpenChat && <Chat />}</WindowBody>
     </Window>
   )
 }

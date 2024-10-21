@@ -21,9 +21,13 @@ export interface IUser {
   dp: string | null
   username: string
   globalName: string
+  contact: {
+    id: number
+    alias: string
+  } | null
 }
 
-export interface IAuthUser extends IUser {
+export interface IAuthUser extends Omit<IUser, 'contact'> {
   email: string
   createdAt: string
   updatedAt: string

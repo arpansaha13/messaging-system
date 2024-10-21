@@ -18,7 +18,7 @@ export const typingSlice = createSlice({
     },
   },
   selectors: {
-    selectTypingState: (slice, userId: IUser['id']) => slice.typingState.get(userId),
+    selectTypingState: (slice, userId?: IUser['id']) => (userId ? slice.typingState.get(userId) : null),
   },
 })
 

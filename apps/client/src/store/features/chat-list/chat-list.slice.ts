@@ -7,13 +7,11 @@ import type { IChatListItem, IContact, IUser } from '@shared/types/client'
 interface ChatListSliceType {
   unarchived: IChatListItem[]
   archived: IChatListItem[]
-  activeChat: Pick<IChatListItem, 'receiver' | 'contact'> | null
 }
 
 const initialState: ChatListSliceType = {
   unarchived: [],
   archived: [],
-  activeChat: null,
 }
 
 export const initChatList = createAsyncThunk('chats/initChatList', async (_, { dispatch }) => {
@@ -25,32 +23,6 @@ export const chatListSlice = createSlice({
   name: 'chatList',
   initialState,
   reducers: {
-    setActiveChat: (state, action: PayloadAction<Pick<IChatListItem, 'receiver' | 'contact'> | null>) => {
-      state.activeChat = action.payload
-    },
-    upsertActiveChatContact: (
-      state,
-      action: PayloadAction<{ receiverId: IUser['id']; newContact: Pick<IContact, 'id' | 'alias'> }>,
-    ) => {
-      if (isNullOrUndefined(state.activeChat)) return
-      if (state.activeChat.receiver.id !== action.payload.receiverId) return
-
-      if (isNullOrUndefined(state.activeChat.contact)) {
-        state.activeChat.contact = {
-          id: action.payload.newContact.id,
-          alias: action.payload.newContact.alias,
-        }
-      } else {
-        state.activeChat.contact.alias = action.payload.newContact.alias
-      }
-    },
-    deleteActiveChatContact: (state, action: PayloadAction<number>) => {
-      if (isNullOrUndefined(state.activeChat)) return
-      if (state.activeChat.receiver.id !== action.payload) return
-      if (isNullOrUndefined(state.activeChat.contact)) return
-
-      state.activeChat.contact = null
-    },
     updateChatListItemMessagePin: (state, action: PayloadAction<{ receiverId: number; pinned: boolean }>) => {
       const { receiverId, pinned } = action.payload
       const idx = findRoomIndex(receiverId, state.unarchived)
@@ -190,19 +162,15 @@ export const chatListSlice = createSlice({
   selectors: {
     selectUnarchived: slice => slice.unarchived,
     selectArchived: slice => slice.archived,
-    selectActiveChat: slice => slice.activeChat,
   },
 })
 
 export const {
   setChats,
-  setActiveChat,
   insertUnarchivedChat,
   deleteChat,
   archiveChat,
   unarchiveChat,
-  upsertActiveChatContact,
-  deleteActiveChatContact,
   clearChatListItemMessage,
   deleteChatListItemContact,
   upsertChatListItemContact,
@@ -211,7 +179,7 @@ export const {
   updateChatListItemMessageStatus,
 } = chatListSlice.actions
 
-export const { selectActiveChat, selectArchived, selectUnarchived } = chatListSlice.selectors
+export const { selectArchived, selectUnarchived } = chatListSlice.selectors
 
 function findRoomIndex(receiverId: number, list: ReadonlyArray<IChatListItem>): number | null {
   const idx = list.findIndex(val => val.receiver.id === receiverId)

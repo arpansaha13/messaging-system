@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+'use client'
+
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import io from 'socket.io-client'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
@@ -7,7 +9,6 @@ import {
   updateChatListItemMessageStatus,
   unarchiveChat,
   insertUnarchivedChat,
-  selectActiveChat,
   selectArchived,
   selectUnarchived,
 } from '~/store/features/chat-list/chat-list.slice'
@@ -25,6 +26,7 @@ import type { IMessage, IReceiverEmitRead, SocketEmitEventPayload, SocketOnEvent
 import { IChatListItem, IUser } from '@shared/types/client'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
+import { useSearchParams } from 'next/navigation'
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
@@ -67,7 +69,8 @@ function useSocketInit() {
 
   const dispatch = useAppDispatch()
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
-  const activeChat = useAppSelector(selectActiveChat)
+  const searchParams = useSearchParams()
+  const receiverId = useMemo(() => (searchParams.has('to') ? parseInt(searchParams.get('to')!) : null), [searchParams])
   const archivedChatList = useAppSelector(selectArchived)
   const unarchivedChatList = useAppSelector(selectUnarchived)
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
@@ -75,15 +78,14 @@ function useSocketInit() {
   const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
 
   useEffect(() => {
-    if (isNullOrUndefined(activeChat) || !isSuccess) return
+    if (isNullOrUndefined(receiverId) || !isSuccess) return
 
-    const convo =
-      searchChat(unarchivedChatList, activeChat.receiver.id) ?? searchChat(archivedChatList, activeChat.receiver.id)!
+    const convo = searchChat(unarchivedChatList, receiverId) ?? searchChat(archivedChatList, receiverId)!
 
     if (isNullOrUndefined(convo)) return
     if (!isUnread(authUser.id, convo.latestMsg)) return
 
-    const messages = userMessagesMap.get(activeChat.receiver.id)
+    const messages = userMessagesMap.get(receiverId)
 
     if (isNullOrUndefined(messages)) return
 
@@ -94,27 +96,27 @@ function useSocketInit() {
 
       readEventPayload.push({
         messageId: message.id,
-        senderId: activeChat.receiver.id,
+        senderId: receiverId,
         receiverId: authUser.id,
       })
 
       dispatch(
         updateChatListItemMessageStatus({
-          receiverId: activeChat.receiver.id,
+          receiverId: receiverId,
           messageId: message.id,
           latestMsgStatus: MessageStatus.READ,
         }),
       )
       dispatch(
         updateMessageStatus({
-          receiverId: activeChat.receiver.id,
+          receiverId: receiverId,
           messageId: message.id,
           newStatus: MessageStatus.READ,
         }),
       )
     }
     socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
-  }, [activeChat, archivedChatList, authUser, dispatch, isSuccess, socketWrapper, unarchivedChatList, userMessagesMap])
+  }, [receiverId, archivedChatList, authUser, dispatch, isSuccess, socketWrapper, unarchivedChatList, userMessagesMap])
 
   useEffect(() => {
     if (!isSuccess) return

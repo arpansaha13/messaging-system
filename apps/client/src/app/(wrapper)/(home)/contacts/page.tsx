@@ -6,31 +6,25 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
 import { Avatar, ConfirmModal, SearchBar, FormModal, StackedListItem } from '~/components/common'
 import { useAppDispatch } from '~/store/hooks'
-import {
-  setActiveChat,
-  upsertChatListItemContact,
-  upsertActiveChatContact,
-  deleteChatListItemContact,
-  deleteActiveChatContact,
-} from '~/store/features/chat-list/chat-list.slice'
+import { upsertChatListItemContact, deleteChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
 import {
   useGetContactsQuery,
   useDeleteContactMutation,
   useLazySearchContactsQuery,
   usePatchContactAliasMutation,
 } from '~/store/features/contacts/contact.api.slice'
+import { invalidateTags as invalidateUsersApiTags } from '~/store/features/users/users.api.slice'
+import { USER_API_TAG } from '~/store/features/constants'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
 
 interface ContactsProps {
   menuItems: IContextMenuItem[]
-  handleClick: (contact: IContact) => void
 }
 
 interface SearchResultsProps {
   results: IContact[]
   menuItems: IContextMenuItem[]
-  handleClick: (contact: IContact) => void
 }
 
 interface EditAliasModalProps {
@@ -46,7 +40,6 @@ interface DeleteContactModalProps {
 }
 
 export default function Page() {
-  const dispatch = useAppDispatch()
   const [value, setValue] = useState('')
   const [editAliasModalOpen, setEditAliasModalOpen] = useState(false)
   const [deleteContactModalOpen, setDeleteContactModalOpen] = useState(false)
@@ -78,24 +71,6 @@ export default function Page() {
     [value],
   )
 
-  function handleClick(contact: IContact) {
-    dispatch(
-      setActiveChat({
-        contact: {
-          id: contact.id,
-          alias: contact.alias,
-        },
-        receiver: {
-          id: contact.userId,
-          dp: contact.dp,
-          bio: contact.bio,
-          username: contact.username,
-          globalName: contact.globalName,
-        },
-      }),
-    )
-  }
-
   return (
     <div className="py-2">
       <SearchBar
@@ -108,9 +83,9 @@ export default function Page() {
       />
 
       {isNullOrUndefined(searchResults) ? (
-        <Contacts menuItems={menuItems} handleClick={handleClick} />
+        <Contacts menuItems={menuItems} />
       ) : (
-        <SearchResults results={searchResults} menuItems={menuItems} handleClick={handleClick} />
+        <SearchResults results={searchResults} menuItems={menuItems} />
       )}
 
       <EditAliasModal open={editAliasModalOpen} contact={modalPayload} setOpen={setEditAliasModalOpen} />
@@ -120,7 +95,7 @@ export default function Page() {
   )
 }
 
-function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
+function Contacts({ menuItems }: Readonly<ContactsProps>) {
   const { data: contacts, isSuccess } = useGetContactsQuery()
 
   if (!isSuccess) {
@@ -137,6 +112,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
       <ul className="space-y-1">
         {contacts[letter].map(contact => (
           <StackedListItem
+            href={{ query: { to: contact.userId } }}
             key={contact.id}
             image={contact.dp}
             title={contact.alias}
@@ -144,7 +120,6 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
             text={contact.bio}
             menuItems={menuItems}
             payload={contact}
-            onClick={() => handleClick(contact)}
           />
         ))}
       </ul>
@@ -152,19 +127,19 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
   ))
 }
 
-function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResultsProps>) {
+function SearchResults({ results, menuItems }: Readonly<SearchResultsProps>) {
   return (
     <ul className="space-y-1 py-3">
       {results.map(contact => (
         <StackedListItem
           key={contact.id}
+          href={{ query: { to: contact.userId } }}
           image={contact.dp}
           title={contact.alias}
           subtitle={`${contact.globalName} • @${contact.username}`}
           text={contact.bio}
           menuItems={menuItems}
           payload={contact}
-          onClick={() => handleClick(contact)}
         />
       ))}
     </ul>
@@ -192,7 +167,7 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
 
     await patchContactAlias({ contactId: contact!.id, newAlias: formData.new_alias as string })
     dispatch(upsertChatListItemContact({ receiverId: contact!.userId, newContact }))
-    dispatch(upsertActiveChatContact({ receiverId: contact!.userId, newContact }))
+    dispatch(invalidateUsersApiTags([{ type: USER_API_TAG, id: contact!.userId }]))
 
     setOpen(false)
   }
@@ -243,7 +218,7 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
   async function onSubmit() {
     await deleteContact(contact!.id)
     dispatch(deleteChatListItemContact(contact!.userId))
-    dispatch(deleteActiveChatContact(contact!.userId))
+    dispatch(invalidateUsersApiTags([{ type: USER_API_TAG, id: contact!.userId }]))
     setOpen(false)
   }
 

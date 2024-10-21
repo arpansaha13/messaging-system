@@ -3,12 +3,12 @@ import { classNames } from '@arpansaha13/utils'
 import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
-import { useAppSelector } from '~/store/hooks'
-import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 import isUnread from '~/utils/isUnread'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { useMemo } from 'react'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 
 interface ChatListItemTemplateProps {
   userId: number
@@ -18,16 +18,16 @@ interface ChatListItemTemplateProps {
   globalName: string
   children?: React.ReactNode
   menuItems: IContextMenuItem[]
-  onClick: (e: React.MouseEvent) => void
 }
 
 export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplateProps>) {
-  const { userId, alias, dp, latestMsg, globalName, children, menuItems, onClick } = props
+  const { userId, alias, dp, latestMsg, globalName, children, menuItems } = props
 
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
 
-  // If no chat is selected `activeChat` will be null
-  const activeChat = useAppSelector(selectActiveChat)
+  // If no chat is selected `receiverId` will be null
+  const searchParams = useSearchParams()
+  const receiverId = useMemo(() => (searchParams.has('to') ? parseInt(searchParams.get('to')!) : null), [searchParams])
 
   const authUserIsSender = useMemo(() => authUser?.id === latestMsg?.senderId, [authUser, latestMsg?.senderId])
   const unread = useMemo(() => authUser && isUnread(authUser.id, latestMsg), [authUser, latestMsg])
@@ -48,15 +48,15 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
     <ContextMenuWrapper>
       {({ onContextMenu }) => (
         <li className="relative">
-          <button
+          <Link
+            href={{ query: { to: userId } }}
             className={classNames(
               'flex w-full items-center rounded px-3 text-left transition-colors',
-              userId === activeChat?.receiver.id
+              userId === receiverId
                 ? 'bg-gray-300/65 hover:bg-gray-400/40 dark:bg-gray-700/80 dark:hover:bg-gray-600/80'
                 : 'hover:bg-gray-200/80 dark:hover:bg-gray-600/40',
-              unread ? 'font-semibold' : '',
+              unread && 'font-semibold',
             )}
-            onClick={onClick}
             onContextMenu={onContextMenu}
           >
             <Avatar src={dp} />
@@ -79,7 +79,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
                 <p
                   className={classNames(
                     'flex items-center space-x-1 text-sm',
-                    latestMsg === null ? 'h-5' : '', // same as line-height of 'text-sm'
+                    latestMsg === null && 'h-5', // same as line-height of 'text-sm'
                   )}
                 >
                   {latestMsg && authUserIsSender && <MsgStatusIcon status={latestMsg.status} />}
@@ -91,7 +91,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
                 </div>
               </div>
             </div>
-          </button>
+          </Link>
 
           <ContextMenu items={menuItems} />
         </li>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
@@ -10,7 +11,7 @@ import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
   deleteChat,
   archiveChat,
-  setActiveChat,
+  selectUnarchived,
   clearChatListItemMessage,
   updateChatListItemMessagePin,
 } from '~/store/features/chat-list/chat-list.slice'
@@ -21,7 +22,6 @@ type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>
 
 interface UnarchivedChatListItemProps {
   chatListItem: IChatListItem
-  onClick: () => void
   setDeleteChatModalOpen: React.Dispatch<React.SetStateAction<boolean>>
   setDeleteChatModalPayload: React.Dispatch<React.SetStateAction<DeleteChatModalPayload | null>>
 }
@@ -33,20 +33,10 @@ interface DeleteChatListItemModalProps {
 }
 
 export default function Page() {
-  const dispatch = useAppDispatch()
-  const unarchived = useAppSelector(state => state.chatList.unarchived)
+  const unarchived = useAppSelector(selectUnarchived)
 
   const [deleteChatModalOpen, setDeleteChatModalOpen] = useState(false)
   const [deleteChatModalPayload, setDeleteChatModalPayload] = useState<DeleteChatModalPayload | null>(null)
-
-  async function handleClick(chatListItem: IChatListItem) {
-    dispatch(
-      setActiveChat({
-        contact: chatListItem.contact,
-        receiver: chatListItem.receiver,
-      }),
-    )
-  }
 
   return (
     <>
@@ -55,7 +45,6 @@ export default function Page() {
           <UnarchivedChatListItem
             key={chatListItem.receiver.id}
             chatListItem={chatListItem}
-            onClick={() => handleClick(chatListItem)}
             setDeleteChatModalOpen={setDeleteChatModalOpen}
             setDeleteChatModalPayload={setDeleteChatModalPayload}
           />
@@ -118,7 +107,6 @@ function UnarchivedChatListItem(props: Readonly<UnarchivedChatListItemProps>) {
       dp={chatListItem.receiver.dp}
       globalName={chatListItem.receiver.globalName}
       latestMsg={chatListItem.latestMsg}
-      onClick={props.onClick}
     >
       {chatListItem.chat.pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
     </ChatListItemTemplate>
@@ -129,7 +117,9 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
   const { open, payload, setOpen } = props
 
   const dispatch = useAppDispatch()
-  const activeChat = useAppSelector(state => state.chatList.activeChat)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const receiverId = useMemo(() => (searchParams.has('to') ? parseInt(searchParams.get('to')!) : null), [searchParams])
 
   function onSubmit() {
     if (isNullOrUndefined(payload)) return
@@ -138,8 +128,11 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
     dispatch(deleteChat({ receiverId: payload.receiver.id, archived: false }))
 
     // If active room is being deleted
-    if (activeChat && activeChat.receiver.id === payload.receiver.id) {
-      dispatch(setActiveChat(null))
+    if (receiverId && receiverId === payload.receiver.id) {
+      const { pathname, searchParams } = new URL(window.location.href)
+      const params = new URLSearchParams(searchParams)
+      params.delete('to')
+      router.replace(`${pathname}?${params.toString()}`)
     }
 
     setOpen(false)

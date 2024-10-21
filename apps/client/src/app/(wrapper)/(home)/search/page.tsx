@@ -7,20 +7,17 @@ import { Input } from '~/components/ui'
 import { Avatar, SearchBar, FormModal, StackedListItem } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
 import { useAppDispatch } from '~/store/hooks'
-import {
-  setActiveChat,
-  upsertActiveChatContact,
-  upsertChatListItemContact,
-} from '~/store/features/chat-list/chat-list.slice'
+import { upsertChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
 import { useLazySearchUsersQuery } from '~/store/features/users/users.api.slice'
 import { useAddContactMutation } from '~/store/features/contacts/contact.api.slice'
+import { invalidateTags as invalidateUsersApiTags } from '~/store/features/users/users.api.slice'
+import { USER_API_TAG } from '~/store/features/constants'
 import getFormData from '~/utils/getFormData'
 import type { IContextMenuItem, IUserSearchResult } from '@shared/types/client'
 
 interface SearchResultsProps {
   results: IUserSearchResult[]
   menuItems: IContextMenuItem[]
-  handleClick: (user: IUserSearchResult) => void
 }
 
 interface AddContactModalProps {
@@ -31,8 +28,6 @@ interface AddContactModalProps {
 }
 
 export default function Page() {
-  const dispatch = useAppDispatch()
-
   const [value, setValue] = useState('')
   const [triggerSearch, { data: searchResults }] = useLazySearchUsersQuery()
   const [addContactModalOpen, setAddContactModalOpen] = useState(false)
@@ -56,21 +51,6 @@ export default function Page() {
     [value],
   )
 
-  function handleClick(user: IUserSearchResult) {
-    dispatch(
-      setActiveChat({
-        contact: user.contact ?? null,
-        receiver: {
-          id: user.id,
-          dp: user.dp,
-          bio: user.bio,
-          username: user.username,
-          globalName: user.globalName,
-        },
-      }),
-    )
-  }
-
   async function refetchSearchResults() {
     return triggerSearch(value)
   }
@@ -79,9 +59,7 @@ export default function Page() {
     <div className="py-2">
       <SearchBar id="search" name="search" placeholder="Search" type="text" value={value} setValue={setValue} />
 
-      {!isNullOrUndefined(searchResults) && (
-        <SearchResults results={searchResults} menuItems={menuItems} handleClick={handleClick} />
-      )}
+      {!isNullOrUndefined(searchResults) && <SearchResults results={searchResults} menuItems={menuItems} />}
 
       <AddContactModal
         open={addContactModalOpen}
@@ -93,18 +71,18 @@ export default function Page() {
   )
 }
 
-function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResultsProps>) {
+function SearchResults({ results, menuItems }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(user => (
         <StackedListItem
           key={user.id}
+          href={{ query: { to: user.id } }}
           image={user.dp}
           title={user.contact ? user.contact.alias : <GlobalName name={user.globalName} />}
           subtitle={user.contact ? `${user.globalName} • @${user.username}` : `@${user.username}`}
           text={user.bio}
           {...(isNullOrUndefined(user.contact) && { menuItems, payload: user })}
-          onClick={() => handleClick(user)}
         />
       ))}
     </ul>
@@ -121,7 +99,7 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
     const formData = getFormData(e.currentTarget)
     const { data: newContact } = await addContact({ userIdToAdd: user!.id, alias: formData.new_alias as string })
     dispatch(upsertChatListItemContact({ receiverId: user!.id, newContact: newContact! }))
-    dispatch(upsertActiveChatContact({ receiverId: user!.id, newContact: newContact! }))
+    dispatch(invalidateUsersApiTags([{ type: USER_API_TAG, id: user!.id }]))
     await refetchSearchResults()
     setOpen(false)
   }

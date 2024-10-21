@@ -1,3 +1,4 @@
+import Link, { LinkProps } from 'next/link'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
 import type { IContextMenuItem } from '@shared/types/client'
@@ -7,8 +8,8 @@ interface StackedListItemProps {
   title: string | React.ReactNode
   subtitle: string | React.ReactNode
   text: string
+  href: LinkProps['href']
   menuItems?: IContextMenuItem[]
-  onClick: () => void
 
   /**
    * This payload will be passed to the menuItem.onClick method
@@ -17,20 +18,18 @@ interface StackedListItemProps {
   payload?: any
 }
 
-interface StackedListItemButtonProps extends Pick<StackedListItemProps, 'image' | 'title' | 'subtitle' | 'text'> {
-  eventHandlers: {
-    onClick: () => void
-    onContextMenu?: (e: React.MouseEvent) => void
-  }
+interface StackedListItemLinkProps
+  extends Pick<StackedListItemProps, 'image' | 'title' | 'subtitle' | 'text' | 'href'> {
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export default function StackedListItem(props: Readonly<StackedListItemProps>) {
-  const { menuItems, payload, onClick, ...remainingProps } = props
+  const { menuItems, payload, ...remainingProps } = props
 
   if (isNullOrUndefined(menuItems)) {
     return (
       <li>
-        <StackedListItemButton {...remainingProps} eventHandlers={{ onClick }} />
+        <StackedListItemLink {...remainingProps} />
       </li>
     )
   }
@@ -39,7 +38,7 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
     <ContextMenuWrapper>
       {({ onContextMenu }) => (
         <li className="relative">
-          <StackedListItemButton {...remainingProps} eventHandlers={{ onClick, onContextMenu }} />
+          <StackedListItemLink {...remainingProps} onContextMenu={onContextMenu} />
 
           <ContextMenu payload={payload} items={menuItems} />
         </li>
@@ -48,13 +47,14 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
   )
 }
 
-function StackedListItemButton(props: Readonly<StackedListItemButtonProps>) {
-  const { image, title, subtitle, text, eventHandlers } = props
+function StackedListItemLink(props: Readonly<StackedListItemLinkProps>) {
+  const { image, title, subtitle, text, href, onContextMenu } = props
 
   return (
-    <button
+    <Link
+      href={href}
       className="flex w-full items-center rounded px-3 text-left transition-colors hover:bg-gray-200/80 dark:hover:bg-gray-600/40"
-      {...eventHandlers}
+      onContextMenu={onContextMenu}
     >
       <Avatar src={image} />
 
@@ -70,6 +70,6 @@ function StackedListItemButton(props: Readonly<StackedListItemButtonProps>) {
           <p className="line-clamp-1 flex items-center space-x-1 text-sm text-gray-500 dark:text-gray-400">{text}</p>
         </div>
       </div>
-    </button>
+    </Link>
   )
 }

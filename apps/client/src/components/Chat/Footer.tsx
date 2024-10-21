@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useSocket } from '~/providers/SocketProvider'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { addDraft, removeDraft, selectDraft } from '~/store/features/drafts/draft.slice'
 import { upsertTempMessages } from '~/store/features/messages/message.slice'
-import { selectActiveChat, unarchiveChat } from '~/store/features/chat-list/chat-list.slice'
+import { unarchiveChat } from '~/store/features/chat-list/chat-list.slice'
+import { useChatContext } from './context'
 import { generateHash } from '~/utils/generateHash'
 import { MessageStatus, SocketEmitEvent } from '@shared/types'
 import type { ISenderEmitTyping, IMessageSending } from '@shared/types'
@@ -30,17 +32,17 @@ export default function ChatFooter() {
   const { socket } = useSocket()!
 
   const dispatch = useAppDispatch()
-  const { data: authUser, isSuccess } = useGetAuthUserQuery()
-  const activeChat = useAppSelector(selectActiveChat)!
-  const draft = useAppSelector(state => selectDraft(state, activeChat.receiver.id))
+  const { data: authUser, isSuccess: isGetAuthUserSuccess } = useGetAuthUserQuery()
+  const { data: receiver, isSuccess: isGetUserSuccess } = useChatContext()!
+  const draft = useAppSelector(state => selectDraft(state, receiver?.id))
 
   const [inputValue, setInputValue] = useState('')
-  const prevReceiverId = useRef(activeChat.receiver.id ?? null)
+  const prevReceiverId = useRef(receiver?.id ?? null)
 
   function typingPayload(isTyping: boolean): ISenderEmitTyping {
     return {
       senderId: authUser!.id,
-      receiverId: activeChat.receiver.id,
+      receiverId: receiver!.id,
       isTyping,
     }
   }
@@ -62,7 +64,7 @@ export default function ChatFooter() {
       socket.emit(SocketEmitEvent.TYPING, typingPayload(true))
     }
     if (e.key === 'Enter' && inputValue) {
-      dispatch(unarchiveChat(activeChat.receiver.id))
+      dispatch(unarchiveChat(receiver!.id))
 
       const newMessage = {
         hash: generateHash(),
@@ -74,7 +76,7 @@ export default function ChatFooter() {
       // Note: Convo won't be updated for a message that is still "sending"
       dispatch(
         upsertTempMessages({
-          receiverId: activeChat.receiver.id,
+          receiverId: receiver!.id,
           messages: [{ ...newMessage, createdInClientAt: new Date() }],
         }),
       )
@@ -82,29 +84,25 @@ export default function ChatFooter() {
       setInputValue('')
       socket.emit(SocketEmitEvent.SEND_MESSAGE, {
         ...newMessage,
-        receiverId: activeChat.receiver.id,
+        receiverId: receiver!.id,
       })
     }
   }
 
   useEffect(() => {
-    // Store the draft, if any, when `activeChat` changes
-    if (prevReceiverId.current !== null && inputValue) {
+    // Store the draft, if any, when `receiver` changes
+    if (!isNullOrUndefined(prevReceiverId.current) && inputValue) {
       dispatch(addDraft({ receiverId: prevReceiverId.current, draft: inputValue }))
       setInputValue('')
     }
     // Retrieve the draft, if any
-    if (activeChat !== null && draft) {
+    if (!isNullOrUndefined(receiver) && draft) {
       setInputValue(draft)
-      dispatch(removeDraft(activeChat.receiver.id))
+      dispatch(removeDraft(receiver.id))
     }
-    prevReceiverId.current = activeChat?.receiver.id ?? null
+    prevReceiverId.current = receiver?.id ?? null
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeChat, dispatch])
-
-  if (!isSuccess) {
-    return null
-  }
+  }, [receiver, dispatch, draft])
 
   return (
     <div className="flex-grow px-1">

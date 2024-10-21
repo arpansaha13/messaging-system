@@ -6,27 +6,43 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import type { User } from 'src/users/user.entity'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { UserSearchQuery } from './dto/user-search-query.dto'
+import type { GetUserWithContactResponse } from './dto/get-user-with-contact.response'
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserRepository)
-    private userRepository: UserRepository,
+    private readonly userRepository: UserRepository,
 
     @InjectRepository(ContactRepository)
-    private contactRepository: ContactRepository,
+    private readonly contactRepository: ContactRepository,
   ) {}
 
-  async getUserById(userId: User['id']): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id: userId })
+  async getUserWithContactById(authUserId: User['id'], userId: User['id']): Promise<GetUserWithContactResponse> {
+    const user = await this.userRepository.findOne({
+      select: ['id', 'globalName', 'username', 'bio', 'dp'],
+      where: { id: userId },
+    })
+
     if (user === null) throw new NotFoundException('User could not be found.')
-    return user
+
+    const contact = await this.contactRepository.findOne({
+      select: ['id', 'alias'],
+      where: { user: { id: authUserId }, userInContact: { id: userId } },
+    })
+
+    return { ...user, contact }
   }
 
   async updateUserInfo(userId: User['id'], data: UpdateUserInfoDto): Promise<User> {
     const updateResult = await this.userRepository.update(userId, { ...data })
-    if (updateResult.affected) return this.getUserById(userId)
-    else throw new NotFoundException()
+    if (updateResult.affected) {
+      return this.userRepository.findOne({
+        select: ['id', 'globalName', 'username', 'bio', 'dp'],
+        where: { id: userId },
+      })
+    }
+    throw new NotFoundException()
   }
 
   async findUsers(authUserId: User['id'], query: UserSearchQuery): Promise<User[]> {

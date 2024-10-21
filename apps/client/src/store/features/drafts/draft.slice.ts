@@ -21,7 +21,7 @@ export const draftSlice = createSlice({
     },
   },
   selectors: {
-    selectDraft: (slice, receiverId: IUser['id']) => slice.drafts.get(receiverId),
+    selectDraft: (slice, receiverId?: IUser['id']) => receiverId ? slice.drafts.get(receiverId) : null,
   },
 })
 

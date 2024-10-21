@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { forwardRef, useRef } from 'react'
 import {
   ArchiveBoxIcon,
@@ -37,18 +37,21 @@ const navItems = [
     to: '/',
     name: 'Chats',
     icon: ChatBubbleOvalLeftEllipsisIcon,
+    preserveQuery: true,
   },
   {
     type: 'link' as const,
     to: '/contacts',
     name: 'Contacts',
     icon: UsersIcon,
+    preserveQuery: true,
   },
   {
     type: 'link' as const,
     to: '/search',
     name: 'Search',
     icon: MagnifyingGlassIcon,
+    preserveQuery: true,
   },
   { type: 'separator' as const },
   {
@@ -60,17 +63,20 @@ const navItems = [
     to: '/archived',
     name: 'Archived',
     icon: ArchiveBoxIcon,
+    preserveQuery: true,
   },
   {
     type: 'link' as const,
     to: '/settings/profile',
     name: 'Settings',
     icon: Cog6ToothIcon,
+    preserveQuery: false,
   },
 ]
 
 export default function Navbar() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
 
   if (!isSuccess) {
@@ -103,7 +109,10 @@ export default function Navbar() {
         return (
           <LinkWrapper key={navItem.to}>
             <Link
-              href={navItem.to}
+              href={{
+                pathname: navItem.to,
+                query: navItem.preserveQuery ? searchParams.toString() : undefined,
+              }}
               className={classNames(
                 'mx-auto block w-max rounded p-2 transition-colors',
                 pathname === navItem.to && 'bg-brand-300 text-brand-900 dark:bg-brand-800 dark:text-brand-200',
