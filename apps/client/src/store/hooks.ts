@@ -20,6 +20,7 @@ export function usePrefetch<T extends EndpointNames>(
   const dispatch = useAppDispatch()
   useEffect(() => {
     const slice = endpointSliceMap[endpoint]
-    dispatch(slice.util.prefetch(endpoint as any, arg as any, options))
+    // @ts-ignore
+    dispatch(slice.util.prefetch(endpoint, arg, options))
   }, [arg, dispatch, endpoint, options])
 }
