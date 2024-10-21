@@ -4,8 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useState, useRef, type FormEvent } from 'react'
-import BaseInput from '~base/BaseInput'
-import BaseButton from '~base/BaseButton'
+import { Input, Button } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
 import { toggleNotification, setNotification } from '~/store/features/notification/notification.slice'
 import { _login } from '~/utils/api'
@@ -65,9 +64,9 @@ export default function SignInPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-gray-100 px-4 py-8 shadow sm:rounded-lg sm:px-10 dark:bg-gray-900/90">
           <form ref={formRef} className="space-y-6" onSubmit={login}>
-            <BaseInput id="email" name="email" type="email" autoComplete="email" required label="Email address" />
+            <Input id="email" name="email" type="email" autoComplete="email" required label="Email address" />
 
-            <BaseInput
+            <Input
               id="password"
               name="password"
               type="password"
@@ -85,9 +84,9 @@ export default function SignInPage() {
             </div> */}
 
             <div>
-              <BaseButton type="submit" loading={loading}>
+              <Button type="submit" loading={loading}>
                 Login
-              </BaseButton>
+              </Button>
             </div>
 
             <div className="flex items-center justify-start">

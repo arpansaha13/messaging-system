@@ -1,20 +1,25 @@
-import Link, { LinkProps } from 'next/link'
-import { memo } from 'react'
+import Link, { type LinkProps } from 'next/link'
 import { classNames } from '@arpansaha13/utils'
 import type { ReactNode } from 'react'
 
-interface BaseButtonProps extends LinkProps {
+interface ButtonProps extends LinkProps {
   children: ReactNode
   loading?: boolean
   disabled?: boolean
   stretch?: boolean
 }
 
-const BaseButtonLoader = () => (
+const ButtonLoader = () => (
   <div className="absolute aspect-square w-6 animate-spin rounded-full border-y-2 border-gray-50" />
 )
 
-function BaseButton({ children, loading = false, disabled = false, stretch = false, ...attrs }: BaseButtonProps) {
+export default function ButtonLink({
+  children,
+  loading = false,
+  disabled = false,
+  stretch = false,
+  ...attrs
+}: ButtonProps) {
   return (
     <Link
       {...attrs}
@@ -25,8 +30,7 @@ function BaseButton({ children, loading = false, disabled = false, stretch = fal
       )}
     >
       <div className={loading ? 'opacity-0' : ''}>{children}</div>
-      {loading && <BaseButtonLoader />}
+      {loading && <ButtonLoader />}
     </Link>
   )
 }
-export default memo(BaseButton)

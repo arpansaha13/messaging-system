@@ -1,8 +1,6 @@
 import { useParams } from 'next/navigation'
 import { type FormEvent, useRef, useState } from 'react'
-import BaseInput from '~base/BaseInput'
-import BaseButton from '~base/BaseButton'
-import BaseButtonLink from '~base/BaseButtonLink'
+import { Input, Button, ButtonLink } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
 import { setNotification, toggleNotification } from '~/store/features/notification/notification.slice'
 import { _verification } from '~/utils/api'
@@ -62,13 +60,13 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
   return (
     <form ref={formRef} className="space-y-6" onSubmit={verifyAccount}>
       <div className="pb-2">
-        <BaseInput id="otp" name="otp" type="text" required label="Otp" />
+        <Input id="otp" name="otp" type="text" required label="Otp" />
       </div>
 
       <div>
-        <BaseButton type="submit" loading={loading}>
+        <Button type="submit" loading={loading}>
           Submit
-        </BaseButton>
+        </Button>
       </div>
     </form>
   )
@@ -80,7 +78,7 @@ function VerifiedInfo() {
       <p className="mb-4 text-2xl font-bold">Verification successful!</p>
       <p className="mb-4 text-sm text-gray-600">Your account has been verified. You can now login from your account.</p>
 
-      <BaseButtonLink href="/auth/signin">Go to login</BaseButtonLink>
+      <ButtonLink href="/auth/signin">Go to login</ButtonLink>
     </div>
   )
 }

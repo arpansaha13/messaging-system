@@ -5,8 +5,7 @@ import { DialogTitle } from '@headlessui/react'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import BaseButton from '~base/BaseButton'
-import Modal from '~common/Modal'
+import { Button, Modal } from '~/components/ui'
 import Avatar from '~common/Avatar'
 import ChatListItemTemplate from '~/components/chat-list-item/Template'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
@@ -189,9 +188,9 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
               Delete
             </button>
 
-            <BaseButton secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
+            <Button secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
               Cancel
-            </BaseButton>
+            </Button>
           </div>
         </form>
       </div>

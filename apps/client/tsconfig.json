@@ -32,9 +32,6 @@
       "~api/*": [
         "./src/app/api/*"
       ],
-      "~base/*": [
-        "./src/components/base/*"
-      ],
       "~common/*": [
         "./src/components/common/*"
       ],

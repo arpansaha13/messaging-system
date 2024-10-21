@@ -1,4 +1,4 @@
-import BaseButtonLink from '~base/BaseButtonLink'
+import { ButtonLink } from '~/components/ui'
 
 export default function LinkExpired() {
   return (
@@ -6,7 +6,7 @@ export default function LinkExpired() {
       <p className="mb-4 text-2xl font-bold">This link has expired</p>
       <p className="mb-4 text-sm text-gray-600">You can still request a new account verification link.</p>
 
-      <BaseButtonLink href="/auth/resend-verification-link">Request verification</BaseButtonLink>
+      <ButtonLink href="/auth/resend-verification-link">Request verification</ButtonLink>
     </div>
   )
 }

@@ -1,14 +1,13 @@
-// Types
 import type { InputHTMLAttributes, RefObject } from 'react'
 
-interface BaseInputProps extends InputHTMLAttributes<HTMLInputElement> {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string
   label: string
   innerRef?: RefObject<HTMLInputElement>
   validationError?: string | null
 }
 
-export default function BaseInput(props: BaseInputProps) {
+export default function Input(props: Readonly<InputProps>) {
   const { label, innerRef, validationError = null, ...inputAttrs } = props
 
   return (

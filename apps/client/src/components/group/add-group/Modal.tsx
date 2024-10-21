@@ -1,7 +1,5 @@
 import { DialogTitle } from '@headlessui/react'
-import BaseInput from '~base/BaseInput'
-import BaseButton from '~base/BaseButton'
-import Modal from '~common/Modal'
+import { Input, Button, Modal } from '~/components/ui'
 import { useAddGroupMutation } from '~/store/features/groups/groups.api.slice'
 import getFormData from '~/utils/getFormData'
 import { useAddGroupContext } from './context'
@@ -29,16 +27,16 @@ export default function AddGroupModal() {
         </DialogTitle>
 
         <form className="mt-4" onSubmit={onSubmit}>
-          <BaseInput label="Choose a name for your group" id="name" name="name" type="text" required />
+          <Input label="Choose a name for your group" id="name" name="name" type="text" required />
 
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <BaseButton type="submit" className="sm:col-start-2">
+            <Button type="submit" className="sm:col-start-2">
               Create
-            </BaseButton>
+            </Button>
 
-            <BaseButton secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
+            <Button secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
               Cancel
-            </BaseButton>
+            </Button>
           </div>
         </form>
       </div>

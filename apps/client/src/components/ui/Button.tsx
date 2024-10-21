@@ -1,8 +1,7 @@
-import { memo } from 'react'
 import { classNames } from '@arpansaha13/utils'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 
-interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
   type?: 'button' | 'submit'
   secondary?: boolean
@@ -11,11 +10,11 @@ interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   stretch?: boolean
 }
 
-const BaseButtonLoader = () => (
+const ButtonLoader = () => (
   <div className="absolute aspect-square w-6 animate-spin rounded-full border-y-2 border-gray-50" />
 )
 
-function BaseButton(props: Readonly<BaseButtonProps>) {
+export default function Button(props: Readonly<ButtonProps>) {
   const {
     children,
     className,
@@ -43,8 +42,7 @@ function BaseButton(props: Readonly<BaseButtonProps>) {
       )}
     >
       <div className={loading ? 'opacity-0' : ''}>{children}</div>
-      {loading && <BaseButtonLoader />}
+      {loading && <ButtonLoader />}
     </button>
   )
 }
-export default memo(BaseButton)

@@ -4,8 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRef, useState, type FormEvent } from 'react'
 import { useMap } from 'react-use'
-import BaseInput from '~base/BaseInput'
-import BaseButton from '~base/BaseButton'
+import { Input, Button } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
 import { setNotification } from '~/store/features/notification/notification.slice'
 import { _signup } from '~/utils/api'
@@ -91,9 +90,9 @@ export default function SignUpPage() {
         <div className="bg-gray-100 px-4 py-8 shadow sm:rounded-lg sm:px-10 dark:bg-gray-900/90">
           <form ref={formRef} className="space-y-6" onSubmit={signUp}>
             <div className="grid grid-cols-2 gap-6 pb-2">
-              <BaseInput id="email" name="email" type="email" autoComplete="email" required label="Email address" />
+              <Input id="email" name="email" type="email" autoComplete="email" required label="Email address" />
 
-              <BaseInput
+              <Input
                 id="global-name"
                 name="globalName"
                 autoComplete="name"
@@ -103,7 +102,7 @@ export default function SignUpPage() {
                 label="Name"
               />
 
-              <BaseInput
+              <Input
                 id="password"
                 name="password"
                 type="password"
@@ -115,7 +114,7 @@ export default function SignUpPage() {
                 validationError={validationErrors.password}
               />
 
-              <BaseInput
+              <Input
                 id="confirm-password"
                 name="confirmPassword"
                 type="password"
@@ -129,9 +128,9 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <BaseButton type="submit" loading={loading}>
+              <Button type="submit" loading={loading}>
                 Sign up
-              </BaseButton>
+              </Button>
             </div>
 
             <div className="flex items-center justify-start">
