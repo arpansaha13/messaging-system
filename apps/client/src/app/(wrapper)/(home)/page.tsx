@@ -1,11 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { DialogTitle } from '@headlessui/react'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { Button, Modal } from '~/components/ui'
 import Avatar from '~common/Avatar'
 import ChatListItemTemplate from '~/components/chat-list-item/Template'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
@@ -18,6 +16,7 @@ import {
 } from '~/store/features/chat-list/chat-list.slice'
 import { clearMessages, deleteMessages } from '~/store/features/messages/message.slice'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
+import ConfirmModal from '~/components/common/ConfirmModal'
 
 type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>
 
@@ -150,12 +149,8 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
   }
 
   return (
-    <Modal open={open} setOpen={setOpen}>
-      <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
-          Delete chat
-        </DialogTitle>
-
+    <ConfirmModal open={open} setOpen={setOpen} heading="Delete chat" onSubmit={onSubmit} submitButtonText="Delete">
+      <>
         <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar
             src={payload?.receiver.dp}
@@ -178,19 +173,7 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
         <p className="mt-2 text-center">
           Are you sure you want to delete this chat? The messages can no longer be recovered.
         </p>
-
-        <form className="mt-4" onSubmit={onSubmit}>
-          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <Button type="submit" theme="danger" className="sm:col-start-2">
-              Delete
-            </Button>
-
-            <Button theme="secondary" className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
-    </Modal>
+      </>
+    </ConfirmModal>
   )
 }

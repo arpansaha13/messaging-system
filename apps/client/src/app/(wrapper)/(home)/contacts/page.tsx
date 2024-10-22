@@ -20,6 +20,7 @@ import { selectContacts, updateContactAlias, deleteContact } from '~/store/featu
 import { _getContacts } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
+import ConfirmModal from '~/components/common/ConfirmModal'
 
 interface ContactsProps {
   menuItems: IContextMenuItem[]
@@ -265,12 +266,8 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
   }
 
   return (
-    <Modal open={open} setOpen={setOpen}>
-      <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
-          Delete contact
-        </DialogTitle>
-
+    <ConfirmModal open={open} setOpen={setOpen} heading="Delete contact" onSubmit={onSubmit} submitButtonText="Delete">
+      <>
         <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
         </div>
@@ -286,19 +283,7 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
         </div>
 
         <p className="mt-2 text-center">Are you sure you want to delete this contact?</p>
-
-        <form className="mt-4" onSubmit={onSubmit}>
-          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <Button type="submit" theme="danger" className="sm:col-start-2">
-              Delete
-            </Button>
-
-            <Button theme="secondary" className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
-    </Modal>
+      </>
+    </ConfirmModal>
   )
 }
