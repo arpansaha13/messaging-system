@@ -181,14 +181,11 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
 
         <form className="mt-4" onSubmit={onSubmit}>
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <button
-              type="submit"
-              className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:col-start-2"
-            >
+            <Button type="submit" theme="danger" className="sm:col-start-2">
               Delete
-            </button>
+            </Button>
 
-            <Button secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
+            <Button theme="secondary" className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </div>

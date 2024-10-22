@@ -34,7 +34,7 @@ export default function AddGroupModal() {
               Create
             </Button>
 
-            <Button secondary className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
+            <Button theme="secondary" className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
               Cancel
             </Button>
           </div>
