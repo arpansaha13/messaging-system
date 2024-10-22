@@ -1,14 +1,13 @@
-import type { InputHTMLAttributes, RefObject } from 'react'
+import { type InputHTMLAttributes, forwardRef } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   id: string
   label: string
-  innerRef?: RefObject<HTMLInputElement>
   validationError?: string | null
 }
 
-export default function Input(props: Readonly<InputProps>) {
-  const { label, innerRef, validationError = null, ...inputAttrs } = props
+const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => {
+  const { label, validationError = null, ...inputAttrs } = props
 
   return (
     <div className="relative">
@@ -17,7 +16,7 @@ export default function Input(props: Readonly<InputProps>) {
       </label>
       <div className="mt-1">
         <input
-          ref={innerRef}
+          ref={ref}
           {...inputAttrs}
           className="text focus:border-brand-500 focus:ring-brand-500 block w-full appearance-none rounded-md border border-gray-300 bg-gray-50 px-3 py-2 placeholder-gray-400 shadow-sm focus:outline-none sm:text-sm dark:bg-gray-800/70"
         />
@@ -27,4 +26,7 @@ export default function Input(props: Readonly<InputProps>) {
       )}
     </div>
   )
-}
+})
+
+Input.displayName = 'Input'
+export default Input
