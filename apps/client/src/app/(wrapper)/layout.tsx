@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useDark } from '~/hooks/useDark'
 import { SocketProvider } from '~/providers/SocketProvider'
-import Notification from '~common/Notification'
+import { Notification } from '~/components/common'
 import Navbar from '~/components/Navbar'
 import { useAppDispatch, usePrefetch } from '~/store/hooks'
 import { initChatList } from '~/store/features/chat-list/chat-list.slice'
@@ -34,9 +34,7 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
     <SocketProvider>
       <div className="flex h-screen">
         <Notification />
-
         <Navbar />
-
         <main className="flex-grow">{children}</main>
       </div>
     </SocketProvider>

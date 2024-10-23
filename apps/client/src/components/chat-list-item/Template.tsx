@@ -1,11 +1,9 @@
 import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
-import Avatar from '~common/Avatar'
-import { ContextMenu, ContextMenuWrapper } from '~common/ContextMenu'
+import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
 import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { useAppSelector } from '~/store/hooks'
-
 import { selectActiveChat } from '~/store/features/chat-list/chat-list.slice'
 import isUnread from '~/utils/isUnread'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'

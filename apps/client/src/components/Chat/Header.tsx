@@ -1,5 +1,5 @@
 import { classNames } from '@arpansaha13/utils'
-import Avatar from '~common/Avatar'
+import { Avatar } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
 import { useAppSelector } from '~/store/hooks'
 import { selectTypingState } from '~/store/features/typing/typing.slice'

@@ -4,11 +4,7 @@ import { useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
-import Avatar from '~common/Avatar'
-import SearchBar from '~common/SearchBar'
-import StackedListItem from '~common/StackedListItem'
-import FormModal from '~/components/common/FormModal'
-import ConfirmModal from '~/components/common/ConfirmModal'
+import { Avatar, ConfirmModal, SearchBar, FormModal, StackedListItem } from '~/components/common'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
   setActiveChat,

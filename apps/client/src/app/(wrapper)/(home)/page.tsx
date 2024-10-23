@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import Avatar from '~common/Avatar'
+import { Avatar, ConfirmModal } from '~/components/common'
 import ChatListItemTemplate from '~/components/chat-list-item/Template'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
@@ -16,7 +16,6 @@ import {
 } from '~/store/features/chat-list/chat-list.slice'
 import { clearMessages, deleteMessages } from '~/store/features/messages/message.slice'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
-import ConfirmModal from '~/components/common/ConfirmModal'
 
 type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>
 

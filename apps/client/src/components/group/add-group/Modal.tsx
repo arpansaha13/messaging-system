@@ -1,5 +1,5 @@
 import { Input } from '~/components/ui'
-import FormModal from '~/components/common/FormModal'
+import { FormModal } from '~/components/common'
 import { useAddGroupMutation } from '~/store/features/groups/groups.api.slice'
 import getFormData from '~/utils/getFormData'
 import { useAddGroupContext } from './context'

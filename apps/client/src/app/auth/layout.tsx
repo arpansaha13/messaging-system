@@ -1,4 +1,4 @@
-import Notification from '~common/Notification'
+import { Notification } from '~/components/common'
 import type { ReactNode } from 'react'
 
 interface AuthLayoutProps {

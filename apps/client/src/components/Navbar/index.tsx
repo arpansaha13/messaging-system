@@ -10,8 +10,7 @@ import {
   UserGroupIcon,
 } from '@heroicons/react/24/outline'
 import { classNames } from '@arpansaha13/utils'
-import Avatar from '~common/Avatar'
-import Separator from '~common/Separator'
+import { Avatar, Separator } from '~/components/common'
 import AddGroup from '~/components/group/add-group'
 import { useOverflow } from '~/hooks/useOverflow'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'

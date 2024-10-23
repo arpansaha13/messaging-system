@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { classNames } from '@arpansaha13/utils'
 import { CheckIcon, PencilIcon } from '@heroicons/react/24/solid'
-import Avatar from '~common/Avatar'
+import { Avatar } from '~/components/common'
 import { useGetAuthUserQuery, usePatchAuthUserMutation } from '~/store/features/users/users.api.slice'
 
 interface FieldProps {

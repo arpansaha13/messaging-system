@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import { classNames } from '@arpansaha13/utils'
-import Separator from '~common/Separator'
+import { Separator } from '~/components/common'
 import { _logout } from '~/utils/api'
 
 interface SettingsLayoutProps {

@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useMemo } from 'react'
-import GroupAvatar from '~common/GroupAvatar'
+import { GroupAvatar } from '~/components/common'
 import ChannelListItemTemplate from '~/components/channel-list-item/Template'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
 import { useGetChannelsQuery, useGetGroupQuery } from '~/store/features/groups/groups.api.slice'

@@ -1,4 +1,4 @@
-import { memo, useRef } from 'react'
+import { useRef } from 'react'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/solid'
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -7,7 +7,7 @@ interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
   setValue: React.Dispatch<React.SetStateAction<string>>
 }
 
-const SearchBar = ({ id, value, setValue, ...attrs }: SearchBarProps) => {
+export default function SearchBar({ id, value, setValue, ...attrs }: SearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   function clear() {
@@ -49,4 +49,3 @@ const SearchBar = ({ id, value, setValue, ...attrs }: SearchBarProps) => {
     </>
   )
 }
-export default memo(SearchBar)
