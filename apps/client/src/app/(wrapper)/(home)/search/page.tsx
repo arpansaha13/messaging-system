@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useDebounce } from 'react-use'
-import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { Input, Button, Modal } from '~/components/ui'
+import { Input } from '~/components/ui'
 import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
+import FormModal from '~common/FormModal'
 import StackedListItem from '~common/StackedListItem'
 import GlobalName from '~/components/GlobalName'
 import { useAppDispatch } from '~/store/hooks'
@@ -18,7 +18,7 @@ import {
 import { insertContact } from '~/store/features/contacts/contact.slice'
 import { useLazySearchUsersQuery } from '~/store/features/users/users.api.slice'
 import getFormData from '~/utils/getFormData'
-import type { IContact, IContextMenuItem, IUserSearchResult } from '@shared/types/client'
+import type { IContextMenuItem, IUserSearchResult } from '@shared/types/client'
 
 interface SearchResultsProps {
   results: IUserSearchResult[]
@@ -30,7 +30,7 @@ interface AddContactModalProps {
   open: boolean
   user: IUserSearchResult | null
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-  updateSearchResults: (newContact: IContact) => void
+  refetchSearchResults: () => Promise<any>
 }
 
 export default function Page() {
@@ -74,14 +74,8 @@ export default function Page() {
     )
   }
 
-  function updateSearchResults(newContact: IContact) {
-    const item = searchResults!.find(u => u.id === newContact.userId)
-    if (item) {
-      item.contact = {
-        id: newContact.contactId,
-        alias: newContact.alias,
-      }
-    }
+  async function refetchSearchResults() {
+    return triggerSearch(value)
   }
 
   return (
@@ -96,7 +90,7 @@ export default function Page() {
         open={addContactModalOpen}
         user={modalPayload}
         setOpen={setAddContactModalOpen}
-        updateSearchResults={updateSearchResults}
+        refetchSearchResults={refetchSearchResults}
       />
     </div>
   )
@@ -121,33 +115,32 @@ function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResul
 }
 
 function AddContactModal(props: Readonly<AddContactModalProps>) {
-  const { open, user, setOpen, updateSearchResults } = props
+  const { open, user, setOpen, refetchSearchResults } = props
 
   const dispatch = useAppDispatch()
-  const [loading, setLoading] = useState(false)
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setLoading(true)
 
     const formData = getFormData(e.currentTarget)
 
     const newContact = await dispatch(insertContact({ userToAdd: user!, alias: formData.new_alias as string })).unwrap()
     dispatch(upsertChatListItemContact({ receiverId: user!.id, newContact }))
     dispatch(upsertActiveChatContact({ receiverId: user!.id, newContact }))
-    updateSearchResults(newContact)
+    await refetchSearchResults()
 
-    setLoading(false)
     setOpen(false)
   }
 
   return (
-    <Modal open={open} setOpen={setOpen}>
-      <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
-          Add to Contacts
-        </DialogTitle>
-
+    <FormModal
+      open={open}
+      setOpen={setOpen}
+      onSubmit={onSubmit}
+      heading="Add to Contacts"
+      submitButtonText="Add contact"
+    >
+      <>
         <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar src={user?.dp} alt={`display picture of ${user?.globalName}`} width={6} height={6} />
         </div>
@@ -164,26 +157,15 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
           <p className="text-center text-sm text-gray-500 dark:text-gray-300">{user?.bio}</p>
         </div>
 
-        <form className="mt-4" onSubmit={onSubmit}>
-          <Input
-            label="By what name would you like to save this contact?"
-            id="new_alias"
-            name="new_alias"
-            type="text"
-            required
-          />
-
-          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <Button type="submit" loading={loading} className="sm:col-start-2">
-              Add contact
-            </Button>
-
-            <Button theme="secondary" className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
-    </Modal>
+        <Input
+          label="By what name would you like to save this contact?"
+          id="new_alias"
+          name="new_alias"
+          type="text"
+          required
+          className="mt-4"
+        />
+      </>
+    </FormModal>
   )
 }

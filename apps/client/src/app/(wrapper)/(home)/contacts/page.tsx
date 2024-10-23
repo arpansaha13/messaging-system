@@ -2,12 +2,13 @@
 
 import { useRef, useState } from 'react'
 import { useDebounce } from 'react-use'
-import { DialogTitle } from '@headlessui/react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { Input, Button, Modal } from '~/components/ui'
+import { Input } from '~/components/ui'
 import Avatar from '~common/Avatar'
 import SearchBar from '~common/SearchBar'
 import StackedListItem from '~common/StackedListItem'
+import FormModal from '~/components/common/FormModal'
+import ConfirmModal from '~/components/common/ConfirmModal'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
   setActiveChat,
@@ -20,7 +21,6 @@ import { selectContacts, updateContactAlias, deleteContact } from '~/store/featu
 import { _getContacts } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
-import ConfirmModal from '~/components/common/ConfirmModal'
 
 interface ContactsProps {
   menuItems: IContextMenuItem[]
@@ -205,13 +205,15 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
   }
 
   return (
-    <Modal open={open} setOpen={setOpen}>
-      <div className="mt-3 sm:mt-5">
-        <DialogTitle as="h3" className="text-center text-lg font-medium leading-6 text-gray-900 dark:text-white">
-          Edit contact alias
-        </DialogTitle>
-
-        <div className="mx-auto mt-4 flex justify-center text-center">
+    <FormModal
+      open={open}
+      setOpen={setOpen}
+      onSubmit={onSubmit}
+      heading="Edit contact alias"
+      submitButtonText="Save new alias"
+    >
+      <>
+        <div className="mx-auto flex justify-center text-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
         </div>
 
@@ -225,28 +227,17 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
           <p className="text-center text-sm text-gray-500 dark:text-gray-300">{contact?.bio}</p>
         </div>
 
-        <form className="mt-4" onSubmit={onSubmit}>
-          <Input
-            label="By what name would you like to save this contact?"
-            id="new_alias"
-            name="new_alias"
-            type="text"
-            required
-            defaultValue={contact?.alias}
-          />
-
-          <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <Button type="submit" className="sm:col-start-2">
-              Save new alias
-            </Button>
-
-            <Button theme="secondary" className="mt-3 sm:col-start-1 sm:mt-0" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </div>
-    </Modal>
+        <Input
+          label="By what name would you like to save this contact?"
+          id="new_alias"
+          name="new_alias"
+          type="text"
+          required
+          defaultValue={contact?.alias}
+          className="mt-4"
+        />
+      </>
+    </FormModal>
   )
 }
 
@@ -255,10 +246,10 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
 
   const dispatch = useAppDispatch()
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    dispatch(deleteContact(contact!))
+    await dispatch(deleteContact(contact!))
     dispatch(deleteChatListItemContact(contact!.userId))
     dispatch(deleteActiveChatContact(contact!.userId))
 
