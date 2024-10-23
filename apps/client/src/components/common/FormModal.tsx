@@ -1,3 +1,5 @@
+'use client'
+
 import { DialogTitle } from '@headlessui/react'
 import { useState } from 'react'
 import { Button, Modal } from '~/components/ui'

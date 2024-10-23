@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, Fragment, useContext, useRef, useState } from 'react'
 import { useClickAway } from 'react-use'
 import { FocusTrap, Menu, Transition } from '@headlessui/react'
