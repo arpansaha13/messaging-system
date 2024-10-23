@@ -12,8 +12,8 @@ import {
   upsertActiveChatContact,
   upsertChatListItemContact,
 } from '~/store/features/chat-list/chat-list.slice'
-import { insertContact } from '~/store/features/contacts/contact.slice'
 import { useLazySearchUsersQuery } from '~/store/features/users/users.api.slice'
+import { useAddContactMutation } from '~/store/features/contacts/contact.api.slice'
 import getFormData from '~/utils/getFormData'
 import type { IContextMenuItem, IUserSearchResult } from '@shared/types/client'
 
@@ -115,12 +115,29 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
   const { open, user, setOpen, refetchSearchResults } = props
 
   const dispatch = useAppDispatch()
+  const [addContact] = useAddContactMutation()
 
   async function addToContacts(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData(e.currentTarget)
-    const newContact = await dispatch(insertContact({ userToAdd: user!, alias: formData.new_alias as string })).unwrap()
-    dispatch(upsertChatListItemContact({ receiverId: user!.id, newContact }))
-    dispatch(upsertActiveChatContact({ receiverId: user!.id, newContact }))
+    const { data: newContact } = await addContact({ userIdToAdd: user!.id, alias: formData.new_alias as string })
+    dispatch(
+      upsertChatListItemContact({
+        receiverId: user!.id,
+        newContact: {
+          alias: newContact!.alias,
+          contactId: newContact!.id,
+        },
+      }),
+    )
+    dispatch(
+      upsertActiveChatContact({
+        receiverId: user!.id,
+        newContact: {
+          alias: newContact!.alias,
+          contactId: newContact!.id,
+        },
+      }),
+    )
     await refetchSearchResults()
     setOpen(false)
   }

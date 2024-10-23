@@ -1,5 +1,5 @@
 export { _login, _signup, _verification, _logout } from './auth'
-export { _getContacts, _postContacts, _patchContacts, _deleteContacts } from './contacts'
+export { _getContacts } from './contacts'
 export { _getMessages } from './messages'
 export {
   _getChats,

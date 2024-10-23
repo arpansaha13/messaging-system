@@ -5,7 +5,7 @@ import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
 import { Avatar, ConfirmModal, SearchBar, FormModal, StackedListItem } from '~/components/common'
-import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { useAppDispatch } from '~/store/hooks'
 import {
   setActiveChat,
   upsertChatListItemContact,
@@ -13,7 +13,11 @@ import {
   deleteChatListItemContact,
   deleteActiveChatContact,
 } from '~/store/features/chat-list/chat-list.slice'
-import { selectContacts, updateContactAlias, deleteContact } from '~/store/features/contacts/contact.slice'
+import {
+  useGetContactsQuery,
+  useDeleteContactMutation,
+  usePatchContactAliasMutation,
+} from '~/store/features/contacts/contact.api.slice'
 import { _getContacts } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
@@ -127,7 +131,11 @@ export default function Page() {
 }
 
 function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
-  const contacts = useAppSelector(selectContacts)
+  const { data: contacts, isSuccess } = useGetContactsQuery()
+
+  if (!isSuccess) {
+    return null
+  }
 
   return Object.keys(contacts).map(letter => (
     <div key={letter} className="relative">
@@ -177,6 +185,7 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
   const { open, contact, setOpen } = props
 
   const dispatch = useAppDispatch()
+  const [patchContactAlias] = usePatchContactAliasMutation()
 
   async function editContactAlias(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData(e.currentTarget)
@@ -191,7 +200,7 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
       alias: formData.new_alias as string,
     }
 
-    await dispatch(updateContactAlias({ contact: contact!, newAlias: formData.new_alias as string }))
+    await patchContactAlias({ contactId: contact!.contactId, newAlias: formData.new_alias as string })
     dispatch(upsertChatListItemContact({ receiverId: contact!.userId, newContact }))
     dispatch(upsertActiveChatContact({ receiverId: contact!.userId, newContact }))
 
@@ -239,9 +248,10 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
   const { open, contact, setOpen } = props
 
   const dispatch = useAppDispatch()
+  const [deleteContact] = useDeleteContactMutation()
 
   async function onSubmit() {
-    await dispatch(deleteContact(contact!))
+    await deleteContact(contact!.contactId)
     dispatch(deleteChatListItemContact(contact!.userId))
     dispatch(deleteActiveChatContact(contact!.userId))
     setOpen(false)

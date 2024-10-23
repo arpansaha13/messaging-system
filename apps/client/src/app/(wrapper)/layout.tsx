@@ -8,7 +8,6 @@ import { Notification } from '~/components/common'
 import Navbar from '~/components/Navbar'
 import { useAppDispatch, usePrefetch } from '~/store/hooks'
 import { initChatList } from '~/store/features/chat-list/chat-list.slice'
-import { initContactStore } from '~/store/features/contacts/contact.slice'
 
 interface LayoutWrapperProps {
   children: React.ReactNode
@@ -18,12 +17,13 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   useDark()
   usePrefetch('getAuthUser', undefined)
   usePrefetch('getGroups', undefined)
+  usePrefetch('getContacts', undefined)
 
   const dispatch = useAppDispatch()
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    Promise.all([dispatch(initChatList()), dispatch(initContactStore())]).then(() => setLoading(false))
+    dispatch(initChatList()).then(() => setLoading(false))
   }, [dispatch])
 
   if (loading) {
