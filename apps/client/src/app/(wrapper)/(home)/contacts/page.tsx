@@ -92,7 +92,7 @@ export default function Page() {
     dispatch(
       setActiveChat({
         contact: {
-          id: contact.contactId,
+          id: contact.id,
           alias: contact.alias,
         },
         receiver: {
@@ -147,7 +147,7 @@ function Contacts({ menuItems, handleClick }: Readonly<ContactsProps>) {
       <ul className="space-y-1">
         {contacts[letter].map(contact => (
           <StackedListItem
-            key={contact.contactId}
+            key={contact.id}
             image={contact.dp}
             title={contact.alias}
             subtitle={`${contact.globalName} • @${contact.username}`}
@@ -167,7 +167,7 @@ function SearchResults({ results, menuItems, handleClick }: Readonly<SearchResul
     <ul className="space-y-1 py-3">
       {results.map(contact => (
         <StackedListItem
-          key={contact.contactId}
+          key={contact.id}
           image={contact.dp}
           title={contact.alias}
           subtitle={`${contact.globalName} • @${contact.username}`}
@@ -196,11 +196,11 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
     }
 
     const newContact = {
-      contactId: contact!.contactId,
+      id: contact!.id,
       alias: formData.new_alias as string,
     }
 
-    await patchContactAlias({ contactId: contact!.contactId, newAlias: formData.new_alias as string })
+    await patchContactAlias({ contactId: contact!.id, newAlias: formData.new_alias as string })
     dispatch(upsertChatListItemContact({ receiverId: contact!.userId, newContact }))
     dispatch(upsertActiveChatContact({ receiverId: contact!.userId, newContact }))
 
@@ -251,7 +251,7 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
   const [deleteContact] = useDeleteContactMutation()
 
   async function onSubmit() {
-    await deleteContact(contact!.contactId)
+    await deleteContact(contact!.id)
     dispatch(deleteChatListItemContact(contact!.userId))
     dispatch(deleteActiveChatContact(contact!.userId))
     setOpen(false)

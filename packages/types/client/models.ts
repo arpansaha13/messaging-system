@@ -38,7 +38,7 @@ export interface IUserSearchResult extends IUser {
 }
 
 export interface IContact {
-  contactId: number
+  id: number
   userId: number
   alias: string
   bio: string

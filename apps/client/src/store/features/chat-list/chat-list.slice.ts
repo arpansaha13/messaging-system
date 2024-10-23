@@ -2,7 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { _archiveChat, _getChats, _pinChat, _unarchiveChat, _unpinChat } from '~/utils/api'
 import { MessageStatus } from '@shared/types'
-import type { IChatListItem } from '@shared/types/client'
+import type { IChatListItem, IContact, IUser } from '@shared/types/client'
 
 interface ChatListSliceType {
   unarchived: IChatListItem[]
@@ -30,14 +30,14 @@ export const chatListSlice = createSlice({
     },
     upsertActiveChatContact: (
       state,
-      action: PayloadAction<{ receiverId: number; newContact: { contactId: number; alias: string } }>,
+      action: PayloadAction<{ receiverId: IUser['id']; newContact: Pick<IContact, 'id' | 'alias'> }>,
     ) => {
       if (isNullOrUndefined(state.activeChat)) return
       if (state.activeChat.receiver.id !== action.payload.receiverId) return
 
       if (isNullOrUndefined(state.activeChat.contact)) {
         state.activeChat.contact = {
-          id: action.payload.newContact.contactId,
+          id: action.payload.newContact.id,
           alias: action.payload.newContact.alias,
         }
       } else {
@@ -63,7 +63,7 @@ export const chatListSlice = createSlice({
     },
     upsertChatListItemContact: (
       state,
-      action: PayloadAction<{ receiverId: number; newContact: { contactId: number; alias: string } }>,
+      action: PayloadAction<{ receiverId: IUser['id']; newContact: Pick<IContact, 'id' | 'alias'> }>,
     ) => {
       const { receiverId, newContact } = action.payload
       let idx = findRoomIndex(receiverId, state.unarchived)
@@ -78,7 +78,7 @@ export const chatListSlice = createSlice({
       }
 
       if (isNullOrUndefined(convo.contact)) {
-        convo.contact = { id: newContact.contactId, alias: newContact.alias }
+        convo.contact = { id: newContact.id, alias: newContact.alias }
       } else {
         convo.contact.alias = newContact.alias
       }

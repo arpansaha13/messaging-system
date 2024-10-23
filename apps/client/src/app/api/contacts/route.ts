@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       res,
       body.map<IContact>(contact => ({
         alias: contact.alias,
-        contactId: contact.id,
+        id: contact.id,
         userId: contact.userInContact.id,
         bio: contact.userInContact.bio,
         dp: contact.userInContact.dp,
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
     newContacts[letter].push({
       alias: contactResItem.alias,
-      contactId: contactResItem.id,
+      id: contactResItem.id,
       userId: contactResItem.userInContact.id,
       bio: contactResItem.userInContact.bio,
       dp: contactResItem.userInContact.dp,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   const body = await res.json()
 
   const newBody: IContact = {
-    contactId: body.id,
+    id: body.id,
     alias: body.alias,
     userId: body.userInContact.id,
     dp: body.userInContact.dp,

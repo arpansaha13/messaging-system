@@ -30,7 +30,7 @@ export const contactsApiSlice = createApi({
       }),
       invalidatesTags: [{ type: CONTACTS_API_TAG }],
     }),
-    patchContactAlias: build.mutation<void, { contactId: IContact['contactId']; newAlias: IContact['alias'] }>({
+    patchContactAlias: build.mutation<void, { contactId: IContact['id']; newAlias: IContact['alias'] }>({
       query: ({ contactId, newAlias }) => ({
         url: `contacts/${contactId}`,
         method: 'PATCH',
@@ -38,7 +38,7 @@ export const contactsApiSlice = createApi({
       }),
       invalidatesTags: [{ type: CONTACTS_API_TAG }],
     }),
-    deleteContact: build.mutation<void, IContact['contactId']>({
+    deleteContact: build.mutation<void, IContact['id']>({
       query: contactId => ({
         url: `contacts/${contactId}`,
         method: 'DELETE',
@@ -47,8 +47,6 @@ export const contactsApiSlice = createApi({
     }),
   }),
 })
-
-const sortCompareFn = (a: Readonly<IContact>, b: Readonly<IContact>) => (a.alias < b.alias ? 1 : -1)
 
 export const { useGetContactsQuery, useAddContactMutation, usePatchContactAliasMutation, useDeleteContactMutation } =
   contactsApiSlice

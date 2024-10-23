@@ -120,24 +120,8 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
   async function addToContacts(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData(e.currentTarget)
     const { data: newContact } = await addContact({ userIdToAdd: user!.id, alias: formData.new_alias as string })
-    dispatch(
-      upsertChatListItemContact({
-        receiverId: user!.id,
-        newContact: {
-          alias: newContact!.alias,
-          contactId: newContact!.id,
-        },
-      }),
-    )
-    dispatch(
-      upsertActiveChatContact({
-        receiverId: user!.id,
-        newContact: {
-          alias: newContact!.alias,
-          contactId: newContact!.id,
-        },
-      }),
-    )
+    dispatch(upsertChatListItemContact({ receiverId: user!.id, newContact: newContact! }))
+    dispatch(upsertActiveChatContact({ receiverId: user!.id, newContact: newContact! }))
     await refetchSearchResults()
     setOpen(false)
   }
