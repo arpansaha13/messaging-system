@@ -132,9 +132,7 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
   const dispatch = useAppDispatch()
   const activeChat = useAppSelector(state => state.chatList.activeChat)
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
+  function onSubmit() {
     if (isNullOrUndefined(payload)) return
 
     dispatch(deleteMessages(payload.receiver.id))
@@ -149,7 +147,7 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
   }
 
   return (
-    <ConfirmModal open={open} setOpen={setOpen} heading="Delete chat" onSubmit={onSubmit} submitButtonText="Delete">
+    <ConfirmModal open={open} setOpen={setOpen} heading="Delete chat" action={onSubmit} submitButtonText="Delete">
       <>
         <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar

@@ -119,16 +119,12 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
 
   const dispatch = useAppDispatch()
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
+  async function addToContacts(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData(e.currentTarget)
-
     const newContact = await dispatch(insertContact({ userToAdd: user!, alias: formData.new_alias as string })).unwrap()
     dispatch(upsertChatListItemContact({ receiverId: user!.id, newContact }))
     dispatch(upsertActiveChatContact({ receiverId: user!.id, newContact }))
     await refetchSearchResults()
-
     setOpen(false)
   }
 
@@ -136,7 +132,7 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
     <FormModal
       open={open}
       setOpen={setOpen}
-      onSubmit={onSubmit}
+      action={addToContacts}
       heading="Add to Contacts"
       submitButtonText="Add contact"
     >

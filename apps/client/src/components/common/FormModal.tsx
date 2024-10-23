@@ -1,4 +1,5 @@
 import { DialogTitle } from '@headlessui/react'
+import { useState } from 'react'
 import { Button, Modal } from '~/components/ui'
 
 interface FormModalProps {
@@ -7,11 +8,20 @@ interface FormModalProps {
   submitButtonText: string
   children: React.ReactNode
   setOpen: React.Dispatch<React.SetStateAction<boolean>>
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
+  action: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>
 }
 
 export default function FormModal(props: Readonly<FormModalProps>) {
-  const { heading, submitButtonText, open, setOpen, onSubmit, children } = props
+  const { heading, submitButtonText, open, setOpen, action, children } = props
+
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    await action(e)
+    setLoading(false)
+  }
 
   return (
     <Modal open={open} setOpen={setOpen}>
@@ -24,7 +34,7 @@ export default function FormModal(props: Readonly<FormModalProps>) {
           {children}
 
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <Button type="submit" className="sm:col-start-2">
+            <Button type="submit" loading={loading} className="sm:col-start-2">
               {submitButtonText}
             </Button>
 

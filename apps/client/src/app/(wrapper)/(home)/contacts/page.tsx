@@ -182,9 +182,7 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
 
   const dispatch = useAppDispatch()
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
+  async function editContactAlias(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData(e.currentTarget)
 
     if (contact!.alias === formData.new_alias) {
@@ -197,7 +195,7 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
       alias: formData.new_alias as string,
     }
 
-    dispatch(updateContactAlias({ contact: contact!, newAlias: formData.new_alias as string }))
+    await dispatch(updateContactAlias({ contact: contact!, newAlias: formData.new_alias as string }))
     dispatch(upsertChatListItemContact({ receiverId: contact!.userId, newContact }))
     dispatch(upsertActiveChatContact({ receiverId: contact!.userId, newContact }))
 
@@ -208,7 +206,7 @@ function EditAliasModal(props: Readonly<EditAliasModalProps>) {
     <FormModal
       open={open}
       setOpen={setOpen}
-      onSubmit={onSubmit}
+      action={editContactAlias}
       heading="Edit contact alias"
       submitButtonText="Save new alias"
     >
@@ -246,18 +244,15 @@ function DeleteContactModal(props: Readonly<DeleteContactModalProps>) {
 
   const dispatch = useAppDispatch()
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-
+  async function onSubmit() {
     await dispatch(deleteContact(contact!))
     dispatch(deleteChatListItemContact(contact!.userId))
     dispatch(deleteActiveChatContact(contact!.userId))
-
     setOpen(false)
   }
 
   return (
-    <ConfirmModal open={open} setOpen={setOpen} heading="Delete contact" onSubmit={onSubmit} submitButtonText="Delete">
+    <ConfirmModal open={open} setOpen={setOpen} heading="Delete contact" action={onSubmit} submitButtonText="Delete">
       <>
         <div className="mx-auto mt-4 flex justify-center text-center">
           <Avatar src={contact?.dp} alt={`display picture of ${contact?.globalName}`} width={6} height={6} />
