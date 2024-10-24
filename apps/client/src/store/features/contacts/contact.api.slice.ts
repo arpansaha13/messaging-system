@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { isNullOrUndefined } from '@arpansaha13/utils'
+import _fetch from '~/utils/api/_fetch'
 import { CONTACTS_API_TAG, FETCH_BASE_URL } from '../constants'
 import type { IContact, IUser } from '@shared/types/client'
 
@@ -45,8 +45,26 @@ export const contactsApiSlice = createApi({
       }),
       invalidatesTags: [{ type: CONTACTS_API_TAG }],
     }),
+    searchContacts: build.query<IContact[] | null, string>({
+      queryFn: async query => {
+        try {
+          let data = null
+          if (query) {
+            data = await _fetch(`contacts?search=${query}`)
+          }
+          return { data }
+        } catch (error: any) {
+          return { error }
+        }
+      },
+    }),
   }),
 })
 
-export const { useGetContactsQuery, useAddContactMutation, usePatchContactAliasMutation, useDeleteContactMutation } =
-  contactsApiSlice
+export const {
+  useGetContactsQuery,
+  useAddContactMutation,
+  useDeleteContactMutation,
+  useLazySearchContactsQuery,
+  usePatchContactAliasMutation,
+} = contactsApiSlice

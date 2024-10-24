@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
@@ -16,9 +16,9 @@ import {
 import {
   useGetContactsQuery,
   useDeleteContactMutation,
+  useLazySearchContactsQuery,
   usePatchContactAliasMutation,
 } from '~/store/features/contacts/contact.api.slice'
-import { _getContacts } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
 
@@ -47,13 +47,11 @@ interface DeleteContactModalProps {
 
 export default function Page() {
   const dispatch = useAppDispatch()
-
-  const isFirstRun = useRef(true)
   const [value, setValue] = useState('')
   const [editAliasModalOpen, setEditAliasModalOpen] = useState(false)
   const [deleteContactModalOpen, setDeleteContactModalOpen] = useState(false)
   const [modalPayload, setModalPayload] = useState<IContact | null>(null)
-  const [searchResults, setSearchResults] = useState<IContact[] | null>(null)
+  const [triggerSearch, { data: searchResults }] = useLazySearchContactsQuery()
 
   const menuItems: IContextMenuItem[] = [
     {
@@ -74,15 +72,7 @@ export default function Page() {
 
   useDebounce(
     () => {
-      if (isFirstRun.current) {
-        isFirstRun.current = false
-        return
-      }
-      if (value === '') {
-        setSearchResults(null)
-        return
-      }
-      _getContacts(value).then(setSearchResults)
+      triggerSearch(value)
     },
     1000,
     [value],
