@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
-import { Avatar, ConfirmModal, SearchBar, FormModal, StackedListItem } from '~/components/common'
+import { Avatar, ConfirmModal, SearchBar, FormModal, StackedListItem, StackedListItemLink } from '~/components/common'
 import { useAppDispatch } from '~/store/hooks'
 import { upsertChatListItemContact, deleteChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
 import {
@@ -111,16 +111,15 @@ function Contacts({ menuItems }: Readonly<ContactsProps>) {
 
       <ul className="space-y-1">
         {contacts[letter].map(contact => (
-          <StackedListItem
-            href={{ query: { to: contact.userId } }}
-            key={contact.id}
-            image={contact.dp}
-            title={contact.alias}
-            subtitle={`${contact.globalName} • @${contact.username}`}
-            text={contact.bio}
-            menuItems={menuItems}
-            payload={contact}
-          />
+          <StackedListItem key={contact.id} menuItems={menuItems} payload={contact}>
+            <StackedListItemLink
+              href={{ query: { to: contact.userId } }}
+              image={contact.dp}
+              title={contact.alias}
+              subtitle={`${contact.globalName} • @${contact.username}`}
+              text={contact.bio}
+            />
+          </StackedListItem>
         ))}
       </ul>
     </div>
@@ -131,16 +130,15 @@ function SearchResults({ results, menuItems }: Readonly<SearchResultsProps>) {
   return (
     <ul className="space-y-1 py-3">
       {results.map(contact => (
-        <StackedListItem
-          key={contact.id}
-          href={{ query: { to: contact.userId } }}
-          image={contact.dp}
-          title={contact.alias}
-          subtitle={`${contact.globalName} • @${contact.username}`}
-          text={contact.bio}
-          menuItems={menuItems}
-          payload={contact}
-        />
+        <StackedListItem key={contact.id} menuItems={menuItems} payload={contact}>
+          <StackedListItemLink
+            href={{ query: { to: contact.userId } }}
+            image={contact.dp}
+            title={contact.alias}
+            subtitle={`${contact.globalName} • @${contact.username}`}
+            text={contact.bio}
+          />
+        </StackedListItem>
       ))}
     </ul>
   )

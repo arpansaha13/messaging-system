@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
-import { Avatar, SearchBar, FormModal, StackedListItem } from '~/components/common'
+import { Avatar, SearchBar, FormModal, StackedListItem, StackedListItemLink } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
 import { useAppDispatch } from '~/store/hooks'
 import { upsertChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
@@ -75,15 +75,15 @@ function SearchResults({ results, menuItems }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(user => (
-        <StackedListItem
-          key={user.id}
-          href={{ query: { to: user.id } }}
-          image={user.dp}
-          title={user.contact ? user.contact.alias : <GlobalName name={user.globalName} />}
-          subtitle={user.contact ? `${user.globalName} • @${user.username}` : `@${user.username}`}
-          text={user.bio}
-          {...(isNullOrUndefined(user.contact) && { menuItems, payload: user })}
-        />
+        <StackedListItem key={user.id} {...(isNullOrUndefined(user.contact) && { menuItems, payload: user })}>
+          <StackedListItemLink
+            href={{ query: { to: user.id } }}
+            image={user.dp}
+            title={user.contact ? user.contact.alias : <GlobalName name={user.globalName} />}
+            subtitle={user.contact ? `${user.globalName} • @${user.username}` : `@${user.username}`}
+            text={user.bio}
+          />
+        </StackedListItem>
       ))}
     </ul>
   )

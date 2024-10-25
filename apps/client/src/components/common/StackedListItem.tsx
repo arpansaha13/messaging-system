@@ -1,15 +1,12 @@
-import Link, { LinkProps } from 'next/link'
+import Link, { type LinkProps } from 'next/link'
+import { cloneElement } from 'react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
 import type { IContextMenuItem } from '@shared/types/client'
 
 interface StackedListItemProps {
-  image: string | null
-  title: string | React.ReactNode
-  subtitle: string | React.ReactNode
-  text: string
-  href: LinkProps['href']
   menuItems?: IContextMenuItem[]
+  children: React.ReactElement<StackedListItemLinkProps>
 
   /**
    * This payload will be passed to the menuItem.onClick method
@@ -18,28 +15,27 @@ interface StackedListItemProps {
   payload?: any
 }
 
-interface StackedListItemLinkProps
-  extends Pick<StackedListItemProps, 'image' | 'title' | 'subtitle' | 'text' | 'href'> {
+interface StackedListItemLinkProps {
+  text: string
+  image: string | null
+  href: LinkProps['href']
+  title: string | React.ReactNode
+  subtitle: string | React.ReactNode
   onContextMenu?: (e: React.MouseEvent) => void
 }
 
-export default function StackedListItem(props: Readonly<StackedListItemProps>) {
-  const { menuItems, payload, ...remainingProps } = props
+export function StackedListItem(props: Readonly<StackedListItemProps>) {
+  const { menuItems, payload, children } = props
 
   if (isNullOrUndefined(menuItems)) {
-    return (
-      <li>
-        <StackedListItemLink {...remainingProps} />
-      </li>
-    )
+    return <li>{children}</li>
   }
 
   return (
     <ContextMenuWrapper>
       {({ onContextMenu }) => (
         <li className="relative">
-          <StackedListItemLink {...remainingProps} onContextMenu={onContextMenu} />
-
+          {cloneElement(children, { onContextMenu })}
           <ContextMenu payload={payload} items={menuItems} />
         </li>
       )}
@@ -47,7 +43,7 @@ export default function StackedListItem(props: Readonly<StackedListItemProps>) {
   )
 }
 
-function StackedListItemLink(props: Readonly<StackedListItemLinkProps>) {
+export function StackedListItemLink(props: Readonly<StackedListItemLinkProps>) {
   const { image, title, subtitle, text, href, onContextMenu } = props
 
   return (
