@@ -142,12 +142,7 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
     <ConfirmModal open={open} setOpen={setOpen} heading="Delete chat" action={onSubmit} submitButtonText="Delete">
       <>
         <div className="mx-auto mt-4 flex justify-center text-center">
-          <Avatar
-            src={payload?.receiver.dp}
-            alt={`display picture of ${payload?.receiver.globalName}`}
-            width={6}
-            height={6}
-          />
+          <Avatar src={payload?.receiver.dp} alt={`display picture of ${payload?.receiver.globalName}`} size={6} />
         </div>
 
         <div className="mt-2">

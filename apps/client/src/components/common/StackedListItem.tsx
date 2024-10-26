@@ -52,7 +52,7 @@ export function StackedListItemLink(props: Readonly<StackedListItemLinkProps>) {
       className="flex w-full items-center rounded px-3 text-left transition-colors hover:bg-gray-200/80 dark:hover:bg-gray-600/40"
       onContextMenu={onContextMenu}
     >
-      <Avatar src={image} />
+      <Avatar src={image} size={3} />
 
       <div className="ml-4 w-full py-3">
         <div className="flex justify-between">

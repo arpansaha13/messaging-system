@@ -114,7 +114,7 @@ function AddContactModal(props: Readonly<AddContactModalProps>) {
     >
       <>
         <div className="mx-auto mt-4 flex justify-center text-center">
-          <Avatar src={user?.dp} alt={`display picture of ${user?.globalName}`} width={6} height={6} />
+          <Avatar src={user?.dp} alt={`display picture of ${user?.globalName}`} size={6} />
         </div>
 
         {user && (

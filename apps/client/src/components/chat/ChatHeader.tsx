@@ -12,7 +12,7 @@ const ChatHeader = (props: Readonly<ChatHeaderProps>) => {
 
   return (
     <div className="flex items-center space-x-3 text-gray-900 dark:text-gray-400">
-      <Avatar src={dp} height={2.5} width={2.5} />
+      <Avatar src={dp} size={2.5} />
 
       <div>
         <p className="font-semibold text-gray-800 dark:text-gray-50">{name}</p>

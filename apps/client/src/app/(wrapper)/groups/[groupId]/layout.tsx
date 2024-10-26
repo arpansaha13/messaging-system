@@ -24,7 +24,7 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
       <WindowPanel className="w-[26rem]">
         <div className="bg-gray-50 p-4 shadow dark:bg-gray-800">
           <div className="mt-8 flex items-center gap-4">
-            <GroupAvatar src={null} alt="" />
+            <GroupAvatar src={null} alt="" size={4} />
 
             <div>
               <p className="text-2xl font-bold">{group.name}</p>

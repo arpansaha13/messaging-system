@@ -1,21 +1,23 @@
-import { differenceInCalendarDays, format } from 'date-fns'
-import { classNames } from '@arpansaha13/utils'
-import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
-import GlobalName from '~/components/GlobalName'
-import MsgStatusIcon from '~/components/MsgStatusIcon'
-import isUnread from '~/utils/isUnread'
-import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
-import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import { useMemo } from 'react'
+'use client'
+
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { useMemo } from 'react'
+import { differenceInCalendarDays, format } from 'date-fns'
+import { classNames } from '@arpansaha13/utils'
+import GlobalName from '~/components/GlobalName'
+import MsgStatusIcon from '~/components/MsgStatusIcon'
+import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
+import isUnread from '~/utils/isUnread'
+import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
+import type { IChatListItem, IContact, IContextMenuItem, IUser } from '@shared/types/client'
 
 interface ChatListItemTemplateProps {
-  userId: number
-  alias: string | null
-  dp: string | null
+  userId: IUser['id']
+  alias: IContact['alias'] | null
+  dp: IUser['dp']
   latestMsg: IChatListItem['latestMsg']
-  globalName: string
+  globalName: IUser['globalName']
   children?: React.ReactNode
   menuItems: IContextMenuItem[]
 }
@@ -59,7 +61,7 @@ export default function ChatListItemTemplate(props: Readonly<ChatListItemTemplat
             )}
             onContextMenu={onContextMenu}
           >
-            <Avatar src={dp} />
+            <Avatar src={dp} size={3} />
 
             <div className="ml-4 w-full py-3">
               <div className="flex items-center justify-between">

@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { forwardRef, useRef } from 'react'
@@ -127,7 +129,7 @@ export default function Navbar() {
 
       <LinkWrapper className="mt-4">
         <Link href="/settings/profile" className="mx-wuto mx-auto block w-max">
-          <Avatar src={authUser.dp} width={2} height={2} />
+          <Avatar src={authUser.dp} size={2} />
         </Link>
       </LinkWrapper>
     </nav>
