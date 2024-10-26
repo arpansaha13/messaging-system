@@ -6,7 +6,7 @@ import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Avatar, ConfirmModal } from '~/components/common'
-import ChatListItemTemplate from '~/components/chat-list-item/Template'
+import { ChatListItem } from '~/components/list-items'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
   deleteChat,
@@ -65,7 +65,7 @@ function UnarchivedChatListItem(props: Readonly<UnarchivedChatListItemProps>) {
 
   const dispatch = useAppDispatch()
 
-  const menuItems: IContextMenuItem[] = [
+  const menuItems: IContextMenuItem<void>[] = [
     {
       slot: chatListItem.chat.pinned ? 'Unpin chat' : 'Pin chat',
       action: () => {
@@ -100,16 +100,9 @@ function UnarchivedChatListItem(props: Readonly<UnarchivedChatListItemProps>) {
   ]
 
   return (
-    <ChatListItemTemplate
-      userId={chatListItem.receiver.id}
-      menuItems={menuItems}
-      alias={chatListItem.contact?.alias ?? null}
-      dp={chatListItem.receiver.dp}
-      globalName={chatListItem.receiver.globalName}
-      latestMsg={chatListItem.latestMsg}
-    >
+    <ChatListItem chatListItem={chatListItem} menuItems={menuItems}>
       {chatListItem.chat.pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
-    </ChatListItemTemplate>
+    </ChatListItem>
   )
 }
 
