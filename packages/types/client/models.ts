@@ -52,7 +52,11 @@ export interface IContact {
 }
 
 export interface IContextMenuItem<T> {
-  slot: string | React.ReactNode
+  /**
+   * Slots can be a string or ReactNode.
+   * But it can be a function too, in case the slot content depends on the payload.
+   */
+  slot: string | React.ReactNode | ((payload: T) => string | React.ReactNode)
   action: (e: React.MouseEvent, payload: T) => void
 }
 

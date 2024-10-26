@@ -15,13 +15,13 @@ interface ContextMenuWrapperProps {
 }
 
 interface ContextMenuProps {
-  items: IContextMenuItem[]
+  items: IContextMenuItem<any>[]
 
   /**
    * This payload will be passed to the menuItem.onClick method
    * for identification of the concerned list-item
    */
-  payload?: any
+  payload: any
 }
 
 interface IContextMenuContext {
@@ -77,7 +77,7 @@ export function ContextMenu(props: Readonly<ContextMenuProps>) {
   const ref = useRef<HTMLDivElement>(null)
   const { open, position, close } = useContext(ContextMenuContext)!
 
-  function handleClick(e: React.MouseEvent, item: IContextMenuItem) {
+  function handleClick(e: React.MouseEvent, item: IContextMenuItem<any>) {
     item.action(e, payload)
     close()
   }
@@ -112,7 +112,7 @@ export function ContextMenu(props: Readonly<ContextMenuProps>) {
                   handleClick(e, item)
                 }}
               >
-                {item.slot}
+                {typeof item.slot === 'function' ? item.slot(payload) : item.slot}
               </button>
             ))}
           </FocusTrap>

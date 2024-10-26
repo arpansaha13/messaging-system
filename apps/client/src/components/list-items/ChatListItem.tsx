@@ -15,15 +15,12 @@ import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 interface ChatListItemProps {
   chatListItem: IChatListItem
   children?: React.ReactNode
-  menuItems: IContextMenuItem<void>[]
+  menuItems: IContextMenuItem<IChatListItem>[]
 }
 
 export default function ChatListItem(props: Readonly<ChatListItemProps>) {
-  const {
-    children,
-    menuItems,
-    chatListItem: { latestMsg, receiver, contact },
-  } = props
+  const { children, menuItems, chatListItem } = props
+  const { latestMsg, receiver, contact } = chatListItem
 
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
 
@@ -98,7 +95,7 @@ export default function ChatListItem(props: Readonly<ChatListItemProps>) {
             </div>
           </Link>
 
-          <ContextMenu items={menuItems} />
+          <ContextMenu items={menuItems} payload={chatListItem} />
         </li>
       )}
     </ContextMenuWrapper>

@@ -20,12 +20,6 @@ import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>
 
-interface UnarchivedChatListItemProps {
-  chatListItem: IChatListItem
-  setDeleteChatModalOpen: React.Dispatch<React.SetStateAction<boolean>>
-  setDeleteChatModalPayload: React.Dispatch<React.SetStateAction<DeleteChatModalPayload | null>>
-}
-
 interface DeleteChatListItemModalProps {
   open: boolean
   payload: DeleteChatModalPayload | null
@@ -33,21 +27,53 @@ interface DeleteChatListItemModalProps {
 }
 
 export default function Page() {
+  const dispatch = useAppDispatch()
   const unarchived = useAppSelector(selectUnarchived)
-
   const [deleteChatModalOpen, setDeleteChatModalOpen] = useState(false)
   const [deleteChatModalPayload, setDeleteChatModalPayload] = useState<DeleteChatModalPayload | null>(null)
+
+  const menuItems: IContextMenuItem<IChatListItem>[] = useMemo(
+    () => [
+      {
+        slot: payload => (payload.chat.pinned ? 'Unpin chat' : 'Pin chat'),
+        action: (_, payload) => {
+          dispatch(updateChatListItemMessagePin({ receiverId: payload.receiver.id, pinned: !payload.chat.pinned }))
+        },
+      },
+      {
+        slot: 'Archive chat',
+        action: (_, payload) => {
+          dispatch(archiveChat(payload.receiver.id))
+        },
+      },
+      {
+        slot: 'Clear messages',
+        action: (_, payload) => {
+          dispatch(clearMessages(payload.receiver.id))
+          dispatch(clearChatListItemMessage(payload.receiver.id))
+        },
+      },
+      {
+        slot: 'Delete chat',
+        action: (_, payload) => {
+          setDeleteChatModalPayload({
+            contact: payload.contact,
+            receiver: payload.receiver,
+          })
+          setDeleteChatModalOpen(true)
+        },
+      },
+    ],
+    [dispatch],
+  )
 
   return (
     <>
       <ul className="space-y-1">
         {unarchived.map(chatListItem => (
-          <UnarchivedChatListItem
-            key={chatListItem.receiver.id}
-            chatListItem={chatListItem}
-            setDeleteChatModalOpen={setDeleteChatModalOpen}
-            setDeleteChatModalPayload={setDeleteChatModalPayload}
-          />
+          <ChatListItem key={chatListItem.receiver.id} chatListItem={chatListItem} menuItems={menuItems}>
+            {chatListItem.chat.pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
+          </ChatListItem>
         ))}
       </ul>
 
@@ -57,52 +83,6 @@ export default function Page() {
         payload={deleteChatModalPayload}
       />
     </>
-  )
-}
-
-function UnarchivedChatListItem(props: Readonly<UnarchivedChatListItemProps>) {
-  const { chatListItem, setDeleteChatModalOpen, setDeleteChatModalPayload } = props
-
-  const dispatch = useAppDispatch()
-
-  const menuItems: IContextMenuItem<void>[] = [
-    {
-      slot: chatListItem.chat.pinned ? 'Unpin chat' : 'Pin chat',
-      action: () => {
-        dispatch(
-          updateChatListItemMessagePin({ receiverId: chatListItem.receiver.id, pinned: !chatListItem.chat.pinned }),
-        )
-      },
-    },
-    {
-      slot: 'Archive chat',
-      action: () => {
-        dispatch(archiveChat(chatListItem.receiver.id))
-      },
-    },
-    {
-      slot: 'Clear messages',
-      action: () => {
-        dispatch(clearMessages(chatListItem.receiver.id))
-        dispatch(clearChatListItemMessage(chatListItem.receiver.id))
-      },
-    },
-    {
-      slot: 'Delete chat',
-      action: () => {
-        setDeleteChatModalPayload({
-          contact: chatListItem.contact,
-          receiver: chatListItem.receiver,
-        })
-        setDeleteChatModalOpen(true)
-      },
-    },
-  ]
-
-  return (
-    <ChatListItem chatListItem={chatListItem} menuItems={menuItems}>
-      {chatListItem.chat.pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
-    </ChatListItem>
   )
 }
 
