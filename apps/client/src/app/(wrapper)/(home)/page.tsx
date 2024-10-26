@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react'
 import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Avatar, ConfirmModal } from '~/components/common'
+import { SkeletonChatList } from '~/components/skeleton'
 import { ChatListItem } from '~/components/list-items'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
@@ -14,6 +15,7 @@ import {
   selectUnarchived,
   clearChatListItemMessage,
   updateChatListItemMessagePin,
+  selectChatListStatus,
 } from '~/store/features/chat-list/chat-list.slice'
 import { clearMessages, deleteMessages } from '~/store/features/messages/message.slice'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
@@ -29,6 +31,7 @@ interface DeleteChatListItemModalProps {
 export default function Page() {
   const dispatch = useAppDispatch()
   const unarchived = useAppSelector(selectUnarchived)
+  const fetchStatus = useAppSelector(selectChatListStatus)
   const [deleteChatModalOpen, setDeleteChatModalOpen] = useState(false)
   const [deleteChatModalPayload, setDeleteChatModalPayload] = useState<DeleteChatModalPayload | null>(null)
 
@@ -66,6 +69,10 @@ export default function Page() {
     ],
     [dispatch],
   )
+
+  if (fetchStatus !== 'idle') {
+    return <SkeletonChatList />
+  }
 
   return (
     <>

@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { classNames } from '@arpansaha13/utils'
 import { Avatar, Separator } from '~/components/common'
+import { SkeletonAvatar, SkeletonNavbarGroupList } from '~/components/skeleton'
 import AddGroup from '~/components/group/add-group'
 import { useOverflow } from '~/hooks/useOverflow'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
@@ -81,10 +82,6 @@ export default function Navbar() {
   const searchParams = useSearchParams()
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
 
-  if (!isSuccess) {
-    return null
-  }
-
   return (
     <nav className="flex h-full w-16 flex-shrink-0 flex-col items-center gap-0.5 bg-gray-100 py-4 shadow-md dark:bg-gray-900">
       {navItems.map((navItem, i) => {
@@ -129,7 +126,7 @@ export default function Navbar() {
 
       <LinkWrapper className="mt-4">
         <Link href="/settings/profile" className="mx-wuto mx-auto block w-max">
-          <Avatar src={authUser.dp} size={2} />
+          {isSuccess ? <Avatar src={authUser.dp} size={2} /> : <SkeletonAvatar size={2} pulse />}
         </Link>
       </LinkWrapper>
     </nav>
@@ -163,7 +160,9 @@ function GroupList(props: Readonly<GroupListProps>) {
   const pathname = usePathname()
   const { data: groups, isSuccess } = useGetGroupsQuery()
 
-  if (!isSuccess) return null
+  if (!isSuccess) {
+    return <SkeletonNavbarGroupList />
+  }
 
   return (
     <ul className="space-y-0.5">

@@ -5,6 +5,7 @@ import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
 import { Avatar, ConfirmModal, SearchBar, FormModal } from '~/components/common'
+import { SkeletonContactList } from '~/components/skeleton'
 import { ContactListItem } from '~/components/list-items'
 import { useAppDispatch } from '~/store/hooks'
 import { upsertChatListItemContact, deleteChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
@@ -97,14 +98,14 @@ export default function Page() {
 }
 
 function Contacts({ menuItems }: Readonly<ContactsProps>) {
-  const { data: contacts, isSuccess } = useGetContactsQuery()
+  const { data: contacts, isLoading, isSuccess } = useGetContactsQuery()
 
-  if (!isSuccess) {
-    return null
+  if (isLoading || !isSuccess) {
+    return <SkeletonContactList />
   }
 
   return Object.keys(contacts).map(letter => (
-    <div key={letter} className="relative">
+    <div key={letter}>
       {/* Size of image = size-12 */}
       <div className="dark:text-brand-500 mx-3 my-2 flex size-12 items-center justify-center font-medium text-gray-500">
         <h3>{letter}</h3>

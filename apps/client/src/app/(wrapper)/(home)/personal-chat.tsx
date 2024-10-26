@@ -2,6 +2,7 @@
 
 import GlobalName from '~/components/GlobalName'
 import { Chat, ChatBody, ChatFooter, ChatHeader } from '~/components/chat'
+import { SkeletonChat } from '~/components/skeleton'
 import useController from './controller'
 
 export default function PersonalChat() {
@@ -19,7 +20,7 @@ export default function PersonalChat() {
   } = useController()
 
   if (!isGetUserSuccess || !isGetAuthUserSuccess) {
-    return null
+    return <SkeletonChat />
   }
 
   return (

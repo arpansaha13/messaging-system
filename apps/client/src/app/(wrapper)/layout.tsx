@@ -1,7 +1,6 @@
 'use client'
 
-import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useDark } from '~/hooks/useDark'
 import { SocketProvider } from '~/providers/SocketProvider'
 import { Notification } from '~/components/common'
@@ -19,16 +18,11 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
   usePrefetch('getGroups', undefined)
   usePrefetch('getContacts', undefined)
 
-  const dispatch = useAppDispatch()
-  const [loading, setLoading] = useState<boolean>(true)
+  const dispatch = useAppDispatch() 
 
   useEffect(() => {
-    dispatch(initChatList()).then(() => setLoading(false))
+    dispatch(initChatList())
   }, [dispatch])
-
-  if (loading) {
-    return <Loading />
-  }
 
   return (
     <SocketProvider>
@@ -38,33 +32,5 @@ export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>
         <main className="flex-grow">{children}</main>
       </div>
     </SocketProvider>
-  )
-}
-
-function Loading() {
-  const logos = [
-    { src: '/nextjs-icon.svg', alt: 'NextJs logo' },
-    { src: '/reactjs-icon.svg', alt: 'React logo' },
-    { src: '/nestjs-icon.svg', alt: 'NestJs logo' },
-    { src: '/postgresql-icon.svg', alt: 'PostgreSQL logo' },
-  ]
-
-  return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="relative flex h-28 space-x-8">
-        {logos.map(logo => (
-          <Image
-            key={logo.src}
-            src={logo.src}
-            alt={logo.alt}
-            width={112}
-            height={112}
-            placeholder="blur"
-            blurDataURL={logo.src}
-            className="animate-pulse"
-          />
-        ))}
-      </div>
-    </div>
   )
 }
