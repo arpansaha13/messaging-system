@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
-import { Avatar, SearchBar, FormModal, StackedListItem, StackedListItemLink } from '~/components/common'
+import { Avatar, SearchBar, FormModal } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
+import { SearchListItem, SearchListItemLink } from '~/components/list-items'
 import { useAppDispatch } from '~/store/hooks'
 import { upsertChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
 import { useLazySearchUsersQuery } from '~/store/features/users/users.api.slice'
@@ -13,11 +14,11 @@ import { useAddContactMutation } from '~/store/features/contacts/contact.api.sli
 import { invalidateTags as invalidateUsersApiTags } from '~/store/features/users/users.api.slice'
 import { USER_API_TAG } from '~/store/features/constants'
 import getFormData from '~/utils/getFormData'
-import type { IContextMenuItem, IUserSearchResult } from '@shared/types/client'
+import type { IContextMenuItem, IUser, IUserSearchResult } from '@shared/types/client'
 
 interface SearchResultsProps {
   results: IUserSearchResult[]
-  menuItems: IContextMenuItem[]
+  menuItems: IContextMenuItem<IUser>[]
 }
 
 interface AddContactModalProps {
@@ -33,7 +34,7 @@ export default function Page() {
   const [addContactModalOpen, setAddContactModalOpen] = useState(false)
   const [modalPayload, setModalPayload] = useState<IUserSearchResult | null>(null)
 
-  const menuItems: IContextMenuItem[] = [
+  const menuItems: IContextMenuItem<IUser>[] = [
     {
       slot: 'Add to Contacts',
       action: (_, payload) => {
@@ -75,15 +76,9 @@ function SearchResults({ results, menuItems }: Readonly<SearchResultsProps>) {
   return (
     <ul className="py-3">
       {results.map(user => (
-        <StackedListItem key={user.id} {...(isNullOrUndefined(user.contact) && { menuItems, payload: user })}>
-          <StackedListItemLink
-            href={{ query: { to: user.id } }}
-            image={user.dp}
-            title={user.contact ? user.contact.alias : <GlobalName name={user.globalName} />}
-            subtitle={user.contact ? `${user.globalName} • @${user.username}` : `@${user.username}`}
-            text={user.bio}
-          />
-        </StackedListItem>
+        <SearchListItem key={user.id} {...(isNullOrUndefined(user.contact) && { menuItems, payload: user })}>
+          <SearchListItemLink user={user} />
+        </SearchListItem>
       ))}
     </ul>
   )

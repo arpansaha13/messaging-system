@@ -51,9 +51,9 @@ export interface IContact {
   username: string
 }
 
-export interface IContextMenuItem {
+export interface IContextMenuItem<T> {
   slot: string | React.ReactNode
-  action: (e: React.MouseEvent, payload?: any) => void
+  action: (e: React.MouseEvent, payload: T) => void
 }
 
 export interface IGroup {

@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Input } from '~/components/ui'
-import { Avatar, ConfirmModal, SearchBar, FormModal, StackedListItem, StackedListItemLink } from '~/components/common'
+import { Avatar, ConfirmModal, SearchBar, FormModal } from '~/components/common'
+import { ContactListItem } from '~/components/list-items'
 import { useAppDispatch } from '~/store/hooks'
 import { upsertChatListItemContact, deleteChatListItemContact } from '~/store/features/chat-list/chat-list.slice'
 import {
@@ -19,12 +20,12 @@ import getFormData from '~/utils/getFormData'
 import type { IContact, IContextMenuItem } from '@shared/types/client'
 
 interface ContactsProps {
-  menuItems: IContextMenuItem[]
+  menuItems: IContextMenuItem<IContact>[]
 }
 
 interface SearchResultsProps {
   results: IContact[]
-  menuItems: IContextMenuItem[]
+  menuItems: IContextMenuItem<IContact>[]
 }
 
 interface EditAliasModalProps {
@@ -46,7 +47,7 @@ export default function Page() {
   const [modalPayload, setModalPayload] = useState<IContact | null>(null)
   const [triggerSearch, { data: searchResults }] = useLazySearchContactsQuery()
 
-  const menuItems: IContextMenuItem[] = [
+  const menuItems: IContextMenuItem<IContact>[] = [
     {
       slot: 'Edit Alias',
       action: (_, payload: IContact) => {
@@ -104,22 +105,14 @@ function Contacts({ menuItems }: Readonly<ContactsProps>) {
 
   return Object.keys(contacts).map(letter => (
     <div key={letter} className="relative">
-      {/* Size of image = h-12 w-12 */}
-      <div className="dark:text-brand-500 mx-3 my-2 flex h-12 w-12 items-center justify-center font-medium text-gray-500">
+      {/* Size of image = size-12 */}
+      <div className="dark:text-brand-500 mx-3 my-2 flex size-12 items-center justify-center font-medium text-gray-500">
         <h3>{letter}</h3>
       </div>
 
       <ul className="space-y-1">
         {contacts[letter].map(contact => (
-          <StackedListItem key={contact.id} menuItems={menuItems} payload={contact}>
-            <StackedListItemLink
-              href={{ query: { to: contact.userId } }}
-              image={contact.dp}
-              title={contact.alias}
-              subtitle={`${contact.globalName} • @${contact.username}`}
-              text={contact.bio}
-            />
-          </StackedListItem>
+          <ContactListItem key={contact.id} menuItems={menuItems} contact={contact} />
         ))}
       </ul>
     </div>
@@ -130,15 +123,7 @@ function SearchResults({ results, menuItems }: Readonly<SearchResultsProps>) {
   return (
     <ul className="space-y-1 py-3">
       {results.map(contact => (
-        <StackedListItem key={contact.id} menuItems={menuItems} payload={contact}>
-          <StackedListItemLink
-            href={{ query: { to: contact.userId } }}
-            image={contact.dp}
-            title={contact.alias}
-            subtitle={`${contact.globalName} • @${contact.username}`}
-            text={contact.bio}
-          />
-        </StackedListItem>
+        <ContactListItem key={contact.id} menuItems={menuItems} contact={contact} />
       ))}
     </ul>
   )
