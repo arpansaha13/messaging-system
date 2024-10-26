@@ -1,8 +1,8 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import Chat from '~/components/chat'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
+import PersonalChat from './personal-chat'
 
 interface ChatsLayoutProps {
   children: React.ReactNode
@@ -18,7 +18,7 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
         <WindowPanelBody>{children}</WindowPanelBody>
       </WindowPanel>
 
-      <WindowBody>{hasOpenChat && <Chat />}</WindowBody>
+      <WindowBody>{hasOpenChat && <PersonalChat />}</WindowBody>
     </Window>
   )
 }
