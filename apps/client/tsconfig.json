@@ -31,10 +31,7 @@
       ],
       "~api/*": [
         "./src/app/api/*"
-      ],
-      "~common/*": [
-        "./src/components/common/*"
-      ],
+      ]
     }
   },
   "include": [
