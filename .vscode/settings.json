@@ -9,5 +9,6 @@
   "task.allowAutomaticTasks": "on",
   "prettier.endOfLine": "lf",
   "editor.formatOnSave": true,
-  "editor.formatOnPaste": false
+  "editor.formatOnPaste": false,
+  "git.inputValidation": true
 }
