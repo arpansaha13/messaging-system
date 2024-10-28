@@ -9,6 +9,7 @@ import { Channel } from 'src/channels/channel.entity'
 import { ChannelRepository } from 'src/channels/channel.repository'
 import type { User } from 'src/users/user.entity'
 import type { EntityManager } from 'typeorm'
+import { CreateChannelDto } from './dto/create-channel.dto'
 
 @Injectable()
 export class GroupService {
@@ -71,5 +72,16 @@ export class GroupService {
 
   getChannelsOfGroup(groupId: Group['id']) {
     return this.channelRepository.getChannelsByGroupId(groupId)
+  }
+
+  async createChannel(groupId: Group['id'], createChannelDto: CreateChannelDto): Promise<Channel> {
+    const channel = new Channel()
+    const group = await this.groupRepository.findOne({
+      select: ['id'],
+      where: { id: groupId },
+    })
+    channel.name = createChannelDto.name
+    channel.group = group
+    return this.channelRepository.save(channel)
   }
 }

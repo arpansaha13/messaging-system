@@ -4,6 +4,7 @@ import { GroupService } from './group.service'
 import { CreateGroupDto } from './dto/create-group.dto'
 import { Channel } from 'src/channels/channel.entity'
 import { GroupIdParam } from './dto/group-id-param.dto'
+import { CreateChannelDto } from './dto/create-channel.dto'
 import type { Request } from 'express'
 import type { Group } from 'src/groups/group.entity'
 
@@ -17,6 +18,11 @@ export class GroupController {
     return this.groupService.getGroupsOfUser(request.user)
   }
 
+  @Post()
+  createGroup(@Req() request: Request, @Body() createGroupDto: CreateGroupDto): Promise<Group> {
+    return this.groupService.createGroup(request.user, createGroupDto)
+  }
+
   @Get('/:groupId')
   getGroup(@Param() params: GroupIdParam): Promise<Group> {
     return this.groupService.getGroup(params.groupId)
@@ -27,8 +33,8 @@ export class GroupController {
     return this.groupService.getChannelsOfGroup(params.groupId)
   }
 
-  @Post()
-  createGroup(@Req() request: Request, @Body() createGroupDto: CreateGroupDto): Promise<Group> {
-    return this.groupService.createGroup(request.user, createGroupDto)
+  @Post('/:groupId/channels')
+  createChannel(@Param() params: GroupIdParam, @Body() createChannelDto: CreateChannelDto): Promise<Channel> {
+    return this.groupService.createChannel(params.groupId, createChannelDto)
   }
 }

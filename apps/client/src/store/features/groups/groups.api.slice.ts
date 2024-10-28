@@ -3,7 +3,13 @@ import { ALL_GROUPS_API_TAG, FETCH_BASE_URL, GROUP_API_TAG, GROUP_CHANNELS_API_T
 import type { IChannel, IGroup } from '@shared/types/client'
 
 interface IPostCreateGroupBody {
-  name: string
+  name: IGroup['name']
+}
+interface IPostCreateChannel {
+  groupId: IGroup['id']
+  body: {
+    name: IChannel['name']
+  }
 }
 
 export const groupsApiSlice = createApi({
@@ -32,7 +38,16 @@ export const groupsApiSlice = createApi({
       }),
       invalidatesTags: [{ type: ALL_GROUPS_API_TAG }],
     }),
+    addChannel: build.mutation<IGroup, IPostCreateChannel>({
+      query: ({ groupId, body }) => ({
+        url: `groups/${groupId}/channels`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [{ type: GROUP_CHANNELS_API_TAG }],
+    }),
   }),
 })
 
-export const { useGetGroupQuery, useGetGroupsQuery, useGetChannelsQuery, useAddGroupMutation } = groupsApiSlice
+export const { useGetGroupQuery, useGetGroupsQuery, useGetChannelsQuery, useAddGroupMutation, useAddChannelMutation } =
+  groupsApiSlice

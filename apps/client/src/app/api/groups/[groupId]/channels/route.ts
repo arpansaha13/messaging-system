@@ -5,3 +5,9 @@ export async function GET(request: Request) {
 
   return res
 }
+
+export async function POST(request: Request) {
+  const res = await _response(request)
+
+  return res
+}

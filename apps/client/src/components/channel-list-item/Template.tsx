@@ -11,7 +11,7 @@ export default function ChannelListItemTemplate(props: Readonly<ChannelListItemT
   return (
     <li className="relative">
       <button className="flex w-full items-center rounded px-3 text-left transition-colors hover:bg-gray-200/80 dark:hover:bg-gray-600/40">
-        <div className="flex size-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-700">
+        <div className="flex size-12 flex-shrink-0 items-center justify-center rounded-full bg-gray-300 dark:bg-gray-600">
           <ChatBubbleLeftRightIcon className="size-6 text-gray-600 dark:text-gray-200" />
         </div>
 
