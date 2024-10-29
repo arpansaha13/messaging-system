@@ -6,6 +6,7 @@ import { Channel } from 'src/channels/channel.entity'
 import { GroupIdParam } from './dto/group-id-param.dto'
 import { CreateChannelDto } from './dto/create-channel.dto'
 import type { Request } from 'express'
+import type { User } from 'src/users/user.entity'
 import type { Group } from 'src/groups/group.entity'
 
 @Controller('groups')
@@ -36,5 +37,10 @@ export class GroupController {
   @Post('/:groupId/channels')
   createChannel(@Param() params: GroupIdParam, @Body() createChannelDto: CreateChannelDto): Promise<Channel> {
     return this.groupService.createChannel(params.groupId, createChannelDto)
+  }
+
+  @Get('/:groupId/members')
+  getMembersOfGroup(@Param() params: GroupIdParam): Promise<User[]> {
+    return this.groupService.getMembersOfGroup(params.groupId)
   }
 }

@@ -84,4 +84,8 @@ export class GroupService {
     channel.group = group
     return this.channelRepository.save(channel)
   }
+
+  getMembersOfGroup(groupId: Group['id']): Promise<User[]> {
+    return this.userGroupRepository.getMembersByGroupId(groupId)
+  }
 }
