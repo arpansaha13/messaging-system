@@ -1,12 +1,13 @@
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 import { classNames } from '@arpansaha13/utils'
+import type { IChannel } from '@shared/types/client'
 
-interface ChannelListItemTemplateProps {
-  channelName: string
+interface ChannelListItemProps {
+  channel: IChannel
 }
 
-export default function ChannelListItemTemplate(props: Readonly<ChannelListItemTemplateProps>) {
-  const { channelName } = props
+export default function ChannelListItem(props: Readonly<ChannelListItemProps>) {
+  const { channel } = props
 
   return (
     <li className="relative">
@@ -17,7 +18,7 @@ export default function ChannelListItemTemplate(props: Readonly<ChannelListItemT
 
         <div className="ml-4 w-full py-3">
           <div className="flex items-center justify-between">
-            <p className="text-base text-black dark:text-gray-50">{channelName}</p>
+            <p className="text-base text-black dark:text-gray-50">{channel.name}</p>
           </div>
           <div className="flex items-center justify-between text-gray-600 dark:text-gray-400">
             <p

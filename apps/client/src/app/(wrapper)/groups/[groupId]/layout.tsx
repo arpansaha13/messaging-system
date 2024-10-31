@@ -2,9 +2,8 @@
 
 import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
-import ChannelListItemTemplate from '~/components/channel-list-item/Template'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
-import { GroupMemberListItem } from '~/components/list-items'
+import { ChannelListItem, GroupMemberListItem } from '~/components/list-items'
 import GroupHeader from '~/components/group/GroupHeader'
 import {
   useGetGroupQuery,
@@ -33,7 +32,7 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
         <WindowPanelBody>
           <ul className="space-y-1">
             {channels.map(channel => (
-              <ChannelListItemTemplate key={channel.id} channelName={channel.name} />
+              <ChannelListItem key={channel.id} channel={channel} />
             ))}
           </ul>
         </WindowPanelBody>
