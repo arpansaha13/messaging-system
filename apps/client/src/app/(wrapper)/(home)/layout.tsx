@@ -14,7 +14,7 @@ export default function ChatsLayout({ children }: Readonly<ChatsLayoutProps>) {
 
   return (
     <Window>
-      <WindowPanel className="w-[26rem]">
+      <WindowPanel>
         <WindowPanelBody>{children}</WindowPanelBody>
       </WindowPanel>
 

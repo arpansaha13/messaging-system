@@ -2,7 +2,7 @@ import { classNames } from '@arpansaha13/utils'
 
 interface WindowPanelProps {
   children: React.ReactNode
-  className: string
+  className?: string
 }
 
 export default function WindowPanel(props: Readonly<WindowPanelProps>) {
@@ -11,7 +11,7 @@ export default function WindowPanel(props: Readonly<WindowPanelProps>) {
   return (
     <section
       className={classNames(
-        'flex h-full flex-shrink-0 flex-col space-y-2 overflow-hidden rounded bg-gray-100 shadow-md dark:bg-gray-900',
+        'flex h-full w-[22rem] flex-shrink-0 flex-col space-y-2 overflow-hidden rounded bg-gray-100 shadow-md dark:bg-gray-900',
         className,
       )}
     >
