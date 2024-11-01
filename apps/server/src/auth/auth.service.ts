@@ -12,6 +12,7 @@ import { UnverifiedUserRepository } from './unverified-user.repository'
 import { LoginDto, SignUpDto } from './auth.dto'
 import { MailService } from 'src/mail/mail.service'
 import { SessionService } from 'src/sessions/session.service'
+import { generateHash } from 'src/common/utils'
 import type { EntityManager } from 'typeorm'
 import type { Request, Response } from 'express'
 import type { EnvVariables } from 'src/env.types'
@@ -36,18 +37,6 @@ export class AuthService {
     private unverifiedUserRepository: UnverifiedUserRepository,
   ) {}
 
-  private generateHash(length = 8) {
-    let result = ''
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    const charactersLength = characters.length
-    let counter = 0
-    while (counter < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength))
-      counter++
-    }
-    return result
-  }
-
   private generateOtp(length = 4) {
     let result = ''
     const characters = '0123456789'
@@ -62,7 +51,7 @@ export class AuthService {
 
   private generateUsername(globalName: UnverifiedUser['globalName']) {
     const HASH_LENGTH = 6
-    const hash = this.generateHash(HASH_LENGTH)
+    const hash = generateHash(HASH_LENGTH)
     const separator = '-'
     const USERNAME_MAXLENGTH = 20
     const SLUG_MAXLENGTH_WITHOUT_HASH = USERNAME_MAXLENGTH - HASH_LENGTH - 1
@@ -98,7 +87,7 @@ export class AuthService {
 
   async signUp(credentials: SignUpDto): Promise<void> {
     // TODO: Verify if the hash already exists in db
-    const hash = this.generateHash()
+    const hash = generateHash()
     const otp = this.generateOtp()
     const username = this.generateUsername(credentials.globalName)
 
