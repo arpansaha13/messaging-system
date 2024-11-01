@@ -70,3 +70,9 @@ export interface IChannel {
   id: number
   name: string
 }
+
+export interface IInvite {
+  hash: string
+  expiresAt: string
+  group: Omit<IGroup, 'founder'>
+}

@@ -4,6 +4,7 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid'
 import { GroupAvatar } from '~/components/common'
 import type { IGroup } from '@shared/types/client'
 import AddChannelModal from './add-channel/AddChannelModal'
+import CreateInviteModal from './invites/CreateInviteModal'
 
 interface GroupHeaderProps {
   group: IGroup
@@ -12,12 +13,19 @@ interface GroupHeaderProps {
 export default function GroupHeader(props: Readonly<GroupHeaderProps>) {
   const { group } = props
   const [addChannelModalOpen, setAddChannelModalOpen] = useState(false)
+  const [createInviteModalOpen, setCreateInviteModalOpen] = useState(false)
 
   const menuItems = [
     {
       name: 'Add Channel',
       action: () => {
         setAddChannelModalOpen(true)
+      },
+    },
+    {
+      name: 'Invite People',
+      action: () => {
+        setCreateInviteModalOpen(true)
       },
     },
   ]
@@ -57,6 +65,7 @@ export default function GroupHeader(props: Readonly<GroupHeaderProps>) {
       </Menu>
 
       <AddChannelModal open={addChannelModalOpen} setOpen={setAddChannelModalOpen} groupId={group.id} />
+      <CreateInviteModal open={createInviteModalOpen} setOpen={setCreateInviteModalOpen} groupId={group.id} />
     </div>
   )
 }

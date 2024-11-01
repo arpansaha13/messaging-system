@@ -8,6 +8,7 @@ import { CreateChannelDto } from './dto/create-channel.dto'
 import type { Request } from 'express'
 import type { User } from 'src/users/user.entity'
 import type { Group } from 'src/groups/group.entity'
+import type { Invite } from 'src/invites/invite.entity'
 
 @Controller('groups')
 @UseGuards(AuthGuard())
@@ -42,5 +43,10 @@ export class GroupController {
   @Get('/:groupId/members')
   getMembersOfGroup(@Param() params: GroupIdParam): Promise<User[]> {
     return this.groupService.getMembersOfGroup(params.groupId)
+  }
+
+  @Post('/:groupId/invites')
+  createInvite(@Req() request: Request, @Param() params: GroupIdParam): Promise<Invite> {
+    return this.groupService.createInvite(request.user, params.groupId)
   }
 }

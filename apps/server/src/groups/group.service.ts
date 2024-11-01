@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
 import { Group } from './group.entity'
 import { GroupRepository } from './group.repository'
@@ -7,9 +7,12 @@ import { UserGroup } from 'src/user_group/user-group.entity'
 import { UserGroupRepository } from 'src/user_group/user-group.repository'
 import { Channel } from 'src/channels/channel.entity'
 import { ChannelRepository } from 'src/channels/channel.repository'
+import { Invite } from 'src/invites/invite.entity'
+import { InviteRepository } from 'src/invites/invite.repository'
+import { generateHash } from 'src/common/utils'
+import { MoreThan, type EntityManager } from 'typeorm'
 import type { User } from 'src/users/user.entity'
-import type { EntityManager } from 'typeorm'
-import { CreateChannelDto } from './dto/create-channel.dto'
+import type { CreateChannelDto } from './dto/create-channel.dto'
 
 @Injectable()
 export class GroupService {
@@ -22,6 +25,9 @@ export class GroupService {
 
     @InjectRepository(ChannelRepository)
     private channelRepository: ChannelRepository,
+
+    @InjectRepository(InviteRepository)
+    private inviteRepository: InviteRepository,
 
     @InjectRepository(UserGroupRepository)
     private userGroupRepository: UserGroupRepository,
@@ -87,5 +93,34 @@ export class GroupService {
 
   getMembersOfGroup(groupId: Group['id']): Promise<User[]> {
     return this.userGroupRepository.getMembersByGroupId(groupId)
+  }
+
+  async createInvite(authUser: User, groupId: Group['id']): Promise<Invite> {
+    const invite = await this.inviteRepository.findOne({
+      where: { inviter: { id: authUser.id }, group: { id: groupId }, expiresAt: MoreThan(new Date()) },
+      loadRelationIds: true,
+    })
+
+    if (invite) {
+      return invite
+    }
+
+    const group = await this.groupRepository.findOne({ select: ['id'], where: { id: groupId } })
+
+    if (!group) {
+      throw new BadRequestException('Invalid group id')
+    }
+
+    const hash = generateHash(6)
+    const timestamp = new Date()
+
+    const newInvite = new Invite()
+    newInvite.hash = hash
+    newInvite.group = group
+    newInvite.inviter = authUser
+    newInvite.createdAt = timestamp
+    newInvite.expiresAt = new Date(timestamp.getTime() + 24 * 60 * 60 * 1000) // add 1 day
+    await this.inviteRepository.save(newInvite)
+    return newInvite
   }
 }

@@ -6,6 +6,7 @@ import { UserModule } from './users/user.module'
 import { AuthModule } from 'src/auth/auth.module'
 import { ChatsModule } from './chats/chats.module'
 import { GroupModule } from './groups/group.module'
+import { InviteModule } from './invites/invite.module'
 import { ChannelModule } from './channels/channel.module'
 import { MessageModule } from './messages/message.module'
 import { ContactModule } from './contacts/contact.module'
@@ -19,6 +20,7 @@ import type { EnvVariables } from 'src/env.types'
     UserModule,
     ChatsModule,
     GroupModule,
+    InviteModule,
     ChannelModule,
     MessageModule,
     ContactModule,
