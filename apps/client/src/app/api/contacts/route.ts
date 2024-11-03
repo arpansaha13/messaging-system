@@ -1,10 +1,10 @@
 import _response from '~/utils/api/_response'
-import rfetch from '../utils/rfetch'
+import { overwriteBaseUrl } from '~/utils/api/overwriteBaseUrl'
 import type { IContactResponseFromBE } from '@shared/types'
 import type { IContact } from '@shared/types/client'
 
 export async function GET(request: Request) {
-  const res = await rfetch(request)
+  const res = await fetch(overwriteBaseUrl(request))
   const body: IContactResponseFromBE[] = await res.json()
   const hasSearchParams = new URL(request.url).searchParams.size > 0
 
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const res = await rfetch(request)
+  const res = await fetch(overwriteBaseUrl(request))
   const body = await res.json()
 
   const newBody: IContact = {

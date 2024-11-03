@@ -1,24 +1,22 @@
-import rfetch from '~api/utils/rfetch'
+import { overwriteBaseUrl } from './overwriteBaseUrl'
 
 /**
- * For use in Route Handlers.
- *
- * Fires a fetch request and returns a response.
- * Use this overload if the body does not need to be modified.
+ * - For use in Route Handlers.
+ * - Fires a fetch request and returns a response.
+ * - Use this overload if the body does not need to be modified.
  */
 async function _response(request: Request): Promise<Response>
 
 /**
- * For use in Route Handlers.
- *
- * Returns a response object with the provided body.
- * Use this overload if the body needs to be modified.
+ * - For use in Route Handlers.
+ * - Returns a response object with the provided body.
+ * - Use this overload if the body needs to be modified.
  */
 async function _response(res: Response, body: any): Promise<Response>
 
 async function _response(requestOrRes: Request | Response, body?: any): Promise<Response> {
   if (requestOrRes instanceof Request) {
-    const res = await rfetch(requestOrRes)
+    const res = await fetch(overwriteBaseUrl(requestOrRes))
     const resBody = await getBody(res)
     return createResponse(res, resBody)
   }

@@ -1,9 +1,9 @@
 import _response from '~/utils/api/_response'
-import rfetch from '~api/utils/rfetch'
+import { overwriteBaseUrl } from '~/utils/api/overwriteBaseUrl'
 import { formatChatListItemResponse } from '../format'
 
 export async function GET(request: Request) {
-  const res = await rfetch(request)
+  const res = await fetch(overwriteBaseUrl(request))
   const body = await res.json()
   const formattedBody = formatChatListItemResponse(body)
   return _response(res, formattedBody)
