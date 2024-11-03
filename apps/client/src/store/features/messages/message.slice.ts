@@ -1,7 +1,6 @@
 import { PayloadAction } from '@reduxjs/toolkit'
 import { createAppSlice } from '~/store/createAppSlice'
-import { _clearMessages, _deleteMessages } from '~/utils/api'
-import { _getMessages } from './messages.api'
+import { _clearMessages, _getMessages } from './messages.api'
 import type { IUser } from '@shared/types/client'
 import type { IMessage, IMessageSending, MessageStatus } from '@shared/types'
 
@@ -79,7 +78,6 @@ export const messageSlice = createAppSlice({
     }),
     deleteMessages: create.reducer((state, action: PayloadAction<IUser['id']>) => {
       const receiverId = action.payload
-      _deleteMessages(receiverId)
       state.userMessagesMap.delete(receiverId)
       state.tempMessagesMap.delete(receiverId)
     }),

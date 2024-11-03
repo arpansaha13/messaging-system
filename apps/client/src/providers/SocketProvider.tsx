@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import io from 'socket.io-client'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
@@ -11,6 +12,7 @@ import {
   insertUnarchivedChat,
   selectArchived,
   selectUnarchived,
+  getChatByReceiverId,
 } from '~/store/features/chat-list/chat-list.slice'
 import {
   deleteTempMessage,
@@ -20,13 +22,19 @@ import {
   upsertMessages,
 } from '~/store/features/messages/message.slice'
 import isUnread from '~/utils/isUnread'
-import { _getChatsWith } from '~/utils/api'
-import { MessageStatus, SocketEmitEvent, SocketOnEvent } from '@shared/types'
-import type { IMessage, IReceiverEmitRead, SocketEmitEventPayload, SocketOnEventPayload } from '@shared/types'
-import { IChatListItem, IUser } from '@shared/types/client'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import { useSearchParams } from 'next/navigation'
+import {} from '@shared/types'
+import type { IChatListItem, IUser } from '@shared/types/client'
+import {
+  MessageStatus,
+  SocketEmitEvent,
+  SocketOnEvent,
+  type IMessage,
+  type IReceiverEmitRead,
+  type SocketEmitEventPayload,
+  type SocketOnEventPayload,
+} from '@shared/types'
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
@@ -162,7 +170,7 @@ function useSocketInit() {
           }),
         )
       } else {
-        const convo = await _getChatsWith(payload.senderId)
+        const convo = await dispatch(getChatByReceiverId(payload.senderId)).unwrap()
         convo.latestMsg = message
         dispatch(insertUnarchivedChat(convo))
       }
@@ -216,7 +224,7 @@ function useSocketInit() {
           }),
         )
       } else {
-        const convo = await _getChatsWith(payload.receiverId)
+        const convo = await dispatch(getChatByReceiverId(payload.receiverId)).unwrap()
         convo.latestMsg = message
         dispatch(insertUnarchivedChat(convo))
       }

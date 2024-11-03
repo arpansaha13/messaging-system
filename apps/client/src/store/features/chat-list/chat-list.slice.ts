@@ -1,7 +1,15 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { createAppSlice } from '~/store/createAppSlice'
 import { MessageStatus } from '@shared/types'
-import { _archiveChat, _getChats, _pinChat, _unarchiveChat, _unpinChat } from './chats.api'
+import {
+  _archiveChat,
+  _deleteChat,
+  _getChatByReceiverId,
+  _getChats,
+  _pinChat,
+  _unarchiveChat,
+  _unpinChat,
+} from './chats.api'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { IChatListItem, IContact, IUser } from '@shared/types/client'
 
@@ -34,6 +42,7 @@ export const chatListSlice = createAppSlice({
         state.status = 'failed'
       },
     }),
+    getChatByReceiverId: create.asyncThunk(_getChatByReceiverId),
     updateChatListItemMessagePin: create.reducer(
       (state, action: PayloadAction<{ receiverId: number; pinned: boolean }>) => {
         const { receiverId, pinned } = action.payload
@@ -168,7 +177,7 @@ export const chatListSlice = createAppSlice({
       const idx = findRoomIndex(receiverId, list)
       if (idx === null) return
       list.splice(idx, 1)
-      // _deleteMessages(receiverId)
+      _deleteChat(receiverId)
     }),
   }),
   selectors: {
@@ -184,6 +193,7 @@ export const {
   archiveChat,
   unarchiveChat,
   insertUnarchivedChat,
+  getChatByReceiverId,
   clearChatListItemMessage,
   deleteChatListItemContact,
   upsertChatListItemContact,
