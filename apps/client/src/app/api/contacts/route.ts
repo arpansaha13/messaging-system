@@ -1,4 +1,4 @@
-import _response from '~api/utils/_response'
+import _response from '~/utils/api/_response'
 import rfetch from '../utils/rfetch'
 import type { IContactResponseFromBE } from '@shared/types'
 import type { IContact } from '@shared/types/client'

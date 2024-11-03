@@ -1,4 +1,4 @@
-import _response from '~api/utils/_response'
+import _response from '~/utils/api/_response'
 import rfetch from '../utils/rfetch'
 import { formatChatListItemResponse } from './format'
 import type { IChatsResponse, IChatsResponseFromBE } from '@shared/types'

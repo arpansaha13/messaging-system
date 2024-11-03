@@ -1,4 +1,4 @@
-import _response from '~api/utils/_response'
+import _response from '~/utils/api/_response'
 
 export async function GET(request: Request) {
   const res = await _response(request)
