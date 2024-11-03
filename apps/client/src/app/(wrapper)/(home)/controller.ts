@@ -7,14 +7,13 @@ import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import { unarchiveChat } from '~/store/features/chat-list/chat-list.slice'
 import { selectDraft, addDraft, removeDraft } from '~/store/features/drafts/draft.slice'
 import {
+  getMessages,
   upsertTempMessages,
   selectUserMessagesMap,
   selectTempMessagesMap,
-  upsertMessages,
 } from '~/store/features/messages/message.slice'
 import { selectTypingState } from '~/store/features/typing/typing.slice'
 import { useGetUserQuery, useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import { _getMessages } from '~/utils/api'
 import { generateHash } from '~/utils/generateHash'
 import {
   MessageStatus,
@@ -124,14 +123,7 @@ export default function useController() {
 
   useEffect(() => {
     if (!isNullOrUndefined(receiver) && !userMessagesMap.has(receiver.id)) {
-      _getMessages(receiver.id).then(chatRes => {
-        dispatch(
-          upsertMessages({
-            receiverId: receiver.id,
-            newMessages: chatRes,
-          }),
-        )
-      })
+      dispatch(getMessages(receiver.id))
     }
   }, [receiver, userMessagesMap, dispatch])
 

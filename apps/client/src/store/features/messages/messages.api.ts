@@ -1,4 +1,4 @@
-import _fetch from './_fetch'
+import _fetch from '~/utils/api/_fetch'
 import type { IMessage } from '@shared/types'
 import type { IUser } from '@shared/types/client'
 
