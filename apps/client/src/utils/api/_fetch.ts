@@ -1,7 +1,10 @@
 import type { RequestOptions } from '@shared/types'
 
-export default async function _fetch(url: string, options?: RequestOptions, server = false) {
-  const request = createRequest(url, options, server)
+/**
+ * For use in client components.
+ */
+export default async function _fetch(url: string, options?: RequestOptions) {
+  const request = createRequest(url, options)
   const res = await fetch(request)
 
   if (res.status >= 500) throw new Error('Something went wrong!', { cause: 'Server Error' })
@@ -14,22 +17,19 @@ export default async function _fetch(url: string, options?: RequestOptions, serv
   } catch {
     if (res.status < 400) return data // text data
   }
-  
+
   if (res.status >= 400) throw data
   return data
 }
 
-export function createRequest(url: string, options?: RequestOptions, server = false) {
+function createRequest(url: string, options?: RequestOptions) {
   const headers = {
-    ...(options?.headers ?? {}),
     'Content-Type': 'application/x-www-form-urlencoded',
   }
 
-  const body = options?.body ? new URLSearchParams(options?.body).toString() : null
+  const body = options?.body ? new URLSearchParams(options.body).toString() : null
 
-  if (server) {
-    url = process.env.API_BASE_URL! + url
-  } else if (url.startsWith('/')) {
+  if (url.startsWith('/')) {
     url = '/api' + url
   } else {
     url = '/api/' + url

@@ -1,18 +1,13 @@
-import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Button } from '~/components/ui'
 import { GroupAvatar } from '~/components/common'
-import _fetch from '~/utils/api/_fetch'
+import rfetch from '~/utils/api/rfetch'
 import type { IGroup, IInvite } from '@shared/types/client'
 
 export default async function Page(request: Request) {
+  // @ts-ignore
   const inviteHash = request.params.hash
   const { data: invite, error } = await _getInvite(inviteHash)
-
-  if (!isNullOrUndefined(error)) {
-    return redirect(`/groups/${error.data.group.id}`)
-  }
 
   async function joinGroup() {
     'use server'
@@ -22,6 +17,11 @@ export default async function Page(request: Request) {
     if (group) {
       return redirect(`/groups/${group.id}`)
     }
+  }
+
+  if (error) {
+    console.log(error)
+    return redirect(`/groups/${error.data.group.id}`)
   }
 
   return (
@@ -43,44 +43,10 @@ export default async function Page(request: Request) {
   )
 }
 
-type FetchResult<T> = { data: T; error: null } | { data: null; error: any }
-
-async function _getInvite(hash: IInvite['hash']): Promise<FetchResult<IInvite>> {
-  const cookieStore = cookies()
-
-  try {
-    const data = await _fetch(
-      `invites/${hash}`,
-      {
-        method: 'GET',
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
-      },
-      true,
-    )
-    return { data, error: null }
-  } catch (error: any) {
-    return { data: null, error }
-  }
+async function _getInvite(hash: IInvite['hash']) {
+  return rfetch<IInvite>(`invites/${hash}`)
 }
 
-async function _acceptInvite(hash: IInvite['hash']): Promise<FetchResult<IGroup>> {
-  const cookieStore = cookies()
-
-  try {
-    const data = await _fetch(
-      `invites/${hash}/accept`,
-      {
-        method: 'POST',
-        headers: {
-          Cookie: cookieStore.toString(),
-        },
-      },
-      true,
-    )
-    return { data, error: null }
-  } catch (error: any) {
-    return { data: null, error }
-  }
+async function _acceptInvite(hash: IInvite['hash']) {
+  return rfetch<IGroup>(`invites/${hash}/accept`, { method: 'POST' })
 }
