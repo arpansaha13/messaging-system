@@ -8,12 +8,13 @@ import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-r
 import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
 import { In, type EntityManager } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
-import type {
-  IReceiverEmitDelivered,
-  IReceiverEmitRead,
-  ISenderEmitMessage,
-  ISessionConnect,
-  ISenderEmitTyping,
+import {
+  type IReceiverEmitDelivered,
+  type IReceiverEmitRead,
+  type ISenderEmitMessage,
+  type ISessionConnect,
+  type ISenderEmitTyping,
+  SocketOnEvent,
 } from '@shared/types'
 
 @Injectable()
@@ -104,10 +105,10 @@ export class ChatsWsService {
       })
       .catch(err => {
         console.log(err)
-        throw new InternalServerErrorException(' Error while sending the message')
+        throw new InternalServerErrorException('Error while sending the message')
       })
 
-    server.to(senderSocketId).emit('sent', {
+    server.to(senderSocketId).emit(SocketOnEvent.SENT, {
       hash: payload.hash,
       messageId: message.id,
       createdAt: message.createdAt,
@@ -118,7 +119,7 @@ export class ChatsWsService {
     // If receiver is not connected to socket - could mean offline
     if (isNullOrUndefined(receiverSocketId)) return
 
-    server.to(receiverSocketId).emit('receive-message', {
+    server.to(receiverSocketId).emit(SocketOnEvent.RECEIVE_MESSAGE, {
       messageId: message.id,
       content: payload.content,
       senderId: payload.senderId,
@@ -135,7 +136,7 @@ export class ChatsWsService {
 
     const senderSocketId = this.clients.get(payload.senderId)
 
-    server.to(senderSocketId).emit('delivered', {
+    server.to(senderSocketId).emit(SocketOnEvent.DELIVERED, {
       messageId: payload.messageId,
       receiverId: payload.receiverId,
       status: MessageStatus.DELIVERED,
@@ -165,7 +166,7 @@ export class ChatsWsService {
 
   handleTyping(payload: ISenderEmitTyping, server: Server) {
     const receiverSocketId = this.clients.get(payload.receiverId)
-    server.to(receiverSocketId).emit('typing', {
+    server.to(receiverSocketId).emit(SocketOnEvent.TYPING, {
       senderId: payload.senderId,
       receiverId: payload.receiverId,
       isTyping: payload.isTyping,

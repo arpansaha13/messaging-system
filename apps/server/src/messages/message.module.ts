@@ -6,7 +6,7 @@ import { ChatRepository } from 'src/chats/chats.repository'
 
 @Module({
   controllers: [MessageController],
-  providers: [MessageRepository, MessageService, ChatRepository],
-  exports: [MessageService],
+  providers: [ChatRepository, MessageRepository, MessageService],
+  exports: [MessageRepository],
 })
 export class MessageModule {}

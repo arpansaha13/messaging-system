@@ -4,22 +4,15 @@ import { ChatsService } from './chats.service'
 import { ChatsWsService } from './chats.ws.service'
 import { ChatRepository } from './chats.repository'
 import { ChatsController } from './chats.controller'
-import { ContactRepository } from 'src/contacts/contact.repository'
-import { UserRepository } from 'src/users/user.repository'
-import { MessageRepository } from 'src/messages/message.repository'
-import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
+import { UserModule } from 'src/users/user.module'
+import { ContactModule } from 'src/contacts/contact.module'
+import { MessageModule } from 'src/messages/message.module'
+import { MessageRecipientModule } from 'src/message-recipient/message-recipient.module'
 
 @Module({
-  providers: [
-    ChatRepository,
-    ChatsGateway,
-    ChatsService,
-    ChatsWsService,
-    ContactRepository,
-    MessageRepository,
-    MessageRecipientRepository,
-    UserRepository,
-  ],
+  imports: [ContactModule, MessageModule, MessageRecipientModule, UserModule],
+  providers: [ChatRepository, ChatsGateway, ChatsService, ChatsWsService],
   controllers: [ChatsController],
+  exports: [ChatRepository],
 })
 export class ChatsModule {}

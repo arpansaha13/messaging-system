@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common'
 import { GroupService } from './group.service'
 import { GroupRepository } from './group.repository'
 import { GroupController } from './group.controller'
-import { InviteRepository } from 'src/invites/invite.repository'
-import { ChannelRepository } from 'src/channels/channel.repository'
-import { UserGroupRepository } from 'src/user_group/user-group.repository'
+import { InviteModule } from 'src/invites/invite.module'
+import { ChannelModule } from 'src/channels/channel.module'
+import { UserGroupModule } from 'src/user_group/user_group.module'
 
 @Module({
+  imports: [ChannelModule, InviteModule, UserGroupModule],
   controllers: [GroupController],
-  providers: [ChannelRepository, GroupRepository, GroupService, InviteRepository, UserGroupRepository],
+  providers: [GroupRepository, GroupService],
 })
 export class GroupModule {}

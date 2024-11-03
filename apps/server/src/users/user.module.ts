@@ -3,11 +3,12 @@ import { MessageModule } from 'src/messages/message.module'
 import { UserService } from './user.service'
 import { UserController } from './user.controller'
 import { UserRepository } from './user.repository'
-import { ContactRepository } from 'src/contacts/contact.repository'
+import { ContactModule } from 'src/contacts/contact.module'
 
 @Module({
-  imports: [MessageModule],
+  imports: [ContactModule, MessageModule],
   controllers: [UserController],
-  providers: [ContactRepository, UserRepository, UserService],
+  providers: [UserRepository, UserService],
+  exports: [UserRepository],
 })
 export class UserModule {}
