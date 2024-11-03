@@ -2,6 +2,7 @@ import { useParams } from 'next/navigation'
 import { type FormEvent, useRef, useState } from 'react'
 import { Input, Button, ButtonLink } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
+import { useVerifyMutation } from '~/store/features/auth/auth.api.slice'
 import { setNotification, toggleNotification } from '~/store/features/notification/notification.slice'
 import { _verification } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
@@ -30,31 +31,27 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
   const params = useParams()
   const dispatch = useAppDispatch()
   const formRef = useRef<HTMLFormElement>(null)
-  const [loading, setLoading] = useState<boolean>(false)
+  const [_verification, { isLoading }] = useVerifyMutation()
 
-  function verifyAccount(e: FormEvent<HTMLFormElement>) {
+  async function verifyAccount(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     const formData = getFormData<IVerificationFormData>(formRef.current)
 
-    setLoading(true)
-
-    _verification(params.hash as string, formData)
-      .then(() => {
-        setStatus(VerificationStatus.VERIFIED)
-        dispatch(toggleNotification(false))
-      })
-      .catch(err => {
-        dispatch(
-          setNotification({
-            show: true,
-            status: 'error',
-            title: 'Verification failed!',
-            description: err.message,
-          }),
-        )
-      })
-      .finally(() => setLoading(false))
+    try {
+      await _verification({ hash: params.hash as string, body: formData }).unwrap()
+      setStatus(VerificationStatus.VERIFIED)
+      dispatch(toggleNotification(false))
+    } catch (err: any) {
+      dispatch(
+        setNotification({
+          show: true,
+          status: 'error',
+          title: 'Verification failed!',
+          description: err.data.message,
+        }),
+      )
+    }
   }
 
   return (
@@ -64,7 +61,7 @@ const OtpForm = ({ setStatus }: OtpFormProps) => {
       </div>
 
       <div>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={isLoading}>
           Submit
         </Button>
       </div>
@@ -78,7 +75,7 @@ function VerifiedInfo() {
       <p className="mb-4 text-2xl font-bold">Verification successful!</p>
       <p className="mb-4 text-sm text-gray-600">Your account has been verified. You can now login from your account.</p>
 
-      <ButtonLink href="/auth/signin">Go to login</ButtonLink>
+      <ButtonLink href="/auth/login">Go to login</ButtonLink>
     </div>
   )
 }

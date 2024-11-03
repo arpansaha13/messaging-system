@@ -7,8 +7,8 @@ import { useState, useRef, type FormEvent } from 'react'
 import { Input, Button } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
 import { toggleNotification, setNotification } from '~/store/features/notification/notification.slice'
-import { _login } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
+import { useLoginMutation } from '~/store/features/auth/auth.api.slice'
 
 interface ILoginFormData {
   email: string
@@ -24,30 +24,27 @@ export default function SignInPage() {
   const router = useRouter()
 
   const formRef = useRef<HTMLFormElement>(null)
-  const [loading, setLoading] = useState<boolean>(false)
+  const [_login, { isLoading }] = useLoginMutation()
 
-  function login(e: FormEvent<HTMLFormElement>) {
+  async function login(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setLoading(true)
 
     const formData = getFormData<ILoginFormData>(formRef.current)
 
-    _login(formData)
-      .then(() => {
-        router.replace('/')
-        dispatch(toggleNotification(false))
-      })
-      .catch(err => {
-        dispatch(
-          setNotification({
-            show: true,
-            status: 'error',
-            title: 'Sign in failed!',
-            description: err.message,
-          }),
-        )
-      })
-      .finally(() => setLoading(false))
+    try {
+      await _login(formData).unwrap()
+      router.replace('/')
+      dispatch(toggleNotification(false))
+    } catch (e: any) {
+      dispatch(
+        setNotification({
+          show: true,
+          status: 'error',
+          title: 'Sign in failed!',
+          description: e.data.message,
+        }),
+      )
+    }
   }
 
   return (
@@ -84,7 +81,7 @@ export default function SignInPage() {
             </div> */}
 
             <div>
-              <Button type="submit" loading={loading}>
+              <Button type="submit" loading={isLoading}>
                 Login
               </Button>
             </div>

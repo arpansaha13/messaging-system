@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import { classNames } from '@arpansaha13/utils'
 import { Separator } from '~/components/common'
-import { _logout } from '~/utils/api'
+import { useLogoutMutation } from '~/store/features/auth/auth.api.slice'
 
 interface SettingsLayoutProps {
   children: React.ReactNode
@@ -13,6 +13,7 @@ interface SettingsLayoutProps {
 
 export default function SettingsLayout({ children }: Readonly<SettingsLayoutProps>) {
   const pathname = usePathname()
+  const [_logout] = useLogoutMutation()
 
   const tabs = [
     {

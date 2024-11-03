@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRef, useState, type FormEvent } from 'react'
+import { useRef, type FormEvent } from 'react'
 import { useMap } from 'react-use'
 import { Input, Button } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
+import { useSignUpMutation } from '~/store/features/auth/auth.api.slice'
 import { setNotification } from '~/store/features/notification/notification.slice'
-import { _signup } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 
 interface ISignupFormData {
@@ -24,14 +24,14 @@ interface ISignupFormData {
 export default function SignUpPage() {
   const dispatch = useAppDispatch()
   const formRef = useRef<HTMLFormElement>(null)
-  const [loading, setLoading] = useState<boolean>(false)
+  const [_signUp, { isLoading }] = useSignUpMutation()
 
   const [validationErrors, { set: setError }] = useMap<Record<string, string | null>>({
     password: null,
     confirmPassword: null,
   })
 
-  function signUp(e: FormEvent<HTMLFormElement>) {
+  async function signUp(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
     const formData = getFormData<ISignupFormData>(formRef.current)
@@ -48,32 +48,28 @@ export default function SignUpPage() {
     setError('password', null)
     setError('confirmPassword', null)
 
-    setLoading(true)
+    try {
+      await _signUp(formData).unwrap()
+      dispatch(
+        setNotification({
+          show: true,
+          status: 'success',
+          title: 'Account created!',
+          description: 'Please verify your account using the link sent to your email.',
+        }),
+      )
+    } catch (err: any) {
+      const message: string | Array<string> = err.data.message
 
-    _signup(formData)
-      .then(() => {
-        dispatch(
-          setNotification({
-            show: true,
-            status: 'success',
-            title: 'Account created!',
-            description: 'Please verify your account using the link sent to your email.',
-          }),
-        )
-      })
-      .catch(err => {
-        const message: string | Array<string> = err.message
-
-        dispatch(
-          setNotification({
-            show: true,
-            status: 'error',
-            title: 'Sign up failed!',
-            description: typeof message === 'string' ? message : message[0],
-          }),
-        )
-      })
-      .finally(() => setLoading(false))
+      dispatch(
+        setNotification({
+          show: true,
+          status: 'error',
+          title: 'Sign up failed!',
+          description: typeof message === 'string' ? message : message[0],
+        }),
+      )
+    }
   }
 
   return (
@@ -128,7 +124,7 @@ export default function SignUpPage() {
             </div>
 
             <div>
-              <Button type="submit" loading={loading}>
+              <Button type="submit" loading={isLoading}>
                 Sign up
               </Button>
             </div>

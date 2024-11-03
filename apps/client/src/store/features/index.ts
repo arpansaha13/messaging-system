@@ -4,13 +4,14 @@ import { typingSlice } from './typing/typing.slice'
 import { messageSlice } from './messages/message.slice'
 import { chatListSlice } from './chat-list/chat-list.slice'
 import { notificationSlice } from './notification/notification.slice'
+import { authApiSlice } from './auth/auth.api.slice'
 import { usersApiSlice } from './users/users.api.slice'
 import { groupsApiSlice } from './groups/groups.api.slice'
 import { contactsApiSlice } from './contacts/contact.api.slice'
 
 export const slices = [darkModeSlice, draftSlice, typingSlice, messageSlice, chatListSlice, notificationSlice]
 
-export const apiSlices = [usersApiSlice, groupsApiSlice, contactsApiSlice] as const
+export const apiSlices = [authApiSlice, usersApiSlice, groupsApiSlice, contactsApiSlice] as const
 
 type UnionOfKeys<T> = T extends { endpoints: infer U } ? keyof U : never
 type AllKeys<T extends readonly any[]> = UnionOfKeys<T[number]>
