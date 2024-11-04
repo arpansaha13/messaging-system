@@ -13,15 +13,15 @@ interface AvatarProps {
 
 interface AvatarSvgProps {
   size: number
-  bgColor: `bg-gray-${TwColorShades}`
-  svgColor: `text-gray-${TwColorShades}`
+  bgColor: `bg-gray-${TwColorShades} dark:bg-gray-${TwColorShades}`
+  svgColor: `text-gray-${TwColorShades} dark:text-gray-${TwColorShades}`
 }
 
 export default function Avatar(props: Readonly<AvatarProps>) {
   const { src, size, alt = '' } = props
 
   if (isNullOrUndefined(src)) {
-    return <AvatarSvg size={size} bgColor="bg-gray-500" svgColor="text-gray-300" />
+    return <AvatarSvg size={size} bgColor="bg-gray-500 dark:bg-gray-500" svgColor="text-gray-300 dark:text-gray-500" />
   }
 
   return (

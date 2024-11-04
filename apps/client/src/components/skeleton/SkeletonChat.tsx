@@ -10,15 +10,15 @@ interface SkeletonChatBodyMessageProps {
 export default function SkeletonChat() {
   return (
     <div className="flex h-full flex-col">
-      <div className="relative z-10 flex items-center justify-between bg-gray-800 px-4 py-2.5">
+      <div className="relative z-10 flex items-center justify-between bg-gray-100 px-4 py-2.5 dark:bg-gray-800">
         <SkeletonChatHeader />
       </div>
 
-      <div className="flex flex-grow flex-col justify-end bg-gray-900">
+      <div className="flex flex-grow flex-col justify-end bg-slate-200/50 dark:bg-gray-900">
         <SkeletonChatBody />
       </div>
 
-      <div className="relative z-10 flex w-full items-center space-x-1 bg-gray-800 px-4 py-2.5">
+      <div className="relative z-10 flex w-full items-center space-x-1 bg-gray-100 px-4 py-2.5 dark:bg-gray-800">
         <SkeletonChatFooter />
       </div>
     </div>
@@ -40,11 +40,11 @@ function SkeletonChatHeader() {
 function SkeletonChatBody() {
   return (
     <div className="scrollbar animate-pulse overflow-y-scroll px-20 py-4">
-      <SkeletonChatBodyMessage lines={2} />
-      <SkeletonChatBodyMessage lines={1} />
-      <SkeletonChatBodyMessage direction="right" lines={3} />
-      <SkeletonChatBodyMessage lines={1} />
-      <SkeletonChatBodyMessage direction="right" lines={2} />
+      <SkeletonChatBodyMessage lines={2} direction="left" />
+      <SkeletonChatBodyMessage lines={1} direction="left" />
+      <SkeletonChatBodyMessage lines={3} direction="right" />
+      <SkeletonChatBodyMessage lines={1} direction="left" />
+      <SkeletonChatBodyMessage lines={2} direction="right" />
     </div>
   )
 }
@@ -54,7 +54,7 @@ function SkeletonChatBodyMessage(props: Readonly<SkeletonChatBodyMessageProps>) 
 
   return (
     <div className={classNames('mb-4 w-max', direction === 'right' && 'ml-auto')}>
-      <div className="relative rounded-lg border-b border-gray-400/50 bg-gray-700 p-2 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none">
+      <div className="relative rounded-lg border-b border-gray-400/50 bg-white p-2 last:mb-0 lg:max-w-lg xl:max-w-xl dark:border-none dark:bg-slate-700">
         {Array.from({ length: lines }).map((_, i) => (
           <div key={i} className="flex h-5 items-center">
             <SkeletonParagraph className={classNames('h-3.5', i === lines - 1 ? 'w-60' : 'w-96')} />
@@ -73,7 +73,7 @@ function SkeletonChatBodyMessage(props: Readonly<SkeletonChatBodyMessageProps>) 
 function SkeletonChatFooter() {
   return (
     <div className="flex-grow px-1">
-      <div className="h-10 animate-pulse rounded-lg bg-gray-700/70 shadow" />
+      <div className="h-10 animate-pulse rounded-lg bg-white shadow dark:bg-gray-700/70" />
     </div>
   )
 }

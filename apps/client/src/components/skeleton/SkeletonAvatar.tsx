@@ -14,7 +14,7 @@ export default function SkeletonAvatar(props: Readonly<SkeletonAvatarProps>) {
       className={classNames('flex-shrink-0', pulse && 'animate-pulse')}
       style={{ width: `${size}rem`, height: `${size}rem` }}
     >
-      <AvatarSvg size={size} bgColor="bg-gray-600" svgColor="text-gray-400" />
+      <AvatarSvg size={size} bgColor="bg-gray-500 dark:bg-gray-600" svgColor="text-gray-300 dark:text-gray-400" />
     </div>
   )
 }
