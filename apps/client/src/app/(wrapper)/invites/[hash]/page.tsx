@@ -25,12 +25,15 @@ export default async function Page(request: Request) {
   }
 
   return (
-    <div className="flex h-full items-center justify-center bg-gray-800">
-      <form action={joinGroup} className="flex w-[26rem] flex-col items-center rounded-lg bg-gray-900 p-6">
+    <div className="flex h-full items-center justify-center bg-gray-200 dark:bg-gray-800">
+      <form
+        action={joinGroup}
+        className="flex w-[26rem] flex-col items-center rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900"
+      >
         <GroupAvatar src={null} size={6} />
 
         <p className="mt-4 text-xl font-semibold">
-          You have been invited to <span className="text-brand-500">{invite.group.name}</span>
+          You have been invited to <span className="text-brand-600 dark:text-brand-500">{invite.group.name}</span>
         </p>
 
         <div className="mt-4">

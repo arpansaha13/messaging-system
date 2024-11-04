@@ -8,10 +8,6 @@ import { Modal } from '~/components/ui'
 import { useCreateInviteQuery } from '~/store/features/groups/groups.api.slice'
 import type { IGroup, IInvite } from '@shared/types/client'
 
-interface CopyButtonContentProps {
-  isCopied: boolean
-}
-
 interface CreateInviteModalProps {
   open: boolean
   groupId: IGroup['id']
@@ -45,36 +41,29 @@ export default function CreateInviteModal(props: Readonly<CreateInviteModalProps
       </DialogTitle>
 
       <div className="mt-4 flex overflow-hidden rounded shadow">
-        <div className="flex-grow bg-gray-800 px-4 py-2">
-          <p className="text-sm text-gray-200">{inviteLink}</p>
+        <div className="flex-grow bg-gray-300 px-4 py-2 dark:bg-gray-800">
+          <p className="text-sm text-gray-900 dark:text-gray-200">{inviteLink}</p>
         </div>
         <div>
           <button
             type="button"
-            className="bg-brand-600 hover:bg-brand-700 flex w-28 items-center justify-center gap-1 px-4 py-2 text-sm font-medium transition-colors"
+            className="bg-brand-500 dark:bg-brand-600 hover:bg-brand-600 dark:hover:bg-brand-700 flex w-28 items-center justify-center gap-1 px-4 py-2 text-sm font-medium transition-colors"
             onClick={copy}
           >
-            <CopyButtonContent isCopied={isCopied} />
+            {isCopied ? (
+              <ClipboardDocumentCheckIcon className="dark:text-brand-100 size-5" />
+            ) : (
+              <DocumentTextIcon className="size-5 dark:text-white" />
+            )}
+            {isCopied ? 'Copied' : 'Copy'}
           </button>
         </div>
       </div>
-      <p className="mt-1 text-xs text-gray-300">Invite link expires on {formatExpiresAt(invite.expiresAt)}</p>
+
+      <p className="mt-1 text-xs text-gray-800 dark:text-gray-300">
+        Invite link expires on {formatExpiresAt(invite.expiresAt)}
+      </p>
     </Modal>
-  )
-}
-
-function CopyButtonContent(props: Readonly<CopyButtonContentProps>) {
-  const { isCopied } = props
-
-  return (
-    <>
-      {isCopied ? (
-        <ClipboardDocumentCheckIcon className="text-brand-100 size-5" />
-      ) : (
-        <DocumentTextIcon className="size-5 text-white" />
-      )}
-      {isCopied ? 'Copied' : 'Copy'}
-    </>
   )
 }
 

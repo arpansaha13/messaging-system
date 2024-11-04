@@ -42,7 +42,7 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
 
       <WindowPanel>
         <div className="bg-gray-50 p-4 shadow dark:bg-gray-800">
-          <h2 className="text-lg font-semibold text-gray-300">Members</h2>
+          <h2 className="text-lg font-semibold dark:text-gray-300">Members</h2>
         </div>
 
         <WindowPanelBody>

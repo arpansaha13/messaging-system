@@ -41,7 +41,7 @@ export default function GroupHeader(props: Readonly<GroupHeaderProps>) {
       </div>
 
       <Menu as="div" className="absolute right-2 top-2">
-        <MenuButton className="focus:ring-brand-500 block rounded p-1 transition-colors hover:bg-gray-600/60 focus:outline-none focus:ring-2">
+        <MenuButton className="focus:ring-brand-500 block rounded p-1 transition-colors hover:bg-gray-200 focus:outline-none focus:ring-2 dark:hover:bg-gray-600/60">
           <EllipsisHorizontalIcon className="size-6 flex-shrink-0" />
         </MenuButton>
 
