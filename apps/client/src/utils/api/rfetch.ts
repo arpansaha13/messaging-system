@@ -3,7 +3,7 @@ import type { RequestOptions } from '@shared/types'
 
 export type FetchResult<T> = { data: T; error: null } | { data: null; error: Exception }
 
-interface Exception {
+export interface Exception {
   data?: any
   status: number
   message: string
