@@ -1,9 +1,8 @@
 import { redirect } from 'next/navigation'
-import { Button } from '~/components/ui'
-import { GroupAvatar } from '~/components/common'
 import { HttpCode } from '~/utils/api/HttpCode.enum'
-import { getInvite, joinGroup } from './actions'
+import { getInvite } from './actions'
 import type { Exception } from '~/utils/api/rfetch'
+import JoinGroupForm from './JoinGroupForm'
 
 interface WrapperProps {
   children: React.ReactNode
@@ -18,29 +17,9 @@ export default async function Page(request: Readonly<Request>) {
     return handleError(error)
   }
 
-  async function handleSubmit() {
-    'use server'
-    return joinGroup(inviteHash)
-  }
-
   return (
     <Wrapper>
-      <form
-        action={handleSubmit}
-        className="flex w-[26rem] flex-col items-center rounded-lg bg-gray-50 p-6 shadow dark:bg-gray-900"
-      >
-        <GroupAvatar src={null} size={6} />
-
-        <p className="mt-4 text-xl font-semibold">
-          You have been invited to <span className="text-brand-600 dark:text-brand-500">{invite.group.name}</span>
-        </p>
-
-        <div className="mt-4">
-          <Button type="submit" className="mx-auto w-max">
-            Join group
-          </Button>
-        </div>
-      </form>
+      <JoinGroupForm invite={invite} />
     </Wrapper>
   )
 }
