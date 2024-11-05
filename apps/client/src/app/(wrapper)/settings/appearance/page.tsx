@@ -1,17 +1,19 @@
 'use client'
 
-import { useDark } from '~/hooks/useDark'
 import { classNames } from '@arpansaha13/utils'
+import { useAppDispatch, useAppSelector } from '~/store/hooks'
+import { toggleDark } from '~/store/features/dark/dark.slice'
 
 export default function Page() {
-  const [isDark, toggleDark] = useDark()
+  const dispatch = useAppDispatch()
+  const isDark = useAppSelector(state => state.dark.isDark)
 
   const switchToLight = () => {
-    if (isDark) toggleDark(false)
+    dispatch(toggleDark(false))
   }
 
   const switchToDark = () => {
-    if (!isDark) toggleDark(true)
+    dispatch(toggleDark(true))
   }
 
   return (

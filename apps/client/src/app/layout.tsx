@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { StoreProvider } from '~/providers/StoreProvider'
+import { ThemeProvider } from '~/providers/ThemeProvider'
 import '~/styles/globals.css'
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export default function RootLayout(props: Readonly<RootLayoutProps>) {
     <html lang="en">
       {/* Browser extensions like grammarly will add attributes on body causing hydration warnings */}
       <body suppressHydrationWarning className="h-screen w-screen">
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </StoreProvider>
       </body>
     </html>
   )

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useDark } from '~/hooks/useDark'
 import { SocketProvider } from '~/providers/SocketProvider'
 import { Notification } from '~/components/common'
 import Navbar from '~/components/Navbar'
@@ -13,12 +12,11 @@ interface LayoutWrapperProps {
 }
 
 export default function LayoutWrapper({ children }: Readonly<LayoutWrapperProps>) {
-  useDark()
   usePrefetch('getAuthUser', undefined)
   usePrefetch('getGroups', undefined)
   usePrefetch('getContacts', undefined)
 
-  const dispatch = useAppDispatch() 
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
     dispatch(initChatList())
