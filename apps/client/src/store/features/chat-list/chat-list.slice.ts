@@ -69,10 +69,10 @@ export const chatListSlice = createAppSlice({
           convo = state.unarchived[idx]
         }
 
-        if (isNullOrUndefined(convo.contact)) {
-          convo.contact = { id: newContact.id, alias: newContact.alias }
+        if (isNullOrUndefined(convo.receiver.contact)) {
+          convo.receiver.contact = { id: newContact.id, alias: newContact.alias }
         } else {
-          convo.contact.alias = newContact.alias
+          convo.receiver.contact.alias = newContact.alias
         }
       },
     ),
@@ -89,9 +89,9 @@ export const chatListSlice = createAppSlice({
         convo = state.unarchived[idx]
       }
 
-      if (isNullOrUndefined(convo.contact)) return
+      if (isNullOrUndefined(convo.receiver.contact)) return
 
-      convo.contact = null
+      convo.receiver.contact = null
     }),
     clearChatListItemMessage: create.reducer((state, action: PayloadAction<number>) => {
       const receiverId = action.payload

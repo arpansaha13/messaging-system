@@ -20,7 +20,7 @@ import {
 import { clearMessages, deleteMessages } from '~/store/features/messages/message.slice'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
-type DeleteChatModalPayload = Pick<IChatListItem, 'contact' | 'receiver'>
+type DeleteChatModalPayload = Pick<IChatListItem, 'receiver'>
 
 interface DeleteChatListItemModalProps {
   open: boolean
@@ -59,10 +59,7 @@ export default function Page() {
       {
         slot: 'Delete chat',
         action: (_, payload) => {
-          setDeleteChatModalPayload({
-            contact: payload.contact,
-            receiver: payload.receiver,
-          })
+          setDeleteChatModalPayload({ receiver: payload.receiver })
           setDeleteChatModalOpen(true)
         },
       },
@@ -127,7 +124,7 @@ function DeleteChatListItemModal(props: Readonly<DeleteChatListItemModalProps>) 
 
         <div className="mt-2">
           <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-300">
-            {payload?.contact?.alias ?? payload?.receiver.globalName}
+            {payload?.receiver.contact?.alias ?? payload?.receiver.globalName}
           </p>
         </div>
 

@@ -2,10 +2,6 @@ import type { IMessage } from '@shared/types'
 
 /** Generic type for chat-list item. A = archived */
 export interface IChatListItem {
-  contact: {
-    id: number
-    alias: string
-  } | null
   latestMsg: IMessage | null
   receiver: IUser
   chat: {

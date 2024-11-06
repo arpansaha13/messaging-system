@@ -5,27 +5,14 @@ export function formatChatListItemResponse(body: IChatListItemResponseFromBE): I
   const { chat, message, contact } = body
 
   return {
-    contact: contact
-      ? {
-          id: contact.id,
-          alias: contact.alias,
-        }
-      : null,
-    latestMsg: message
-      ? {
-          id: message.id,
-          status: message.status,
-          content: message.content,
-          senderId: message.senderId,
-          createdAt: message.createdAt,
-        }
-      : null,
+    latestMsg: message,
     receiver: {
       id: chat.receiver_id,
       dp: chat.receiver_dp,
       bio: chat.receiver_bio,
       username: chat.receiver_username,
       globalName: chat.receiver_global_name,
+      contact: contact,
     },
     chat: {
       muted: chat.muted,
