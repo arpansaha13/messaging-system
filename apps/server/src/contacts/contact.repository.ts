@@ -5,7 +5,7 @@ import type { User } from 'src/users/user.entity'
 
 @Injectable()
 export class ContactRepository extends Repository<Contact> {
-  constructor(private dataSource: DataSource) {
+  constructor(private readonly dataSource: DataSource) {
     super(Contact, dataSource.createEntityManager())
   }
 
@@ -61,7 +61,7 @@ export class ContactRepository extends Repository<Contact> {
       .getMany()
   }
 
-  createContact(user: Contact['user'], userInContact: Contact['userInContact'], alias: Contact['alias']) {
+  createContact(user: User, userInContact: User, alias: Contact['alias']) {
     const newContact = new Contact()
     newContact.user = user
     newContact.userInContact = userInContact
@@ -69,12 +69,38 @@ export class ContactRepository extends Repository<Contact> {
     return this.save(newContact)
   }
 
-  existsByUserIds(userId: Contact['user']['id'], userIdInContact: Contact['userInContact']['id']) {
+  existsByUserIds(userId: User['id'], userIdInContact: User['id']) {
     return this.exists({
       where: {
         user: { id: userId },
         userInContact: { id: userIdInContact },
       },
     })
+  }
+
+  getContactsHavingUserIds(userId: User['id'], userInContactIds: User['id'][]): Promise<any[]>
+  getContactsHavingUserIds(userId: User['id'], userInContactIds: User['id']): Promise<any>
+
+  getContactsHavingUserIds(userId: User['id'], userInContactIds: User['id'] | User['id'][]) {
+    if (Array.isArray(userInContactIds) && userInContactIds.length === 0) {
+      return []
+    }
+
+    const partialQuery = this.createQueryBuilder('contact')
+      .select('contact.id', 'id')
+      .addSelect('contact.alias', 'alias')
+      .addSelect('userInContact.id', 'userIdInContact')
+      .innerJoin('contact.userInContact', 'userInContact')
+      .where('contact.user.id = :userId', { userId })
+
+    if (Array.isArray(userInContactIds)) {
+      return partialQuery
+        .andWhere('contact.userInContact.id IN (:...userInContactIds)', { userInContactIds })
+        .getRawMany()
+    }
+
+    return partialQuery
+      .andWhere('contact.userInContact.id = :userInContactId', { userInContactId: userInContactIds })
+      .getRawOne()
   }
 }

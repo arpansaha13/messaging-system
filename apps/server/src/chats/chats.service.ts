@@ -6,6 +6,7 @@ import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
 import type { IChatListItemResponseFromBE, IChatsResponseFromBE } from '@shared/types'
 import type { User } from 'src/users/user.entity'
+import type { Contact } from 'src/contacts/contact.entity'
 
 @Injectable()
 export class ChatsService {
@@ -30,20 +31,10 @@ export class ChatsService {
     }
 
     const receiverIds = chats.map(chat => chat.receiver_id)
-
     const messages = await Promise.all(promises)
+    const contacts = await this.contactRepository.getContactsHavingUserIds(userId, receiverIds)
 
-    const contacts = await this.contactRepository
-      .createQueryBuilder('contact')
-      .select('contact.id', 'id')
-      .addSelect('contact.alias', 'alias')
-      .addSelect('userInContact.id', 'userIdInContact')
-      .innerJoin('contact.userInContact', 'userInContact')
-      .where('contact.user.id = :userId', { userId })
-      .andWhere('contact.userInContact.id IN (:...receiverIds)', { receiverIds })
-      .getRawMany()
-
-    const contactsMap = new Map()
+    const contactsMap = new Map<User['id'], Contact>()
     contacts.forEach(contact => {
       contactsMap.set(contact.userIdInContact, contact)
     })
@@ -102,16 +93,7 @@ export class ChatsService {
     }
 
     const message = await this.messageRepository.getLatestMessageByUserId(userId, chat.receiver_id, chat.clearedAt)
-
-    const contact = await this.contactRepository
-      .createQueryBuilder('contact')
-      .select('contact.id', 'id')
-      .addSelect('contact.alias', 'alias')
-      .addSelect('userInContact.id', 'userIdInContact')
-      .innerJoin('contact.userInContact', 'userInContact')
-      .where('contact.user.id = :userId', { userId })
-      .andWhere('contact.userInContact.id = :receiverId', { receiverId })
-      .getRawOne()
+    const contact = await this.contactRepository.getContactsHavingUserIds(userId, receiverId)
 
     return { chat, message, contact }
   }
