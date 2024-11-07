@@ -1,31 +1,36 @@
 import { ChatsWsService } from './chats.ws.service'
-import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
+import {
+  MessageBody,
+  ConnectedSocket,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+  type OnGatewayConnection,
+  type OnGatewayDisconnect,
+} from '@nestjs/websockets'
 import type { Server, Socket } from 'socket.io'
 import { SocketEmitEvent } from '@shared/types'
 import type {
   IReceiverEmitDelivered,
   IReceiverEmitRead,
   ISenderEmitMessage,
-  ISessionConnect,
   ISenderEmitTyping,
   SocketOnEventPayload,
 } from '@shared/types'
 
 @WebSocketGateway()
-export class ChatsGateway {
+export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly chatsService: ChatsWsService) {}
 
   @WebSocketServer()
   private readonly server: Server<SocketOnEventPayload>
 
-  @SubscribeMessage<SocketEmitEvent>(SocketEmitEvent.SESSION_CONNECT)
-  handleConnect(@MessageBody() payload: ISessionConnect, @ConnectedSocket() socket: Socket) {
-    this.chatsService.handleConnect(payload, socket)
+  handleConnection(@ConnectedSocket() socket: Socket) {
+    this.chatsService.handleConnect(socket)
   }
 
-  @SubscribeMessage('disconnect')
-  handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
-    this.chatsService.handleDisconnect(senderSocket)
+  handleDisconnect(@ConnectedSocket() socket: Socket) {
+    this.chatsService.handleDisconnect(socket)
   }
 
   @SubscribeMessage<SocketEmitEvent>(SocketEmitEvent.SEND_MESSAGE)

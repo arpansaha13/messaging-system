@@ -1,9 +1,5 @@
 import type { MessageStatus } from './message'
 
-export interface ISessionConnect {
-  userId: number
-}
-
 export interface ISenderEmitMessage {
   hash: string
   content: string
@@ -61,8 +57,6 @@ export interface ISenderEmitTyping {
 export type IReceiverOnTyping = ISenderEmitTyping
 
 export enum SocketOnEvent {
-  CONNECT = 'connect',
-  DISCONNECT = 'disconnect',
   RECEIVE_MESSAGE = 'receive-message',
   SENT = 'sent',
   DELIVERED = 'delivered',
@@ -71,7 +65,6 @@ export enum SocketOnEvent {
 }
 
 export enum SocketEmitEvent {
-  SESSION_CONNECT = 'session-connect',
   SEND_MESSAGE = 'send-message',
   DELIVERED = 'delivered',
   TYPING = 'typing',
@@ -79,8 +72,6 @@ export enum SocketEmitEvent {
 }
 
 export interface SocketOnEventPayload {
-  [SocketOnEvent.CONNECT]: never
-  [SocketOnEvent.DISCONNECT]: never
   [SocketOnEvent.RECEIVE_MESSAGE]: IReceiverOnMessage
   [SocketOnEvent.SENT]: ISenderOnSent
   [SocketOnEvent.DELIVERED]: ISenderOnDelivered
@@ -89,7 +80,6 @@ export interface SocketOnEventPayload {
 }
 
 export interface SocketEmitEventPayload {
-  [SocketEmitEvent.SESSION_CONNECT]: ISessionConnect
   [SocketEmitEvent.SEND_MESSAGE]: ISenderEmitMessage
   [SocketEmitEvent.DELIVERED]: IReceiverEmitDelivered
   [SocketEmitEvent.TYPING]: ISenderEmitTyping

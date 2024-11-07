@@ -9,12 +9,11 @@ import { MessageRecipientRepository } from 'src/message-recipient/message-recipi
 import { In, type EntityManager } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
 import {
+  SocketOnEvent,
   type IReceiverEmitDelivered,
   type IReceiverEmitRead,
   type ISenderEmitMessage,
-  type ISessionConnect,
   type ISenderEmitTyping,
-  SocketOnEvent,
 } from '@shared/types'
 
 @Injectable()
@@ -27,27 +26,19 @@ export class ChatsWsService {
     private readonly messageRecipientRepository: MessageRecipientRepository,
   ) {}
 
-  /** A map of all clients (user_id's) to their client socket id's. */
   // TODO: Move this to an external cache
-  private clients = new Map<User['id'], Socket['id']>()
+  private readonly clients = new Map<User['id'], Socket['id']>()
 
-  private getMapKeyByValue(socketId: Socket['id']): User['id'] {
-    for (const [key, value] of this.clients.entries()) {
-      if (value === socketId) return key
-    }
-  }
-
-  handleConnect(payload: ISessionConnect, socket: Socket) {
+  handleConnect(socket: Socket) {
     // If the same user connects again it will overwrite previous data in map.
     // Which means multiple connections are not possible currently.
     // TODO: support multiple connections
-    this.clients.set(payload.userId, socket.id)
+    this.clients.set(parseInt(socket.handshake.query.userId as string), socket.id)
   }
 
   // TODO: check if room is unarchived if the receiver is offline
   handleDisconnect(socket: Socket) {
-    const disconnectedUserId = this.getMapKeyByValue(socket.id)
-    this.clients.delete(disconnectedUserId)
+    this.clients.delete(parseInt(socket.handshake.query.userId as string))
   }
 
   async sendMessage(payload: ISenderEmitMessage, server: Server) {
@@ -161,7 +152,7 @@ export class ChatsWsService {
     }))
 
     const senderSocketId = this.clients.get(payloadArray[0].senderId)
-    server.to(senderSocketId).emit('read', readPayloadToSender)
+    server.to(senderSocketId).emit(SocketOnEvent.READ, readPayloadToSender)
   }
 
   handleTyping(payload: ISenderEmitTyping, server: Server) {

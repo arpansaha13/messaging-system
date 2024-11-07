@@ -45,7 +45,6 @@ interface ISocketWrapper {
 }
 
 interface ISocketContext {
-  isConnected: boolean
   socket: ISocketWrapper
 }
 
@@ -56,25 +55,6 @@ function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
 }
 
 function useSocketInit() {
-  const socket = useMemo(() => io(SOCKET_URL, { autoConnect: true }), [])
-
-  /** A socket wrapper to allow type security. */
-  const socketWrapper = useMemo<ISocketWrapper>(
-    () => ({
-      emit(event, payload, ack) {
-        if (ack) socket.emit(event, payload, ack)
-        else socket.emit(event, payload)
-      },
-      on(event, listener) {
-        socket.on(event as any, listener)
-      },
-      off(event) {
-        socket.off(event)
-      },
-    }),
-    [socket],
-  )
-
   const dispatch = useAppDispatch()
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const searchParams = useSearchParams()
@@ -83,7 +63,28 @@ function useSocketInit() {
   const unarchivedChatList = useAppSelector(selectUnarchived)
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
-  const [isConnected, setIsConnected] = useState<boolean>(socket.connected)
+
+  const socket = useMemo(() => {
+    if (!isSuccess) return null
+    return io(SOCKET_URL, { autoConnect: true, query: { userId: authUser.id } })
+  }, [authUser, isSuccess])
+
+  /** A socket wrapper to allow type security. */
+  const socketWrapper = useMemo<ISocketWrapper>(
+    () => ({
+      emit(event, payload, ack) {
+        if (ack) socket?.emit(event, payload, ack)
+        else socket?.emit(event, payload)
+      },
+      on(event, listener) {
+        socket?.on(event as any, listener)
+      },
+      off(event) {
+        socket?.off(event)
+      },
+    }),
+    [socket],
+  )
 
   useEffect(() => {
     if (isNullOrUndefined(receiverId) || !isSuccess) return
@@ -125,26 +126,6 @@ function useSocketInit() {
     }
     socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
   }, [receiverId, archivedChatList, authUser, dispatch, isSuccess, socketWrapper, unarchivedChatList, userMessagesMap])
-
-  useEffect(() => {
-    if (!isSuccess) return
-
-    if (socket.connected) socketWrapper.emit(SocketEmitEvent.SESSION_CONNECT, { userId: authUser.id })
-
-    socketWrapper.on(SocketOnEvent.CONNECT, () => {
-      setIsConnected(true)
-      socketWrapper.emit(SocketEmitEvent.SESSION_CONNECT, { userId: authUser.id })
-    })
-
-    socketWrapper.on(SocketOnEvent.DISCONNECT, () => {
-      setIsConnected(false)
-    })
-
-    return () => {
-      socketWrapper.off(SocketOnEvent.CONNECT)
-      socketWrapper.off(SocketOnEvent.DISCONNECT)
-    }
-  }, [authUser, isSuccess, setIsConnected, socket.connected, socketWrapper])
 
   useEffect(() => {
     if (!isSuccess) return
@@ -313,15 +294,15 @@ function useSocketInit() {
     }
   }, [dispatch, socketWrapper])
 
-  return { isConnected, socketWrapper }
+  return { socketWrapper }
 }
 
 const SocketContext = createContext<ISocketContext | null>(null)
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isConnected, socketWrapper } = useSocketInit()
+  const { socketWrapper } = useSocketInit()
 
-  const contextValue = useMemo(() => ({ isConnected, socket: socketWrapper }), [isConnected, socketWrapper])
+  const contextValue = useMemo(() => ({ socket: socketWrapper }), [socketWrapper])
 
   return <SocketContext.Provider value={contextValue}>{children}</SocketContext.Provider>
 }
