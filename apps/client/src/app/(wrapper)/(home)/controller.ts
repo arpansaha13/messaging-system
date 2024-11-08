@@ -1,8 +1,8 @@
 import { useSearchParams } from 'next/navigation'
-import { useMemo, useState, useRef, useEffect } from 'react'
+import { useMemo, useState, useRef, useEffect, useCallback } from 'react'
 import { useDebounce } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { useSocket } from '~/providers/SocketProvider'
+import { useSocket } from '~/hooks/useSocket'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import { unarchiveChat } from '~/store/features/chat-list/chat-list.slice'
 import { selectDraft, addDraft, removeDraft } from '~/store/features/drafts/draft.slice'
@@ -24,7 +24,7 @@ import {
 } from '@shared/types'
 
 export default function useController() {
-  const { socket } = useSocket()!
+  const { socket } = useSocket()
 
   const dispatch = useAppDispatch()
   const searchParams = useSearchParams()
@@ -38,55 +38,63 @@ export default function useController() {
   const [inputValue, setInputValue] = useState('')
   const prevReceiverId = useRef(receiver?.id ?? null)
 
-  function typingPayload(isTyping: boolean): ISenderEmitTyping {
-    return {
-      senderId: authUser!.id,
-      receiverId: receiver!.id,
-      isTyping,
-    }
-  }
+  const typingPayload = useCallback(
+    (isTyping: boolean): ISenderEmitTyping => {
+      return {
+        senderId: authUser!.id,
+        receiverId: receiver!.id,
+        isTyping,
+      }
+    },
+    [authUser, receiver],
+  )
   const isFirstRun = useRef(true)
   const [isReady] = useDebounce(
     () => {
       if (isFirstRun.current) {
         isFirstRun.current = false
       } else {
-        socket.emit(SocketEmitEvent.TYPING, typingPayload(false))
+        socket?.emit(SocketEmitEvent.TYPING, typingPayload(false))
       }
     },
     1000,
-    [inputValue],
+    [inputValue, socket],
   )
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (isReady() && isTypedCharGood(e)) {
-      socket.emit(SocketEmitEvent.TYPING, typingPayload(true))
-    }
-    if (e.key === 'Enter' && inputValue) {
-      dispatch(unarchiveChat(receiver!.id))
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (isNullOrUndefined(socket)) return
 
-      const newMessage = {
-        hash: generateHash(),
-        content: inputValue,
-        senderId: authUser!.id,
-        status: MessageStatus.SENDING,
-      } as IMessageSending
+      if (isReady() && isTypedCharGood(e)) {
+        socket.emit(SocketEmitEvent.TYPING, typingPayload(true))
+      }
+      if (e.key === 'Enter' && inputValue) {
+        dispatch(unarchiveChat(receiver!.id))
 
-      // Note: Chat-list latest-message won't be updated for a message that is still "sending"
-      dispatch(
-        upsertTempMessages({
+        const newMessage = {
+          hash: generateHash(),
+          content: inputValue,
+          senderId: authUser!.id,
+          status: MessageStatus.SENDING,
+        } as IMessageSending
+
+        // Note: Chat-list latest-message won't be updated for a message that is still "sending"
+        dispatch(
+          upsertTempMessages({
+            receiverId: receiver!.id,
+            messages: [{ ...newMessage, createdInClientAt: new Date() }],
+          }),
+        )
+
+        setInputValue('')
+        socket.emit(SocketEmitEvent.SEND_MESSAGE, {
+          ...newMessage,
           receiverId: receiver!.id,
-          messages: [{ ...newMessage, createdInClientAt: new Date() }],
-        }),
-      )
-
-      setInputValue('')
-      socket.emit(SocketEmitEvent.SEND_MESSAGE, {
-        ...newMessage,
-        receiverId: receiver!.id,
-      })
-    }
-  }
+        })
+      }
+    },
+    [authUser, dispatch, inputValue, isReady, receiver, socket, typingPayload],
+  )
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInputValue(e.target.value)

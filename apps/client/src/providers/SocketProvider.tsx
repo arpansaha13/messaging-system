@@ -1,9 +1,10 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import io from 'socket.io-client'
+import { useUnmount } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
+import { useSocket } from '~/hooks/useSocket'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
   updateChatListItemMessage,
@@ -24,37 +25,14 @@ import {
 import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import {} from '@shared/types'
 import type { IChatListItem, IUser } from '@shared/types/client'
-import {
-  MessageStatus,
-  SocketEmitEvent,
-  SocketOnEvent,
-  type IMessage,
-  type IReceiverEmitRead,
-  type SocketEmitEventPayload,
-  type SocketOnEventPayload,
-} from '@shared/types'
-
-interface ISocketWrapper {
-  emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void
-
-  on<T extends SocketOnEvent>(event: T, listener: (payload: SocketOnEventPayload[T]) => void): void
-
-  off(event: SocketOnEvent): void
-}
-
-interface ISocketContext {
-  socket: ISocketWrapper
-}
-
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_IO_BASE_URL!
+import { MessageStatus, SocketEmitEvent, SocketOnEvent, type IMessage, type IReceiverEmitRead } from '@shared/types'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
   return chatList.find(item => item.receiver.id === receiverId) ?? null
 }
 
-function useSocketInit() {
+export function SocketProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch()
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const searchParams = useSearchParams()
@@ -64,27 +42,7 @@ function useSocketInit() {
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
 
-  const socket = useMemo(() => {
-    if (!isSuccess) return null
-    return io(SOCKET_URL, { autoConnect: true, query: { userId: authUser.id } })
-  }, [authUser, isSuccess])
-
-  /** A socket wrapper to allow type security. */
-  const socketWrapper = useMemo<ISocketWrapper>(
-    () => ({
-      emit(event, payload, ack) {
-        if (ack) socket?.emit(event, payload, ack)
-        else socket?.emit(event, payload)
-      },
-      on(event, listener) {
-        socket?.on(event as any, listener)
-      },
-      off(event) {
-        socket?.off(event)
-      },
-    }),
-    [socket],
-  )
+  const { socket, closeSocket } = useSocket()
 
   useEffect(() => {
     if (isNullOrUndefined(receiverId) || !isSuccess) return
@@ -124,13 +82,13 @@ function useSocketInit() {
         }),
       )
     }
-    socketWrapper.emit(SocketEmitEvent.READ, readEventPayload)
-  }, [receiverId, archivedChatList, authUser, dispatch, isSuccess, socketWrapper, unarchivedChatList, userMessagesMap])
+    socket?.emit(SocketEmitEvent.READ, readEventPayload)
+  }, [receiverId, archivedChatList, authUser, dispatch, isSuccess, socket, unarchivedChatList, userMessagesMap])
 
   useEffect(() => {
     if (!isSuccess) return
 
-    socketWrapper.on(SocketOnEvent.RECEIVE_MESSAGE, async payload => {
+    socket?.on(SocketOnEvent.RECEIVE_MESSAGE, async payload => {
       const message: IMessage = {
         id: payload.messageId,
         content: payload.content,
@@ -156,7 +114,7 @@ function useSocketInit() {
         dispatch(insertUnarchivedChat(convo))
       }
 
-      socketWrapper.emit(SocketEmitEvent.DELIVERED, {
+      socket?.emit(SocketEmitEvent.DELIVERED, {
         messageId: message.id,
         receiverId: authUser.id,
         senderId: payload.senderId,
@@ -175,14 +133,14 @@ function useSocketInit() {
     })
 
     return () => {
-      socketWrapper.off(SocketOnEvent.RECEIVE_MESSAGE)
+      socket?.off(SocketOnEvent.RECEIVE_MESSAGE)
     }
-  }, [authUser, archivedChatList, dispatch, socketWrapper, unarchivedChatList, userMessagesMap, isSuccess])
+  }, [authUser, archivedChatList, dispatch, socket, unarchivedChatList, userMessagesMap, isSuccess])
 
   useEffect(() => {
     if (!isSuccess) return
 
-    socketWrapper.on(SocketOnEvent.SENT, async payload => {
+    socket?.on(SocketOnEvent.SENT, async payload => {
       const tempMessage = tempMessagesMap.get(payload.receiverId)!.get(payload.hash)!
 
       const message: IMessage = {
@@ -227,12 +185,12 @@ function useSocketInit() {
     })
 
     return () => {
-      socketWrapper.off(SocketOnEvent.SENT)
+      socket?.off(SocketOnEvent.SENT)
     }
-  }, [authUser, dispatch, isSuccess, socketWrapper, tempMessagesMap, archivedChatList, unarchivedChatList])
+  }, [authUser, dispatch, isSuccess, socket, tempMessagesMap, archivedChatList, unarchivedChatList])
 
   useEffect(() => {
-    socketWrapper.on(SocketOnEvent.DELIVERED, payload => {
+    socket?.on(SocketOnEvent.DELIVERED, payload => {
       dispatch(
         updateChatListItemMessageStatus({
           messageId: payload.messageId,
@@ -250,12 +208,12 @@ function useSocketInit() {
     })
 
     return () => {
-      socketWrapper.off(SocketOnEvent.DELIVERED)
+      socket?.off(SocketOnEvent.DELIVERED)
     }
-  }, [dispatch, socketWrapper])
+  }, [dispatch, socket])
 
   useEffect(() => {
-    socketWrapper.on(SocketOnEvent.READ, payloadArray => {
+    socket?.on(SocketOnEvent.READ, payloadArray => {
       payloadArray.forEach(p => {
         dispatch(
           updateChatListItemMessageStatus({
@@ -275,12 +233,12 @@ function useSocketInit() {
     })
 
     return () => {
-      socketWrapper.off(SocketOnEvent.READ)
+      socket?.off(SocketOnEvent.READ)
     }
-  }, [dispatch, socketWrapper])
+  }, [dispatch, socket])
 
   useEffect(() => {
-    socketWrapper.on(SocketOnEvent.TYPING, payload => {
+    socket?.on(SocketOnEvent.TYPING, payload => {
       dispatch(
         setTypingState({
           newState: payload.isTyping,
@@ -290,23 +248,11 @@ function useSocketInit() {
     })
 
     return () => {
-      socketWrapper.off(SocketOnEvent.TYPING)
+      socket?.off(SocketOnEvent.TYPING)
     }
-  }, [dispatch, socketWrapper])
+  }, [dispatch, socket])
 
-  return { socketWrapper }
-}
+  useUnmount(closeSocket)
 
-const SocketContext = createContext<ISocketContext | null>(null)
-
-export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { socketWrapper } = useSocketInit()
-
-  const contextValue = useMemo(() => ({ socket: socketWrapper }), [socketWrapper])
-
-  return <SocketContext.Provider value={contextValue}>{children}</SocketContext.Provider>
-}
-
-export function useSocket() {
-  return useContext(SocketContext)
+  return children
 }
