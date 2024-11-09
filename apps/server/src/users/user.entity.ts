@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer'
 import { Column, Entity, OneToMany, type Relation } from 'typeorm'
 import { BaseEntity } from 'src/common/entities/base.entity'
 import { Contact } from 'src/contacts/contact.entity'
@@ -19,6 +20,7 @@ export class User extends BaseEntity {
   @Column({ nullable: false, default: 'Hey there!' })
   bio: string
 
+  @Exclude()
   @Column({ nullable: false })
   password: string
 
