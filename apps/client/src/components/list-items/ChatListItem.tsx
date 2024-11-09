@@ -20,7 +20,7 @@ interface ChatListItemProps {
 
 export default function ChatListItem(props: Readonly<ChatListItemProps>) {
   const { children, menuItems, chatListItem } = props
-  const { latestMsg, receiver, contact } = chatListItem
+  const { latestMsg, receiver } = chatListItem
 
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
 
@@ -62,7 +62,7 @@ export default function ChatListItem(props: Readonly<ChatListItemProps>) {
             <div className="ml-4 w-full py-3">
               <div className="flex items-center justify-between">
                 <p className="text-base text-black dark:text-gray-50">
-                  {contact?.alias ?? <GlobalName name={receiver.globalName} />}
+                  {receiver.contact?.alias ?? <GlobalName name={receiver.globalName} />}
                 </p>
                 {latestMsg && (
                   <p
