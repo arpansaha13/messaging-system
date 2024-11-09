@@ -34,9 +34,11 @@ export class ChatsWsService {
     // Which means multiple connections are not possible currently.
     // TODO: support multiple connections
     this.clients.set(parseInt(socket.handshake.query.userId as string), socket.id)
+
+    const channels = (socket.handshake.query.channels as string).split(',')
+    socket.join(channels)
   }
 
-  // TODO: check if room is unarchived if the receiver is offline
   handleDisconnect(socket: Socket) {
     this.clients.delete(parseInt(socket.handshake.query.userId as string))
   }
@@ -110,6 +112,9 @@ export class ChatsWsService {
     // If receiver is not connected to socket - could mean offline
     if (isNullOrUndefined(receiverSocketId)) return
 
+    // FIXME: If the receiver is offline has this chat archived,
+    // then this chat will stay archived even after getting a new message
+    // This is because unarchive on new message is done on client-side on RECEIVE_MESSAGE
     server.to(receiverSocketId).emit(SocketOnEvent.RECEIVE_MESSAGE, {
       messageId: message.id,
       content: payload.content,

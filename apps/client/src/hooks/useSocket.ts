@@ -24,7 +24,13 @@ export function useSocket(): UseSocketResult {
 
   const socketWrapper = useMemo<ISocketWrapper | null>(() => {
     if (isNullOrUndefined(socket) && isSuccess) {
-      socket = io(SOCKET_URL, { autoConnect: true, query: { userId: authUser.id } })
+      socket = io(SOCKET_URL, {
+        autoConnect: true,
+        query: {
+          userId: authUser.id,
+          channels: authUser.channels,
+        },
+      })
     }
     if (socket) return createSocketWrapper()
     return null

@@ -28,6 +28,7 @@ export interface IAuthUser extends Omit<IUser, 'contact'> {
   createdAt: string
   updatedAt: string
   deletedAt: string
+  channels: IChannel['id'][]
 }
 
 export interface IUserSearchResult extends IUser {
