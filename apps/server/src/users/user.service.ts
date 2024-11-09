@@ -1,12 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { UserRepository } from './user.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
-import { isNullOrUndefined } from '@arpansaha13/utils'
+import { ChannelRepository } from 'src/channels/channel.repository'
+import { UserGroupRepository } from 'src/user_group/user-group.repository'
 import type { User } from 'src/users/user.entity'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { UserSearchQuery } from './dto/user-search-query.dto'
 import type { GetUserWithContactResponse } from './dto/get-user-with-contact.response'
+import type { AuthUserResponse } from './dto/auth-user-details.response'
 
 @Injectable()
 export class UserService {
@@ -16,7 +19,23 @@ export class UserService {
 
     @InjectRepository(ContactRepository)
     private readonly contactRepository: ContactRepository,
+
+    @InjectRepository(UserGroupRepository)
+    private readonly userGroupRepository: UserGroupRepository,
+
+    @InjectRepository(ChannelRepository)
+    private readonly channelRepository: ChannelRepository,
   ) {}
+
+  async getAuthUser(authUser: User): Promise<AuthUserResponse> {
+    const groupIds = await this.userGroupRepository.getGroupIdsByUserId(authUser.id)
+    const channelIds = await this.channelRepository.getChannelIdsByUserId(groupIds)
+
+    return {
+      ...authUser,
+      channels: channelIds,
+    }
+  }
 
   async getUserWithContactById(authUserId: User['id'], userId: User['id']): Promise<GetUserWithContactResponse> {
     const user = await this.userRepository.findOne({

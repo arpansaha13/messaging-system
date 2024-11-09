@@ -7,6 +7,7 @@ import { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { Request } from 'express'
 import type { User } from 'src/users/user.entity'
 import type { GetUserWithContactResponse } from './dto/get-user-with-contact.response'
+import type { AuthUserResponse } from './dto/auth-user-details.response'
 
 @Controller('users')
 @UseGuards(AuthGuard())
@@ -14,8 +15,8 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('/me')
-  async getAuthUserInfo(@Req() request: Request): Promise<User> {
-    return request.user
+  async getAuthUserInfo(@Req() request: Request): Promise<AuthUserResponse> {
+    return this.userService.getAuthUser(request.user)
   }
 
   @Patch('/me')
