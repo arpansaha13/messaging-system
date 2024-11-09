@@ -10,6 +10,17 @@ export class UserGroupRepository extends Repository<UserGroup> {
     super(UserGroup, dataSource.createEntityManager())
   }
 
+  async getGroupsByUserId(userId: User['id']): Promise<Group[]> {
+    const userGroups = await this.find({
+      where: { user: { id: userId } },
+      relations: {
+        group: { founder: true },
+      },
+    })
+
+    return userGroups.map(ug => ug.group)
+  }
+
   /** Get only the ids of the groups that the user belongs to. */
   async getGroupIdsByUserId(userId: User['id']): Promise<Group['id'][]> {
     const userGroups = await this.find({
@@ -17,7 +28,7 @@ export class UserGroupRepository extends Repository<UserGroup> {
       loadRelationIds: { relations: ['group'] },
     })
 
-    return userGroups.map(userGroup => userGroup.group) as unknown as Group['id'][]
+    return userGroups.map(ug => ug.group) as unknown as Group['id'][]
   }
 
   async getMembersByGroupId(groupId: Group['id']): Promise<User[]> {
@@ -26,6 +37,6 @@ export class UserGroupRepository extends Repository<UserGroup> {
       where: { group: { id: groupId } },
       relations: { user: true },
     })
-    return userGroups.map(userGroup => userGroup.user)
+    return userGroups.map(ug => ug.user)
   }
 }

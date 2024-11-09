@@ -18,32 +18,23 @@ import type { CreateChannelDto } from './dto/create-channel.dto'
 export class GroupService {
   constructor(
     @InjectEntityManager()
-    private manager: EntityManager,
+    private readonly manager: EntityManager,
 
     @InjectRepository(GroupRepository)
-    private groupRepository: GroupRepository,
+    private readonly groupRepository: GroupRepository,
 
     @InjectRepository(ChannelRepository)
-    private channelRepository: ChannelRepository,
+    private readonly channelRepository: ChannelRepository,
 
     @InjectRepository(InviteRepository)
-    private inviteRepository: InviteRepository,
+    private readonly inviteRepository: InviteRepository,
 
     @InjectRepository(UserGroupRepository)
-    private userGroupRepository: UserGroupRepository,
+    private readonly userGroupRepository: UserGroupRepository,
   ) {}
 
   async getGroupsOfUser(authUser: User): Promise<Group[]> {
-    const userGroups = await this.userGroupRepository.find({
-      where: { user: { id: authUser.id } },
-      relations: {
-        group: {
-          founder: true,
-        },
-      },
-    })
-
-    return userGroups.map(ug => ug.group)
+    return this.userGroupRepository.getGroupsByUserId(authUser.id)
   }
 
   getGroup(groupId: Group['id']): Promise<Group> {
