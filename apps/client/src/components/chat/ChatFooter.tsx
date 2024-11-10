@@ -21,6 +21,7 @@ const ChatFooter = (props: Readonly<ChatFooterProps>) => {
             id="type-area"
             name="type-area"
             autoFocus
+            autoComplete="off"
             placeholder="Type a message"
             className="block w-full rounded-lg border-none bg-white px-3 py-2.5 text-sm text-gray-500 placeholder-gray-400 shadow focus:border-none focus:outline-none focus:ring-0 dark:bg-gray-700/70 dark:text-gray-200"
             value={value}
