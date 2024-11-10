@@ -1,15 +1,15 @@
 import { darkModeSlice } from './dark/dark.slice'
 import { draftSlice } from './drafts/draft.slice'
 import { typingSlice } from './typing/typing.slice'
-import { messageSlice } from './messages/message.slice'
 import { chatListSlice } from './chat-list/chat-list.slice'
 import { notificationSlice } from './notification/notification.slice'
+import { messagePersonalSlice } from './messages/message-personal.slice'
 import { authApiSlice } from './auth/auth.api.slice'
 import { usersApiSlice } from './users/users.api.slice'
 import { groupsApiSlice } from './groups/groups.api.slice'
 import { contactsApiSlice } from './contacts/contact.api.slice'
 
-export const slices = [darkModeSlice, draftSlice, typingSlice, messageSlice, chatListSlice, notificationSlice]
+export const slices = [darkModeSlice, draftSlice, typingSlice, messagePersonalSlice, chatListSlice, notificationSlice]
 
 export const apiSlices = [authApiSlice, usersApiSlice, groupsApiSlice, contactsApiSlice] as const
 

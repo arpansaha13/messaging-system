@@ -1,8 +1,5 @@
-'use client'
-
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useUnmount } from 'react-use'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useSocket } from '~/hooks/useSocket'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
@@ -21,18 +18,18 @@ import {
   selectUserMessagesMap,
   updateMessageStatus,
   upsertMessages,
-} from '~/store/features/messages/message.slice'
+} from '~/store/features/messages/message-personal.slice'
 import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import type { IChatListItem, IUser } from '@shared/types/client'
 import { MessageStatus, SocketEvent, type IMessage, type IReceiverEmitRead } from '@shared/types'
+import type { IChatListItem, IUser } from '@shared/types/client'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
   return chatList.find(item => item.receiver.id === receiverId) ?? null
 }
 
-export function SocketProvider({ children }: { children: React.ReactNode }) {
+export function usePersonalChatSocketEvents() {
   const dispatch = useAppDispatch()
   const { data: authUser, isSuccess } = useGetAuthUserQuery()
   const searchParams = useSearchParams()
@@ -42,7 +39,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
   const userMessagesMap = useAppSelector(selectUserMessagesMap)
   const tempMessagesMap = useAppSelector(selectTempMessagesMap)
 
-  const { socket, closeSocket } = useSocket()
+  const { socket } = useSocket()
 
   useEffect(() => {
     if (isNullOrUndefined(receiverId) || !isSuccess) return
@@ -251,8 +248,4 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
       socket?.off(SocketEvent.TYPING)
     }
   }, [dispatch, socket])
-
-  useUnmount(closeSocket)
-
-  return children
 }

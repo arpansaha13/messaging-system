@@ -19,7 +19,7 @@ const initialState: IMessageSlice = {
   status: 'idle',
 }
 
-export const messageSlice = createAppSlice({
+export const messagePersonalSlice = createAppSlice({
   name: 'message',
   initialState,
   reducers: create => ({
@@ -103,7 +103,7 @@ export const {
   clearMessages,
   deleteMessages,
   deleteTempMessage,
-} = messageSlice.actions
+} = messagePersonalSlice.actions
 
 export const { selectUserMessagesMap, selectTempMessagesMap, selectMessages, selectTempMessages } =
-  messageSlice.selectors
+  messagePersonalSlice.selectors

@@ -17,7 +17,7 @@ import {
   updateChatListItemMessagePin,
   selectChatListStatus,
 } from '~/store/features/chat-list/chat-list.slice'
-import { clearMessages, deleteMessages } from '~/store/features/messages/message.slice'
+import { clearMessages, deleteMessages } from '~/store/features/messages/message-personal.slice'
 import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
 
 type DeleteChatModalPayload = Pick<IChatListItem, 'receiver'>

@@ -1,4 +1,3 @@
-import { ChatsWsService } from './chats.ws.service'
 import {
   MessageBody,
   ConnectedSocket,
@@ -8,6 +7,7 @@ import {
   type OnGatewayConnection,
   type OnGatewayDisconnect,
 } from '@nestjs/websockets'
+import { ChatsWsService } from './chats-personal.ws.service'
 import type { Server, Socket } from 'socket.io'
 import { SocketEvent } from '@shared/types'
 import type { IReceiverEmitDelivered, IReceiverEmitRead, ISenderEmitMessage, ISenderEmitTyping } from '@shared/types'

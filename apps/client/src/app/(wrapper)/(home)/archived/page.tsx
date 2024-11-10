@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { ChatListItem } from '~/components/list-items'
 import { SkeletonChatList } from '~/components/skeleton'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
-import { deleteMessages } from '~/store/features/messages/message.slice'
+import { deleteMessages } from '~/store/features/messages/message-personal.slice'
 import {
   unarchiveChat,
   deleteChat,

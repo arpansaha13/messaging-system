@@ -11,7 +11,7 @@ import {
   upsertTempMessages,
   selectUserMessagesMap,
   selectTempMessagesMap,
-} from '~/store/features/messages/message.slice'
+} from '~/store/features/messages/message-personal.slice'
 import { selectTypingState } from '~/store/features/typing/typing.slice'
 import { useGetUserQuery, useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { generateHash } from '~/utils/generateHash'
