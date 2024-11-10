@@ -9,21 +9,15 @@ import {
   type OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import type { Server, Socket } from 'socket.io'
-import { SocketEmitEvent } from '@shared/types'
-import type {
-  IReceiverEmitDelivered,
-  IReceiverEmitRead,
-  ISenderEmitMessage,
-  ISenderEmitTyping,
-  SocketOnEventPayload,
-} from '@shared/types'
+import { SocketEvent } from '@shared/types'
+import type { IReceiverEmitDelivered, IReceiverEmitRead, ISenderEmitMessage, ISenderEmitTyping } from '@shared/types'
 
 @WebSocketGateway()
 export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly chatsService: ChatsWsService) {}
 
   @WebSocketServer()
-  private readonly server: Server<SocketOnEventPayload>
+  private readonly server: Server
 
   handleConnection(@ConnectedSocket() socket: Socket) {
     this.chatsService.handleConnect(socket)
@@ -33,22 +27,22 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.chatsService.handleDisconnect(socket)
   }
 
-  @SubscribeMessage<SocketEmitEvent>(SocketEmitEvent.SEND_MESSAGE)
+  @SubscribeMessage<SocketEvent>(SocketEvent.SEND_MESSAGE)
   sendMessage(@MessageBody() payload: ISenderEmitMessage) {
     this.chatsService.sendMessage(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEmitEvent>(SocketEmitEvent.DELIVERED)
+  @SubscribeMessage<SocketEvent>(SocketEvent.DELIVERED)
   handleDelivered(@MessageBody() payload: IReceiverEmitDelivered) {
     this.chatsService.handleDelivered(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEmitEvent>(SocketEmitEvent.READ)
+  @SubscribeMessage<SocketEvent>(SocketEvent.READ)
   handleReadStatus(@MessageBody() payload: IReceiverEmitRead) {
     this.chatsService.handleRead(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEmitEvent>(SocketEmitEvent.TYPING)
+  @SubscribeMessage<SocketEvent>(SocketEvent.TYPING)
   handleTyping(@MessageBody() payload: ISenderEmitTyping) {
     this.chatsService.handleTyping(payload, this.server)
   }

@@ -8,7 +8,7 @@ export interface ISenderEmitMessage {
   status: MessageStatus.SENDING
 }
 
-export interface IReceiverOnMessage {
+interface IReceiverOnMessage {
   messageId: number
   content: string
   senderId: number
@@ -16,7 +16,7 @@ export interface IReceiverOnMessage {
   status: MessageStatus.SENT
 }
 
-export interface ISenderOnSent {
+interface ISenderOnSent {
   hash: string
   messageId: number
   receiverId: number
@@ -24,13 +24,13 @@ export interface ISenderOnSent {
   status: MessageStatus.SENT
 }
 
-export interface ISenderOnDelivered {
+interface ISenderOnDelivered {
   messageId: number
   receiverId: number
   status: MessageStatus.DELIVERED
 }
 
-export interface ISenderOnRead {
+interface ISenderOnRead {
   messageId: number
   receiverId: number
   status: MessageStatus.DELIVERED
@@ -54,9 +54,10 @@ export interface ISenderEmitTyping {
   isTyping: boolean
 }
 
-export type IReceiverOnTyping = ISenderEmitTyping
+type IReceiverOnTyping = ISenderEmitTyping
 
-export enum SocketOnEvent {
+export enum SocketEvent {
+  SEND_MESSAGE = 'send-message',
   RECEIVE_MESSAGE = 'receive-message',
   SENT = 'sent',
   DELIVERED = 'delivered',
@@ -64,24 +65,17 @@ export enum SocketOnEvent {
   TYPING = 'typing',
 }
 
-export enum SocketEmitEvent {
-  SEND_MESSAGE = 'send-message',
-  DELIVERED = 'delivered',
-  TYPING = 'typing',
-  READ = 'read',
-}
-
 export interface SocketOnEventPayload {
-  [SocketOnEvent.RECEIVE_MESSAGE]: IReceiverOnMessage
-  [SocketOnEvent.SENT]: ISenderOnSent
-  [SocketOnEvent.DELIVERED]: ISenderOnDelivered
-  [SocketOnEvent.READ]: ISenderOnRead[]
-  [SocketOnEvent.TYPING]: IReceiverOnTyping
+  [SocketEvent.RECEIVE_MESSAGE]: IReceiverOnMessage
+  [SocketEvent.SENT]: ISenderOnSent
+  [SocketEvent.DELIVERED]: ISenderOnDelivered
+  [SocketEvent.READ]: ISenderOnRead[]
+  [SocketEvent.TYPING]: IReceiverOnTyping
 }
 
 export interface SocketEmitEventPayload {
-  [SocketEmitEvent.SEND_MESSAGE]: ISenderEmitMessage
-  [SocketEmitEvent.DELIVERED]: IReceiverEmitDelivered
-  [SocketEmitEvent.TYPING]: ISenderEmitTyping
-  [SocketEmitEvent.READ]: IReceiverEmitRead | IReceiverEmitRead[]
+  [SocketEvent.SEND_MESSAGE]: ISenderEmitMessage
+  [SocketEvent.DELIVERED]: IReceiverEmitDelivered
+  [SocketEvent.TYPING]: ISenderEmitTyping
+  [SocketEvent.READ]: IReceiverEmitRead | IReceiverEmitRead[]
 }

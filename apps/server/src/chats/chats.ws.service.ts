@@ -9,7 +9,7 @@ import { MessageRecipientRepository } from 'src/message-recipient/message-recipi
 import { In, type EntityManager } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
 import {
-  SocketOnEvent,
+  SocketEvent,
   type IReceiverEmitDelivered,
   type IReceiverEmitRead,
   type ISenderEmitMessage,
@@ -101,7 +101,7 @@ export class ChatsWsService {
         throw new InternalServerErrorException('Error while sending the message')
       })
 
-    server.to(senderSocketId).emit(SocketOnEvent.SENT, {
+    server.to(senderSocketId).emit(SocketEvent.SENT, {
       hash: payload.hash,
       messageId: message.id,
       createdAt: message.createdAt,
@@ -115,7 +115,7 @@ export class ChatsWsService {
     // FIXME: If the receiver is offline has this chat archived,
     // then this chat will stay archived even after getting a new message
     // This is because unarchive on new message is done on client-side on RECEIVE_MESSAGE
-    server.to(receiverSocketId).emit(SocketOnEvent.RECEIVE_MESSAGE, {
+    server.to(receiverSocketId).emit(SocketEvent.RECEIVE_MESSAGE, {
       messageId: message.id,
       content: payload.content,
       senderId: payload.senderId,
@@ -132,7 +132,7 @@ export class ChatsWsService {
 
     const senderSocketId = this.clients.get(payload.senderId)
 
-    server.to(senderSocketId).emit(SocketOnEvent.DELIVERED, {
+    server.to(senderSocketId).emit(SocketEvent.DELIVERED, {
       messageId: payload.messageId,
       receiverId: payload.receiverId,
       status: MessageStatus.DELIVERED,
@@ -157,12 +157,12 @@ export class ChatsWsService {
     }))
 
     const senderSocketId = this.clients.get(payloadArray[0].senderId)
-    server.to(senderSocketId).emit(SocketOnEvent.READ, readPayloadToSender)
+    server.to(senderSocketId).emit(SocketEvent.READ, readPayloadToSender)
   }
 
   handleTyping(payload: ISenderEmitTyping, server: Server) {
     const receiverSocketId = this.clients.get(payload.receiverId)
-    server.to(receiverSocketId).emit(SocketOnEvent.TYPING, {
+    server.to(receiverSocketId).emit(SocketEvent.TYPING, {
       senderId: payload.senderId,
       receiverId: payload.receiverId,
       isTyping: payload.isTyping,

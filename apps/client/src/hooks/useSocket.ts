@@ -2,7 +2,10 @@ import { useMemo } from 'react'
 import io, { type Socket } from 'socket.io-client'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import type { SocketEmitEvent, SocketEmitEventPayload, SocketOnEvent, SocketOnEventPayload } from '@shared/types'
+import type { SocketEmitEventPayload, SocketOnEventPayload } from '@shared/types'
+
+type SocketEmitEvent = keyof SocketEmitEventPayload
+type SocketOnEvent = keyof SocketOnEventPayload
 
 interface ISocketWrapper {
   emit<T extends SocketEmitEvent>(event: T, payload: SocketEmitEventPayload[T], ack?: (res: any) => void): void

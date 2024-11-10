@@ -15,13 +15,7 @@ import {
 import { selectTypingState } from '~/store/features/typing/typing.slice'
 import { useGetUserQuery, useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { generateHash } from '~/utils/generateHash'
-import {
-  MessageStatus,
-  SocketEmitEvent,
-  type IMessage,
-  type IMessageSending,
-  type ISenderEmitTyping,
-} from '@shared/types'
+import { MessageStatus, SocketEvent, type IMessage, type IMessageSending, type ISenderEmitTyping } from '@shared/types'
 
 export default function useController() {
   const { socket } = useSocket()
@@ -54,7 +48,7 @@ export default function useController() {
       if (isFirstRun.current) {
         isFirstRun.current = false
       } else {
-        socket?.emit(SocketEmitEvent.TYPING, typingPayload(false))
+        socket?.emit(SocketEvent.TYPING, typingPayload(false))
       }
     },
     1000,
@@ -66,7 +60,7 @@ export default function useController() {
       if (isNullOrUndefined(socket)) return
 
       if (isReady() && isTypedCharGood(e)) {
-        socket.emit(SocketEmitEvent.TYPING, typingPayload(true))
+        socket.emit(SocketEvent.TYPING, typingPayload(true))
       }
       if (e.key === 'Enter' && inputValue) {
         dispatch(unarchiveChat(receiver!.id))
@@ -87,7 +81,7 @@ export default function useController() {
         )
 
         setInputValue('')
-        socket.emit(SocketEmitEvent.SEND_MESSAGE, {
+        socket.emit(SocketEvent.SEND_MESSAGE, {
           ...newMessage,
           receiverId: receiver!.id,
         })

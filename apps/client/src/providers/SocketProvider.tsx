@@ -26,7 +26,7 @@ import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import type { IChatListItem, IUser } from '@shared/types/client'
-import { MessageStatus, SocketEmitEvent, SocketOnEvent, type IMessage, type IReceiverEmitRead } from '@shared/types'
+import { MessageStatus, SocketEvent, type IMessage, type IReceiverEmitRead } from '@shared/types'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
   return chatList.find(item => item.receiver.id === receiverId) ?? null
@@ -82,13 +82,13 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         }),
       )
     }
-    socket?.emit(SocketEmitEvent.READ, readEventPayload)
+    socket?.emit(SocketEvent.READ, readEventPayload)
   }, [receiverId, archivedChatList, authUser, dispatch, isSuccess, socket, unarchivedChatList, userMessagesMap])
 
   useEffect(() => {
     if (!isSuccess) return
 
-    socket?.on(SocketOnEvent.RECEIVE_MESSAGE, async payload => {
+    socket?.on(SocketEvent.RECEIVE_MESSAGE, async payload => {
       const message: IMessage = {
         id: payload.messageId,
         content: payload.content,
@@ -114,7 +114,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
         dispatch(insertUnarchivedChat(convo))
       }
 
-      socket?.emit(SocketEmitEvent.DELIVERED, {
+      socket?.emit(SocketEvent.DELIVERED, {
         messageId: message.id,
         receiverId: authUser.id,
         senderId: payload.senderId,
@@ -133,14 +133,14 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      socket?.off(SocketOnEvent.RECEIVE_MESSAGE)
+      socket?.off(SocketEvent.RECEIVE_MESSAGE)
     }
   }, [authUser, archivedChatList, dispatch, socket, unarchivedChatList, userMessagesMap, isSuccess])
 
   useEffect(() => {
     if (!isSuccess) return
 
-    socket?.on(SocketOnEvent.SENT, async payload => {
+    socket?.on(SocketEvent.SENT, async payload => {
       const tempMessage = tempMessagesMap.get(payload.receiverId)!.get(payload.hash)!
 
       const message: IMessage = {
@@ -185,12 +185,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      socket?.off(SocketOnEvent.SENT)
+      socket?.off(SocketEvent.SENT)
     }
   }, [authUser, dispatch, isSuccess, socket, tempMessagesMap, archivedChatList, unarchivedChatList])
 
   useEffect(() => {
-    socket?.on(SocketOnEvent.DELIVERED, payload => {
+    socket?.on(SocketEvent.DELIVERED, payload => {
       dispatch(
         updateChatListItemMessageStatus({
           messageId: payload.messageId,
@@ -208,12 +208,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      socket?.off(SocketOnEvent.DELIVERED)
+      socket?.off(SocketEvent.DELIVERED)
     }
   }, [dispatch, socket])
 
   useEffect(() => {
-    socket?.on(SocketOnEvent.READ, payloadArray => {
+    socket?.on(SocketEvent.READ, payloadArray => {
       payloadArray.forEach(p => {
         dispatch(
           updateChatListItemMessageStatus({
@@ -233,12 +233,12 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      socket?.off(SocketOnEvent.READ)
+      socket?.off(SocketEvent.READ)
     }
   }, [dispatch, socket])
 
   useEffect(() => {
-    socket?.on(SocketOnEvent.TYPING, payload => {
+    socket?.on(SocketEvent.TYPING, payload => {
       dispatch(
         setTypingState({
           newState: payload.isTyping,
@@ -248,7 +248,7 @@ export function SocketProvider({ children }: { children: React.ReactNode }) {
     })
 
     return () => {
-      socket?.off(SocketOnEvent.TYPING)
+      socket?.off(SocketEvent.TYPING)
     }
   }, [dispatch, socket])
 
