@@ -22,7 +22,7 @@ import {
 import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import { MessageStatus, SocketEvent, type IMessage, type IReceiverEmitRead } from '@shared/types'
+import { MessageStatus, SocketEvents, type IMessage, type IReceiverEmitRead } from '@shared/types'
 import type { IChatListItem, IUser } from '@shared/types/client'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
@@ -79,13 +79,13 @@ export function usePersonalChatSocketEvents() {
         }),
       )
     }
-    socket?.emit(SocketEvent.READ, readEventPayload)
+    socket?.emit(SocketEvents.PERSONAL.STATUS_READ, readEventPayload)
   }, [receiverId, archivedChatList, authUser, dispatch, isSuccess, socket, unarchivedChatList, userMessagesMap])
 
   useEffect(() => {
     if (!isSuccess) return
 
-    socket?.on(SocketEvent.RECEIVE_MESSAGE, async payload => {
+    socket?.on(SocketEvents.PERSONAL.MESSAGE_RECEIVE, async payload => {
       const message: IMessage = {
         id: payload.messageId,
         content: payload.content,
@@ -111,7 +111,7 @@ export function usePersonalChatSocketEvents() {
         dispatch(insertUnarchivedChat(convo))
       }
 
-      socket?.emit(SocketEvent.DELIVERED, {
+      socket?.emit(SocketEvents.PERSONAL.STATUS_DELIVERED, {
         messageId: message.id,
         receiverId: authUser.id,
         senderId: payload.senderId,
@@ -130,14 +130,14 @@ export function usePersonalChatSocketEvents() {
     })
 
     return () => {
-      socket?.off(SocketEvent.RECEIVE_MESSAGE)
+      socket?.off(SocketEvents.PERSONAL.MESSAGE_RECEIVE)
     }
   }, [authUser, archivedChatList, dispatch, socket, unarchivedChatList, userMessagesMap, isSuccess])
 
   useEffect(() => {
     if (!isSuccess) return
 
-    socket?.on(SocketEvent.SENT, async payload => {
+    socket?.on(SocketEvents.PERSONAL.STATUS_SENT, async payload => {
       const tempMessage = tempMessagesMap.get(payload.receiverId)!.get(payload.hash)!
 
       const message: IMessage = {
@@ -182,12 +182,12 @@ export function usePersonalChatSocketEvents() {
     })
 
     return () => {
-      socket?.off(SocketEvent.SENT)
+      socket?.off(SocketEvents.PERSONAL.STATUS_SENT)
     }
   }, [authUser, dispatch, isSuccess, socket, tempMessagesMap, archivedChatList, unarchivedChatList])
 
   useEffect(() => {
-    socket?.on(SocketEvent.DELIVERED, payload => {
+    socket?.on(SocketEvents.PERSONAL.STATUS_DELIVERED, payload => {
       dispatch(
         updateChatListItemMessageStatus({
           messageId: payload.messageId,
@@ -205,12 +205,12 @@ export function usePersonalChatSocketEvents() {
     })
 
     return () => {
-      socket?.off(SocketEvent.DELIVERED)
+      socket?.off(SocketEvents.PERSONAL.STATUS_DELIVERED)
     }
   }, [dispatch, socket])
 
   useEffect(() => {
-    socket?.on(SocketEvent.READ, payloadArray => {
+    socket?.on(SocketEvents.PERSONAL.STATUS_READ, payloadArray => {
       payloadArray.forEach(p => {
         dispatch(
           updateChatListItemMessageStatus({
@@ -230,12 +230,12 @@ export function usePersonalChatSocketEvents() {
     })
 
     return () => {
-      socket?.off(SocketEvent.READ)
+      socket?.off(SocketEvents.PERSONAL.STATUS_READ)
     }
   }, [dispatch, socket])
 
   useEffect(() => {
-    socket?.on(SocketEvent.TYPING, payload => {
+    socket?.on(SocketEvents.PERSONAL.TYPING, payload => {
       dispatch(
         setTypingState({
           newState: payload.isTyping,
@@ -245,7 +245,7 @@ export function usePersonalChatSocketEvents() {
     })
 
     return () => {
-      socket?.off(SocketEvent.TYPING)
+      socket?.off(SocketEvents.PERSONAL.TYPING)
     }
   }, [dispatch, socket])
 }

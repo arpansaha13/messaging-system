@@ -56,26 +56,30 @@ export interface ISenderEmitTyping {
 
 type IReceiverOnTyping = ISenderEmitTyping
 
-export enum SocketEvent {
-  SEND_MESSAGE = 'send-message',
-  RECEIVE_MESSAGE = 'receive-message',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  READ = 'read',
+enum SocketEvents_Personal {
+  MESSAGE_SEND = 'send-message',
+  MESSAGE_RECEIVE = 'receive-message',
+  STATUS_SENT = 'sent',
+  STATUS_DELIVERED = 'delivered',
+  STATUS_READ = 'read',
   TYPING = 'typing',
 }
 
+export const SocketEvents = {
+  PERSONAL: SocketEvents_Personal,
+}
+
 export interface SocketOnEventPayload {
-  [SocketEvent.RECEIVE_MESSAGE]: IReceiverOnMessage
-  [SocketEvent.SENT]: ISenderOnSent
-  [SocketEvent.DELIVERED]: ISenderOnDelivered
-  [SocketEvent.READ]: ISenderOnRead[]
-  [SocketEvent.TYPING]: IReceiverOnTyping
+  [SocketEvents.PERSONAL.MESSAGE_RECEIVE]: IReceiverOnMessage
+  [SocketEvents.PERSONAL.STATUS_SENT]: ISenderOnSent
+  [SocketEvents.PERSONAL.STATUS_DELIVERED]: ISenderOnDelivered
+  [SocketEvents.PERSONAL.STATUS_READ]: ISenderOnRead[]
+  [SocketEvents.PERSONAL.TYPING]: IReceiverOnTyping
 }
 
 export interface SocketEmitEventPayload {
-  [SocketEvent.SEND_MESSAGE]: ISenderEmitMessage
-  [SocketEvent.DELIVERED]: IReceiverEmitDelivered
-  [SocketEvent.TYPING]: ISenderEmitTyping
-  [SocketEvent.READ]: IReceiverEmitRead | IReceiverEmitRead[]
+  [SocketEvents.PERSONAL.MESSAGE_SEND]: ISenderEmitMessage
+  [SocketEvents.PERSONAL.STATUS_DELIVERED]: IReceiverEmitDelivered
+  [SocketEvents.PERSONAL.TYPING]: ISenderEmitTyping
+  [SocketEvents.PERSONAL.STATUS_READ]: IReceiverEmitRead | IReceiverEmitRead[]
 }

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/websockets'
 import { ChatsWsService } from './chats-personal.ws.service'
 import type { Server, Socket } from 'socket.io'
-import { SocketEvent } from '@shared/types'
+import { SocketEvents } from '@shared/types'
 import type { IReceiverEmitDelivered, IReceiverEmitRead, ISenderEmitMessage, ISenderEmitTyping } from '@shared/types'
 
 @WebSocketGateway()
@@ -27,22 +27,22 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.chatsService.handleDisconnect(socket)
   }
 
-  @SubscribeMessage<SocketEvent>(SocketEvent.SEND_MESSAGE)
+  @SubscribeMessage(SocketEvents.PERSONAL.MESSAGE_SEND)
   sendMessage(@MessageBody() payload: ISenderEmitMessage) {
     this.chatsService.sendMessage(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEvent>(SocketEvent.DELIVERED)
+  @SubscribeMessage(SocketEvents.PERSONAL.STATUS_DELIVERED)
   handleDelivered(@MessageBody() payload: IReceiverEmitDelivered) {
     this.chatsService.handleDelivered(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEvent>(SocketEvent.READ)
+  @SubscribeMessage(SocketEvents.PERSONAL.STATUS_READ)
   handleReadStatus(@MessageBody() payload: IReceiverEmitRead) {
     this.chatsService.handleRead(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEvent>(SocketEvent.TYPING)
+  @SubscribeMessage(SocketEvents.PERSONAL.TYPING)
   handleTyping(@MessageBody() payload: ISenderEmitTyping) {
     this.chatsService.handleTyping(payload, this.server)
   }
