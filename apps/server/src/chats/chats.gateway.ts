@@ -7,9 +7,9 @@ import {
   type OnGatewayConnection,
   type OnGatewayDisconnect,
 } from '@nestjs/websockets'
+import { SocketEvents } from '@shared/constants'
 import { ChatsWsService } from './chats-personal.ws.service'
 import type { Server, Socket } from 'socket.io'
-import { SocketEvents } from '@shared/types'
 import type { IReceiverEmitDelivered, IReceiverEmitRead, ISenderEmitMessage, ISenderEmitTyping } from '@shared/types'
 
 @WebSocketGateway()

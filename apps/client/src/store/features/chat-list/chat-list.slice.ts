@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { createAppSlice } from '~/store/createAppSlice'
-import { MessageStatus } from '@shared/types'
+import { MessageStatus } from '@shared/constants'
 import {
   _archiveChat,
   _deleteChat,

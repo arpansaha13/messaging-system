@@ -30,6 +30,7 @@
     "tailwindcss": "^3.4.13"
   },
   "devDependencies": {
+    "@shared/constants": "workspace:*",
     "@shared/types": "workspace:*",
     "@types/node": "^20.16.5",
     "@types/react": "^18.3.11",

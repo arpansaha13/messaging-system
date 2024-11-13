@@ -1,10 +1,8 @@
 {
   "compilerOptions": {
-    "rootDir": "./lib",
-    "module": "es2015",
+    "module": "commonjs",
     "declaration": true,
     "removeComments": true,
-    "moduleResolution": "Bundler",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
@@ -22,6 +20,6 @@
     "esModuleInterop": true,
   },
   "include": [
-    "lib",
+    "./lib/**/*.ts",
   ],
 }

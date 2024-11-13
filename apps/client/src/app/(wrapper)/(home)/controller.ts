@@ -15,7 +15,8 @@ import {
 import { selectTypingState } from '~/store/features/typing/typing.slice'
 import { useGetUserQuery, useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { generateHash } from '~/utils/generateHash'
-import { MessageStatus, SocketEvents, type IMessage, type IMessageSending, type ISenderEmitTyping } from '@shared/types'
+import { MessageStatus, SocketEvents } from '@shared/constants'
+import type { IMessage, IMessageSending, ISenderEmitTyping } from '@shared/types'
 
 export default function useController() {
   const { socket } = useSocket()

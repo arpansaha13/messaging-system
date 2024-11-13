@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { isNullOrUndefined } from '@arpansaha13/utils'
+import { MessageStatus, SocketEvents } from '@shared/constants'
 import { useSocket } from '~/hooks/useSocket'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
@@ -22,7 +23,7 @@ import {
 import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import { MessageStatus, SocketEvents, type IMessage, type IReceiverEmitRead } from '@shared/types'
+import type { IMessage, IReceiverEmitRead } from '@shared/types'
 import type { IChatListItem, IUser } from '@shared/types/client'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {

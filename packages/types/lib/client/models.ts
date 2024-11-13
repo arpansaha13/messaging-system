@@ -1,4 +1,4 @@
-import type { IMessage } from '@shared/types'
+import { IMessage } from '../message'
 
 /** Generic type for chat-list item. A = archived */
 export interface IChatListItem {

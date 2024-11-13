@@ -1,3 +1,5 @@
+import type { MessageStatus } from '@shared/constants'
+
 export interface IMessageSending {
   hash: string
   content: string
@@ -13,11 +15,4 @@ export interface IMessage {
   senderId: number
   createdAt: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
-}
-
-export enum MessageStatus {
-  SENDING = 'SENDING',
-  SENT = 'SENT',
-  DELIVERED = 'DELIVERED',
-  READ = 'READ',
 }

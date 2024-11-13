@@ -2,7 +2,7 @@ import { Icon } from '@iconify/react'
 import alarmIcon from '@iconify-icons/mdi/alarm'
 import checkIcon from '@iconify-icons/mdi/check'
 import checkAllIcon from '@iconify-icons/mdi/check-all'
-import { MessageStatus } from '@shared/types'
+import { MessageStatus } from '@shared/constants'
 
 export default function MsgStatusIcon({ status }: { status: MessageStatus }) {
   switch (status) {

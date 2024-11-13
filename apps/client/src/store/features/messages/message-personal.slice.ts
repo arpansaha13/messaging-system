@@ -2,7 +2,8 @@ import { PayloadAction } from '@reduxjs/toolkit'
 import { createAppSlice } from '~/store/createAppSlice'
 import { _clearMessages, _getMessages } from './messages.api'
 import type { IUser } from '@shared/types/client'
-import type { IMessage, IMessageSending, MessageStatus } from '@shared/types'
+import type { MessageStatus } from '@shared/constants'
+import type { IMessage, IMessageSending } from '@shared/types'
 
 interface IMessageSlice {
   userMessagesMap: Map<IUser['id'], Map<IMessage['id'], IMessage>>

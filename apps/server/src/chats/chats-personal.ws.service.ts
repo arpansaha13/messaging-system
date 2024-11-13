@@ -1,6 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm'
 import { isNullOrUndefined } from '@arpansaha13/utils'
+import { SocketEvents } from '@shared/constants'
 import { User } from 'src/users/user.entity'
 import { Chat } from './chats.entity'
 import { Message } from 'src/messages/message.entity'
@@ -8,13 +9,7 @@ import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-r
 import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
 import { In, type EntityManager } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
-import {
-  SocketEvents,
-  type IReceiverEmitDelivered,
-  type IReceiverEmitRead,
-  type ISenderEmitMessage,
-  type ISenderEmitTyping,
-} from '@shared/types'
+import type { IReceiverEmitDelivered, IReceiverEmitRead, ISenderEmitMessage, ISenderEmitTyping } from '@shared/types'
 
 @Injectable()
 export class ChatsWsService {
