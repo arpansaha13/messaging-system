@@ -1,15 +1,18 @@
 import { redirect } from 'next/navigation'
 import { HttpCode } from '~/utils/api/HttpCode.enum'
 import { getInvite } from './actions'
-import type { Exception } from '~/utils/api/rfetch'
 import JoinGroupForm from './JoinGroupForm'
+import type { Exception } from '~/utils/api/rfetch'
+
+interface PageProps {
+  params: { hash: string }
+}
 
 interface WrapperProps {
   children: React.ReactNode
 }
 
-export default async function Page(request: Readonly<Request>) {
-  // @ts-ignore
+export default async function Page(request: Readonly<PageProps>) {
   const inviteHash = request.params.hash
   const { data: invite, error } = await getInvite(inviteHash)
 

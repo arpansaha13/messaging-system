@@ -4,7 +4,6 @@ import { Input, Button, ButtonLink } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
 import { useVerifyMutation } from '~/store/features/auth/auth.api.slice'
 import { setNotification, toggleNotification } from '~/store/features/notification/notification.slice'
-import { _verification } from '~/utils/api'
 import getFormData from '~/utils/getFormData'
 
 enum VerificationStatus {

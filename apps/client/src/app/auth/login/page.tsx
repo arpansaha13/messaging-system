@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState, useRef, type FormEvent } from 'react'
+import { useRef, type FormEvent } from 'react'
 import { Input, Button } from '~/components/ui'
 import { useAppDispatch } from '~/store/hooks'
 import { toggleNotification, setNotification } from '~/store/features/notification/notification.slice'
