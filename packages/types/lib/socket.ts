@@ -1,72 +1,65 @@
-import type { MessageStatus, SocketEvents } from '@shared/constants'
+import type { MessageStatus } from '@shared/constants'
+import type { IUser } from './client'
+import type { IMessage, IMessageSending } from './message'
 
-export interface ISenderEmitMessage {
-  hash: string
-  content: string
-  senderId: number
-  receiverId: number
-  status: MessageStatus.SENDING
-}
+export namespace SocketEventPayloads {
+  export namespace Personal {
+    export interface EmitMessage {
+      hash: IMessageSending['hash']
+      content: IMessage['content']
+      senderId: IUser['id']
+      receiverId: IUser['id']
+      status: MessageStatus.SENDING
+    }
 
-interface IReceiverOnMessage {
-  messageId: number
-  content: string
-  senderId: number
-  createdAt: string
-  status: MessageStatus.SENT
-}
+    export interface OnMessage {
+      messageId: IMessage['id']
+      content: IMessage['content']
+      senderId: IUser['id']
+      createdAt: string
+      status: MessageStatus.SENT
+    }
 
-interface ISenderOnSent {
-  hash: string
-  messageId: number
-  receiverId: number
-  createdAt: string
-  status: MessageStatus.SENT
-}
+    export interface OnSent {
+      hash: IMessageSending['hash']
+      messageId: IMessage['id']
+      receiverId: IUser['id']
+      createdAt: string
+      status: MessageStatus.SENT
+    }
 
-interface ISenderOnDelivered {
-  messageId: number
-  receiverId: number
-  status: MessageStatus.DELIVERED
-}
+    export interface OnDelivered {
+      messageId: IMessage['id']
+      receiverId: IUser['id']
+      status: MessageStatus.DELIVERED
+    }
 
-interface ISenderOnRead {
-  messageId: number
-  receiverId: number
-  status: MessageStatus.DELIVERED
-}
+    export interface OnRead {
+      messageId: IMessage['id']
+      receiverId: IUser['id']
+      status: MessageStatus.DELIVERED
+    }
 
-export interface IReceiverEmitDelivered {
-  messageId: number
-  senderId: number
-  receiverId: number
-}
+    export interface EmitDelivered {
+      messageId: IMessage['id']
+      senderId: IUser['id']
+      receiverId: IUser['id']
+    }
 
-export interface IReceiverEmitRead {
-  messageId: number
-  senderId: number
-  receiverId: number
-}
+    export interface EmitRead {
+      messageId: IMessage['id']
+      senderId: IUser['id']
+      receiverId: IUser['id']
+    }
 
-export interface ISenderEmitTyping {
-  senderId: number
-  receiverId: number
-  isTyping: boolean
-}
+    export interface EmitTyping {
+      senderId: IMessage['id']
+      receiverId: IUser['id']
+      isTyping: boolean
+    }
 
-type IReceiverOnTyping = ISenderEmitTyping
+    export type OnTyping = EmitTyping
+  }
 
-export interface SocketOnEventPayload {
-  [SocketEvents.PERSONAL.MESSAGE_RECEIVE]: IReceiverOnMessage
-  [SocketEvents.PERSONAL.STATUS_SENT]: ISenderOnSent
-  [SocketEvents.PERSONAL.STATUS_DELIVERED]: ISenderOnDelivered
-  [SocketEvents.PERSONAL.STATUS_READ]: ISenderOnRead[]
-  [SocketEvents.PERSONAL.TYPING]: IReceiverOnTyping
-}
-
-export interface SocketEmitEventPayload {
-  [SocketEvents.PERSONAL.MESSAGE_SEND]: ISenderEmitMessage
-  [SocketEvents.PERSONAL.STATUS_DELIVERED]: IReceiverEmitDelivered
-  [SocketEvents.PERSONAL.TYPING]: ISenderEmitTyping
-  [SocketEvents.PERSONAL.STATUS_READ]: IReceiverEmitRead | IReceiverEmitRead[]
+  export namespace Group {}
 }

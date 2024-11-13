@@ -23,7 +23,7 @@ import {
 import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import type { IMessage, IReceiverEmitRead } from '@shared/types'
+import type { IMessage, SocketEventPayloads } from '@shared/types'
 import type { IChatListItem, IUser } from '@shared/types/client'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
@@ -54,7 +54,7 @@ export function usePersonalChatSocketEvents() {
 
     if (isNullOrUndefined(messages)) return
 
-    const readEventPayload: IReceiverEmitRead[] = []
+    const readEventPayload: SocketEventPayloads.Personal.EmitRead[] = []
 
     for (const message of messages.values()) {
       if (message.senderId === authUser.id || message.status === MessageStatus.READ) continue

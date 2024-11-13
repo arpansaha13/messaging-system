@@ -16,7 +16,7 @@ import { selectTypingState } from '~/store/features/typing/typing.slice'
 import { useGetUserQuery, useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { generateHash } from '~/utils/generateHash'
 import { MessageStatus, SocketEvents } from '@shared/constants'
-import type { IMessage, IMessageSending, ISenderEmitTyping } from '@shared/types'
+import type { IMessage, IMessageSending, SocketEventPayloads } from '@shared/types'
 
 export default function useController() {
   const { socket } = useSocket()
@@ -34,7 +34,7 @@ export default function useController() {
   const prevReceiverId = useRef(receiver?.id ?? null)
 
   const typingPayload = useCallback(
-    (isTyping: boolean): ISenderEmitTyping => {
+    (isTyping: boolean): SocketEventPayloads.Personal.EmitTyping => {
       return {
         senderId: authUser!.id,
         receiverId: receiver!.id,

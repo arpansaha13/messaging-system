@@ -6,14 +6,19 @@ export enum MessageStatus {
 }
 
 enum SocketEvents_Personal {
-  MESSAGE_SEND = 'send-message',
-  MESSAGE_RECEIVE = 'receive-message',
-  STATUS_SENT = 'sent',
-  STATUS_DELIVERED = 'delivered',
-  STATUS_READ = 'read',
-  TYPING = 'typing',
+  MESSAGE_SEND = 'personal:send-message',
+  MESSAGE_RECEIVE = 'personal:receive-message',
+  STATUS_SENT = 'personal:sent',
+  STATUS_DELIVERED = 'personal:delivered',
+  STATUS_READ = 'personal:read',
+  TYPING = 'personal:typing',
+}
+
+enum SocketEvents_Group {
+  MESSAGE_SEND = 'group:send-message',
 }
 
 export const SocketEvents = {
   PERSONAL: SocketEvents_Personal,
+  GROUP: SocketEvents_Group,
 }

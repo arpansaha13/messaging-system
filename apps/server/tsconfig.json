@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "module": "es2015",
-    "moduleResolution": "Bundler",
+    "module": "commonjs",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,

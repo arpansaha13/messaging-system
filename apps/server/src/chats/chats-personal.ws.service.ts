@@ -9,7 +9,7 @@ import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-r
 import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
 import { In, type EntityManager } from 'typeorm'
 import type { Server, Socket } from 'socket.io'
-import type { IReceiverEmitDelivered, IReceiverEmitRead, ISenderEmitMessage, ISenderEmitTyping } from '@shared/types'
+import type { SocketEventPayloads } from '@shared/types'
 
 @Injectable()
 export class ChatsWsService {
@@ -38,7 +38,7 @@ export class ChatsWsService {
     this.clients.delete(parseInt(socket.handshake.query.userId as string))
   }
 
-  async sendMessage(payload: ISenderEmitMessage, server: Server) {
+  async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage, server: Server) {
     const receiverSocketId = this.clients.get(payload.receiverId)
     const senderSocketId = this.clients.get(payload.senderId)
 
@@ -119,7 +119,7 @@ export class ChatsWsService {
     })
   }
 
-  async handleDelivered(payload: IReceiverEmitDelivered, server: Server) {
+  async handleDelivered(payload: SocketEventPayloads.Personal.EmitDelivered, server: Server) {
     await this.messageRecipientRepository.update(
       { id: payload.messageId, receiver: { id: payload.receiverId } },
       { status: MessageStatus.DELIVERED },
@@ -134,7 +134,10 @@ export class ChatsWsService {
     })
   }
 
-  async handleRead(payload: IReceiverEmitRead | IReceiverEmitRead[], server: Server) {
+  async handleRead(
+    payload: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[],
+    server: Server,
+  ) {
     const payloadArray = Array.isArray(payload) ? payload : [payload]
 
     await this.messageRecipientRepository.update(
@@ -155,7 +158,7 @@ export class ChatsWsService {
     server.to(senderSocketId).emit(SocketEvents.PERSONAL.STATUS_READ, readPayloadToSender)
   }
 
-  handleTyping(payload: ISenderEmitTyping, server: Server) {
+  handleTyping(payload: SocketEventPayloads.Personal.EmitTyping, server: Server) {
     const receiverSocketId = this.clients.get(payload.receiverId)
     server.to(receiverSocketId).emit(SocketEvents.PERSONAL.TYPING, {
       senderId: payload.senderId,
