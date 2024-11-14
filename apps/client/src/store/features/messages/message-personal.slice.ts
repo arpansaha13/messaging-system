@@ -23,6 +23,7 @@ const initialState: IMessageSlice = {
 export const messagePersonalSlice = createAppSlice({
   name: 'message',
   initialState,
+
   reducers: create => ({
     getMessages: create.asyncThunk(_getMessages, {
       pending: state => {
@@ -43,7 +44,7 @@ export const messagePersonalSlice = createAppSlice({
     upsertMessages: create.reducer(
       (state, action: PayloadAction<{ receiverId: IUser['id']; newMessages: IMessage[] }>) => {
         const { receiverId, newMessages } = action.payload
-        const messages = state.userMessagesMap.get(receiverId) ?? new Map<IUser['id'], IMessage>()
+        const messages = state.userMessagesMap.get(receiverId) ?? new Map<IMessage['id'], IMessage>()
         newMessages.forEach(message => messages.set(message.id, message))
         state.userMessagesMap.set(receiverId, messages)
       },

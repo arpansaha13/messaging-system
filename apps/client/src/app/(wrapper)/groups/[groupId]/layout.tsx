@@ -51,7 +51,7 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
         <WindowPanelBody>
           <ul className="space-y-1">
             {channels.map(channel => (
-              <ChannelListItem key={channel.id} channel={channel} />
+              <ChannelListItem key={channel.id} channel={channel} groupId={group.id} />
             ))}
           </ul>
         </WindowPanelBody>

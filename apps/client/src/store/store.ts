@@ -31,6 +31,8 @@ export const makeStore = () => {
             'typing.typingState',
             'message.userMessagesMap',
             'message.tempMessagesMap',
+            'group-message.groupMessagesMap',
+            'group-message.tempGroupMessagesMap',
             'channel.channelsMap',
           ],
         },
