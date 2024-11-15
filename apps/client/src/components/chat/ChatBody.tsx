@@ -37,10 +37,10 @@ export default function ChatBody(props: Readonly<ChatBodyProps>) {
     const tempMessage = tempMessageItrResult.value
     const authUserIsSender = authUserId === message.senderId
 
-    if (new Date(message.createdAt) <= tempMessage.createdInClientAt) {
+    if (new Date(message.createdAt) <= new Date(tempMessage.createdInClientAt)) {
       renderMap.push(<ChatBodyMessage key={message.id} message={message} authUserIsSender={authUserIsSender} />)
       messageItrResult = messageItr.next()
-    } else if (new Date(message.createdAt) < tempMessage.createdInClientAt) {
+    } else if (new Date(message.createdAt) < new Date(tempMessage.createdInClientAt)) {
       renderMap.push(<ChatBodyTempMessage key={tempMessage.hash} message={tempMessage} />)
       tempMessageItrResult = tempMessageItr.next()
     }

@@ -1,18 +1,19 @@
 import type { MessageStatus } from '@shared/constants'
+import type { IUser } from './client'
 
 export interface IMessageSending {
   hash: string
   content: string
-  senderId: number
+  senderId: IUser['id']
   status: MessageStatus.SENDING
 
   /** For deciding the order in which messages should be shown in chat window */
-  createdInClientAt: Date
+  createdInClientAt: string
 }
 export interface IMessage {
   id: number
   content: string
-  senderId: number
+  senderId: IUser['id']
   createdAt: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
 }

@@ -77,7 +77,7 @@ export default function useController() {
         dispatch(
           upsertTempMessages({
             receiverId: receiver!.id,
-            messages: [{ ...newMessage, createdInClientAt: new Date() }],
+            messages: [{ ...newMessage, createdInClientAt: new Date().toString() }],
           }),
         )
 

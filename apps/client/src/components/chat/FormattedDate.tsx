@@ -1,7 +1,7 @@
 import { differenceInCalendarDays, format } from 'date-fns'
 
 interface FormattedDateProps {
-  dateString: Date | string
+  dateString: string
 }
 
 export default function FormattedDate(props: Readonly<FormattedDateProps>) {
