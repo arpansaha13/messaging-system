@@ -89,5 +89,15 @@ export namespace SocketEventPayloads {
       createdAt: string
       status: MessageStatus.SENT
     }
+
+    export interface EmitDelivered {
+      messageId: IMessage['id']
+      receiverId: IUser['id']
+    }
+
+    export interface EmitRead {
+      messageId: IMessage['id']
+      receiverId: IUser['id']
+    }
   }
 }

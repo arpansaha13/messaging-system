@@ -1,4 +1,5 @@
 import { PayloadAction } from '@reduxjs/toolkit'
+import { MessageStatus } from '@shared/constants'
 import { createAppSlice } from '~/store/createAppSlice'
 import { _getMessages } from './messages.api'
 import type { IChannel, IGroup } from '@shared/types/client'
@@ -24,6 +25,10 @@ export const messageGroupSlice = createAppSlice({
   initialState,
 
   reducers: create => ({
+    getGroupMessages: create.reducer((state, action: PayloadAction<IChannel['id']>) => {
+      const channelId = action.payload
+      state.groupMessagesMap.set(channelId, new Map())
+    }),
     upsertGroupMessages: create.reducer(
       (state, action: PayloadAction<{ channelId: IChannel['id']; newMessages: IGroupMessage[] }>) => {
         const { channelId, newMessages } = action.payload
@@ -47,6 +52,21 @@ export const messageGroupSlice = createAppSlice({
         tempChat?.delete(hash)
       },
     ),
+    updateGroupMessageStatus: create.reducer(
+      (
+        state,
+        action: PayloadAction<{
+          channelId: IChannel['id']
+          messageId: IGroupMessage['id']
+          newStatus: Exclude<MessageStatus, MessageStatus.SENDING>
+        }>,
+      ) => {
+        const { channelId, messageId, newStatus } = action.payload
+        const messages = state.groupMessagesMap.get(channelId)
+        const message = messages?.get(messageId)
+        if (message) message.status = newStatus
+      },
+    ),
   }),
   selectors: {
     selectGroupMessagesMap: slice => slice.groupMessagesMap,
@@ -56,7 +76,13 @@ export const messageGroupSlice = createAppSlice({
   },
 })
 
-export const { upsertGroupMessages, upsertTempGroupMessages, deleteTempGroupMessage } = messageGroupSlice.actions
+export const {
+  getGroupMessages,
+  upsertGroupMessages,
+  upsertTempGroupMessages,
+  deleteTempGroupMessage,
+  updateGroupMessageStatus,
+} = messageGroupSlice.actions
 
 export const { selectGroupMessagesMap, selectTempGroupMessagesMap, selectGroupMessages, selectTempGroupMessages } =
   messageGroupSlice.selectors

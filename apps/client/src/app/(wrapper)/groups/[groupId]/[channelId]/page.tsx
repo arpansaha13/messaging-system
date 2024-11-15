@@ -1,5 +1,6 @@
 'use client'
 
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Chat, ChatHeader, ChatBody, ChatFooter } from '~/components/chat'
 import { useController } from './controller'
 
@@ -16,7 +17,7 @@ export default function Page() {
     handleKeyDown,
   } = useController()
 
-  if (!isGetAuthUserSuccess || !isGetChannelSuccess) {
+  if (!isGetAuthUserSuccess || !isGetChannelSuccess || isNullOrUndefined(groupMessages)) {
     return null
   }
 

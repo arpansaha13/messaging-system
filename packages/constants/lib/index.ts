@@ -18,6 +18,8 @@ enum SocketEvents_Group {
   MESSAGE_SEND = 'group:send-message',
   STATUS_SENT = 'group:sent',
   MESSAGE_RECEIVE = 'group:receive-message',
+  STATUS_DELIVERED = 'group:delivered',
+  STATUS_READ = 'group:read',
 }
 
 export const SocketEvents = {

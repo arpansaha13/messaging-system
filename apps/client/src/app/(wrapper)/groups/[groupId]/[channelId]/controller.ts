@@ -1,11 +1,12 @@
 import { useParams } from 'next/navigation'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { MessageStatus, SocketEvents } from '@shared/constants'
 import { useSocket } from '~/hooks/useSocket'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
 import {
+  getGroupMessages,
   selectGroupMessages,
   selectTempGroupMessages,
   upsertTempGroupMessages,
@@ -64,8 +65,14 @@ export function useController() {
 
   // __________________________________BODY_____________________________________
 
-  const groupMessages = useAppSelector(state => selectGroupMessages(state, channelId)) ?? new Map()
+  const groupMessages = useAppSelector(state => selectGroupMessages(state, channelId))
   const tempGroupMessages = useAppSelector(state => selectTempGroupMessages(state, channelId)) ?? new Map()
+
+  useEffect(() => {
+    if (isNullOrUndefined(groupMessages)) {
+      dispatch(getGroupMessages(channelId))
+    }
+  }, [channelId, groupMessages, dispatch])
 
   return {
     authUserId: authUser?.id,
