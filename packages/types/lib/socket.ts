@@ -1,6 +1,6 @@
 import type { MessageStatus } from '@shared/constants'
-import type { IUser } from './client'
-import type { IMessage, IMessageSending } from './message'
+import type { IChannel, IGroup, IUser } from './client'
+import type { IGroupMessage, IGroupMessageSending, IMessage, IMessageSending } from './message'
 
 export namespace SocketEventPayloads {
   export namespace Personal {
@@ -61,5 +61,33 @@ export namespace SocketEventPayloads {
     export type OnTyping = EmitTyping
   }
 
-  export namespace Group {}
+  export namespace Group {
+    export interface EmitMessage {
+      hash: IGroupMessageSending['hash']
+      content: IGroupMessage['content']
+      senderId: IUser['id']
+      groupId: IGroup['id']
+      channelId: IChannel['id']
+      status: MessageStatus.SENDING
+    }
+
+    export interface OnMessage {
+      messageId: IGroupMessage['id']
+      content: IGroupMessage['content']
+      senderId: IUser['id']
+      groupId: IGroup['id']
+      channelId: IChannel['id']
+      createdAt: string
+      status: MessageStatus.SENT
+    }
+
+    export interface OnSent {
+      hash: IMessageSending['hash']
+      messageId: IMessage['id']
+      groupId: IGroup['id']
+      channelId: IChannel['id']
+      createdAt: string
+      status: MessageStatus.SENT
+    }
+  }
 }

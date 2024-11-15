@@ -12,7 +12,7 @@ import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
 @Injectable()
-export class ChatsWsService {
+export class PersonalChatsWsService {
   constructor(
     @InjectEntityManager()
     private readonly manager: EntityManager,

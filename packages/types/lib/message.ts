@@ -1,5 +1,5 @@
 import type { MessageStatus } from '@shared/constants'
-import type { IUser } from './client'
+import type { IChannel, IUser } from './client'
 
 export interface IMessageSending {
   hash: string
@@ -16,4 +16,12 @@ export interface IMessage {
   senderId: IUser['id']
   createdAt: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
+}
+
+export interface IGroupMessageSending extends IMessageSending {
+  channelId: IChannel['id']
+}
+
+export interface IGroupMessage extends IMessage {
+  channelId: IChannel['id']
 }

@@ -11,6 +11,8 @@ export interface SocketOnEventPayload {
   [SocketEvents.PERSONAL.STATUS_DELIVERED]: SocketEventPayloads.Personal.OnDelivered
   [SocketEvents.PERSONAL.STATUS_READ]: SocketEventPayloads.Personal.OnRead[]
   [SocketEvents.PERSONAL.TYPING]: SocketEventPayloads.Personal.OnTyping
+
+  [SocketEvents.GROUP.STATUS_SENT]: SocketEventPayloads.Group.OnSent
 }
 
 export interface SocketEmitEventPayload {
@@ -18,6 +20,8 @@ export interface SocketEmitEventPayload {
   [SocketEvents.PERSONAL.STATUS_DELIVERED]: SocketEventPayloads.Personal.EmitDelivered
   [SocketEvents.PERSONAL.TYPING]: SocketEventPayloads.Personal.EmitTyping
   [SocketEvents.PERSONAL.STATUS_READ]: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[]
+
+  [SocketEvents.GROUP.MESSAGE_SEND]: SocketEventPayloads.Group.EmitMessage
 }
 
 type SocketEmitEvent = keyof SocketEmitEventPayload

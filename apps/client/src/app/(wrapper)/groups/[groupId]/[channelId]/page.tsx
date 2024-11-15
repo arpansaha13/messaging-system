@@ -7,9 +7,9 @@ export default function Page() {
   const {
     authUserId,
     channel,
-    messages,
-    tempMessages,
     inputValue,
+    groupMessages,
+    tempGroupMessages,
     isGetAuthUserSuccess,
     isGetChannelSuccess,
     handleChange,
@@ -23,7 +23,7 @@ export default function Page() {
   return (
     <Chat
       header={<ChatHeader dp={null} isTyping={null} name={channel!.name} />}
-      body={<ChatBody authUserId={authUserId!} messages={messages} tempMessages={tempMessages} />}
+      body={<ChatBody authUserId={authUserId!} messages={groupMessages} tempMessages={tempGroupMessages} />}
       footer={<ChatFooter value={inputValue} onChange={handleChange} onKeyDown={handleKeyDown} />}
     />
   )
