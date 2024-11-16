@@ -5,6 +5,7 @@ import { MessageRepository } from './message.repository'
 import { ChatRepository } from 'src/chats/chats.repository'
 import type { Message } from './message.entity'
 import type { User } from 'src/users/user.entity'
+import type { Channel } from 'src/channels/channel.entity'
 
 @Injectable()
 export class MessageService {
@@ -24,5 +25,9 @@ export class MessageService {
     if (isNullOrUndefined(chat)) return []
 
     return this.messageRepository.getMessagesByUserId(authUser.id, receiverId, chat.clearedAt)
+  }
+
+  getMessagesByChannelId(channelId: Channel['id']) {
+    return this.messageRepository.getMessagesByChannelId(channelId)
   }
 }

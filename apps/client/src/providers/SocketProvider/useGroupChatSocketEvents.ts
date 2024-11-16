@@ -49,7 +49,7 @@ export function useGroupChatSocketEvents() {
   //       }),
   //     )
   //   }
-  //   socket?.emit(SocketEvents.GROUP.STATUS_READ, readEventPayload)
+  //   if (readEventPayload.length > 0) socket?.emit(SocketEvents.GROUP.STATUS_READ, readEventPayload)
   // }, [authUser, channelId, dispatch, groupMessagesMap, isSuccess, socket])
 
   useEffect(() => {

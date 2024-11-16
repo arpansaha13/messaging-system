@@ -21,6 +21,8 @@ export class GroupChatsWsService {
     private readonly messageRecipientRepository: MessageRecipientRepository,
   ) {}
 
+  // Read receipts for for group chats - "DELIVERED" and "READ" - are not handled
+
   async sendMessage(payload: SocketEventPayloads.Group.EmitMessage, senderSocket: Socket) {
     const roomId = payload.channelId.toString()
 

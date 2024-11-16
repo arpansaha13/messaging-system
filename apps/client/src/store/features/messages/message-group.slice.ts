@@ -1,7 +1,7 @@
 import { PayloadAction } from '@reduxjs/toolkit'
 import { MessageStatus } from '@shared/constants'
 import { createAppSlice } from '~/store/createAppSlice'
-import { _getMessages } from './messages.api'
+import { _getGroupMessages } from './messages.api'
 import type { IChannel, IGroup } from '@shared/types/client'
 import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
 
@@ -25,9 +25,21 @@ export const messageGroupSlice = createAppSlice({
   initialState,
 
   reducers: create => ({
-    getGroupMessages: create.reducer((state, action: PayloadAction<IChannel['id']>) => {
-      const channelId = action.payload
-      state.groupMessagesMap.set(channelId, new Map())
+    getGroupMessages: create.asyncThunk(_getGroupMessages, {
+      pending: state => {
+        state.status = 'loading'
+      },
+      fulfilled: (state, action) => {
+        state.status = 'idle'
+        const channelId = action.meta.arg
+        const newMessages = action.payload
+        const messages = state.groupMessagesMap.get(channelId) ?? new Map<IChannel['id'], IGroupMessage>()
+        newMessages.forEach(message => messages.set(message.id, message))
+        state.groupMessagesMap.set(channelId, messages)
+      },
+      rejected: state => {
+        state.status = 'failed'
+      },
     }),
     upsertGroupMessages: create.reducer(
       (state, action: PayloadAction<{ channelId: IChannel['id']; newMessages: IGroupMessage[] }>) => {

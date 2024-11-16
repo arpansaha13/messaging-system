@@ -3,6 +3,7 @@ import { Brackets, DataSource, Repository } from 'typeorm'
 import { Message } from './message.entity'
 import { Chat } from 'src/chats/chats.entity'
 import type { User } from 'src/users/user.entity'
+import type { Channel } from 'src/channels/channel.entity'
 
 @Injectable()
 export class MessageRepository extends Repository<Message> {
@@ -20,6 +21,7 @@ export class MessageRepository extends Repository<Message> {
       .innerJoin('message.recipients', 'recipient')
       .innerJoin('recipient.receiver', 'receiver')
       .where('message.createdAt >= :clearedAt', { clearedAt })
+      .andWhere('message.channel_id is null')
       .andWhere(
         new Brackets(qb => {
           qb.where(
@@ -52,6 +54,7 @@ export class MessageRepository extends Repository<Message> {
       .innerJoin('message.recipients', 'recipient')
       .innerJoin('recipient.receiver', 'receiver')
       .where('message.createdAt >= :clearedAt', { clearedAt })
+      .andWhere('message.channel_id is null')
       .andWhere(
         new Brackets(qb => {
           qb.where(
@@ -72,5 +75,16 @@ export class MessageRepository extends Repository<Message> {
       .orderBy('message.createdAt', 'DESC') // latest message
       .limit(1)
       .getRawOne()
+  }
+
+  getMessagesByChannelId(channelId: Channel['id']) {
+    return this.createQueryBuilder('message')
+      .select('message.id', 'id')
+      .addSelect('message.content', 'content')
+      .addSelect('message.sender.id', 'senderId')
+      .addSelect('message.createdAt', 'createdAt')
+      .where('message.channel_id = :channelId', { channelId })
+      .orderBy('message.createdAt')
+      .getRawMany()
   }
 }
