@@ -6,9 +6,9 @@ import type { IContact } from '@shared/types/client'
 export async function GET(request: Request) {
   const res = await fetch(overwriteBaseUrl(request))
   const body: IContactResponseFromBE[] = await res.json()
-  const hasSearchParams = new URL(request.url).searchParams.size > 0
+  const hasSearchQuery = new URL(request.url).searchParams.has('search')
 
-  if (hasSearchParams) {
+  if (hasSearchQuery) {
     return _response(
       res,
       body.map<IContact>(contact => ({
