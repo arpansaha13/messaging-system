@@ -80,13 +80,15 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
 
             <Separator />
 
-            <ul className="space-y-1">
+            <div>
               <h3 className="mb-2 px-3 py-2 font-semibold dark:text-gray-300">Members</h3>
 
-              {groupMembers.map(user => (
-                <GroupMemberListItem key={user.id} member={user} />
-              ))}
-            </ul>
+              <ul className="space-y-1">
+                {groupMembers.map(user => (
+                  <GroupMemberListItem key={user.id} member={user} />
+                ))}
+              </ul>
+            </div>
           </WindowPanelBody>
         </WindowPanel>
       )}
