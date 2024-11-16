@@ -29,7 +29,15 @@ export default function AddChannelModal(props: Readonly<AddChannelModalProps>) {
 
   return (
     <FormModal open={open} setOpen={setOpen} heading="Create new channel" action={onSubmit} submitButtonText="Create">
-      <Input required label="Choose a name for the channel" id="name" name="name" type="text" className="mt-4" />
+      <Input
+        required
+        label="Choose a name for the channel"
+        id="name"
+        name="name"
+        type="text"
+        className="mt-4"
+        autoComplete="off"
+      />
     </FormModal>
   )
 }

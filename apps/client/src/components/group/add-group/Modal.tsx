@@ -20,7 +20,15 @@ export default function AddGroupModal() {
 
   return (
     <FormModal open={open} setOpen={setOpen} heading="Create new group" action={onSubmit} submitButtonText="Create">
-      <Input required label="Choose a name for your group" id="name" name="name" type="text" className="mt-4" />
+      <Input
+        required
+        label="Choose a name for your group"
+        id="name"
+        name="name"
+        type="text"
+        className="mt-4"
+        autoComplete="off"
+      />
     </FormModal>
   )
 }
