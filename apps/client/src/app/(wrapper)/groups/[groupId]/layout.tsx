@@ -2,17 +2,18 @@
 
 import { useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { XMarkIcon } from '@heroicons/react/24/outline'
 import { GroupAvatar, Separator } from '~/components/common'
 import { Window, WindowBody, WindowPanel, WindowPanelBody } from '~/components/window'
 import { ChannelListItem, GroupMemberListItem } from '~/components/list-items'
+import { SkeletonChannelList, SkeletonGroupMembersList, SkeletonParagraph } from '~/components/skeleton'
+import AddChannel from './AddChannel'
+import InvitePeople from './InvitePeople'
 import {
   useGetGroupQuery,
   useGetChannelsQuery,
   useGetGroupMembersQuery,
 } from '~/store/features/groups/groups.api.slice'
-import { XMarkIcon } from '@heroicons/react/24/outline'
-import AddChannel from './AddChannel'
-import InvitePeople from './InvitePeople'
 
 interface GroupsLayoutProps {
   children: React.ReactNode
@@ -33,34 +34,43 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
     setPanelOpen(false)
   }
 
-  if (!isFetchGroupSuccess || !isFetchChannelsSuccess || !isFetchGroupMembersSuccess) return null
-
   return (
     <Window>
       <WindowPanel>
-        <button className="relative block w-full bg-gray-50 p-4 shadow dark:bg-gray-800" onClick={openGroupInfoPanel}>
+        <button
+          className="relative block w-full bg-gray-50 p-4 text-left shadow dark:bg-gray-800"
+          onClick={openGroupInfoPanel}
+        >
           <div className="mt-8 flex items-center gap-4">
             <GroupAvatar src={null} alt="" size={4} />
 
             <div>
-              <h1 className="text-2xl font-bold">{group.name}</h1>
+              {!isFetchGroupSuccess ? (
+                <SkeletonParagraph className="h-6 w-36 animate-pulse" />
+              ) : (
+                <h1 className="text-2xl font-bold">{group.name}</h1>
+              )}
             </div>
           </div>
         </button>
 
         <WindowPanelBody>
-          <ul className="space-y-1">
-            {channels.map(channel => (
-              <ChannelListItem key={channel.id} channel={channel} groupId={group.id} />
-            ))}
-          </ul>
+          {!isFetchChannelsSuccess || !isFetchGroupSuccess ? (
+            <SkeletonChannelList />
+          ) : (
+            <ul className="space-y-1">
+              {channels.map(channel => (
+                <ChannelListItem key={channel.id} channel={channel} groupId={group.id} />
+              ))}
+            </ul>
+          )}
         </WindowPanelBody>
       </WindowPanel>
 
       <WindowBody>{children}</WindowBody>
 
-      {panelOpen && (
-        <WindowPanel>
+      {
+        panelOpen && <WindowPanel>
           <div className="flex items-center gap-2.5 bg-gray-50 p-3 shadow dark:bg-gray-800">
             <button
               type="button"
@@ -73,10 +83,14 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
           </div>
 
           <WindowPanelBody>
-            <div className="space-y-1">
-              <AddChannel group={group} />
-              <InvitePeople group={group} />
-            </div>
+            {!isFetchGroupSuccess ? (
+              <SkeletonGroupInfoButtons />
+            ) : (
+              <div className="space-y-1">
+                <AddChannel group={group} />
+                <InvitePeople group={group} />
+              </div>
+            )}
 
             <Separator />
 
@@ -84,14 +98,29 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
               <h3 className="mb-2 px-3 py-2 font-semibold dark:text-gray-300">Members</h3>
 
               <ul className="space-y-1">
-                {groupMembers.map(user => (
-                  <GroupMemberListItem key={user.id} member={user} />
-                ))}
+                {!isFetchGroupMembersSuccess ? (
+                  <SkeletonGroupMembersList />
+                ) : (
+                  groupMembers.map(user => <GroupMemberListItem key={user.id} member={user} />)
+                )}
               </ul>
             </div>
           </WindowPanelBody>
         </WindowPanel>
-      )}
+      }
     </Window>
+  )
+}
+
+function SkeletonGroupInfoButtons() {
+  return (
+    <div className="space-y-1">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i} className="flex w-full animate-pulse items-center gap-3 rounded px-4 py-3">
+          <SkeletonParagraph className="size-5" />
+          <SkeletonParagraph className="h-4 w-20" />
+        </div>
+      ))}
+    </div>
   )
 }
