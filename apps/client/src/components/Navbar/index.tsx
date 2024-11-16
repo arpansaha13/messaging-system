@@ -176,7 +176,7 @@ function GroupList(props: Readonly<GroupListProps>) {
               href={href}
               className={classNames(
                 'mx-auto flex size-10 items-center justify-center rounded transition-colors',
-                href === pathname && 'bg-brand-300 text-brand-900 dark:bg-brand-800 dark:text-brand-200',
+                pathname.startsWith(href) && 'bg-brand-300 text-brand-900 dark:bg-brand-800 dark:text-brand-200',
               )}
             >
               <UserGroupIcon className="size-6 flex-shrink-0" />
