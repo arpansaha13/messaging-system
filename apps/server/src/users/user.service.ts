@@ -29,7 +29,7 @@ export class UserService {
 
   async getAuthUser(authUser: User): Promise<AuthUserResponse> {
     const groupIds = await this.userGroupRepository.getGroupIdsByUserId(authUser.id)
-    const channelIds = await this.channelRepository.getChannelIdsByUserId(groupIds)
+    const channelIds = await this.channelRepository.getChannelIdsByGroupIds(groupIds)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...rest } = authUser
 

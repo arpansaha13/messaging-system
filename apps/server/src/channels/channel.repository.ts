@@ -10,7 +10,7 @@ export class ChannelRepository extends Repository<Channel> {
   }
 
   /** Get only the ids of the channels belonging to the groups. */
-  async getChannelIdsByUserId(groupIds: Group['id'][]): Promise<Channel['id'][]> {
+  async getChannelIdsByGroupIds(groupIds: Group['id'][]): Promise<Channel['id'][]> {
     const channels = await this.find({
       select: ['id'],
       where: { group: { id: In(groupIds) } },
