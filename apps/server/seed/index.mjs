@@ -42,6 +42,9 @@ async function seed() {
   await client.query('DELETE FROM user_group')
   console.log('deleted user_group')
 
+  await client.query('DELETE FROM invites')
+  console.log('deleted invites')
+
   await client.query('DELETE FROM groups')
   console.log('deleted groups')
 
