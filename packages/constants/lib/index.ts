@@ -15,6 +15,8 @@ enum SocketEvents_Personal {
 }
 
 enum SocketEvents_Group {
+  NEW_GROUP = 'group:new-group',
+  NEW_CHANNEL = 'group:new-channel',
   MESSAGE_SEND = 'group:send-message',
   STATUS_SENT = 'group:sent',
   MESSAGE_RECEIVE = 'group:receive-message',

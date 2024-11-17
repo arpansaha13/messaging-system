@@ -35,6 +35,7 @@ export class UserService {
 
     return {
       ...rest,
+      groups: groupIds,
       channels: channelIds,
     }
   }

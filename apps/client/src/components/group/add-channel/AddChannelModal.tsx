@@ -1,3 +1,5 @@
+import { SocketEvents } from '@shared/constants'
+import { useSocket } from '~/hooks/useSocket'
 import { Input } from '~/components/ui'
 import { FormModal } from '~/components/common'
 import { useAddChannelMutation } from '~/store/features/groups/groups.api.slice'
@@ -16,13 +18,19 @@ interface AddChannelModalProps {
 
 export default function AddChannelModal(props: Readonly<AddChannelModalProps>) {
   const { groupId, open, setOpen } = props
+
+  const { socket } = useSocket()
   const [addChannel] = useAddChannelMutation()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData<ICreateChannelFormData>(e.currentTarget)
-    await addChannel({
+    const { data } = await addChannel({
       groupId,
       body: formData,
+    })
+    socket?.emit(SocketEvents.GROUP.NEW_CHANNEL, {
+      groupId,
+      channelId: data!.channelId,
     })
     setOpen(false)
   }

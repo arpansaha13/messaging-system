@@ -4,6 +4,7 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { SocketEvents } from '@shared/constants'
 import { User } from 'src/users/user.entity'
 import { Chat } from './chats.entity'
+import { ChatsStoreService } from './chats-store.service'
 import { Message } from 'src/messages/message.entity'
 import { MessageRecipient, MessageStatus } from 'src/message-recipient/message-recipient.entity'
 import { MessageRecipientRepository } from 'src/message-recipient/message-recipient.repository'
@@ -19,28 +20,27 @@ export class PersonalChatsWsService {
 
     @InjectRepository(MessageRecipientRepository)
     private readonly messageRecipientRepository: MessageRecipientRepository,
+
+    private readonly chatsStore: ChatsStoreService,
   ) {}
 
-  // TODO: Move this to an external cache
-  private readonly clients = new Map<User['id'], Socket['id']>()
-
   handleConnect(socket: Socket) {
-    // If the same user connects again it will overwrite previous data in map.
-    // Which means multiple connections are not possible currently.
-    // TODO: support multiple connections
-    this.clients.set(parseInt(socket.handshake.query.userId as string), socket.id)
+    this.chatsStore.setClient(parseInt(socket.handshake.query.userId as string), socket.id)
 
     const channels = (socket.handshake.query.channels as string).split(',')
     socket.join(channels)
+
+    const groups = (socket.handshake.query.groups as string).split(',')
+    groups.forEach(groupId => this.chatsStore.addSocketToGroup(parseInt(groupId), socket.id))
   }
 
   handleDisconnect(socket: Socket) {
-    this.clients.delete(parseInt(socket.handshake.query.userId as string))
+    this.chatsStore.deleteClient(parseInt(socket.handshake.query.userId as string))
   }
 
   async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage, server: Server) {
-    const receiverSocketId = this.clients.get(payload.receiverId)
-    const senderSocketId = this.clients.get(payload.senderId)
+    const receiverSocketId = this.chatsStore.getClient(payload.receiverId)
+    const senderSocketId = this.chatsStore.getClient(payload.senderId)
 
     const { message, messageRecipient } = await this.manager
       .transaction(async txnManager => {
@@ -125,7 +125,7 @@ export class PersonalChatsWsService {
       { status: MessageStatus.DELIVERED },
     )
 
-    const senderSocketId = this.clients.get(payload.senderId)
+    const senderSocketId = this.chatsStore.getClient(payload.senderId)
 
     server.to(senderSocketId).emit(SocketEvents.PERSONAL.STATUS_DELIVERED, {
       messageId: payload.messageId,
@@ -154,12 +154,12 @@ export class PersonalChatsWsService {
       status: MessageStatus.READ,
     }))
 
-    const senderSocketId = this.clients.get(payloadArray[0].senderId)
+    const senderSocketId = this.chatsStore.getClient(payloadArray[0].senderId)
     server.to(senderSocketId).emit(SocketEvents.PERSONAL.STATUS_READ, readPayloadToSender)
   }
 
   handleTyping(payload: SocketEventPayloads.Personal.EmitTyping, server: Server) {
-    const receiverSocketId = this.clients.get(payload.receiverId)
+    const receiverSocketId = this.chatsStore.getClient(payload.receiverId)
     server.to(receiverSocketId).emit(SocketEvents.PERSONAL.TYPING, {
       senderId: payload.senderId,
       receiverId: payload.receiverId,

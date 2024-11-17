@@ -1,3 +1,5 @@
+import { SocketEvents } from '@shared/constants'
+import { useSocket } from '~/hooks/useSocket'
 import { Input } from '~/components/ui'
 import { FormModal } from '~/components/common'
 import { useAddGroupMutation } from '~/store/features/groups/groups.api.slice'
@@ -11,10 +13,15 @@ interface ICreateGroupFormData {
 export default function AddGroupModal() {
   const { open, setOpen } = useAddGroupContext()!
   const [addGroup] = useAddGroupMutation()
+  const { socket } = useSocket()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     const formData = getFormData<ICreateGroupFormData>(e.currentTarget)
-    await addGroup(formData)
+    const { data } = await addGroup(formData)
+    socket?.emit(SocketEvents.GROUP.NEW_GROUP, {
+      groupId: data!.id,
+      channels: data!.channels.join(','),
+    })
     setOpen(false)
   }
 

@@ -31,6 +31,8 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.personalChatsService.handleDisconnect(socket)
   }
 
+  // Personal
+
   @SubscribeMessage(SocketEvents.PERSONAL.MESSAGE_SEND)
   sendMessage(@MessageBody() payload: SocketEventPayloads.Personal.EmitMessage) {
     this.personalChatsService.sendMessage(payload, this.server)
@@ -49,6 +51,21 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage(SocketEvents.PERSONAL.TYPING)
   handleTyping(@MessageBody() payload: SocketEventPayloads.Personal.EmitTyping) {
     this.personalChatsService.handleTyping(payload, this.server)
+  }
+
+  // Group
+
+  @SubscribeMessage(SocketEvents.GROUP.NEW_GROUP)
+  handleNewGroup(@MessageBody() payload: SocketEventPayloads.Group.EmitNewGroup, @ConnectedSocket() socket: Socket) {
+    this.groupChatsService.handleNewGroup(payload, socket)
+  }
+
+  @SubscribeMessage(SocketEvents.GROUP.NEW_CHANNEL)
+  handleNewChannel(
+    @MessageBody() payload: SocketEventPayloads.Group.EmitNewChannel,
+    @ConnectedSocket() server: Server,
+  ) {
+    this.groupChatsService.handleNewChannel(payload, server)
   }
 
   @SubscribeMessage(SocketEvents.GROUP.MESSAGE_SEND)

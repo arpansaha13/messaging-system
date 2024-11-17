@@ -13,6 +13,8 @@ import { generateHash } from 'src/common/utils'
 import { MoreThan, type EntityManager } from 'typeorm'
 import type { User } from 'src/users/user.entity'
 import type { CreateChannelDto } from './dto/create-channel.dto'
+import type { CreateGroupResponse } from './interfaces/create-group.response'
+import type { CreateChannelResponse } from './interfaces/create-channel.response'
 
 @Injectable()
 export class GroupService {
@@ -44,8 +46,8 @@ export class GroupService {
     })
   }
 
-  async createGroup(authUser: User, createGroupDto: CreateGroupDto): Promise<Group> {
-    const newGroup = await this.manager.transaction(async txnManager => {
+  async createGroup(authUser: User, createGroupDto: CreateGroupDto): Promise<CreateGroupResponse> {
+    return this.manager.transaction(async txnManager => {
       let newGroup = new Group()
       newGroup.name = createGroupDto.name
       newGroup.founder = authUser
@@ -56,30 +58,35 @@ export class GroupService {
       newUserGroup.user = authUser
       await txnManager.save(UserGroup, newUserGroup)
 
-      const newChannel = new Channel()
+      let newChannel = new Channel()
       newChannel.name = 'default'
       newChannel.group = newGroup
-      await txnManager.save(Channel, newChannel)
+      newChannel = await txnManager.save(Channel, newChannel)
 
-      return newGroup
+      return {
+        id: newGroup.id,
+        channels: [newChannel.id],
+      }
     })
-
-    return newGroup
   }
 
   getChannelsOfGroup(groupId: Group['id']) {
     return this.channelRepository.getChannelsByGroupId(groupId)
   }
 
-  async createChannel(groupId: Group['id'], createChannelDto: CreateChannelDto): Promise<Channel> {
-    const channel = new Channel()
+  async createChannel(groupId: Group['id'], createChannelDto: CreateChannelDto): Promise<CreateChannelResponse> {
+    let newChannel = new Channel()
     const group = await this.groupRepository.findOne({
       select: ['id'],
       where: { id: groupId },
     })
-    channel.name = createChannelDto.name
-    channel.group = group
-    return this.channelRepository.save(channel)
+    newChannel.name = createChannelDto.name
+    newChannel.group = group
+    newChannel = await this.channelRepository.save(newChannel)
+    return {
+      groupId: group.id,
+      channelId: newChannel.id,
+    }
   }
 
   getMembersOfGroup(groupId: Group['id']): Promise<User[]> {

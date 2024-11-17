@@ -8,7 +8,8 @@ import { Message } from 'src/messages/message.entity'
 import { User } from 'src/users/user.entity'
 import { Channel } from 'src/channels/channel.entity'
 import { UserGroup } from 'src/user_group/user-group.entity'
-import type { Socket } from 'socket.io'
+import { ChatsStoreService } from './chats-store.service'
+import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
 @Injectable()
@@ -19,9 +20,27 @@ export class GroupChatsWsService {
 
     @InjectRepository(MessageRecipientRepository)
     private readonly messageRecipientRepository: MessageRecipientRepository,
+
+    private readonly chatsStore: ChatsStoreService,
   ) {}
 
   // Read receipts for for group chats - "DELIVERED" and "READ" - are not handled
+
+  async handleNewGroup(payload: SocketEventPayloads.Group.EmitNewGroup, senderSocket: Socket) {
+    this.chatsStore.addSocketToGroup(payload.groupId, senderSocket.id)
+    senderSocket.join(payload.channels.split(','))
+  }
+
+  async handleNewChannel(payload: SocketEventPayloads.Group.EmitNewChannel, server: Server) {
+    const socketsInGroup = this.chatsStore.getSocketsInGroup(payload.groupId)
+    const roomId = payload.channelId.toString()
+
+    for (const socketId of socketsInGroup) {
+      const socket = server.to(socketId)
+      socket.socketsJoin(roomId)
+      socket.emit(SocketEvents.GROUP.NEW_CHANNEL, { groupId: payload.groupId })
+    }
+  }
 
   async sendMessage(payload: SocketEventPayloads.Group.EmitMessage, senderSocket: Socket) {
     const roomId = payload.channelId.toString()

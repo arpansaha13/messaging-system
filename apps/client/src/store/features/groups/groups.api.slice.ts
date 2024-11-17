@@ -18,6 +18,15 @@ interface IPostCreateChannel {
     name: IChannel['name']
   }
 }
+interface IAddGroupResponse {
+  id: IGroup['id']
+  channels: IChannel['id'][]
+}
+
+interface IAddChannelResponse {
+  groupId: IGroup['id']
+  channelId: IChannel['id']
+}
 
 export const groupsApiSlice = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: FETCH_BASE_URL }),
@@ -48,7 +57,7 @@ export const groupsApiSlice = createApi({
       }),
       providesTags: (_result, _error, id) => [{ type: GROUP_INVITE_API_TAG, id }],
     }),
-    addGroup: build.mutation<IGroup, IPostCreateGroupBody>({
+    addGroup: build.mutation<IAddGroupResponse, IPostCreateGroupBody>({
       query: body => ({
         url: 'groups',
         method: 'POST',
@@ -56,13 +65,13 @@ export const groupsApiSlice = createApi({
       }),
       invalidatesTags: [{ type: ALL_GROUPS_API_TAG }],
     }),
-    addChannel: build.mutation<IGroup, IPostCreateChannel>({
+    addChannel: build.mutation<IAddChannelResponse, IPostCreateChannel>({
       query: ({ groupId, body }) => ({
         url: `groups/${groupId}/channels`,
         method: 'POST',
         body,
       }),
-      invalidatesTags: [{ type: GROUP_CHANNELS_API_TAG }],
+      invalidatesTags: result => [{ type: GROUP_CHANNELS_API_TAG, id: result?.groupId }],
     }),
   }),
 })
@@ -76,3 +85,5 @@ export const {
   useAddGroupMutation,
   useAddChannelMutation,
 } = groupsApiSlice
+
+export const { invalidateTags } = groupsApiSlice.util

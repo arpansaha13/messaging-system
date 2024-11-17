@@ -62,6 +62,22 @@ export namespace SocketEventPayloads {
   }
 
   export namespace Group {
+    export interface EmitNewGroup {
+      groupId: number
+
+      /** Comma-separated channel ids */
+      channels: string
+    }
+
+    export interface EmitNewChannel {
+      groupId: number
+      channelId: number
+    }
+
+    export interface OnNewChannel {
+      groupId: number
+    }
+
     export interface EmitMessage {
       hash: IGroupMessageSending['hash']
       content: IGroupMessage['content']

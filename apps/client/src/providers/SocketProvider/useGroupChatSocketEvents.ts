@@ -1,6 +1,4 @@
-import { useEffect, useMemo } from 'react'
-import { useParams } from 'next/navigation'
-import { isNullOrUndefined } from '@arpansaha13/utils'
+import { useEffect } from 'react'
 import { MessageStatus, SocketEvents } from '@shared/constants'
 import { useSocket } from '~/hooks/useSocket'
 import { useAppDispatch, useAppSelector } from '~/store/hooks'
@@ -8,11 +6,12 @@ import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import {
   upsertGroupMessages,
   deleteTempGroupMessage,
-  updateGroupMessageStatus,
   selectGroupMessagesMap,
   selectTempGroupMessagesMap,
 } from '~/store/features/messages/message-group.slice'
-import type { IGroupMessage, SocketEventPayloads } from '@shared/types'
+import { invalidateTags as invalidateGroupsApiTags } from '~/store/features/groups/groups.api.slice'
+import { GROUP_CHANNELS_API_TAG } from '~/store/features/constants'
+import type { IGroupMessage } from '@shared/types'
 
 export function useGroupChatSocketEvents() {
   const dispatch = useAppDispatch()
@@ -51,6 +50,17 @@ export function useGroupChatSocketEvents() {
   //   }
   //   if (readEventPayload.length > 0) socket?.emit(SocketEvents.GROUP.STATUS_READ, readEventPayload)
   // }, [authUser, channelId, dispatch, groupMessagesMap, isSuccess, socket])
+
+  useEffect(() => {
+    socket?.on(SocketEvents.GROUP.NEW_CHANNEL, payload => {
+      console.log([{ type: GROUP_CHANNELS_API_TAG, id: payload.groupId }])
+      dispatch(invalidateGroupsApiTags([{ type: GROUP_CHANNELS_API_TAG, id: payload.groupId }]))
+    })
+
+    return () => {
+      socket?.off(SocketEvents.GROUP.NEW_CHANNEL)
+    }
+  }, [dispatch, socket])
 
   useEffect(() => {
     if (!isSuccess) return

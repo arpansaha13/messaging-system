@@ -5,6 +5,7 @@ import { ChatRepository } from './chats.repository'
 import { ChatsController } from './chats.controller'
 import { GroupChatsWsService } from './group-chats.ws.service'
 import { PersonalChatsWsService } from './personal-chats.ws.service'
+import { ChatsStoreService } from './chats-store.service'
 import { UserModule } from 'src/users/user.module'
 import { ContactModule } from 'src/contacts/contact.module'
 import { MessageModule } from 'src/messages/message.module'
@@ -12,7 +13,14 @@ import { MessageRecipientModule } from 'src/message-recipient/message-recipient.
 
 @Module({
   imports: [ContactModule, MessageModule, MessageRecipientModule, UserModule],
-  providers: [ChatRepository, ChatsGateway, ChatsService, GroupChatsWsService, PersonalChatsWsService],
+  providers: [
+    ChatRepository,
+    ChatsGateway,
+    ChatsService,
+    GroupChatsWsService,
+    PersonalChatsWsService,
+    ChatsStoreService,
+  ],
   controllers: [ChatsController],
   exports: [ChatRepository],
 })

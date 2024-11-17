@@ -12,6 +12,7 @@ export interface SocketOnEventPayload {
   [SocketEvents.PERSONAL.STATUS_READ]: SocketEventPayloads.Personal.OnRead[]
   [SocketEvents.PERSONAL.TYPING]: SocketEventPayloads.Personal.OnTyping
 
+  [SocketEvents.GROUP.NEW_CHANNEL]: SocketEventPayloads.Group.OnNewChannel
   [SocketEvents.GROUP.STATUS_SENT]: SocketEventPayloads.Group.OnSent
   [SocketEvents.GROUP.MESSAGE_RECEIVE]: SocketEventPayloads.Group.OnMessage
 }
@@ -22,6 +23,8 @@ export interface SocketEmitEventPayload {
   [SocketEvents.PERSONAL.TYPING]: SocketEventPayloads.Personal.EmitTyping
   [SocketEvents.PERSONAL.STATUS_READ]: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[]
 
+  [SocketEvents.GROUP.NEW_GROUP]: SocketEventPayloads.Group.EmitNewGroup
+  [SocketEvents.GROUP.NEW_CHANNEL]: SocketEventPayloads.Group.EmitNewChannel
   [SocketEvents.GROUP.MESSAGE_SEND]: SocketEventPayloads.Group.EmitMessage
   [SocketEvents.GROUP.STATUS_DELIVERED]: SocketEventPayloads.Group.EmitDelivered
   [SocketEvents.GROUP.STATUS_READ]: SocketEventPayloads.Group.EmitRead | SocketEventPayloads.Group.EmitRead[]
@@ -54,6 +57,7 @@ export function useSocket(): UseSocketResult {
         autoConnect: true,
         query: {
           userId: authUser.id,
+          groups: authUser.groups,
           channels: authUser.channels,
         },
       })

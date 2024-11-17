@@ -10,6 +10,8 @@ import type { Request } from 'express'
 import type { User } from 'src/users/user.entity'
 import type { Group } from 'src/groups/group.entity'
 import type { Invite } from 'src/invites/invite.entity'
+import type { CreateGroupResponse } from './interfaces/create-group.response'
+import type { CreateChannelResponse } from './interfaces/create-channel.response'
 
 @Controller('groups')
 @UseGuards(AuthGuard())
@@ -23,7 +25,7 @@ export class GroupController {
   }
 
   @Post()
-  createGroup(@Req() request: Request, @Body() createGroupDto: CreateGroupDto): Promise<Group> {
+  createGroup(@Req() request: Request, @Body() createGroupDto: CreateGroupDto): Promise<CreateGroupResponse> {
     return this.groupService.createGroup(request.user, createGroupDto)
   }
 
@@ -38,7 +40,10 @@ export class GroupController {
   }
 
   @Post('/:groupId/channels')
-  createChannel(@Param() params: GroupIdParam, @Body() createChannelDto: CreateChannelDto): Promise<Channel> {
+  createChannel(
+    @Param() params: GroupIdParam,
+    @Body() createChannelDto: CreateChannelDto,
+  ): Promise<CreateChannelResponse> {
     return this.groupService.createChannel(params.groupId, createChannelDto)
   }
 
