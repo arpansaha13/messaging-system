@@ -69,8 +69,8 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
 
       <WindowBody>{children}</WindowBody>
 
-      {
-        panelOpen && <WindowPanel>
+      {panelOpen && (
+        <WindowPanel>
           <div className="flex items-center gap-2.5 bg-gray-50 p-3 shadow dark:bg-gray-800">
             <button
               type="button"
@@ -107,7 +107,7 @@ export default function GroupsLayout({ children }: Readonly<GroupsLayoutProps>) 
             </div>
           </WindowPanelBody>
         </WindowPanel>
-      }
+      )}
     </Window>
   )
 }

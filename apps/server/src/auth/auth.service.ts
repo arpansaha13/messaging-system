@@ -30,11 +30,11 @@ export class AuthService {
     private readonly configService: ConfigService<EnvVariables>,
 
     @InjectEntityManager()
-    private manager: EntityManager,
+    private readonly manager: EntityManager,
     @InjectRepository(UserRepository)
-    private userRepository: UserRepository,
+    private readonly userRepository: UserRepository,
     @InjectRepository(UnverifiedUserRepository)
-    private unverifiedUserRepository: UnverifiedUserRepository,
+    private readonly unverifiedUserRepository: UnverifiedUserRepository,
   ) {}
 
   private generateOtp(length = 4) {
@@ -194,7 +194,7 @@ export class AuthService {
         await txnManager.delete(UnverifiedUser, { hash })
       })
     } catch (error) {
-      if (error.status < 600) {
+      if (error.status < 500) {
         throw error
       }
       console.log(error)
@@ -203,10 +203,10 @@ export class AuthService {
 
     function verifyOtpAge(unverifiedUser: UnverifiedUser) {
       const timeNow = new Date()
-      const otpAge = timeNow.getTime() - unverifiedUser.updatedAt.getTime()
-      const otpAgeMs = otpAge / 1000 /* Convert to milliseconds */
+      const otpAgeMs = timeNow.getTime() - unverifiedUser.updatedAt.getTime()
+      const otpAgeSeconds = otpAgeMs / 1000
 
-      if (otpAgeMs > parseInt(this.configService.get('OTP_VALIDATION_SECONDS'))) {
+      if (otpAgeSeconds > parseInt(this.configService.get('OTP_VALIDATION_SECONDS'))) {
         throw new InvalidOrExpiredException('OTP has expired.')
       }
 
