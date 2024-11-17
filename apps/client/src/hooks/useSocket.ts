@@ -25,6 +25,7 @@ export interface SocketEmitEventPayload {
 
   [SocketEvents.GROUP.NEW_GROUP]: SocketEventPayloads.Group.EmitNewGroup
   [SocketEvents.GROUP.NEW_CHANNEL]: SocketEventPayloads.Group.EmitNewChannel
+  [SocketEvents.GROUP.JOIN_GROUP]: SocketEventPayloads.Group.EmitJoinGroup
   [SocketEvents.GROUP.MESSAGE_SEND]: SocketEventPayloads.Group.EmitMessage
   [SocketEvents.GROUP.STATUS_DELIVERED]: SocketEventPayloads.Group.EmitDelivered
   [SocketEvents.GROUP.STATUS_READ]: SocketEventPayloads.Group.EmitRead | SocketEventPayloads.Group.EmitRead[]

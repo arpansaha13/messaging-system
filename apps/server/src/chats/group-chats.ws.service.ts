@@ -42,6 +42,11 @@ export class GroupChatsWsService {
     }
   }
 
+  async handleJoinGroup(payload: SocketEventPayloads.Group.EmitJoinGroup, senderSocket: Socket) {
+    this.chatsStore.addSocketToGroup(payload.groupId, senderSocket.id)
+    senderSocket.join(payload.channels.split(','))
+  }
+
   async sendMessage(payload: SocketEventPayloads.Group.EmitMessage, senderSocket: Socket) {
     const roomId = payload.channelId.toString()
 

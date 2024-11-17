@@ -69,6 +69,13 @@ export namespace SocketEventPayloads {
       channels: string
     }
 
+    export interface EmitJoinGroup {
+      groupId: number
+
+      /** Comma-separated channel ids */
+      channels: string
+    }
+
     export interface EmitNewChannel {
       groupId: number
       channelId: number

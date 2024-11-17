@@ -4,7 +4,7 @@ import { InviteHashparam } from './dto/invite-hash-param.dto'
 import { InviteService } from './invite.service'
 import type { Request } from 'express'
 import type { Invite } from './invite.entity'
-import type { Group } from 'src/groups/group.entity'
+import type { AcceptInviteResponse } from './interfaces/accept-invite.response'
 
 @Controller('invites')
 @UseGuards(AuthGuard())
@@ -17,7 +17,7 @@ export class InviteController {
   }
 
   @Post('/:hash/accept')
-  async acceptInvite(@Req() request: Request, @Param() params: InviteHashparam): Promise<Group> {
+  async acceptInvite(@Req() request: Request, @Param() params: InviteHashparam): Promise<AcceptInviteResponse> {
     return this.inviteService.acceptInvite(request.user, params.hash)
   }
 }

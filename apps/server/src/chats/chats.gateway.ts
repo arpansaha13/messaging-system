@@ -61,11 +61,13 @@ export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage(SocketEvents.GROUP.NEW_CHANNEL)
-  handleNewChannel(
-    @MessageBody() payload: SocketEventPayloads.Group.EmitNewChannel,
-    @ConnectedSocket() server: Server,
-  ) {
-    this.groupChatsService.handleNewChannel(payload, server)
+  handleNewChannel(@MessageBody() payload: SocketEventPayloads.Group.EmitNewChannel) {
+    this.groupChatsService.handleNewChannel(payload, this.server)
+  }
+
+  @SubscribeMessage(SocketEvents.GROUP.JOIN_GROUP)
+  handleJoinGroup(@MessageBody() payload: SocketEventPayloads.Group.EmitJoinGroup, @ConnectedSocket() socket: Socket) {
+    this.groupChatsService.handleJoinGroup(payload, socket)
   }
 
   @SubscribeMessage(SocketEvents.GROUP.MESSAGE_SEND)

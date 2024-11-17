@@ -4,16 +4,20 @@ import { MoreThan } from 'typeorm'
 import { InvalidOrExpiredException } from 'src/common/exceptions'
 import { InviteRepository } from './invite.repository'
 import { UserGroup } from 'src/user_group/user-group.entity'
+import { ChannelRepository } from 'src/channels/channel.repository'
 import { UserGroupRepository } from 'src/user_group/user-group.repository'
 import type { Invite } from './invite.entity'
 import type { User } from 'src/users/user.entity'
-import type { Group } from 'src/groups/group.entity'
+import type { AcceptInviteResponse } from './interfaces/accept-invite.response'
 
 @Injectable()
 export class InviteService {
   constructor(
     @InjectRepository(InviteRepository)
     private inviteRepository: InviteRepository,
+
+    @InjectRepository(ChannelRepository)
+    private channelRepository: ChannelRepository,
 
     @InjectRepository(UserGroupRepository)
     private userGroupRepository: UserGroupRepository,
@@ -46,13 +50,19 @@ export class InviteService {
     return invite
   }
 
-  async acceptInvite(authUser: User, inviteHash: Invite['hash']): Promise<Group> {
+  async acceptInvite(authUser: User, inviteHash: Invite['hash']): Promise<AcceptInviteResponse> {
     const invite = await this.getInvite(authUser, inviteHash)
 
     const userGroup = new UserGroup()
     userGroup.user = authUser
     userGroup.group = invite.group
     await this.userGroupRepository.save(userGroup)
-    return invite.group
+
+    const channels = await this.channelRepository.getChannelsByGroupId(invite.group.id)
+
+    return {
+      groupId: invite.group.id,
+      channels: channels.map(channel => channel.id),
+    }
   }
 }
