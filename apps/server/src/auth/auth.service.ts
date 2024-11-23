@@ -12,12 +12,13 @@ import { UnverifiedUserRepository } from './unverified-user.repository'
 import { LoginDto, SignUpDto } from './auth.dto'
 import { MailService } from 'src/mail/mail.service'
 import { SessionService } from 'src/sessions/session.service'
+import { generateHash } from 'src/common/utils'
 import type { EntityManager } from 'typeorm'
 import type { Request, Response } from 'express'
 import type { EnvVariables } from 'src/env.types'
 
 interface JwtPayload {
-  user_id: number
+  user_id: User['id']
 }
 
 @Injectable()
@@ -29,24 +30,12 @@ export class AuthService {
     private readonly configService: ConfigService<EnvVariables>,
 
     @InjectEntityManager()
-    private manager: EntityManager,
+    private readonly manager: EntityManager,
     @InjectRepository(UserRepository)
-    private userRepository: UserRepository,
+    private readonly userRepository: UserRepository,
     @InjectRepository(UnverifiedUserRepository)
-    private unverifiedUserRepository: UnverifiedUserRepository,
+    private readonly unverifiedUserRepository: UnverifiedUserRepository,
   ) {}
-
-  private generateHash(length = 8) {
-    let result = ''
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    const charactersLength = characters.length
-    let counter = 0
-    while (counter < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength))
-      counter++
-    }
-    return result
-  }
 
   private generateOtp(length = 4) {
     let result = ''
@@ -60,9 +49,9 @@ export class AuthService {
     return result
   }
 
-  private generateUsername(globalName: string) {
+  private generateUsername(globalName: UnverifiedUser['globalName']) {
     const HASH_LENGTH = 6
-    const hash = this.generateHash(HASH_LENGTH)
+    const hash = generateHash(HASH_LENGTH)
     const separator = '-'
     const USERNAME_MAXLENGTH = 20
     const SLUG_MAXLENGTH_WITHOUT_HASH = USERNAME_MAXLENGTH - HASH_LENGTH - 1
@@ -98,7 +87,7 @@ export class AuthService {
 
   async signUp(credentials: SignUpDto): Promise<void> {
     // TODO: Verify if the hash already exists in db
-    const hash = this.generateHash()
+    const hash = generateHash()
     const otp = this.generateOtp()
     const username = this.generateUsername(credentials.globalName)
 
@@ -146,7 +135,7 @@ export class AuthService {
       const session = await this.sessionService.createSession({ token, expiresAt: new Date(Date.now() + maxAge) })
 
       res.cookie(this.configService.get('AUTH_COOKIE_NAME'), session.key, {
-        path: '/api',
+        // path: '/api',
         secure: true,
         sameSite: true,
         httpOnly: true,
@@ -166,7 +155,7 @@ export class AuthService {
       await this.sessionService.deleteSession(sessionKey)
 
       res.cookie(this.configService.get('AUTH_COOKIE_NAME'), '', {
-        path: '/api',
+        // path: '/api',
         secure: true,
         httpOnly: true,
         maxAge: 0,
@@ -176,12 +165,12 @@ export class AuthService {
     return res.status(200).send()
   }
 
-  async validateVerificationLink(hash: string) {
+  async validateVerificationLink(hash: UnverifiedUser['hash']) {
     const isValid = await this.unverifiedUserRepository.exists({ where: { hash } })
     return { valid: isValid }
   }
 
-  async verifyAccount(hash: string, otp: string): Promise<void> {
+  async verifyAccount(hash: UnverifiedUser['hash'], otp: UnverifiedUser['otp']): Promise<void> {
     try {
       await this.manager.transaction(async txnManager => {
         const unverifiedUser = await txnManager.findOne(UnverifiedUser, {
@@ -205,7 +194,7 @@ export class AuthService {
         await txnManager.delete(UnverifiedUser, { hash })
       })
     } catch (error) {
-      if (error.status < 600) {
+      if (error.status < 500) {
         throw error
       }
       console.log(error)
@@ -214,10 +203,10 @@ export class AuthService {
 
     function verifyOtpAge(unverifiedUser: UnverifiedUser) {
       const timeNow = new Date()
-      const otpAge = timeNow.getTime() - unverifiedUser.updatedAt.getTime()
-      const otpAgeMs = otpAge / 1000 /* Convert to milliseconds */
+      const otpAgeMs = timeNow.getTime() - unverifiedUser.updatedAt.getTime()
+      const otpAgeSeconds = otpAgeMs / 1000
 
-      if (otpAgeMs > parseInt(this.configService.get('OTP_VALIDATION_SECONDS'))) {
+      if (otpAgeSeconds > parseInt(this.configService.get('OTP_VALIDATION_SECONDS'))) {
         throw new InvalidOrExpiredException('OTP has expired.')
       }
 

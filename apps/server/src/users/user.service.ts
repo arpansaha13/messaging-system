@@ -1,35 +1,73 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { isNullOrUndefined } from '@arpansaha13/utils'
 import { UserRepository } from './user.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
-import { isNullOrUndefined } from '@arpansaha13/utils'
+import { ChannelRepository } from 'src/channels/channel.repository'
+import { UserGroupRepository } from 'src/user_group/user-group.repository'
 import type { User } from 'src/users/user.entity'
 import type { UpdateUserInfoDto } from './dto/update-user-info.dto'
 import type { UserSearchQuery } from './dto/user-search-query.dto'
+import type { GetUserWithContactResponse } from './dto/get-user-with-contact.response'
+import type { AuthUserResponse } from './dto/auth-user-details.response'
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserRepository)
-    private userRepository: UserRepository,
+    private readonly userRepository: UserRepository,
 
     @InjectRepository(ContactRepository)
-    private contactRepository: ContactRepository,
+    private readonly contactRepository: ContactRepository,
+
+    @InjectRepository(UserGroupRepository)
+    private readonly userGroupRepository: UserGroupRepository,
+
+    @InjectRepository(ChannelRepository)
+    private readonly channelRepository: ChannelRepository,
   ) {}
 
-  async getUserById(userId: number): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id: userId })
+  async getAuthUser(authUser: User): Promise<AuthUserResponse> {
+    const groupIds = await this.userGroupRepository.getGroupIdsByUserId(authUser.id)
+    const channelIds = await this.channelRepository.getChannelIdsByGroupIds(groupIds)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...rest } = authUser
+
+    return {
+      ...rest,
+      groups: groupIds,
+      channels: channelIds,
+    }
+  }
+
+  async getUserWithContactById(authUserId: User['id'], userId: User['id']): Promise<GetUserWithContactResponse> {
+    const user = await this.userRepository.findOne({
+      select: ['id', 'globalName', 'username', 'bio', 'dp'],
+      where: { id: userId },
+    })
+
     if (user === null) throw new NotFoundException('User could not be found.')
-    return user
+
+    const contact = await this.contactRepository.findOne({
+      select: ['id', 'alias'],
+      where: { user: { id: authUserId }, userInContact: { id: userId } },
+    })
+
+    return { ...user, contact }
   }
 
-  async updateUserInfo(userId: number, data: UpdateUserInfoDto): Promise<User> {
+  async updateUserInfo(userId: User['id'], data: UpdateUserInfoDto): Promise<User> {
     const updateResult = await this.userRepository.update(userId, { ...data })
-    if (updateResult.affected) return this.getUserById(userId)
-    else throw new NotFoundException()
+    if (updateResult.affected) {
+      return this.userRepository.findOne({
+        select: ['id', 'globalName', 'username', 'bio', 'dp'],
+        where: { id: userId },
+      })
+    }
+    throw new NotFoundException()
   }
 
-  async findUsers(authUserId: number, query: UserSearchQuery): Promise<User[]> {
+  async findUsers(authUserId: User['id'], query: UserSearchQuery): Promise<User[]> {
     if (!query.text) return []
 
     const users = await this.userRepository.getUsersByQuery(authUserId, query.text)

@@ -19,7 +19,6 @@ import { GetContactsQueryDto } from './dto/get-contacts-query.dto'
 import { DeleteContactParamDto } from './dto/delete-contact-param.dto'
 import { EditAliasBodyDto, EditAliasParamDto } from './dto/edit-alias.dto'
 import type { Request } from 'express'
-import type { IContact } from '@pkg/types'
 
 @Controller('contacts')
 @UseGuards(AuthGuard())
@@ -27,10 +26,7 @@ export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
   @Get()
-  getContacts(
-    @Req() request: Request,
-    @Query() query: GetContactsQueryDto,
-  ): Promise<IContact[] | Record<string, IContact[]>> {
+  getContacts(@Req() request: Request, @Query() query: GetContactsQueryDto): Promise<any[]> {
     if (query.search) {
       return this.contactService.getContactsByQuery(request.user, query.search)
     }
@@ -39,7 +35,7 @@ export class ContactController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  addContact(@Req() request: Request, @Body() contact: AddContactDto): Promise<IContact> {
+  addContact(@Req() request: Request, @Body() contact: AddContactDto): Promise<any> {
     return this.contactService.addContact(request.user, contact.userIdToAdd, contact.alias)
   }
 

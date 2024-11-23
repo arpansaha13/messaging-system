@@ -2,7 +2,7 @@
   "name": "messaging-system-monorepo",
   "author": "Arpan Saha <https://github.com/arpansaha13>",
   "description": "A messaging system project.",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
   "private": true,
   "packageManager": "pnpm@9.1.4",

@@ -1,50 +1,77 @@
-import { ChatsWsService } from './chats.ws.service'
-import { MessageBody, ConnectedSocket, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets'
+import {
+  MessageBody,
+  ConnectedSocket,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+  type OnGatewayConnection,
+  type OnGatewayDisconnect,
+} from '@nestjs/websockets'
+import { SocketEvents } from '@shared/constants'
+import { GroupChatsWsService } from './group-chats.ws.service'
+import { PersonalChatsWsService } from './personal-chats.ws.service'
 import type { Server, Socket } from 'socket.io'
-import type {
-  IReceiverEmitDelivered,
-  IReceiverEmitRead,
-  ISenderEmitMessage,
-  ISessionConnect,
-  ISenderEmitTyping,
-  SocketEmitEvent,
-  SocketOnEventPayload,
-} from '@pkg/types'
+import type { SocketEventPayloads } from '@shared/types'
 
 @WebSocketGateway()
-export class ChatsGateway {
-  constructor(private readonly chatsService: ChatsWsService) {}
+export class ChatsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  constructor(
+    private readonly personalChatsService: PersonalChatsWsService,
+    private readonly groupChatsService: GroupChatsWsService,
+  ) {}
 
   @WebSocketServer()
-  private readonly server: Server<SocketOnEventPayload>
+  private readonly server: Server
 
-  @SubscribeMessage<SocketEmitEvent>('session-connect')
-  handleConnect(@MessageBody() payload: ISessionConnect, @ConnectedSocket() socket: Socket) {
-    this.chatsService.handleConnect(payload, socket)
+  handleConnection(@ConnectedSocket() socket: Socket) {
+    this.personalChatsService.handleConnect(socket)
   }
 
-  @SubscribeMessage('disconnect')
-  handleDisconnect(@ConnectedSocket() senderSocket: Socket) {
-    this.chatsService.handleDisconnect(senderSocket)
+  handleDisconnect(@ConnectedSocket() socket: Socket) {
+    this.personalChatsService.handleDisconnect(socket)
   }
 
-  @SubscribeMessage<SocketEmitEvent>('send-message')
-  sendMessage(@MessageBody() payload: ISenderEmitMessage) {
-    this.chatsService.sendMessage(payload, this.server)
+  // Personal
+
+  @SubscribeMessage(SocketEvents.PERSONAL.MESSAGE_SEND)
+  sendMessage(@MessageBody() payload: SocketEventPayloads.Personal.EmitMessage) {
+    this.personalChatsService.sendMessage(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEmitEvent>('delivered')
-  handleDelivered(@MessageBody() payload: IReceiverEmitDelivered) {
-    this.chatsService.handleDelivered(payload, this.server)
+  @SubscribeMessage(SocketEvents.PERSONAL.STATUS_DELIVERED)
+  handleDelivered(@MessageBody() payload: SocketEventPayloads.Personal.EmitDelivered) {
+    this.personalChatsService.handleDelivered(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEmitEvent>('read')
-  handleReadStatus(@MessageBody() payload: IReceiverEmitRead) {
-    this.chatsService.handleRead(payload, this.server)
+  @SubscribeMessage(SocketEvents.PERSONAL.STATUS_READ)
+  handleReadStatus(@MessageBody() payload: SocketEventPayloads.Personal.EmitRead) {
+    this.personalChatsService.handleRead(payload, this.server)
   }
 
-  @SubscribeMessage<SocketEmitEvent>('typing')
-  handleTyping(@MessageBody() payload: ISenderEmitTyping) {
-    this.chatsService.handleTyping(payload, this.server)
+  @SubscribeMessage(SocketEvents.PERSONAL.TYPING)
+  handleTyping(@MessageBody() payload: SocketEventPayloads.Personal.EmitTyping) {
+    this.personalChatsService.handleTyping(payload, this.server)
+  }
+
+  // Group
+
+  @SubscribeMessage(SocketEvents.GROUP.NEW_GROUP)
+  handleNewGroup(@MessageBody() payload: SocketEventPayloads.Group.EmitNewGroup, @ConnectedSocket() socket: Socket) {
+    this.groupChatsService.handleNewGroup(payload, socket)
+  }
+
+  @SubscribeMessage(SocketEvents.GROUP.NEW_CHANNEL)
+  handleNewChannel(@MessageBody() payload: SocketEventPayloads.Group.EmitNewChannel) {
+    this.groupChatsService.handleNewChannel(payload, this.server)
+  }
+
+  @SubscribeMessage(SocketEvents.GROUP.JOIN_GROUP)
+  handleJoinGroup(@MessageBody() payload: SocketEventPayloads.Group.EmitJoinGroup, @ConnectedSocket() socket: Socket) {
+    this.groupChatsService.handleJoinGroup(payload, socket)
+  }
+
+  @SubscribeMessage(SocketEvents.GROUP.MESSAGE_SEND)
+  sendGroupMessage(@MessageBody() payload: SocketEventPayloads.Group.EmitMessage, @ConnectedSocket() socket: Socket) {
+    this.groupChatsService.sendMessage(payload, socket)
   }
 }

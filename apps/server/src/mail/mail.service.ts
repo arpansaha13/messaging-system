@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MailerService } from '@nestjs-modules/mailer'
+import type { UnverifiedUser } from 'src/auth/unverified-user.entity'
 
 @Injectable()
 export class MailService {
@@ -9,7 +10,12 @@ export class MailService {
     private mailerService: MailerService,
   ) {}
 
-  async sendVerificationMail(email: string, name: string, hash: string, otp: string) {
+  async sendVerificationMail(
+    email: UnverifiedUser['email'],
+    name: UnverifiedUser['globalName'],
+    hash: UnverifiedUser['hash'],
+    otp: UnverifiedUser['otp'],
+  ) {
     const url = `${this.config.get('CLIENT_DOMAIN')}/auth/verification/${hash}`
 
     await this.mailerService.sendMail({

@@ -4,9 +4,9 @@ import { isNullOrUndefined } from '@arpansaha13/utils'
 import { ChatRepository } from './chats.repository'
 import { ContactRepository } from 'src/contacts/contact.repository'
 import { MessageRepository } from 'src/messages/message.repository'
-import type { IChatListItem } from '@pkg/types'
+import type { IChatListItemResponseFromBE, IChatsResponseFromBE } from '@shared/types'
 import type { User } from 'src/users/user.entity'
-import type { IChatsResponse } from './interfaces/chats-response.interface'
+import type { Contact } from 'src/contacts/contact.entity'
 
 @Injectable()
 export class ChatsService {
@@ -21,7 +21,7 @@ export class ChatsService {
     private readonly messageRepository: MessageRepository,
   ) {}
 
-  async getChatsOfUser(userId: User['id']): Promise<IChatsResponse> {
+  async getChatsOfUser(userId: User['id']): Promise<IChatsResponseFromBE> {
     const chats = await this.chatRepository.getChatsOfUser(userId)
 
     const promises = []
@@ -31,25 +31,15 @@ export class ChatsService {
     }
 
     const receiverIds = chats.map(chat => chat.receiver_id)
-
     const messages = await Promise.all(promises)
+    const contacts = await this.contactRepository.getContactsHavingUserIds(userId, receiverIds)
 
-    const contacts = await this.contactRepository
-      .createQueryBuilder('contact')
-      .select('contact.id', 'id')
-      .addSelect('contact.alias', 'alias')
-      .addSelect('userInContact.id', 'userIdInContact')
-      .innerJoin('contact.userInContact', 'userInContact')
-      .where('contact.user.id = :userId', { userId })
-      .andWhere('contact.userInContact.id IN (:...receiverIds)', { receiverIds })
-      .getRawMany()
-
-    const contactsMap = new Map()
+    const contactsMap = new Map<User['id'], Contact>()
     contacts.forEach(contact => {
       contactsMap.set(contact.userIdInContact, contact)
     })
 
-    const res: IChatsResponse = { unarchived: [], archived: [] }
+    const res = { unarchived: [], archived: [] }
 
     chats.forEach(chat => {
       const message = messages.find(message => {
@@ -67,10 +57,10 @@ export class ChatsService {
 
       const contact = contactsMap.get(chat.receiver_id) ?? null
 
-      const item = createChatListItem(chat, message, contact)
+      const item = { chat, message, contact }
 
-      if (item.chat.archived) res.archived.push(item as IChatListItem)
-      else res.unarchived.push(item as IChatListItem)
+      if (item.chat.archived) res.archived.push(item)
+      else res.unarchived.push(item)
     })
 
     const compareFn = (a: any, b: any) => {
@@ -79,13 +69,13 @@ export class ChatsService {
       if (!a.chat.pinned && b.chat.pinned) return 1
 
       // Cleared convo's at bottom
-      if (a.latestMsg !== null && b.latestMsg === null) return -1
-      if (a.latestMsg === null && b.latestMsg !== null) return 1
-      if (a.latestMsg === null && b.latestMsg === null) return 0
+      if (isNullOrUndefined(a.message) && isNullOrUndefined(b.message)) return 0
+      if (isNullOrUndefined(b.message)) return -1
+      if (isNullOrUndefined(a.message)) return 1
 
       // Latest convo on top
-      if (new Date(a.latestMsg!.createdAt) > new Date(b.latestMsg!.createdAt)) return -1
-      if (new Date(a.latestMsg!.createdAt) < new Date(b.latestMsg!.createdAt)) return 1
+      if (new Date(a.message!.createdAt) > new Date(b.message!.createdAt)) return -1
+      if (new Date(a.message!.createdAt) < new Date(b.message!.createdAt)) return 1
       return 0
     }
 
@@ -95,7 +85,7 @@ export class ChatsService {
     return res
   }
 
-  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']): Promise<IChatListItem> {
+  async getChatOfUserWithReceiver(userId: User['id'], receiverId: User['id']): Promise<IChatListItemResponseFromBE> {
     const chat = await this.chatRepository.getChatOfUserByReceiverId(userId, receiverId)
 
     if (isNullOrUndefined(chat)) {
@@ -103,18 +93,9 @@ export class ChatsService {
     }
 
     const message = await this.messageRepository.getLatestMessageByUserId(userId, chat.receiver_id, chat.clearedAt)
+    const contact = await this.contactRepository.getContactsHavingUserIds(userId, receiverId)
 
-    const contact = await this.contactRepository
-      .createQueryBuilder('contact')
-      .select('contact.id', 'id')
-      .addSelect('contact.alias', 'alias')
-      .addSelect('userInContact.id', 'userIdInContact')
-      .innerJoin('contact.userInContact', 'userInContact')
-      .where('contact.user.id = :userId', { userId })
-      .andWhere('contact.userInContact.id = :receiverId', { receiverId })
-      .getRawOne()
-
-    return createChatListItem(chat, message, contact)
+    return { chat, message, contact }
   }
 
   async clearChat(authUserId: User['id'], receiverId: User['id']): Promise<void> {
@@ -131,37 +112,5 @@ export class ChatsService {
 
   async updateArchive(authUserId: User['id'], receiverId: User['id'], newValue: boolean): Promise<void> {
     await this.chatRepository.updateChatOptions(authUserId, receiverId, { archived: newValue, pinned: false })
-  }
-}
-
-function createChatListItem(chat: any, message: any | null, contact: any | null): IChatListItem {
-  return {
-    contact: contact
-      ? {
-          id: contact.id,
-          alias: contact.alias,
-        }
-      : null,
-    latestMsg: message
-      ? {
-          id: message.id,
-          status: message.status,
-          content: message.content,
-          senderId: message.senderId,
-          createdAt: message.createdAt,
-        }
-      : null,
-    receiver: {
-      id: chat.receiver_id,
-      dp: chat.receiver_dp,
-      bio: chat.receiver_bio,
-      username: chat.receiver_username,
-      globalName: chat.receiver_global_name,
-    },
-    chat: {
-      muted: chat.muted,
-      pinned: chat.pinned,
-      archived: chat.archived,
-    },
   }
 }
