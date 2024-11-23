@@ -7,6 +7,7 @@ import { insertContacts } from './contacts.mjs'
 import { insertGroups } from './groups.mjs'
 import { insertChannels } from './channels.mjs'
 import { insertUserGroups } from './user-groups.mjs'
+import { insertGroupMessages } from './group-messages.mjs'
 
 dotEnvConfig()
 
@@ -28,7 +29,7 @@ async function seed() {
   console.log('deleted message_recipients')
 
   await client.query('DELETE FROM messages')
-  console.log('deleted message')
+  console.log('deleted messages')
 
   await client.query('DELETE FROM contacts')
   console.log('deleted contacts')
@@ -78,10 +79,6 @@ async function seed() {
   const chats = await run(insertChats.bind(this, client, users.data))
   console.log(`inserted ${chats.count} chats\n`)
 
-  console.log('inserting messages...')
-  const { messagesInsertCount, recipientsInsertCount } = await run(insertMessages.bind(this, client, chats.data))
-  console.log(`inserted ${messagesInsertCount} messages and ${recipientsInsertCount} message-recipients\n`)
-
   console.log('inserting contacts...')
   const contactsInsertCount = await run(insertContacts.bind(this, client, users.data))
   console.log(`inserted ${contactsInsertCount} contacts\n`)
@@ -96,7 +93,19 @@ async function seed() {
 
   console.log('inserting channels...')
   const channels = await run(insertChannels.bind(this, client, groups.data))
-  console.log(`inserted ${channels.count} channels`)
+  console.log(`inserted ${channels.count} channels\n`)
+
+  console.log('inserting messages...')
+  const { messagesInsertCount, recipientsInsertCount } = await run(insertMessages.bind(this, client, chats.data))
+  console.log(`inserted ${messagesInsertCount} messages and ${recipientsInsertCount} message-recipients\n`)
+
+  console.log('inserting group messages...')
+  const { groupMessagesInsertCount, groupMessageRecipientsInsertCount } = await run(
+    insertGroupMessages.bind(this, client, groups.data),
+  )
+  console.log(
+    `inserted ${groupMessagesInsertCount} group messages and ${groupMessageRecipientsInsertCount} group-message message-recipients`,
+  )
 
   console.log()
   console.timeEnd('Seeding completed in')

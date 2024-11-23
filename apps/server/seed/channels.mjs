@@ -1,45 +1,37 @@
 import { faker } from '@faker-js/faker'
 
-const MAX_CHANNELS = 30
+const MAX_CHANNELS_PER_GROUP = 10
 
 export async function insertChannels(client, groups) {
   const channelEntries = []
   let channelsInsertCount = 0
 
-  // Ensure every group has at least one channel
   for (const group of groups) {
-    channelEntries.push({
-      name: faker.company.name(),
-      group_id: group.id,
-    })
-  }
+    const numOfChannels = faker.number.int({ min: 1, max: MAX_CHANNELS_PER_GROUP })
 
-  // Add additional channels up to the MAX_CHANNELS limit
-  for (let i = 0; i < MAX_CHANNELS - groups.length; i++) {
-    const group = faker.helpers.arrayElement(groups)
+    for (let i = 0; i < numOfChannels; i++) {
+      const channel = {
+        name: faker.company.name(),
+        group_id: group.id,
+      }
+      channelEntries.push(channel)
 
-    channelEntries.push({
-      name: faker.company.name(),
-      group_id: group.id,
-    })
+      // 20 at a time, or if it is the last iteration
+      if (channelEntries.length === 20 || i === numOfChannels - 1) {
+        const insertedChannels = await bulkInsertChannels(channelEntries)
+        channelsInsertCount += channelEntries.length
 
-    // 20 at a time
-    if (channelEntries.length === 20) {
-      await bulkInsertChannels(channelEntries)
-      channelsInsertCount += channelEntries.length
-      channelEntries.length = 0 // Clear the array
+        // Add inserted channel IDs to the group object
+        insertedChannels.forEach(channel => {
+          group.channels.push(channel.id)
+        })
+
+        channelEntries.length = 0 // Clear the array
+      }
     }
   }
 
-  // Insert remaining channel entries
-  if (channelEntries.length > 0) {
-    await bulkInsertChannels(channelEntries)
-    channelsInsertCount += channelEntries.length
-  }
-
-  return {
-    count: channelsInsertCount,
-  }
+  return { count: channelsInsertCount }
 
   async function bulkInsertChannels(entries) {
     const values = []
@@ -54,8 +46,10 @@ export async function insertChannels(client, groups) {
     const query = `
       INSERT INTO channels (name, group_id)
       VALUES ${placeholders}
+      RETURNING id
     `
 
-    await client.query(query, values)
+    const result = await client.query(query, values)
+    return result.rows
   }
 }

@@ -1,5 +1,7 @@
 import { faker } from '@faker-js/faker'
 
+const MAX_MEMBERS_IN_GROUP = 10
+
 export async function insertUserGroups(client, users, groups) {
   const userGroupEntries = []
   const existingUserGroups = new Set()
@@ -13,8 +15,9 @@ export async function insertUserGroups(client, users, groups) {
       user_id: founder.id,
       group_id: group.id,
     })
+    group.members.push(founder.id)
 
-    const numberOfMembers = faker.number.int({ min: 1, max: (users.length * 2) / 3 })
+    const numberOfMembers = faker.number.int({ min: 1, max: MAX_MEMBERS_IN_GROUP })
 
     // Reduce 1 because founder is already added as a member
     for (let i = 0; i < numberOfMembers - 1; i++) {
@@ -29,6 +32,7 @@ export async function insertUserGroups(client, users, groups) {
         user_id: user.id,
         group_id: group.id,
       })
+      group.members.push(user.id)
 
       // 20 at a time
       if (userGroupEntries.length === 20) {

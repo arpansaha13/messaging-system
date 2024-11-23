@@ -53,7 +53,12 @@ export async function insertGroups(client, users) {
     const result = await client.query(query, values)
     result.rows.forEach((row, i) => {
       entries[i].id = row.id
-      groups.push({ id: row.id, founder_id: entries[i].founder_id })
+      groups.push(Object.freeze({
+        id: row.id,
+        founder_id: entries[i].founder_id,
+        channels: [], // filled in insertChannels
+        members: [] // filled in inserUserGroups
+      }))
     })
   }
 }
