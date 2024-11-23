@@ -2,30 +2,54 @@
   Messaging System
 </h1>
 
-<div align="center">
+<p align="center">
+  A real-time chat application
+</p>
+
+## Screenshots
+
+### Personal Chat
+
+<div align="center" style="display: flex; justify-content: center; gap: 10px;">
   <img
-    src="https://github.com/arpansaha13/whatsapp-clone/assets/82361490/844d3985-5c2d-43e1-bb6c-5209dffab927"
-    alt="Chat system UI: Light mode"
+    width="45%"
+    src="apps\client\public\screenshots\personal-chat-ui-light.png"
+    alt="Personal Chat UI: Light mode"
    />
   <img
-    src="https://github.com/arpansaha13/whatsapp-clone/assets/82361490/c548a668-2bfa-483a-b5bb-4f3310c33ea6"
-    alt="Chat system UI: Dark mode"
+    width="45%"
+    src="apps\client\public\screenshots\personal-chat-ui-dark.png"
+    alt="Personal Chat UI: Dark mode"
+   />
+</div>
+
+### Group Chat
+
+<div align="center" style="display: flex; justify-content: center; gap: 10px;">
+  <img
+    width="45%"
+    src="apps\client\public\screenshots\group-chat-ui-light.png"
+    alt="Group Chat UI: Light mode"
+   />
+  <img
+    width="45%"
+    src="apps\client\public\screenshots\group-chat-ui-dark.png"
+    alt="Group Chat UI: Dark mode"
    />
 </div>
 
 ## Tech Stack
 
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Next JS](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
-![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
-![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+- [Next.js](https://nextjs.org)
+- [Redux Toolkit](https://redux-toolkit.js.org)
+- [Nest.js](https://nestjs.com)
+- [PostgreSQL](https://www.postgresql.org)
 
 ## Features
 
-- Real-time one-to-one chat.
-- Real-time message status updates and read receipts.
-- Pin and unpin.
-- Archive and unarchive.
-- Clear messages and delete chat.
+- Real-time one-to-one chats.
+- Group chats with channels.
+- Message status updates & Read receipts.
 - User search and contacts.
+- Pin/unpin, archive/unarchive, clear messages, and delete chat.
 - Light and dark mode.
