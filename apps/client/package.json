@@ -10,35 +10,35 @@
   },
   "dependencies": {
     "@arpansaha13/utils": "^0.8.0",
-    "@headlessui/react": "^2.1.9",
+    "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.1.5",
     "@iconify-icons/mdi": "^1.2.48",
     "@iconify/react": "^4.1.1",
-    "@reduxjs/toolkit": "^2.2.8",
+    "@reduxjs/toolkit": "^2.3.0",
     "@tailwindcss/forms": "^0.5.9",
     "autoprefixer": "^10.4.20",
     "date-fns": "^3.6.0",
     "immer": "^10.1.1",
-    "next": "^14.2.15",
-    "postcss": "^8.4.45",
+    "next": "^14.2.18",
+    "postcss": "^8.4.49",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-redux": "^9.1.2",
     "react-use": "^17.5.1",
     "redux-persist": "^6.0.0",
-    "socket.io-client": "^4.7.5",
-    "tailwindcss": "^3.4.13"
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^3.4.15"
   },
   "devDependencies": {
     "@shared/constants": "workspace:*",
     "@shared/types": "workspace:*",
-    "@types/node": "^20.16.5",
-    "@types/react": "^18.3.11",
-    "@types/react-dom": "^18.3.0",
-    "eslint": "^8.57.0",
-    "eslint-config-next": "^14.2.8",
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.18",
     "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.6",
-    "typescript": "^5.5.4"
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "typescript": "^5.6.3"
   }
 }
