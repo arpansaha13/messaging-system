@@ -36,6 +36,9 @@ export class PersonalChatsWsService {
 
   handleDisconnect(socket: Socket) {
     this.chatsStore.deleteClient(parseInt(socket.handshake.query.userId as string))
+
+    const groups = (socket.handshake.query.groups as string).split(',')
+    groups.forEach(groupId => this.chatsStore.removeSocketFromGroup(parseInt(groupId), socket.id))
   }
 
   async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage, server: Server) {
