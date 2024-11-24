@@ -80,14 +80,26 @@ export function useSocket(): UseSocketResult {
 function createSocketWrapper(): ISocketWrapper {
   return {
     emit(event, payload, ack) {
-      if (ack) socket!.emit(event, payload, ack)
-      else socket!.emit(event, payload)
+      if (socket) {
+        if (ack) socket.emit(event, payload, ack)
+        else socket.emit(event, payload)
+      } else {
+        console.warn('Socket is closed and cannot emit events.')
+      }
     },
     on(event, listener) {
-      socket!.on(event as any, listener)
+      if (socket) {
+        socket.on(event as any, listener)
+      } else {
+        console.warn('Socket is closed and cannot listen to events.')
+      }
     },
     off(event) {
-      socket!.off(event)
+      if (socket) {
+        socket.off(event)
+      } else {
+        console.warn('Socket is closed and cannot remove listeners.')
+      }
     },
   }
 }
