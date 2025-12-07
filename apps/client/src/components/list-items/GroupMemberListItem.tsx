@@ -1,4 +1,4 @@
-import type { IUser } from '@shared/types/client'
+import type { IUser } from '~/types'
 import { Avatar } from '~/components/common'
 import GlobalName from '~/components/GlobalName'
 

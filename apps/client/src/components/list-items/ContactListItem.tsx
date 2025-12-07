@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ContextMenu, ContextMenuWrapper } from '~/components/common'
 import ContactAndSearchListItemTemplate from './ContactAndSearchListItemTemplate'
-import type { IContact, IContextMenuItem } from '@shared/types/client'
+import type { IContact, IContextMenuItem } from '~/types'
 
 interface ContactListItemProps {
   contact: IContact

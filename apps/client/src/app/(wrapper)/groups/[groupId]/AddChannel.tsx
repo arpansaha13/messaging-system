@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 import AddChannelModal from '~/components/group/add-channel/AddChannelModal'
 import Button from './Button'
-import type { IGroup } from '@shared/types/client'
+import type { IGroup } from '~/types'
 
 interface AddChannelProps {
   group: IGroup

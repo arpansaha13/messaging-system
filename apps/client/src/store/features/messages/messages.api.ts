@@ -1,6 +1,6 @@
 import _fetch from '~/utils/api/_fetch'
 import type { IGroupMessage, IMessage } from '@shared/types'
-import type { IChannel, IUser } from '@shared/types/client'
+import type { IChannel, IUser } from '~/types'
 
 export function _getMessages(receiverId: IUser['id']): Promise<IMessage[]> {
   return _fetch(`messages/${receiverId}`)

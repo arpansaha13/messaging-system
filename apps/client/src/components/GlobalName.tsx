@@ -1,4 +1,4 @@
-import type { IUser } from '@shared/types/client'
+import type { IUser } from '~/types'
 
 interface GlobalNameProps {
   name: IUser['globalName']

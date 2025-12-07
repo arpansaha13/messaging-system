@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { AUTH_USER_API_TAG, FETCH_BASE_URL, USER_API_TAG } from '../constants'
-import type { IAuthUser, IUser, IUserSearchResult } from '@shared/types/client'
+import type { IAuthUser, IUser, IUserSearchResult } from '~/types'
 import _fetch from '~/utils/api/_fetch'
 
 export const usersApiSlice = createApi({

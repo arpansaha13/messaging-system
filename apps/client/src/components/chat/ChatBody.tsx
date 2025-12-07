@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react'
 import ChatBodyMessage from './ChatBodyMessage'
 import ChatBodyTempMessage from './ChatBodyTempMessage'
-import type { IUser } from '@shared/types/client'
+import type { IUser } from '~/types'
 import type { IMessage, IMessageSending } from '@shared/types'
 
 export interface ChatBodyProps {

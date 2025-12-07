@@ -1,21 +1,21 @@
 import type { MessageStatus } from '@shared/constants'
-import type { IChannel, IGroup, IUser } from './client'
 import type { IGroupMessage, IGroupMessageSending, IMessage, IMessageSending } from './message'
+import type { ChannelId, GroupId, UserId } from './id'
 
 export namespace SocketEventPayloads {
   export namespace Personal {
     export interface EmitMessage {
       hash: IMessageSending['hash']
       content: IMessage['content']
-      senderId: IUser['id']
-      receiverId: IUser['id']
+      senderId: UserId
+      receiverId: UserId
       status: MessageStatus.SENDING
     }
 
     export interface OnMessage {
       messageId: IMessage['id']
       content: IMessage['content']
-      senderId: IUser['id']
+      senderId: UserId
       createdAt: string
       status: MessageStatus.SENT
     }
@@ -23,38 +23,38 @@ export namespace SocketEventPayloads {
     export interface OnSent {
       hash: IMessageSending['hash']
       messageId: IMessage['id']
-      receiverId: IUser['id']
+      receiverId: UserId
       createdAt: string
       status: MessageStatus.SENT
     }
 
     export interface OnDelivered {
       messageId: IMessage['id']
-      receiverId: IUser['id']
+      receiverId: UserId
       status: MessageStatus.DELIVERED
     }
 
     export interface OnRead {
       messageId: IMessage['id']
-      receiverId: IUser['id']
+      receiverId: UserId
       status: MessageStatus.DELIVERED
     }
 
     export interface EmitDelivered {
       messageId: IMessage['id']
-      senderId: IUser['id']
-      receiverId: IUser['id']
+      senderId: UserId
+      receiverId: UserId
     }
 
     export interface EmitRead {
       messageId: IMessage['id']
-      senderId: IUser['id']
-      receiverId: IUser['id']
+      senderId: UserId
+      receiverId: UserId
     }
 
     export interface EmitTyping {
       senderId: IMessage['id']
-      receiverId: IUser['id']
+      receiverId: UserId
       isTyping: boolean
     }
 
@@ -88,18 +88,18 @@ export namespace SocketEventPayloads {
     export interface EmitMessage {
       hash: IGroupMessageSending['hash']
       content: IGroupMessage['content']
-      senderId: IUser['id']
-      groupId: IGroup['id']
-      channelId: IChannel['id']
+      senderId: UserId
+      groupId: GroupId
+      channelId: ChannelId
       status: MessageStatus.SENDING
     }
 
     export interface OnMessage {
       messageId: IGroupMessage['id']
       content: IGroupMessage['content']
-      senderId: IUser['id']
-      groupId: IGroup['id']
-      channelId: IChannel['id']
+      senderId: UserId
+      groupId: GroupId
+      channelId: ChannelId
       createdAt: string
       status: MessageStatus.SENT
     }
@@ -107,20 +107,20 @@ export namespace SocketEventPayloads {
     export interface OnSent {
       hash: IMessageSending['hash']
       messageId: IMessage['id']
-      groupId: IGroup['id']
-      channelId: IChannel['id']
+      groupId: GroupId
+      channelId: ChannelId
       createdAt: string
       status: MessageStatus.SENT
     }
 
     export interface EmitDelivered {
       messageId: IMessage['id']
-      receiverId: IUser['id']
+      receiverId: UserId
     }
 
     export interface EmitRead {
       messageId: IMessage['id']
-      receiverId: IUser['id']
+      receiverId: UserId
     }
   }
 }

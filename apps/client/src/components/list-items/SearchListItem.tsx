@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { cloneElement } from 'react'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { ContextMenu, ContextMenuWrapper } from '~/components/common'
-import type { IContextMenuItem, IUser } from '@shared/types/client'
+import type { IContextMenuItem, IUser } from '~/types'
 import ContactAndSearchListItemTemplate from './ContactAndSearchListItemTemplate'
 import GlobalName from '../GlobalName'
 

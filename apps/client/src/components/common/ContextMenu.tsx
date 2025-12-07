@@ -3,7 +3,7 @@
 import { createContext, Fragment, useContext, useRef, useState } from 'react'
 import { useClickAway } from 'react-use'
 import { FocusTrap, Menu, Transition } from '@headlessui/react'
-import type { IContextMenuItem } from '@shared/types/client'
+import type { IContextMenuItem } from '~/types'
 
 interface IContextMenuWrapperRenderProps {
   close: () => void

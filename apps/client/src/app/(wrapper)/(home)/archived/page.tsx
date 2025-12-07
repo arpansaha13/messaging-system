@@ -12,7 +12,7 @@ import {
   selectArchived,
   selectChatListStatus,
 } from '~/store/features/chat-list/chat-list.slice'
-import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
+import type { IChatListItem, IContextMenuItem } from '~/types'
 
 export default function Page() {
   const router = useRouter()

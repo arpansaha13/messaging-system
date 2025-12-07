@@ -1,4 +1,4 @@
-import type { IChatListItem } from './client/models'
+import type { IChatListItem } from './models'
 
 export interface IChatsResponse {
   archived: IChatListItem[]

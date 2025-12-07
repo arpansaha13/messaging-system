@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid'
 import { classNames } from '@arpansaha13/utils'
-import type { IChannel, IGroup } from '@shared/types/client'
+import type { IChannel, IGroup } from '~/types'
 import Link from 'next/link'
 
 interface ChannelListItemProps {

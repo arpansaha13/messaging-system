@@ -10,7 +10,7 @@ import MsgStatusIcon from '~/components/MsgStatusIcon'
 import { Avatar, ContextMenu, ContextMenuWrapper } from '~/components/common'
 import isUnread from '~/utils/isUnread'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
-import type { IChatListItem, IContextMenuItem } from '@shared/types/client'
+import type { IChatListItem, IContextMenuItem } from '~/types'
 
 interface ChatListItemProps {
   chatListItem: IChatListItem

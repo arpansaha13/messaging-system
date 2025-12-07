@@ -6,7 +6,7 @@ import { ClipboardDocumentCheckIcon, DocumentTextIcon } from '@heroicons/react/2
 import { getOrdinalSuffix } from '@arpansaha13/utils'
 import { Modal } from '~/components/ui'
 import { useCreateInviteQuery } from '~/store/features/groups/groups.api.slice'
-import type { IGroup, IInvite } from '@shared/types/client'
+import type { IGroup, IInvite } from '~/types'
 
 interface CreateInviteModalProps {
   open: boolean

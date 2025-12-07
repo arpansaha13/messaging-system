@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import type { IUser } from '@shared/types/client'
+import type { IUser } from '~/types'
 
 export interface DraftSliceType {
   drafts: Map<IUser['id'], string>

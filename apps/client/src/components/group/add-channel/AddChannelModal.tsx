@@ -4,7 +4,7 @@ import { Input } from '~/components/ui'
 import { FormModal } from '~/components/common'
 import { useAddChannelMutation } from '~/store/features/groups/groups.api.slice'
 import getFormData from '~/utils/getFormData'
-import type { IGroup } from '@shared/types/client'
+import type { IGroup } from '~/types'
 
 interface ICreateChannelFormData {
   name: string

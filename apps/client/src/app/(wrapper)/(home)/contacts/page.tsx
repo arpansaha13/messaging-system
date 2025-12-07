@@ -18,7 +18,7 @@ import {
 import { invalidateTags as invalidateUsersApiTags } from '~/store/features/users/users.api.slice'
 import { USER_API_TAG } from '~/store/features/constants'
 import getFormData from '~/utils/getFormData'
-import type { IContact, IContextMenuItem } from '@shared/types/client'
+import type { IContact, IContextMenuItem } from '~/types'
 
 interface ContactsProps {
   menuItems: IContextMenuItem<IContact>[]

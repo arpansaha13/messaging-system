@@ -14,7 +14,7 @@ import { useAddContactMutation } from '~/store/features/contacts/contact.api.sli
 import { invalidateTags as invalidateUsersApiTags } from '~/store/features/users/users.api.slice'
 import { USER_API_TAG } from '~/store/features/constants'
 import getFormData from '~/utils/getFormData'
-import type { IContextMenuItem, IUser, IUserSearchResult } from '@shared/types/client'
+import type { IContextMenuItem, IUser, IUserSearchResult } from '~/types'
 
 interface SearchResultsProps {
   results: IUserSearchResult[]

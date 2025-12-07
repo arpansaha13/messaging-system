@@ -1,7 +1,7 @@
 import _response from '~/utils/api/_response'
 import { overwriteBaseUrl } from '~/utils/api/overwriteBaseUrl'
 import type { IContactResponseFromBE } from '@shared/types'
-import type { IContact } from '@shared/types/client'
+import type { IContact } from '~/types'
 
 export async function GET(request: Request) {
   const res = await fetch(overwriteBaseUrl(request))

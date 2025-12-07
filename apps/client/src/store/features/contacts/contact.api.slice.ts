@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import _fetch from '~/utils/api/_fetch'
 import { CONTACTS_API_TAG, FETCH_BASE_URL } from '../constants'
-import type { IContact, IUser } from '@shared/types/client'
+import type { IContact, IUser } from '~/types'
 
 interface IPostCreateContactBody {
   userIdToAdd: IUser['id']

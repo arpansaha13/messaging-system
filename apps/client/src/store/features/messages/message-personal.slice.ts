@@ -1,7 +1,7 @@
 import { PayloadAction } from '@reduxjs/toolkit'
 import { createAppSlice } from '~/store/createAppSlice'
 import { _clearMessages, _getMessages } from './messages.api'
-import type { IUser } from '@shared/types/client'
+import type { IUser } from '~/types'
 import type { MessageStatus } from '@shared/constants'
 import type { IMessage, IMessageSending } from '@shared/types'
 

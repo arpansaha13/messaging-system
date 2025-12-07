@@ -1,7 +1,7 @@
 'use server'
 
 import rfetch from '~/utils/api/rfetch'
-import type { IChannel, IGroup, IInvite } from '@shared/types/client'
+import type { IChannel, IGroup, IInvite } from '~/types'
 
 interface AcceptInviteResponse {
   groupId: IGroup['id']

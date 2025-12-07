@@ -24,7 +24,7 @@ import isUnread from '~/utils/isUnread'
 import { setTypingState } from '~/store/features/typing/typing.slice'
 import { useGetAuthUserQuery } from '~/store/features/users/users.api.slice'
 import type { IMessage, SocketEventPayloads } from '@shared/types'
-import type { IChatListItem, IUser } from '@shared/types/client'
+import type { IChatListItem, IUser } from '~/types'
 
 function searchChat(chatList: IChatListItem[], receiverId: IUser['id']) {
   return chatList.find(item => item.receiver.id === receiverId) ?? null

@@ -1,10 +1,10 @@
 import type { MessageStatus } from '@shared/constants'
-import type { IChannel, IUser } from './client'
+import type { ChannelId, UserId } from './id'
 
 export interface IMessageSending {
   hash: string
   content: string
-  senderId: IUser['id']
+  senderId: UserId
   status: MessageStatus.SENDING
 
   /** For deciding the order in which messages should be shown in chat window */
@@ -13,15 +13,15 @@ export interface IMessageSending {
 export interface IMessage {
   id: number
   content: string
-  senderId: IUser['id']
+  senderId: UserId
   createdAt: string
   status: Exclude<MessageStatus, MessageStatus.SENDING>
 }
 
 export interface IGroupMessageSending extends IMessageSending {
-  channelId: IChannel['id']
+  channelId: ChannelId
 }
 
 export interface IGroupMessage extends IMessage {
-  channelId: IChannel['id']
+  channelId: ChannelId
 }

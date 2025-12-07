@@ -2,7 +2,7 @@ import { PayloadAction } from '@reduxjs/toolkit'
 import { MessageStatus } from '@shared/constants'
 import { createAppSlice } from '~/store/createAppSlice'
 import { _getGroupMessages } from './messages.api'
-import type { IChannel, IGroup } from '@shared/types/client'
+import type { IChannel, IGroup } from '~/types'
 import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
 
 interface IMessageSlice {

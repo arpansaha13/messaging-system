@@ -11,7 +11,7 @@ import {
   _unpinChat,
 } from './chats.api'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import type { IChatListItem, IContact, IUser } from '@shared/types/client'
+import type { IChatListItem, IContact, IUser } from '~/types'
 
 interface ChatListSliceType {
   unarchived: IChatListItem[]

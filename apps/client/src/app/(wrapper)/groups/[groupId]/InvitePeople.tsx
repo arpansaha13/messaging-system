@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { UserPlusIcon } from '@heroicons/react/24/solid'
 import CreateInviteModal from '~/components/group/invites/CreateInviteModal'
 import Button from './Button'
-import type { IGroup } from '@shared/types/client'
+import type { IGroup } from '~/types'
 
 interface InvitePeopleProps {
   group: IGroup

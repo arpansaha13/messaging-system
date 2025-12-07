@@ -7,7 +7,7 @@ import {
   GROUP_INVITE_API_TAG,
   GROUP_MEMBERS_API_TAG,
 } from '../constants'
-import type { IChannel, IGroup, IInvite, IUser } from '@shared/types/client'
+import type { IChannel, IGroup, IInvite, IUser } from '~/types'
 
 interface IPostCreateGroupBody {
   name: IGroup['name']

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import type { IUser } from '@shared/types/client'
+import type { IUser } from '~/types'
 
 interface TypingSliceType {
   typingState: Map<IUser['id'], boolean>

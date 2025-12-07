@@ -1,6 +1,5 @@
 import _fetch from '~/utils/api/_fetch'
-import type { IChatsResponse } from '@shared/types'
-import type { IChatListItem, IUser } from '@shared/types/client'
+import type { IChatListItem, IChatsResponse, IUser } from '~/types'
 
 export function _getChats(): Promise<IChatsResponse> {
   return _fetch('chats')

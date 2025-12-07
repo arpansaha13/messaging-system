@@ -7,7 +7,7 @@ import { useSocket } from '~/hooks/useSocket'
 import { GroupAvatar } from '~/components/common'
 import { Button } from '~/components/ui'
 import { acceptInvite } from './actions'
-import type { IInvite } from '@shared/types/client'
+import type { IInvite } from '~/types'
 
 interface JoinGroupFormProps {
   invite: IInvite
