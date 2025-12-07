@@ -10,7 +10,8 @@
     "experimentalDecorators": true
   },
   "include": [
-    "src"
+    "src",
+    "types"
   ],
   "exclude": [
     "**/*.spec.ts",
