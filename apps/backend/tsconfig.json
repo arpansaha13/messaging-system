@@ -2,9 +2,7 @@
   "compilerOptions": {
     "target": "es2020",
     "module": "commonjs",
-    "outDir": "dist",
     "baseUrl": ".",
-    "removeComments": true,
     "strict": true,
     "allowJs": false,
     "esModuleInterop": true,
@@ -15,8 +13,7 @@
     "emitDecoratorMetadata": true,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "resolveJsonModule": true,
-    "sourceMap": true
+    "resolveJsonModule": true
   },
   "include": [
     "src",

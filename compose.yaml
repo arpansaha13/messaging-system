@@ -1,0 +1,97 @@
+services:
+  postgres:
+    image: postgres:15.10-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "7000:5432"
+    volumes:
+      - ./data/default:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.dev
+    container_name: backend
+    environment:
+      NODE_ENV: development
+      API_PORT: 4000
+      DB_HOST: ${DB_HOST} # postgres service name in docker network
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_NAME}
+      DB_LOGGING: 'true'
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
+      OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - backend_node_modules:/app/apps/backend/node_modules
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/backend/src
+          target: /app/apps/backend/src
+          ignore:
+            - node_modules
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile.dev
+    container_name: client
+    environment:
+      NODE_ENV: development
+      API_BASE_URL: ${API_BASE_URL}
+      NEXT_PUBLIC_SOCKET_IO_BASE_URL: ${NEXT_PUBLIC_SOCKET_IO_BASE_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    volumes:
+      - ./apps/client/.next:/app/apps/client/.next
+      - client_node_modules:/app/apps/client/node_modules
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/client/src
+          target: /app/apps/client/src
+          ignore:
+            - node_modules
+        - action: sync
+          path: ./apps/client/public
+          target: /app/apps/client/public
+          ignore:
+            - node_modules
+
+volumes:
+  backend_node_modules:
+    driver: local
+  client_node_modules:
+    driver: local
+
+networks:
+  messaging-network:
+    driver: bridge

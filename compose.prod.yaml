@@ -1,0 +1,75 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15.10-alpine
+    container_name: postgres_prod
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "7001:5432"
+    volumes:
+      - ./data/default:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.prod
+    image: messaging_system_backend_prod
+    container_name: backend_prod
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_NAME}
+      DB_LOGGING: 'false'
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
+      OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-network
+
+  client:
+    build:
+      context: .
+      dockerfile: apps/client/Dockerfile.prod
+      args:
+        NEXT_PUBLIC_SOCKET_IO_BASE_URL: ${NEXT_PUBLIC_SOCKET_IO_BASE_URL}
+    image: messaging_system_frontend_prod
+    container_name: client_prod
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: ${API_BASE_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - messaging-network
+
+volumes:
+  db_data_prod:
+    driver: local
+
+networks:
+  messaging-network:
+    driver: bridge
