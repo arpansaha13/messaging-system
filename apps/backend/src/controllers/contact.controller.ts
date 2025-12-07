@@ -1,0 +1,46 @@
+import { Router, Request, Response } from 'express'
+import { ContactService } from '../services/contact.service'
+
+export function createContactRouter(contactService: ContactService) {
+  const router = Router()
+
+  router.get('/', async (req: Request, res: Response) => {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
+
+    const q = req.query.search as string | undefined
+    if (q) {
+      const results = await contactService.getContactsByQuery(req.user.id, q)
+      return res.json(results)
+    }
+
+    const results = await contactService.getContacts(req.user.id)
+    res.json(results)
+  })
+
+  router.post('/', async (req: Request, res: Response) => {
+    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
+
+    const { userIdToAdd, alias } = req.body
+    try {
+      const created = await contactService.addContact(req.user.id, Number(userIdToAdd), alias)
+      res.status(201).json(created)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.patch('/:contactId', async (req: Request, res: Response) => {
+    const contactId = Number(req.params.contactId)
+    const { new_alias } = req.body
+    await contactService.editAlias(contactId, new_alias)
+    res.status(204).send()
+  })
+
+  router.delete('/:contactId', async (req: Request, res: Response) => {
+    const contactId = Number(req.params.contactId)
+    await contactService.deleteContact(contactId)
+    res.status(204).send()
+  })
+
+  return router
+}

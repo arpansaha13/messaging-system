@@ -5,12 +5,12 @@
   "version": "3.0.0",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@9.1.4",
+  "packageManager": "pnpm@10.14.0",
   "license": "MIT",
   "scripts": {
     "preinstall": "npx -y only-allow pnpm"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.0.0"
   }
 }
