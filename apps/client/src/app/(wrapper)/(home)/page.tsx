@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Icon } from '@iconify/react'
-import pinIcon from '@iconify-icons/mdi/pin'
 import { isNullOrUndefined } from '@arpansaha13/utils'
 import { Avatar, ConfirmModal } from '~/components/common'
 import { SkeletonChatList } from '~/components/skeleton'
@@ -76,7 +75,7 @@ export default function Page() {
       <ul className="space-y-1">
         {unarchived.map(chatListItem => (
           <ChatListItem key={chatListItem.receiver.id} chatListItem={chatListItem} menuItems={menuItems}>
-            {chatListItem.chat.pinned && <Icon icon={pinIcon} color="inherit" width={20} height={20} />}
+            {chatListItem.chat.pinned && <Icon icon="mdi:pin" color="inherit" width={20} height={20} />}
           </ChatListItem>
         ))}
       </ul>

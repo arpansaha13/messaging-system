@@ -17,7 +17,6 @@
     "@arpansaha13/utils": "^0.8.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.1.5",
-    "@iconify-icons/mdi": "^1.2.48",
     "@iconify/react": "^4.1.1",
     "@reduxjs/toolkit": "^2.3.0",
     "@shared/constants": "workspace:*",
