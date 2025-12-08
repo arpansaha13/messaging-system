@@ -14,10 +14,10 @@ const JWT_TOKEN_VALIDITY_SECONDS = Number(process.env.JWT_TOKEN_VALIDITY_SECONDS
 
 export class AuthService {
   constructor(
-    private userRepo: UserRepository,
-    private sessionRepo: SessionRepository,
-    private unverifiedRepo: UnverifiedUserRepository,
-    private mailService: MailService,
+    private readonly userRepo: UserRepository,
+    private readonly sessionRepo: SessionRepository,
+    private readonly unverifiedRepo: UnverifiedUserRepository,
+    private readonly mailService: MailService,
   ) {}
 
   private generateOtp(length = 4) {
@@ -66,7 +66,7 @@ export class AuthService {
         globalName: credentials.globalName,
         password: hashedPwd,
       },
-      { conflictPaths: ['email'], skipUpdateIfNoValuesChanged: true } as any,
+      { conflictPaths: ['email'], skipUpdateIfNoValuesChanged: true },
     )
 
     await this.mailService.sendVerificationMail(credentials.email, credentials.globalName, hash, otp)

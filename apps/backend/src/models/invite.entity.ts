@@ -4,7 +4,7 @@ import { Group } from './group.entity'
 
 @Entity({ name: 'invites' })
 export class Invite {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'varchar' })
   hash!: string
 
   @ManyToOne(() => User, { nullable: false })

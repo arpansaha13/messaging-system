@@ -7,11 +7,11 @@ export class GroupRepository extends Repository<Group> {
   }
 
   saveGroup(g: Partial<Group>) {
-    const e = this.create(g as any)
+    const e = this.create(g)
     return this.save(e)
   }
 
   findById(id: number) {
-    return this.findOne({ where: { id }, relations: { founder: true } } as any)
+    return this.findOne({ where: { id }, relations: { founder: true } })
   }
 }

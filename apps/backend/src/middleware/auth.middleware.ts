@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken'
-import cookieParser from 'cookie-parser'
 import type { RequestHandler } from 'express'
 import { SessionRepository } from '../repositories/session.repository'
 import { UserRepository } from '../repositories/user.repository'

@@ -40,15 +40,15 @@ export class ChatRepository extends Repository<Chat> {
   }
 
   updateChatOptions(sender_id: number, receiver_id: number, partialEntity: Partial<Chat>) {
-    return this.update({ sender_id, receiver_id } as any, partialEntity)
+    return this.update({ sender_id, receiver_id }, partialEntity)
   }
 
   findChat(senderId: number, receiverId: number) {
-    return this.findOne({ where: { sender_id: senderId, receiver_id: receiverId } as any })
+    return this.findOne({ where: { sender_id: senderId, receiver_id: receiverId } })
   }
 
   saveChat(chat: Partial<Chat>) {
-    const e = this.create(chat as any)
+    const e = this.create(chat)
     return this.save(e)
   }
 }

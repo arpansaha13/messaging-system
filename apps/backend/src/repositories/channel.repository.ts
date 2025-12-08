@@ -7,16 +7,16 @@ export class ChannelRepository extends Repository<Channel> {
   }
 
   async getChannelIdsByGroupIds(groupIds: number[]) {
-    const channels = await this.find({ select: ['id'], where: { group: { id: In(groupIds) } } as any })
+    const channels = await this.find({ select: ['id'], where: { group: { id: In(groupIds) } } })
     return channels.map(c => c.id)
   }
 
   getChannelsByGroupId(groupId: number) {
-    return this.findBy({ group: { id: groupId } } as any)
+    return this.findBy({ group: { id: groupId } })
   }
 
   saveChannel(channel: Partial<Channel>) {
-    const e = this.create(channel as any)
+    const e = this.create(channel)
     return this.save(e)
   }
 }

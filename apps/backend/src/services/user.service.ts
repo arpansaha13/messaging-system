@@ -4,8 +4,8 @@ import { User } from '../models/user.entity'
 
 export class UserService {
   constructor(
-    private repo: UserRepository,
-    private contactRepo?: ContactRepository,
+    private readonly repo: UserRepository,
+    private readonly contactRepo?: ContactRepository,
   ) {}
 
   listUsers(): Promise<User[]> {

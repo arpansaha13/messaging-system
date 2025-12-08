@@ -6,8 +6,8 @@ import type { SocketEventPayloads } from '@shared/types'
 
 export class ChatsGateway {
   constructor(
-    private personalChatsService: PersonalChatsWsService,
-    private groupChatsService: GroupChatsWsService,
+    private readonly personalChatsService: PersonalChatsWsService,
+    private readonly groupChatsService: GroupChatsWsService,
   ) {}
 
   setup(io: Server) {

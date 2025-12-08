@@ -2,11 +2,12 @@ import type { GroupRepository } from '../repositories/group.repository'
 import AppDataSource from '../data-source'
 import { Group } from '../models/group.entity'
 import { Channel } from '../models/channel.entity'
+import type { Request } from 'express'
 
 export class GroupService {
-  constructor(private groupRepo: GroupRepository) {}
+  constructor(private readonly groupRepo: GroupRepository) {}
 
-  async createGroup(authUser: any, createGroupDto: any) {
+  async createGroup(authUser: Request['user'], createGroupDto: any) {
     const em = AppDataSource.manager
     return em.transaction(async txn => {
       let newGroup = txn.create(Group, { name: createGroupDto.name, founder: authUser })

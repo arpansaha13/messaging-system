@@ -4,7 +4,7 @@ import { Group } from './group.entity'
 
 @Entity({ name: 'channels' })
 export class Channel extends BaseEntity {
-  @Column({ name: 'name', nullable: false })
+  @Column({ type: 'varchar', name: 'name', nullable: false })
   name!: string
 
   @ManyToOne(() => Group, { nullable: true })

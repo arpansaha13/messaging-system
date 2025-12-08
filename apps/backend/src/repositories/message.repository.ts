@@ -84,7 +84,7 @@ export class MessageRepository extends Repository<Message> {
   }
 
   saveMessage(msg: Partial<Message>) {
-    const e = this.create(msg as any)
+    const e = this.create(msg)
     return this.save(e)
   }
 }

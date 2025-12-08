@@ -22,10 +22,10 @@ export class ContactRepository extends Repository<Contact> {
           // @ts-ignore
           globalName: true,
         },
-      } as any,
-      where: { user: { id: userId } } as any,
+      },
+      where: { user: { id: userId } },
       order: { alias: 'ASC' },
-      relations: { userInContact: true } as any,
+      relations: { userInContact: true },
     })
   }
 
@@ -73,8 +73,8 @@ export class ContactRepository extends Repository<Contact> {
   existsByUserIds(userId: number, userIdInContact: number) {
     return this.exist({
       where: {
-        user: { id: userId } as any,
-        userInContact: { id: userIdInContact } as any,
+        user: { id: userId },
+        userInContact: { id: userIdInContact },
       },
     })
   }
@@ -99,10 +99,10 @@ export class ContactRepository extends Repository<Contact> {
   }
 
   updateContact(contactId: number, data: Partial<Contact>) {
-    return this.update({ id: contactId } as any, data)
+    return this.update({ id: contactId }, data)
   }
 
   deleteContact(contactId: number) {
-    return this.delete({ id: contactId } as any)
+    return this.delete({ id: contactId })
   }
 }

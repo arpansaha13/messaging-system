@@ -10,7 +10,7 @@ import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
 export class GroupChatsWsService {
-  constructor(private chatsStore: ChatsStoreService) {}
+  constructor(private readonly chatsStore: ChatsStoreService) {}
 
   // Read receipts for for group chats - "DELIVERED" and "READ" - are not handled
 
@@ -53,12 +53,12 @@ export class GroupChatsWsService {
 
         const receivers = (
           await txnManager.find(UserGroup, {
-            select: ['id', 'user'] as any,
+            select: ['id', 'user'],
             where: {
               group: { id: payload.groupId },
               user: { id: undefined }, // Will be filtered after fetching
-            } as any,
-            relations: { user: true } as any,
+            },
+            relations: { user: true },
           })
         )
           .filter(ug => ug.user.id !== payload.senderId)

@@ -1,7 +1,7 @@
 import { SessionRepository } from '../repositories/session.repository'
 
 export class SessionService {
-  constructor(private repo: SessionRepository) {}
+  constructor(private readonly repo: SessionRepository) {}
 
   createSession(data: Partial<any>) {
     const entity = this.repo.create(data)

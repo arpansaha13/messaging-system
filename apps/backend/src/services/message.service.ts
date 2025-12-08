@@ -3,13 +3,13 @@ import { ChatRepository } from '../repositories/chat.repository'
 
 export class MessageService {
   constructor(
-    private repo: MessageRepository,
-    private chatRepo: ChatRepository,
+    private readonly repo: MessageRepository,
+    private readonly chatRepo: ChatRepository,
   ) {}
 
   sendToUser(senderId: number, receiverId: number, content: string) {
     // ensure chats exist
-    return this.repo.saveMessage({ content, sender: { id: senderId } as any, channel: null })
+    return this.repo.save(this.repo.create({ content, sender: { id: senderId }, channel: null }))
   }
 
   getMessagesBetween(senderId: number, receiverId: number, clearedAt: Date) {

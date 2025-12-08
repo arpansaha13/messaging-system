@@ -11,6 +11,6 @@ export class SessionRepository extends Repository<Session> {
   }
 
   deleteByKey(key: string) {
-    return this.delete({ key } as any)
+    return this.delete({ key })
   }
 }

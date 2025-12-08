@@ -79,7 +79,7 @@ async function bootstrap() {
     const mailService = new MailService()
     const authService = new AuthService(userRepo, sessionRepo, unverifiedUserRepo, mailService)
     const userService = new UserService(userRepo, contactRepo)
-    const contactService = new ContactService(contactRepo)
+    const contactService = new ContactService(contactRepo, userRepo)
     const groupService = new GroupService(groupRepo)
     const channelService = new ChannelService(channelRepo)
     const messageService = new MessageService(messageRepo, chatRepo)
@@ -89,7 +89,7 @@ async function bootstrap() {
 
     // Initialize WebSocket services
     const chatsStore = new ChatsStoreService()
-    const personalChatsService = new PersonalChatsWsService(chatRepo, messageRepo, chatsStore)
+    const personalChatsService = new PersonalChatsWsService(chatsStore)
     const groupChatsService = new GroupChatsWsService(chatsStore)
     const chatsGateway = new ChatsGateway(personalChatsService, groupChatsService)
     chatsGateway.setup(io)

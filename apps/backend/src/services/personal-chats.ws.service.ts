@@ -11,25 +11,21 @@ import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
 export class PersonalChatsWsService {
-  constructor(
-    private chatRepo: ChatRepository,
-    private messageRepo: MessageRepository,
-    private chatsStore: ChatsStoreService,
-  ) {}
+  constructor(private readonly chatsStore: ChatsStoreService) {}
 
   handleConnect(socket: Socket) {
-    const userId = parseInt(socket.handshake.query.userId as string)
+    const userId = Number.parseInt(socket.handshake.query.userId as string)
     this.chatsStore.setClient(userId, socket.id)
 
     const channels = (socket.handshake.query.channels as string).split(',')
     socket.join(channels)
 
     const groups = (socket.handshake.query.groups as string).split(',')
-    groups.forEach((groupId: string) => this.chatsStore.addSocketToGroup(parseInt(groupId), socket.id))
+    groups.forEach((groupId: string) => this.chatsStore.addSocketToGroup(Number.parseInt(groupId), socket.id))
   }
 
   handleDisconnect(socket: Socket) {
-    const userId = parseInt(socket.handshake.query.userId as string)
+    const userId = Number.parseInt(socket.handshake.query.userId as string)
     this.chatsStore.deleteClient(userId)
   }
 
@@ -159,13 +155,21 @@ export class PersonalChatsWsService {
       const payloadArray = Array.isArray(payload) ? payload : [payload]
 
       const messageIds = payloadArray.map(p => p.messageId)
-      const receiverIds = payloadArray.map(p => p.receiverId)
 
-      await AppDataSource.manager.update(
-        MessageRecipient,
-        { message: { id: messageIds.length === 1 ? messageIds[0] : undefined } as any },
-        { status: MessageStatus.READ },
-      )
+      if (messageIds.length === 1) {
+        await AppDataSource.manager.update(
+          MessageRecipient,
+          { message: { id: messageIds[0] } },
+          { status: MessageStatus.READ },
+        )
+      } else {
+        await AppDataSource.manager
+          .createQueryBuilder()
+          .update(MessageRecipient)
+          .set({ status: MessageStatus.READ })
+          .where('message.id IN (:...messageIds)', { messageIds })
+          .execute()
+      }
 
       const readPayloadToSender = payloadArray.map(p => ({
         messageId: p.messageId,

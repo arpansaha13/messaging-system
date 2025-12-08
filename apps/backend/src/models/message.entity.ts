@@ -6,7 +6,7 @@ import { MessageRecipient } from './message-recipient.entity'
 
 @Entity({ name: 'messages' })
 export class Message extends BaseEntity {
-  @Column({ nullable: false })
+  @Column({ type: 'text', nullable: false })
   content!: string
 
   @ManyToOne(() => User, { nullable: false })

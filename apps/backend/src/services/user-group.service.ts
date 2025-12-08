@@ -1,7 +1,7 @@
 import { UserGroupRepository } from '../repositories/user-group.repository'
 
 export class UserGroupService {
-  constructor(private repo: UserGroupRepository) {}
+  constructor(private readonly repo: UserGroupRepository) {}
 
   getGroupsOfUser(userId: number) {
     return this.repo.getGroupsByUserId(userId)
@@ -12,6 +12,6 @@ export class UserGroupService {
   }
 
   addUserToGroup(userId: number, groupId: number) {
-    return this.repo.saveUserGroup({ user: { id: userId } as any, group: { id: groupId } as any })
+    return this.repo.save(this.repo.create({ user: { id: userId }, group: { id: groupId } }))
   }
 }

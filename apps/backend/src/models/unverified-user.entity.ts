@@ -3,27 +3,27 @@ import { BaseEntityNoPk } from './base.entity'
 
 @Entity({ name: 'unverified_users' })
 export class UnverifiedUser extends BaseEntityNoPk {
-  @PrimaryColumn()
+  @PrimaryColumn({ type: 'varchar' })
   hash!: string
 
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   otp!: string
 
-  @Column({ name: 'global_name', nullable: false })
+  @Column({ type: 'varchar', name: 'global_name', nullable: false })
   globalName!: string
 
-  @Column({ name: 'username', nullable: false })
+  @Column({ type: 'varchar', name: 'username', nullable: false })
   username!: string
 
-  @Column({ unique: true, nullable: false })
+  @Column({ type: 'varchar', unique: true, nullable: false })
   email!: string
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   dp?: string
 
-  @Column({ nullable: false, default: 'Hey there!.' })
+  @Column({ type: 'text', nullable: false, default: 'Hey there!.' })
   bio!: string
 
-  @Column({ nullable: false })
+  @Column({ type: 'varchar', nullable: false })
   password!: string
 }

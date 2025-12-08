@@ -3,27 +3,28 @@ import { UserGroupRepository } from '../repositories/user-group.repository'
 import { ChannelRepository } from '../repositories/channel.repository'
 import AppDataSource from '../data-source'
 import { Invite } from '../models/invite.entity'
+import type { Request } from 'express'
 
 export class InviteService {
   constructor(
-    private repo: InviteRepository,
-    private userGroupRepo?: UserGroupRepository,
-    private channelRepo?: ChannelRepository,
+    private readonly inviteRepo: InviteRepository,
+    private readonly userGroupRepo?: UserGroupRepository,
+    private readonly channelRepo?: ChannelRepository,
   ) {}
 
-  async createInvite(authUser: any, groupId: number) {
+  async createInvite(authUser: Request['user'], groupId: number) {
     const em = AppDataSource.manager
     return em.transaction(async txn => {
       // if invite exists and not expired, return existing
       const existing = await txn.findOne(Invite, {
-        where: { inviter: { id: authUser.id }, group: { id: groupId }, expiresAt: () => "timestamptz('now')" } as any,
-      } as any)
+        where: { inviter: { id: authUser.id }, group: { id: groupId }, expiresAt: new Date() },
+      })
       // simplify: always create a new invite
       const hash = Math.random().toString(36).slice(2, 8)
       const timestamp = new Date()
       const inv: any = txn.create(Invite, {
         hash,
-        group: { id: groupId } as any,
+        group: { id: groupId },
         inviter: authUser,
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -34,11 +35,11 @@ export class InviteService {
   }
 
   findByHash(hash: string) {
-    return this.repo.findByHash(hash)
+    return this.inviteRepo.findByHash(hash)
   }
 
-  async acceptInvite(authUser: any, inviteHash: string) {
-    const invite = await this.repo.findByHashWithGroup(inviteHash)
+  async acceptInvite(authUser: Request['user'], inviteHash: string) {
+    const invite = await this.inviteRepo.findByHashWithGroup(inviteHash)
     if (!invite) throw new Error('This invite link is either invalid or expired.')
 
     // Check if user already in group
@@ -49,10 +50,12 @@ export class InviteService {
       if (exists) throw new Error('User has already joined group')
 
       // Add user to group
-      await this.userGroupRepo.saveUserGroup({
-        user: { id: authUser.id } as any,
-        group: { id: invite.group.id } as any,
-      })
+      await this.userGroupRepo.save(
+        this.userGroupRepo.create({
+          user: { id: authUser.id },
+          group: { id: invite.group.id },
+        }),
+      )
     }
 
     // Get channels

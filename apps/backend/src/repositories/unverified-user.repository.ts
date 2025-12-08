@@ -15,6 +15,6 @@ export class UnverifiedUserRepository extends Repository<UnverifiedUser> {
   }
 
   deleteByHash(hash: string) {
-    return this.delete({ hash } as any)
+    return this.delete({ hash })
   }
 }

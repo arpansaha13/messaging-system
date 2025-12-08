@@ -6,9 +6,9 @@ const isNullOrUndefined = (v: any) => v === null || v === undefined
 
 export class ChatService {
   constructor(
-    private repo: ChatRepository,
-    private contactRepo: ContactRepository,
-    private messageRepo: MessageRepository,
+    private readonly repo: ChatRepository,
+    private readonly contactRepo: ContactRepository,
+    private readonly messageRepo: MessageRepository,
   ) {}
 
   async getChatsOfUser(userId: number) {
@@ -100,7 +100,7 @@ export class ChatService {
   }
 
   async deleteChat(senderId: number, receiverId: number) {
-    return this.repo.delete({ sender_id: senderId, receiver_id: receiverId } as any)
+    return this.repo.delete({ sender_id: senderId, receiver_id: receiverId })
   }
 
   async getChat(senderId: number, receiverId: number) {
@@ -111,16 +111,14 @@ export class ChatService {
   async ensureChatExists(senderId: number, receiverId: number) {
     let chat = await this.repo.findChat(senderId, receiverId)
     if (!chat)
-      chat = (
-        await this.repo.saveChat({
-          sender_id: senderId,
-          receiver_id: receiverId,
-          clearedAt: new Date(),
-          muted: false,
-          archived: false,
-          pinned: false,
-        })
-      )[0]
+      chat = await this.repo.saveChat({
+        sender_id: senderId,
+        receiver_id: receiverId,
+        clearedAt: new Date(),
+        muted: false,
+        archived: false,
+        pinned: false,
+      })
     return chat
   }
 }

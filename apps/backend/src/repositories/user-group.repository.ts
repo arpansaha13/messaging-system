@@ -8,31 +8,31 @@ export class UserGroupRepository extends Repository<UserGroup> {
 
   async getGroupsByUserId(userId: number) {
     const userGroups = await this.find({
-      where: { user: { id: userId } } as any,
-      relations: { group: { founder: true } } as any,
+      where: { user: { id: userId } },
+      relations: { group: { founder: true } },
     })
     return userGroups.map((ug: any) => ug.group)
   }
 
   async getGroupIdsByUserId(userId: number) {
     const userGroups = await this.find({
-      where: { user: { id: userId } } as any,
-      loadRelationIds: { relations: ['group'] } as any,
+      where: { user: { id: userId } },
+      loadRelationIds: { relations: ['group'] },
     })
     return userGroups.map((ug: any) => ug.group) as number[]
   }
 
   async getMembersByGroupId(groupId: number) {
     const userGroups = await this.find({
-      select: ['id', 'user'] as any,
-      where: { group: { id: groupId } } as any,
-      relations: { user: true } as any,
+      select: ['id', 'user'],
+      where: { group: { id: groupId } },
+      relations: { user: true },
     })
     return userGroups.map((ug: any) => ug.user)
   }
 
   saveUserGroup(ug: Partial<UserGroup>) {
-    const e = this.create(ug as any)
+    const e = this.create(ug)
     return this.save(e)
   }
 }

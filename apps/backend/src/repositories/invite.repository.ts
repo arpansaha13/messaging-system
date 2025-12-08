@@ -7,18 +7,18 @@ export class InviteRepository extends Repository<Invite> {
   }
 
   saveInvite(inv: Partial<Invite>) {
-    const e = this.create(inv as any)
+    const e = this.create(inv)
     return this.save(e)
   }
 
   findByHash(hash: string) {
-    return this.findOne({ where: { hash } } as any)
+    return this.findOne({ where: { hash } })
   }
 
   findByHashWithGroup(hash: string) {
     return this.findOne({
       where: { hash },
       relations: { group: true },
-    } as any)
+    })
   }
 }
