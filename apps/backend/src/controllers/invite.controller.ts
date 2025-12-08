@@ -1,6 +1,7 @@
 import { Router } from 'express'
+import type { InviteService } from '../services/invite.service'
 
-export function createInviteRouter(inviteService: any) {
+export function createInviteRouter(inviteService: InviteService) {
   const router = Router()
 
   router.post('/group/:groupId', async (req, res) => {

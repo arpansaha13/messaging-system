@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Repository, Brackets } from 'typeorm'
 import { Contact } from '../models/contact.entity'
-import { Repository, Brackets } from 'typeorm'
 
 export class ContactRepository extends Repository<Contact> {
-  constructor() {
-    super(Contact, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Contact, dataSource.createEntityManager())
   }
 
   getContactsByUserId(userId: number) {

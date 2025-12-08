@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { ContactService } from '../services/contact.service'
+import type { ContactService } from '../services/contact.service'
 
 export function createContactRouter(contactService: ContactService) {
   const router = Router()

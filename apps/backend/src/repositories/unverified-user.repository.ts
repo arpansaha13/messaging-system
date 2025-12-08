@@ -1,10 +1,9 @@
-import { DataSource, Repository } from 'typeorm'
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { UnverifiedUser } from '../models/unverified-user.entity'
 
 export class UnverifiedUserRepository extends Repository<UnverifiedUser> {
-  constructor() {
-    super(UnverifiedUser, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(UnverifiedUser, dataSource.createEntityManager())
   }
 
   existsByHash(hash: string) {

@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { UserGroup } from '../models/user-group.entity'
-import { Repository } from 'typeorm'
 
 export class UserGroupRepository extends Repository<UserGroup> {
-  constructor() {
-    super(UserGroup, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(UserGroup, dataSource.createEntityManager())
   }
 
   async getGroupsByUserId(userId: number) {

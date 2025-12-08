@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, In, Repository } from 'typeorm'
 import { Channel } from '../models/channel.entity'
-import { In, Repository } from 'typeorm'
 
 export class ChannelRepository extends Repository<Channel> {
-  constructor() {
-    super(Channel, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Channel, dataSource.createEntityManager())
   }
 
   async getChannelIdsByGroupIds(groupIds: number[]) {

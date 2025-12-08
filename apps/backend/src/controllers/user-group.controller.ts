@@ -1,6 +1,7 @@
 import { Router } from 'express'
+import type { UserGroupService } from '../services/user-group.service'
 
-export function createUserGroupRouter(userGroupService: any) {
+export function createUserGroupRouter(userGroupService: UserGroupService) {
   const router = Router()
 
   router.get('/user/:userId', async (req, res) => {

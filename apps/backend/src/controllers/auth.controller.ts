@@ -1,10 +1,9 @@
 import { Router } from 'express'
 import cookieParser from 'cookie-parser'
-import { AuthService } from '../services/auth.service'
+import type { AuthService } from '../services/auth.service'
 
-export function createAuthRouter() {
+export function createAuthRouter(authService: AuthService) {
   const router = Router()
-  const authService = new AuthService()
 
   router.use(cookieParser())
 

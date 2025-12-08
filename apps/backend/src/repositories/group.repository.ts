@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { Group } from '../models/group.entity'
-import { Repository } from 'typeorm'
 
 export class GroupRepository extends Repository<Group> {
-  constructor() {
-    super(Group, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Group, dataSource.createEntityManager())
   }
 
   saveGroup(g: Partial<Group>) {

@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { Chat } from '../models/chat.entity'
-import { Repository } from 'typeorm'
 
 export class ChatRepository extends Repository<Chat> {
-  constructor() {
-    super(Chat, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Chat, dataSource.createEntityManager())
   }
 
   getChatsOfUser(userId: number) {

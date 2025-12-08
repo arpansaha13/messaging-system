@@ -1,6 +1,7 @@
 import { Router } from 'express'
+import type { MessageService } from '../services/message.service'
 
-export function createMessageRouter(messageService: any) {
+export function createMessageRouter(messageService: MessageService) {
   const router = Router()
 
   router.get('/:receiverId', async (req, res) => {

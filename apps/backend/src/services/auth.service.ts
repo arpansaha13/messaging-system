@@ -14,10 +14,10 @@ const JWT_TOKEN_VALIDITY_SECONDS = Number(process.env.JWT_TOKEN_VALIDITY_SECONDS
 
 export class AuthService {
   constructor(
-    private userRepo = new UserRepository(),
-    private sessionRepo = new SessionRepository(),
-    private unverifiedRepo = new UnverifiedUserRepository(),
-    private mailService = new MailService(),
+    private userRepo: UserRepository,
+    private sessionRepo: SessionRepository,
+    private unverifiedRepo: UnverifiedUserRepository,
+    private mailService: MailService,
   ) {}
 
   private generateOtp(length = 4) {

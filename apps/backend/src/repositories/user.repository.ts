@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { User } from '../models/user.entity'
-import { Repository } from 'typeorm'
 
 export class UserRepository extends Repository<User> {
-  constructor() {
-    super(User, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(User, dataSource.createEntityManager())
   }
 
   findAll() {

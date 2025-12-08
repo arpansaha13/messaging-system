@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { Invite } from '../models/invite.entity'
-import { Repository } from 'typeorm'
 
 export class InviteRepository extends Repository<Invite> {
-  constructor() {
-    super(Invite, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Invite, dataSource.createEntityManager())
   }
 
   saveInvite(inv: Partial<Invite>) {

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express'
-import { UserService } from '../services/user.service'
+import type { UserService } from '../services/user.service'
 
 export function createUserRouter(userService: UserService) {
   const router = Router()

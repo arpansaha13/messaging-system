@@ -4,10 +4,11 @@ import express from 'express'
 import { Server as SocketServer } from 'socket.io'
 import cookieParser from 'cookie-parser'
 import AppDataSource from './data-source'
-import { authMiddleware } from './middleware/auth.middleware'
+import { createAuthMiddleware } from './middleware/auth.middleware'
 import { createUserRouter } from './controllers/user.controller'
 import { UserService } from './services/user.service'
 import { UserRepository } from './repositories/user.repository'
+import { SessionRepository } from './repositories/session.repository'
 import { createContactRouter } from './controllers/contact.controller'
 import { ContactService } from './services/contact.service'
 import { ContactRepository } from './repositories/contact.repository'
@@ -34,6 +35,9 @@ import { ChatsGateway } from './services/chats.gateway'
 import { ChatsStoreService } from './services/chats-store.service'
 import { PersonalChatsWsService } from './services/personal-chats.ws.service'
 import { GroupChatsWsService } from './services/group-chats.ws.service'
+import { AuthService } from './services/auth.service'
+import { UnverifiedUserRepository } from './repositories/unverified-user.repository'
+import { MailService } from './services/mail.service'
 
 const PORT = process.env.PORT || 4000
 
@@ -54,20 +58,26 @@ async function bootstrap() {
     })
 
     app.use(cookieParser())
-    app.use(authMiddleware)
+
+    const userRepo = new UserRepository(AppDataSource)
+    const sessionRepo = new SessionRepository(AppDataSource)
+
+    app.use(createAuthMiddleware(sessionRepo, userRepo))
     app.use(express.json())
 
     // Initialize repositories
-    const userRepo = new UserRepository()
-    const contactRepo = new ContactRepository()
-    const groupRepo = new GroupRepository()
-    const channelRepo = new ChannelRepository()
-    const messageRepo = new MessageRepository()
-    const chatRepo = new ChatRepository()
-    const inviteRepo = new InviteRepository()
-    const userGroupRepo = new UserGroupRepository()
+    const unverifiedUserRepo = new UnverifiedUserRepository(AppDataSource)
+    const contactRepo = new ContactRepository(AppDataSource)
+    const groupRepo = new GroupRepository(AppDataSource)
+    const channelRepo = new ChannelRepository(AppDataSource)
+    const messageRepo = new MessageRepository(AppDataSource)
+    const chatRepo = new ChatRepository(AppDataSource)
+    const inviteRepo = new InviteRepository(AppDataSource)
+    const userGroupRepo = new UserGroupRepository(AppDataSource)
 
     // Initialize services
+    const mailService = new MailService()
+    const authService = new AuthService(userRepo, sessionRepo, unverifiedUserRepo, mailService)
     const userService = new UserService(userRepo, contactRepo)
     const contactService = new ContactService(contactRepo)
     const groupService = new GroupService(groupRepo)
@@ -87,7 +97,7 @@ async function bootstrap() {
     // Setup routes
     app.use('/api/users', createUserRouter(userService))
     app.use('/api/contacts', createContactRouter(contactService))
-    app.use('/api/auth', createAuthRouter())
+    app.use('/api/auth', createAuthRouter(authService))
     app.use('/api/groups', createGroupRouter(groupService, userGroupService, channelService, inviteService))
     app.use('/api/channels', createChannelRouter(channelService))
     app.use('/api/messages', createMessageRouter(messageService))

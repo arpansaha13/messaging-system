@@ -1,6 +1,7 @@
 import { Router } from 'express'
+import type { ChannelService } from '../services/channel.service'
 
-export function createChannelRouter(channelService: any) {
+export function createChannelRouter(channelService: ChannelService) {
   const router = Router()
 
   router.get('/:channelId', async (req, res) => {

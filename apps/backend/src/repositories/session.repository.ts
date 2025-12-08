@@ -1,10 +1,9 @@
-import { Repository } from 'typeorm'
-import AppDataSource from '../data-source'
+import { type DataSource, Repository } from 'typeorm'
 import { Session } from '../models/session.entity'
 
 export class SessionRepository extends Repository<Session> {
-  constructor() {
-    super(Session, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Session, dataSource.createEntityManager())
   }
 
   findByKey(key: string) {

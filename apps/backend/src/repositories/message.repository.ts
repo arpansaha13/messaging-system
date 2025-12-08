@@ -1,10 +1,9 @@
-import AppDataSource from '../data-source'
+import { type DataSource, Brackets, Repository } from 'typeorm'
 import { Message } from '../models/message.entity'
-import { Brackets, Repository } from 'typeorm'
 
 export class MessageRepository extends Repository<Message> {
-  constructor() {
-    super(Message, AppDataSource.createEntityManager())
+  constructor(dataSource: DataSource) {
+    super(Message, dataSource.createEntityManager())
   }
 
   getMessagesByUserId(senderId: number, receiverId: number, clearedAt: Date) {

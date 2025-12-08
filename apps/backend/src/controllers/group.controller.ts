@@ -1,6 +1,15 @@
 import { Router } from 'express'
+import type { ChannelService } from '../services/channel.service'
+import type { GroupService } from '../services/group.service'
+import type { InviteService } from '../services/invite.service'
+import type { UserGroupService } from '../services/user-group.service'
 
-export function createGroupRouter(groupService: any, userGroupService: any, channelService: any, inviteService: any) {
+export function createGroupRouter(
+  groupService: GroupService,
+  userGroupService: UserGroupService,
+  channelService: ChannelService,
+  inviteService: InviteService,
+) {
   const router = Router()
 
   router.get('/', async (req: any, res: any) => {
