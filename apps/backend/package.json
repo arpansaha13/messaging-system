@@ -7,19 +7,21 @@
     "start": "node -r reflect-metadata dist/index.js"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.6",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.0",
-    "pg": "^8.11.0",
-    "reflect-metadata": "^0.1.13",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
     "socket.io": "^4.8.1",
-    "typeorm": "^0.3.17"
+    "typeorm": "^0.3.28"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.1",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.9.3"
   }
 }
