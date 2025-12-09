@@ -5,7 +5,7 @@ import { User } from '../models/user.entity'
 export class UserService {
   constructor(
     private readonly repo: UserRepository,
-    private readonly contactRepo?: ContactRepository,
+    private readonly contactRepo: ContactRepository,
   ) {}
 
   listUsers(): Promise<User[]> {
@@ -13,7 +13,7 @@ export class UserService {
   }
 
   getUser(id: number): Promise<User | null> {
-    return this.repo.findById(id) as Promise<User | null>
+    return this.repo.findById(id)
   }
 
   createUser(data: Partial<User>): Promise<User> {
@@ -35,10 +35,6 @@ export class UserService {
   async getUserWithContactById(authUserId: number, userId: number) {
     const user = await this.repo.findById(userId)
     if (!user) throw new Error('User could not be found.')
-
-    if (!this.contactRepo) {
-      return user
-    }
 
     const contact = await this.contactRepo.findOne({
       where: {

@@ -5,8 +5,6 @@ export function createContactRouter(contactService: ContactService) {
   const router = Router()
 
   router.get('/', async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
-
     const q = req.query.search as string | undefined
     if (q) {
       const results = await contactService.getContactsByQuery(req.user.id, q)
@@ -18,8 +16,6 @@ export function createContactRouter(contactService: ContactService) {
   })
 
   router.post('/', async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
-
     const { userIdToAdd, alias } = req.body
     try {
       const created = await contactService.addContact(req.user.id, Number(userIdToAdd), alias)

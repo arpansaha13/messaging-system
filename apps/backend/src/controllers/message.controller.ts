@@ -5,7 +5,6 @@ export function createMessageRouter(messageService: MessageService) {
   const router = Router()
 
   router.get('/:receiverId', async (req, res) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const receiverId = Number(req.params.receiverId)
     const clearedAt = new Date(0)
     try {

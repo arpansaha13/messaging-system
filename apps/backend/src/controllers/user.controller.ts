@@ -5,12 +5,10 @@ export function createUserRouter(userService: UserService) {
   const router = Router()
 
   router.get('/me', async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     res.json(req.user)
   })
 
   router.patch('/me', async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const data = req.body
     try {
       const updated = await userService.updateUser(req.user.id, data)
@@ -21,7 +19,6 @@ export function createUserRouter(userService: UserService) {
   })
 
   router.get('/search', async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const q = req.query.text as string | undefined
     if (!q) return res.json([])
     try {
@@ -38,14 +35,12 @@ export function createUserRouter(userService: UserService) {
   })
 
   router.get('/:id', async (req: Request, res: Response) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const id = Number(req.params.id)
     try {
       const user = await userService.getUserWithContactById(req.user.id, id)
-      if (!user) return res.status(404).json({ message: 'Not found' })
       res.json(user)
     } catch (err: any) {
-      res.status(400).json({ message: err.message })
+      res.status(404).json({ message: err.message })
     }
   })
 

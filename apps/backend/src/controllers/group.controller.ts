@@ -13,13 +13,11 @@ export function createGroupRouter(
   const router = Router()
 
   router.get('/', async (req: any, res: any) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const groups = await userGroupService.getGroupsOfUser(req.user.id)
     res.json(groups)
   })
 
   router.post('/', async (req: any, res: any) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     try {
       const created = await groupService.createGroup(req.user, req.body)
       res.status(201).json(created)
@@ -65,7 +63,6 @@ export function createGroupRouter(
   })
 
   router.post('/:groupId/invites', async (req: any, res: any) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const groupId = Number(req.params.groupId)
     try {
       const invite = await inviteService.createInvite(req.user, groupId)

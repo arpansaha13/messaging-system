@@ -15,7 +15,6 @@ export function createUserGroupRouter(userGroupService: UserGroupService) {
   })
 
   router.post('/group/:groupId/join', async (req, res) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' })
     const groupId = Number(req.params.groupId)
     try {
       const added = await userGroupService.addUserToGroup(req.user.id, groupId)
