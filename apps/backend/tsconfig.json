@@ -3,6 +3,10 @@
     "target": "es2020",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
     "baseUrl": ".",
     "strict": true,
     "allowJs": false,
@@ -18,6 +22,7 @@
   },
   "include": [
     "src",
-    "types"
+    "types",
+    "test"
   ]
 }

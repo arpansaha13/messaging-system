@@ -3,8 +3,12 @@
   "private": true,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "node -r reflect-metadata dist/index.js"
+    "start": "node -r reflect-metadata dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:ci": "vitest run --coverage"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -20,8 +24,12 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.1",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^6.3.4",
+    "testcontainers": "^11.9.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
   }
 }

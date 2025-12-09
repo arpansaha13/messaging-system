@@ -1,3 +1,8 @@
 packages:
   - apps/*
   - packages/*
+
+onlyBuiltDependencies:
+  - cpu-features
+  - protobufjs
+  - ssh2
