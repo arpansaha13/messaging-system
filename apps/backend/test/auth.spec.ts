@@ -1,0 +1,73 @@
+import bcrypt from 'bcryptjs'
+import express from 'express'
+import request from 'supertest'
+import cookieParser from 'cookie-parser'
+import { dataSource } from '../vitest.setup'
+import { createAuthRouter } from '../src/controllers/auth.controller'
+import { AuthService } from '../src/services/auth.service'
+import { UserRepository } from '../src/repositories/user.repository'
+import { SessionRepository } from '../src/repositories/session.repository'
+import { UnverifiedUserRepository } from '../src/repositories/unverified-user.repository'
+import { MailService } from '../src/services/mail.service'
+import { User } from '../src/models/user.entity'
+import { Session } from '../src/models/session.entity'
+import { UnverifiedUser } from '../src/models/unverified-user.entity'
+
+describe('Auth routes', () => {
+  let app: express.Express
+  let userRepo: UserRepository
+  let sessionRepo: SessionRepository
+
+  beforeAll(async () => {
+    userRepo = new UserRepository(dataSource)
+    sessionRepo = new SessionRepository(dataSource)
+    const unverifiedRepo = new UnverifiedUserRepository(dataSource)
+    const mailService = new MailService()
+    const authService = new AuthService(userRepo, sessionRepo, unverifiedRepo, mailService)
+
+    app = express()
+    app.use(cookieParser())
+    app.use(express.json())
+    app.use('/api/auth', createAuthRouter(authService))
+  })
+
+  beforeEach(async () => {
+    await dataSource.getRepository(Session).deleteAll()
+    await dataSource.getRepository(UnverifiedUser).deleteAll()
+    await dataSource.getRepository(User).deleteAll()
+  })
+
+  it('logs in successfully with valid credentials and sets auth cookie', async () => {
+    const password = 'password123'
+    const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt())
+
+    await userRepo.createUser({
+      email: 'test@example.com',
+      globalName: 'Test User',
+      username: 'testuser',
+      password: hashedPassword,
+      bio: 'Hey there!',
+    })
+
+    const res = await request(app).post('/api/auth/login').send({ email: 'test@example.com', password }).expect(200)
+
+    expect(res.headers['set-cookie']).toBeDefined()
+  })
+
+  it('returns 401 for invalid credentials', async () => {
+    await userRepo.createUser({
+      email: 'test@example.com',
+      globalName: 'Test User',
+      username: 'testuser2',
+      password: await bcrypt.hash('password123', await bcrypt.genSalt()),
+      bio: 'Hey there!',
+    })
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'test@example.com', password: 'wrong-password' })
+      .expect(401)
+
+    expect(res.body.message).toBe('Invalid credentials')
+  })
+})
