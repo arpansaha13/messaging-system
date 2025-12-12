@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express'
 import type { UserService } from '../services/user.service'
+import { validateDto } from '../utils/validate-dto'
+import { CreateUserDto, UpdateUserDto } from '../dto/user.dto'
 
 export function createUserRouter(userService: UserService) {
   const router = Router()
@@ -8,7 +10,7 @@ export function createUserRouter(userService: UserService) {
     res.json(req.user)
   })
 
-  router.patch('/me', async (req: Request, res: Response) => {
+  router.patch('/me', validateDto(UpdateUserDto), async (req: Request, res: Response) => {
     const data = req.body
     try {
       const updated = await userService.updateUser(req.user.id, data)
@@ -44,16 +46,14 @@ export function createUserRouter(userService: UserService) {
     }
   })
 
-  router.post('/', async (req: Request, res: Response) => {
-    const data = req.body
-    const created = await userService.createUser(data)
+  router.post('/', validateDto(CreateUserDto), async (req: Request, res: Response) => {
+    const created = await userService.createUser(req.body)
     res.status(201).json(created)
   })
 
-  router.put('/:id', async (req: Request, res: Response) => {
+  router.put('/:id', validateDto(UpdateUserDto), async (req: Request, res: Response) => {
     const id = Number(req.params.id)
-    const data = req.body
-    const updated = await userService.updateUser(id, data)
+    const updated = await userService.updateUser(id, req.body)
     res.json(updated)
   })
 

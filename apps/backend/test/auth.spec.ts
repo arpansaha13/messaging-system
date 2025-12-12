@@ -37,6 +37,19 @@ describe('Auth routes', () => {
     await dataSource.getRepository(User).deleteAll()
   })
 
+  it('returns 400 for invalid login payload', async () => {
+    const res = await request(app).post('/api/auth/login').send({ email: 'not-an-email' }).expect(400)
+    expect(res.body.message).toBeDefined()
+  })
+
+  it('returns 400 for invalid sign-up payload', async () => {
+    const res = await request(app)
+      .post('/api/auth/sign-up')
+      .send({ email: 'bad', globalName: '', password: '123' })
+      .expect(400)
+    expect(res.body.message).toBeDefined()
+  })
+
   it('logs in successfully with valid credentials and sets auth cookie', async () => {
     const password = 'password123'
     const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt())

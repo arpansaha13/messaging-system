@@ -1,6 +1,8 @@
 import { Router } from 'express'
-import cookieParser from 'cookie-parser'
 import type { AuthService } from '../services/auth.service'
+import cookieParser from 'cookie-parser'
+import { validateDto } from '../utils/validate-dto'
+import { LoginDto, SignUpDto, VerifyAccountDto } from '../dto/auth.dto'
 
 export function createAuthRouter(authService: AuthService) {
   const router = Router()
@@ -12,7 +14,7 @@ export function createAuthRouter(authService: AuthService) {
     res.json(result)
   })
 
-  router.post('/sign-up', async (req, res) => {
+  router.post('/sign-up', validateDto(SignUpDto), async (req, res) => {
     try {
       await authService.signUp(req.body)
       res.status(201).send()
@@ -21,7 +23,7 @@ export function createAuthRouter(authService: AuthService) {
     }
   })
 
-  router.post('/login', async (req, res) => authService.login(res, req.body))
+  router.post('/login', validateDto(LoginDto), async (req, res) => authService.login(res, req.body))
 
   router.post('/logout', async (req, res) => authService.logout(req, res))
 
@@ -31,7 +33,7 @@ export function createAuthRouter(authService: AuthService) {
     res.json(result)
   })
 
-  router.post('/verification/:hash', async (req, res) => {
+  router.post('/verification/:hash', validateDto(VerifyAccountDto), async (req, res) => {
     try {
       await authService.verifyAccount(req.params.hash, req.body.otp)
       res.status(201).send()

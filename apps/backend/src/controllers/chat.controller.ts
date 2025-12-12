@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import type { ChatService } from 'src/services/chat.service'
+import { validateDto } from '../utils/validate-dto'
+import { ReceiverParamDto } from '../dto/chat.dto'
 
 export function createChatRouter(chatService: ChatService) {
   const router = Router()
@@ -13,7 +15,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.get('/:receiverId', async (req, res) => {
+  router.get('/:receiverId', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       const chat = await chatService.getChatOfUserWithReceiver(req.user.id, receiverId)
@@ -23,7 +25,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.patch('/:receiverId/archive', async (req, res) => {
+  router.patch('/:receiverId/archive', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       await chatService.updateArchive(req.user.id, receiverId, true)
@@ -33,7 +35,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.patch('/:receiverId/unarchive', async (req, res) => {
+  router.patch('/:receiverId/unarchive', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       await chatService.updateArchive(req.user.id, receiverId, false)
@@ -43,7 +45,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.patch('/:receiverId/pin', async (req, res) => {
+  router.patch('/:receiverId/pin', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       await chatService.updatePin(req.user.id, receiverId, true)
@@ -53,7 +55,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.patch('/:receiverId/unpin', async (req, res) => {
+  router.patch('/:receiverId/unpin', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       await chatService.updatePin(req.user.id, receiverId, false)
@@ -63,7 +65,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.delete('/:receiverId/clear', async (req, res) => {
+  router.delete('/:receiverId/clear', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       await chatService.clearChat(req.user.id, receiverId)
@@ -73,7 +75,7 @@ export function createChatRouter(chatService: ChatService) {
     }
   })
 
-  router.delete('/:receiverId/delete', async (req, res) => {
+  router.delete('/:receiverId/delete', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
       await chatService.deleteChat(req.user.id, receiverId)

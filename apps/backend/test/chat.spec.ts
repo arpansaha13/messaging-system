@@ -205,6 +205,11 @@ describe('Chat routes', () => {
 
       expect(res.body.message).toBe('Unauthorized')
     })
+
+    it('returns 400 when receiverId is not a number', async () => {
+      const res = await request(app).get('/api/chats/not-a-number').set('Cookie', authCookie).expect(400)
+      expect(res.body.message).toBeDefined()
+    })
   })
 
   describe('PATCH /api/chats/:receiverId/archive', () => {

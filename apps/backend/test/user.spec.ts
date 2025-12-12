@@ -237,6 +237,16 @@ describe('User routes', () => {
       })
       expect(res.body.id).toBeDefined()
     })
+
+    it('returns 400 for invalid payload', async () => {
+      const res = await request(app)
+        .post('/api/users/')
+        .set('Cookie', authCookie)
+        .send({ email: 'bad-email', globalName: '', username: '', password: '123' })
+        .expect(400)
+
+      expect(res.body.message).toBeDefined()
+    })
   })
 
   describe('PUT /api/users/:id', () => {

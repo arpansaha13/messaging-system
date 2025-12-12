@@ -183,6 +183,26 @@ describe('Contact routes', () => {
 
       expect(res.body.message).toBe('Unauthorized')
     })
+
+    it('returns 400 when alias is empty', async () => {
+      const res = await request(app)
+        .post('/api/contacts/')
+        .set('Cookie', authCookie)
+        .send({ userIdToAdd: otherUser1.id, alias: '' })
+        .expect(400)
+
+      expect(res.body.message).toBeDefined()
+    })
+
+    it('returns 400 when userIdToAdd is not a number', async () => {
+      const res = await request(app)
+        .post('/api/contacts/')
+        .set('Cookie', authCookie)
+        .send({ userIdToAdd: 'abc', alias: 'Friend' })
+        .expect(400)
+
+      expect(res.body.message).toBeDefined()
+    })
   })
 
   describe('PATCH /api/contacts/:contactId', () => {
@@ -205,6 +225,18 @@ describe('Contact routes', () => {
       const res = await request(app).patch(`/api/contacts/${contact.id}`).send({ new_alias: 'New Alias' }).expect(401)
 
       expect(res.body.message).toBe('Unauthorized')
+    })
+
+    it('returns 400 when alias is empty', async () => {
+      const contact = await contactRepo.createContact(authUser, otherUser1, 'Friend')
+
+      const res = await request(app)
+        .patch(`/api/contacts/${contact.id}`)
+        .set('Cookie', authCookie)
+        .send({ new_alias: '' })
+        .expect(400)
+
+      expect(res.body.message).toBeDefined()
     })
   })
 

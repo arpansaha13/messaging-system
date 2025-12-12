@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express'
 import type { ContactService } from '../services/contact.service'
+import { validateDto } from '../utils/validate-dto'
+import { CreateContactDto, UpdateContactDto } from '../dto/contact.dto'
 
 export function createContactRouter(contactService: ContactService) {
   const router = Router()
@@ -15,7 +17,7 @@ export function createContactRouter(contactService: ContactService) {
     res.json(results)
   })
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', validateDto(CreateContactDto), async (req: Request, res: Response) => {
     const { userIdToAdd, alias } = req.body
     try {
       const created = await contactService.addContact(req.user.id, Number(userIdToAdd), alias)
@@ -25,7 +27,7 @@ export function createContactRouter(contactService: ContactService) {
     }
   })
 
-  router.patch('/:contactId', async (req: Request, res: Response) => {
+  router.patch('/:contactId', validateDto(UpdateContactDto), async (req: Request, res: Response) => {
     const contactId = Number(req.params.contactId)
     const { new_alias } = req.body
     await contactService.editAlias(contactId, new_alias)
