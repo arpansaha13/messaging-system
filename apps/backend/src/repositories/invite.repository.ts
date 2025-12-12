@@ -6,11 +6,6 @@ export class InviteRepository extends Repository<Invite> {
     super(Invite, dataSource.createEntityManager())
   }
 
-  saveInvite(inv: Partial<Invite>) {
-    const e = this.create(inv)
-    return this.save(e)
-  }
-
   findByHash(hash: string) {
     return this.findOne({ where: { hash } })
   }

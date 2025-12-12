@@ -1,0 +1,104 @@
+import express, { type Request } from 'express'
+import request from 'supertest'
+import cookieParser from 'cookie-parser'
+import jwt from 'jsonwebtoken'
+import { dataSource } from '../vitest.setup'
+import { createMessageRouter } from '../src/controllers/message.controller'
+import { MessageRepository } from '../src/repositories/message.repository'
+import { UserRepository } from '../src/repositories/user.repository'
+import { ChannelRepository } from '../src/repositories/channel.repository'
+import { MessageRecipient } from '../src/models/message-recipient.entity'
+import { Message } from '../src/models/message.entity'
+import { Chat } from '../src/models/chat.entity'
+import { Channel } from '../src/models/channel.entity'
+import { User } from '../src/models/user.entity'
+import { createAuthMiddleware } from '../src/middleware/auth.middleware'
+import { SessionRepository } from '../src/repositories/session.repository'
+import { MessageService } from '../src/services/message.service'
+import { ChatRepository } from '../src/repositories/chat.repository'
+import { Session } from '../src/models/session.entity'
+
+describe('Message routes', () => {
+  let app: express.Express
+  let msgRepo: MessageRepository
+  let userRepo: UserRepository
+  let chatRepo: ChatRepository
+  let channelRepo: ChannelRepository
+  let sessionRepo: SessionRepository
+  let authUser: Request['user']
+  let authCookie: string
+
+  beforeAll(() => {
+    msgRepo = new MessageRepository(dataSource)
+    userRepo = new UserRepository(dataSource)
+    chatRepo = new ChatRepository(dataSource)
+    channelRepo = new ChannelRepository(dataSource)
+    sessionRepo = new SessionRepository(dataSource)
+
+    const messageService = new MessageService(msgRepo, chatRepo)
+
+    app = express()
+    app.use(cookieParser())
+    app.use(express.json())
+    app.use(createAuthMiddleware(sessionRepo, userRepo))
+
+    app.use('/api/messages', createMessageRouter(messageService))
+  })
+
+  beforeEach(async () => {
+    await dataSource.getRepository(MessageRecipient).deleteAll()
+    await dataSource.getRepository(Message).deleteAll()
+    await dataSource.getRepository(Chat).deleteAll()
+    await dataSource.getRepository(Channel).deleteAll()
+    await dataSource.getRepository(User).deleteAll()
+    await dataSource.getRepository(Session).deleteAll()
+
+    authUser = await userRepo.createUser({
+      email: 'auth@g.test',
+      username: 'authg',
+      globalName: 'Auth G',
+      password: 'pass',
+    })
+    const payload = { user_id: authUser.id }
+    const token = jwt.sign(payload, process.env.JWT_SECRET!)
+    const session = await sessionRepo.save(sessionRepo.create({ token, expiresAt: new Date(Date.now() + 60_000) }))
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+  })
+
+  it('returns empty array if no chat/messages exist', async () => {
+    const res = await request(app).get(`/api/messages/${authUser.id}`).set('Cookie', authCookie)
+
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+    expect(res.body.length).toBe(0)
+  })
+
+  it('returns messages between users', async () => {
+    // authUser is sender
+    const receiver = await userRepo.createUser({ email: 'm3@test', username: 'm3', globalName: 'M3', password: 'pass' })
+
+    // create a message and recipient rows to satisfy query
+    const msg = await msgRepo.save({ content: 'hello', sender: { id: authUser.id }, channel: null })
+    await dataSource
+      .getRepository('message_recipients')
+      .save({ message: { id: msg.id }, receiver: { id: receiver.id }, status: 'SENT' })
+
+    const res = await request(app).get(`/api/messages/${receiver.id}`).set('Cookie', authCookie)
+
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+    expect(res.body.length).toBeGreaterThan(0)
+  })
+
+  it('returns messages in a channel', async () => {
+    const channel = await channelRepo.save(channelRepo.create({ name: 'room', group: null }))
+    const msg = await dataSource
+      .getRepository('messages')
+      .save({ content: 'room msg', sender: { id: authUser.id }, channel: { id: channel.id } })
+
+    const res = await request(app).get(`/api/messages/channel/${channel.id}`).set('Cookie', authCookie)
+    expect(res.status).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+    expect(res.body.find((m: any) => m.id === msg.id)).toBeDefined()
+  })
+})

@@ -1,7 +1,6 @@
 import { InviteRepository } from '../repositories/invite.repository'
 import { UserGroupRepository } from '../repositories/user-group.repository'
 import { ChannelRepository } from '../repositories/channel.repository'
-import AppDataSource from '../data-source'
 import { Invite } from '../models/invite.entity'
 import type { Request } from 'express'
 
@@ -13,7 +12,7 @@ export class InviteService {
   ) {}
 
   async createInvite(authUser: Request['user'], groupId: number) {
-    const em = AppDataSource.manager
+    const em = this.inviteRepo.manager
     return em.transaction(async txn => {
       // if invite exists and not expired, return existing
       const existing = await txn.findOne(Invite, {

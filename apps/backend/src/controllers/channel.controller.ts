@@ -15,17 +15,5 @@ export function createChannelRouter(channelService: ChannelService) {
     }
   })
 
-  router.get('/group/:groupId', async (req, res) => {
-    const groupId = Number(req.params.groupId)
-    const channels = await channelService.getChannelsOfGroup(groupId)
-    res.json(channels)
-  })
-
-  router.post('/group/:groupId', async (req, res) => {
-    const groupId = Number(req.params.groupId)
-    const created = await channelService.createChannel(groupId, req.body)
-    res.status(201).json(created)
-  })
-
   return router
 }
