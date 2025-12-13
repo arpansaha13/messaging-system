@@ -50,11 +50,6 @@ async function bootstrap() {
     const httpServer = createHttpServer(app)
     const io = new SocketServer(httpServer, {
       path: '/socket.io',
-      cors: {
-        origin: '*',
-        methods: ['GET', 'POST'],
-        credentials: true,
-      },
     })
 
     app.use(cookieParser())

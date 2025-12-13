@@ -20,8 +20,6 @@ process.env.DB_LOGGING = process.env.DB_LOGGING ?? 'false'
 process.env.CLIENT_DOMAIN = 'http://localhost:3000'
 process.env.OTP_VALIDATION_SECONDS = '60' // shorter expiry for tests
 
-process.env.CORS_ORIGINS = 'http://localhost:3000'
-
 process.env.AUTH_COOKIE_NAME = 'test_session'
 
 process.env.JWT_SECRET = 'test-secret-jwt-key'
