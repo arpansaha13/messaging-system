@@ -6,12 +6,11 @@ export class UserRepository extends Repository<User> {
     super(User, dataSource.createEntityManager())
   }
 
-  findAll() {
-    return this.find()
-  }
-
   findById(id: number) {
-    return this.findOne({ where: { id } })
+    return this.findOne({
+      select: ['id', 'bio', 'dp', 'email', 'globalName', 'username'],
+      where: { id },
+    })
   }
 
   findByEmail(email: string) {

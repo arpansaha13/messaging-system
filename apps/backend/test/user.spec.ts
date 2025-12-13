@@ -1,4 +1,5 @@
 import express from 'express'
+import jwt from 'jsonwebtoken'
 import request from 'supertest'
 import cookieParser from 'cookie-parser'
 import { dataSource } from '../vitest.setup'
@@ -8,10 +9,11 @@ import { UserService } from '../src/services/user'
 import { UserRepository } from '../src/repositories/user'
 import { ContactRepository } from '../src/repositories/contact'
 import { SessionRepository } from '../src/repositories/session'
+import { ChannelRepository } from '../src/repositories/channel'
+import { UserGroupRepository } from '../src/repositories/user-group'
 import { User } from '../src/models/user'
 import { Session } from '../src/models/session'
 import { Contact } from '../src/models/contact'
-import jwt from 'jsonwebtoken'
 
 describe('User routes', () => {
   let app: express.Express
@@ -27,7 +29,10 @@ describe('User routes', () => {
     userRepo = new UserRepository(dataSource)
     sessionRepo = new SessionRepository(dataSource)
     contactRepo = new ContactRepository(dataSource)
-    userService = new UserService(userRepo, contactRepo)
+
+    const channelRepo = new ChannelRepository(dataSource)
+    const userGroupRepo = new UserGroupRepository(dataSource)
+    userService = new UserService(userRepo, contactRepo, userGroupRepo, channelRepo)
 
     app = express()
     app.use(cookieParser())
@@ -145,31 +150,6 @@ describe('User routes', () => {
       const res = await request(app).get('/api/users/search?text=test').expect(401)
 
       expect(res.body.message).toBe('Unauthorized')
-    })
-  })
-
-  describe('GET /api/users/', () => {
-    it('returns all users', async () => {
-      await userRepo.createUser({
-        email: 'user1@example.com',
-        globalName: 'User One',
-        username: 'user1',
-        password: 'password',
-        bio: 'Bio 1',
-      })
-
-      await userRepo.createUser({
-        email: 'user2@example.com',
-        globalName: 'User Two',
-        username: 'user2',
-        password: 'password',
-        bio: 'Bio 2',
-      })
-
-      const res = await request(app).get('/api/users/').set('Cookie', authCookie).expect(200)
-
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBeGreaterThanOrEqual(3) // authUser + 2 created
     })
   })
 

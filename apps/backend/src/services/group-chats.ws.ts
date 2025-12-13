@@ -1,11 +1,12 @@
+import { Not } from 'typeorm'
 import { SocketEvents, MessageStatus } from '@shared/constants'
 import { ChatsStoreService } from './chats-store'
 import AppDataSource from '../data-source'
-import { Message } from '../models/message'
-import { MessageRecipient } from '../models/message-recipient'
 import { User } from '../models/user'
 import { Channel } from '../models/channel'
+import { Message } from '../models/message'
 import { UserGroup } from '../models/user-group'
+import { MessageRecipient } from '../models/message-recipient'
 import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
@@ -56,27 +57,29 @@ export class GroupChatsWsService {
             select: ['id', 'user'],
             where: {
               group: { id: payload.groupId },
-              user: { id: undefined }, // Will be filtered after fetching
+              user: { id: Not(payload.senderId) },
             },
             relations: { user: true },
           })
-        )
-          .filter(ug => ug.user.id !== payload.senderId)
-          .map(ug => ug.user)
+        ).map(ug => ug.user)
 
-        let message = new Message()
-        message.content = payload.content
-        message.sender = sender
-        message.channel = channel
-        message = await txnManager.save(message)
+        const message = await txnManager.save(
+          txnManager.create(Message, {
+            sender,
+            channel,
+            content: payload.content,
+          }),
+        )
 
         await Promise.all(
           receivers.map(receiver => {
-            const messageRecipient = new MessageRecipient()
-            messageRecipient.message = message
-            messageRecipient.receiver = receiver
-            messageRecipient.status = MessageStatus.SENT
-            return txnManager.save(messageRecipient)
+            return txnManager.save(
+              txnManager.create(MessageRecipient, {
+                message,
+                receiver,
+                status: MessageStatus.SENT,
+              }),
+            )
           }),
         )
 

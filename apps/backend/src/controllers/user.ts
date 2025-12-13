@@ -7,7 +7,7 @@ export function createUserRouter(userService: UserService) {
   const router = Router()
 
   router.get('/me', async (req: Request, res: Response) => {
-    res.json(req.user)
+    res.json(await userService.getAuthUser(req.user))
   })
 
   router.patch('/me', validateDto(UpdateUserDto), async (req: Request, res: Response) => {
@@ -29,11 +29,6 @@ export function createUserRouter(userService: UserService) {
     } catch (err: any) {
       res.status(400).json({ message: err.message })
     }
-  })
-
-  router.get('/', async (_req: Request, res: Response) => {
-    const users = await userService.listUsers()
-    res.json(users)
   })
 
   router.get('/:id', async (req: Request, res: Response) => {
