@@ -1,6 +1,6 @@
 import { SocketEvents } from '@shared/constants'
-import { PersonalChatsWsService } from './personal-chats.ws.service'
-import { GroupChatsWsService } from './group-chats.ws.service'
+import { PersonalChatsWsService } from './personal-chats.ws'
+import { GroupChatsWsService } from './group-chats.ws'
 import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
