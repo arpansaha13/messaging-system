@@ -8,7 +8,7 @@ const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME
 
 export const createAuthMiddleware = (sessionRepo: SessionRepository, userRepo: UserRepository): RequestHandler => {
   return async (req, res, next) => {
-    if (req.path.startsWith('/auth/')) {
+    if (req.path.startsWith('/api/auth/')) {
       return next() // Skip middleware for auth routes
     }
 
