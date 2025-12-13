@@ -1,10 +1,12 @@
-import { Router } from 'express'
+import { type Request, Router } from 'express'
+import { validateDto } from '../utils/validate-dto'
+import { ReceiverIdParam, ChannelIdParam } from '../dto/message.dto'
 import type { MessageService } from '../services/message.service'
 
 export function createMessageRouter(messageService: MessageService) {
   const router = Router()
 
-  router.get('/:receiverId', async (req, res) => {
+  router.get('/:receiverId', validateDto(ReceiverIdParam, 'params'), async (req: Request, res) => {
     const receiverId = Number(req.params.receiverId)
     const clearedAt = new Date(0)
     try {
@@ -15,7 +17,7 @@ export function createMessageRouter(messageService: MessageService) {
     }
   })
 
-  router.get('/channel/:channelId', async (req, res) => {
+  router.get('/channel/:channelId', validateDto(ChannelIdParam, 'params'), async (req: Request, res) => {
     const channelId = Number(req.params.channelId)
     try {
       const msgs = await messageService.getMessagesInChannel(channelId)

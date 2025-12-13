@@ -81,4 +81,14 @@ describe('UserGroup routes', () => {
     expect(res.status).toBe(201)
     expect(res.body.id).toBeDefined()
   })
+
+  it('returns 400 for invalid user id param', async () => {
+    const res = await request(app).get('/api/user-groups/user/abc').set('Cookie', authCookie)
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 400 for invalid group id param on join', async () => {
+    const res = await request(app).post('/api/user-groups/group/NaN/join').set('Cookie', authCookie)
+    expect(res.status).toBe(400)
+  })
 })

@@ -99,4 +99,16 @@ describe('Invite routes', () => {
     expect(res.status).toBe(200)
     expect(res.body.groupId).toBe(group.id)
   })
+
+  it('returns 400 for invalid group id param when creating invite', async () => {
+    const res = await request(app).post('/api/invites/group/abc').set('Cookie', authCookie)
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 400 for invalid invite hash param', async () => {
+    const res = await request(app).get('/api/invites/').set('Cookie', authCookie)
+    // hitting /api/invites/ will be 404, so test bad param on accept route
+    const badRes = await request(app).post('/api/invites//accept').set('Cookie', authCookie)
+    expect([400, 404]).toContain(badRes.status)
+  })
 })

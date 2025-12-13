@@ -101,4 +101,14 @@ describe('Message routes', () => {
     expect(Array.isArray(res.body)).toBe(true)
     expect(res.body.find((m: any) => m.id === msg.id)).toBeDefined()
   })
+
+  it('returns 400 for invalid receiver id param', async () => {
+    const res = await request(app).get('/api/messages/abc').set('Cookie', authCookie)
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 400 for invalid channel id param', async () => {
+    const res = await request(app).get('/api/messages/channel/xyz').set('Cookie', authCookie)
+    expect(res.status).toBe(400)
+  })
 })

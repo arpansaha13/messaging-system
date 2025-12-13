@@ -91,6 +91,16 @@ describe('Group routes', () => {
     expect(Array.isArray(res.body.channels)).toBe(true)
   })
 
+  it('returns 400 for invalid create-group payload', async () => {
+    const res = await request(app)
+      .post('/api/groups')
+      .set('Content-Type', 'application/json')
+      .set('Cookie', authCookie)
+      .send({ name: '' })
+
+    expect(res.status).toBe(400)
+  })
+
   it('returns 404 for unknown group', async () => {
     const res = await request(app).get('/api/groups/9999').set('Cookie', authCookie)
     expect(res.status).toBe(404)
@@ -110,6 +120,18 @@ describe('Group routes', () => {
     const listRes = await request(app).get(`/api/groups/${created.id}/channels`).set('Cookie', authCookie)
     expect(listRes.status).toBe(200)
     expect(Array.isArray(listRes.body)).toBe(true)
+  })
+
+  it('returns 400 for invalid create-channel payload', async () => {
+    const created = await groupRepo.save(groupRepo.create({ name: 'grpX', founder: authUser }))
+
+    const res = await request(app)
+      .post(`/api/groups/${created.id}/channels`)
+      .set('Content-Type', 'application/json')
+      .set('Cookie', authCookie)
+      .send({ name: '' })
+
+    expect(res.status).toBe(400)
   })
 
   it('returns members of a group', async () => {

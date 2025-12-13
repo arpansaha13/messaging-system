@@ -69,4 +69,9 @@ describe('Channel routes', () => {
     const res = await request(app).get('/api/channels/9999').set('Cookie', authCookie)
     expect(res.status).toBe(404)
   })
+
+  it('returns 400 for invalid channel id param', async () => {
+    const res = await request(app).get('/api/channels/abc').set('Cookie', authCookie)
+    expect(res.status).toBe(400)
+  })
 })

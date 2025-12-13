@@ -1,10 +1,12 @@
-import { Router } from 'express'
+import { type Request, Router } from 'express'
+import { validateDto } from '../utils/validate-dto'
+import { ChannelIdParam } from '../dto/channel.dto'
 import type { ChannelService } from '../services/channel.service'
 
 export function createChannelRouter(channelService: ChannelService) {
   const router = Router()
 
-  router.get('/:channelId', async (req, res) => {
+  router.get('/:channelId', validateDto(ChannelIdParam, 'params'), async (req: Request, res) => {
     const channelId = Number(req.params.channelId)
     try {
       const channel = await channelService.getChannel(channelId)
