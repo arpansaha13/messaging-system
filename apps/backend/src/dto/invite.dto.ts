@@ -5,8 +5,3 @@ export class InviteHashParam {
   @IsNotEmpty()
   hash!: string
 }
-
-export class GroupIdParam {
-  @IsNumberString()
-  groupId!: number
-}

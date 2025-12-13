@@ -11,7 +11,7 @@ export class UserGroupRepository extends Repository<UserGroup> {
       where: { user: { id: userId } },
       relations: { group: { founder: true } },
     })
-    return userGroups.map((ug: any) => ug.group)
+    return userGroups.map(ug => ug.group)
   }
 
   async getGroupIdsByUserId(userId: number) {
@@ -19,7 +19,7 @@ export class UserGroupRepository extends Repository<UserGroup> {
       where: { user: { id: userId } },
       loadRelationIds: { relations: ['group'] },
     })
-    return userGroups.map((ug: any) => ug.group) as number[]
+    return userGroups.map(ug => ug.group as unknown as number)
   }
 
   async getMembersByGroupId(groupId: number) {
@@ -28,7 +28,7 @@ export class UserGroupRepository extends Repository<UserGroup> {
       where: { group: { id: groupId } },
       relations: { user: true },
     })
-    return userGroups.map((ug: any) => ug.user)
+    return userGroups.map(ug => ug.user)
   }
 
   saveUserGroup(ug: Partial<UserGroup>) {

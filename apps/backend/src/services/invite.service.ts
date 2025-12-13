@@ -7,8 +7,8 @@ import type { Request } from 'express'
 export class InviteService {
   constructor(
     private readonly inviteRepo: InviteRepository,
-    private readonly userGroupRepo?: UserGroupRepository,
-    private readonly channelRepo?: ChannelRepository,
+    private readonly userGroupRepo: UserGroupRepository,
+    private readonly channelRepo: ChannelRepository,
   ) {}
 
   async createInvite(authUser: Request['user'], groupId: number) {
@@ -42,23 +42,21 @@ export class InviteService {
     if (!invite) throw new Error('This invite link is either invalid or expired.')
 
     // Check if user already in group
-    if (this.userGroupRepo) {
-      const exists = await this.userGroupRepo.findOne({
-        where: { user: { id: authUser.id }, group: { id: invite.group.id } },
-      })
-      if (exists) throw new Error('User has already joined group')
+    const exists = await this.userGroupRepo.findOne({
+      where: { user: { id: authUser.id }, group: { id: invite.group.id } },
+    })
+    if (exists) throw new Error('User has already joined group')
 
-      // Add user to group
-      await this.userGroupRepo.save(
-        this.userGroupRepo.create({
-          user: { id: authUser.id },
-          group: { id: invite.group.id },
-        }),
-      )
-    }
+    // Add user to group
+    await this.userGroupRepo.save(
+      this.userGroupRepo.create({
+        user: { id: authUser.id },
+        group: { id: invite.group.id },
+      }),
+    )
 
     // Get channels
-    const channels = this.channelRepo ? await this.channelRepo.getChannelsByGroupId(invite.group.id) : []
+    const channels = await this.channelRepo.getChannelsByGroupId(invite.group.id)
 
     return {
       groupId: invite.group.id,

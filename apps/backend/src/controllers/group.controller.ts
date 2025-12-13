@@ -15,12 +15,12 @@ export function createGroupRouter(
 ) {
   const router = Router()
 
-  router.get('/', async (req: Request, res: any) => {
+  router.get('/', async (req: Request, res) => {
     const groups = await userGroupService.getGroupsOfUser(req.user.id)
     res.json(groups)
   })
 
-  router.post('/', validateDto(CreateGroupDto), async (req: Request, res: any) => {
+  router.post('/', validateDto(CreateGroupDto), async (req: Request, res) => {
     try {
       const created = await groupService.createGroup(req.user, req.body)
       res.status(201).json(created)
@@ -35,7 +35,7 @@ export function createGroupRouter(
     res.json(group)
   })
 
-  router.get('/:groupId/channels', validateDto(GroupIdParamDto, 'params'), async (req: Request, res: any) => {
+  router.get('/:groupId/channels', validateDto(GroupIdParamDto, 'params'), async (req: Request, res) => {
     const groupId = Number(req.params.groupId)
     try {
       const channels = await channelService.getChannelsOfGroup(groupId)
@@ -49,7 +49,7 @@ export function createGroupRouter(
     '/:groupId/channels',
     validateDto(GroupIdParamDto, 'params'),
     validateDto(CreateChannelDto),
-    async (req: Request, res: any) => {
+    async (req: Request, res) => {
       const groupId = Number(req.params.groupId)
       try {
         const channel = await channelService.createChannel(groupId, req.body)
@@ -60,7 +60,7 @@ export function createGroupRouter(
     },
   )
 
-  router.get('/:groupId/members', validateDto(GroupIdParamDto, 'params'), async (req: Request, res: any) => {
+  router.get('/:groupId/members', validateDto(GroupIdParamDto, 'params'), async (req: Request, res) => {
     const groupId = Number(req.params.groupId)
     try {
       const members = await userGroupService.getMembersOfGroup(groupId)
@@ -70,7 +70,7 @@ export function createGroupRouter(
     }
   })
 
-  router.post('/:groupId/invites', validateDto(GroupIdParamDto, 'params'), async (req: Request, res: any) => {
+  router.post('/:groupId/invites', validateDto(GroupIdParamDto, 'params'), async (req: Request, res) => {
     const groupId = Number(req.params.groupId)
     try {
       const invite = await inviteService.createInvite(req.user, groupId)

@@ -1,4 +1,4 @@
-import { type DataSource, Repository } from 'typeorm'
+import { type DataSource, MoreThan, Repository } from 'typeorm'
 import { Invite } from '../models/invite.entity'
 
 export class InviteRepository extends Repository<Invite> {
@@ -7,7 +7,10 @@ export class InviteRepository extends Repository<Invite> {
   }
 
   findByHash(hash: string) {
-    return this.findOne({ where: { hash } })
+    return this.findOne({
+      where: { hash, expiresAt: MoreThan(new Date()) },
+      relations: { group: true },
+    })
   }
 
   findByHashWithGroup(hash: string) {
