@@ -66,6 +66,7 @@ services:
       context: .
       dockerfile: apps/client/Dockerfile.prod
       args:
+        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
         NEXT_PUBLIC_SOCKET_IO_BASE_URL: ${NEXT_PUBLIC_SOCKET_IO_BASE_URL}
     image: messaging_system_frontend_prod
     container_name: client_prod

@@ -6,7 +6,7 @@ import { SocketEvents } from '@shared/constants'
 import { useSocket } from '~/hooks/useSocket'
 import { GroupAvatar } from '~/components/common'
 import { Button } from '~/components/ui'
-import { acceptInvite } from './actions'
+import { useAcceptInviteMutation } from '~/store/features/invites/invites.api.slice'
 import type { IInvite } from '~/types'
 
 interface JoinGroupFormProps {
@@ -19,11 +19,12 @@ export default function JoinGroupForm(props: Readonly<JoinGroupFormProps>) {
   const { socket } = useSocket()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [acceptInvite] = useAcceptInviteMutation()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    const { data } = await acceptInvite(invite.hash)
+    const data = await acceptInvite(invite.hash).unwrap()
     if (data) {
       socket?.emit(SocketEvents.GROUP.JOIN_GROUP, {
         groupId: data.groupId,
@@ -31,6 +32,7 @@ export default function JoinGroupForm(props: Readonly<JoinGroupFormProps>) {
       })
       router.replace(`/groups/${data.groupId}`)
     }
+    setLoading(false)
   }
 
   return (

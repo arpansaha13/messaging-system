@@ -76,6 +76,7 @@ services:
     environment:
       NODE_ENV: development
       API_BASE_URL: ${API_BASE_URL}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NEXT_PUBLIC_SOCKET_IO_BASE_URL: ${NEXT_PUBLIC_SOCKET_IO_BASE_URL}
     depends_on:
       backend:

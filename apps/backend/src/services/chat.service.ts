@@ -46,7 +46,23 @@ export class ChatService {
 
       const contact = contactsMap.get(chat.receiver_id) ?? null
 
-      const item = { chat, message, contact }
+      // Format that frontend expects
+      const item = {
+        latestMsg: message,
+        receiver: {
+          id: chat.receiver_id,
+          dp: chat.receiver_dp,
+          bio: chat.receiver_bio,
+          username: chat.receiver_username,
+          globalName: chat.receiver_global_name,
+          contact: contact,
+        },
+        chat: {
+          muted: chat.muted,
+          pinned: chat.pinned,
+          archived: chat.archived,
+        },
+      }
 
       if (item.chat.archived) res.archived.push(item)
       else res.unarchived.push(item)

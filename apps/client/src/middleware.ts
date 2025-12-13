@@ -6,13 +6,14 @@ export default async function middleware(req: NextRequest) {
   const isAuthRoute = path.startsWith('/auth/')
   const isProtectedRoute = !isAuthRoute
 
-  const token = cookies().get('token')
+  const cookieName = process.env.AUTH_COOKIE_NAME!
+  const token = cookies().get(cookieName)
   const redirectToHome = NextResponse.redirect(new URL('/', req.nextUrl))
   const redirectToLogin = NextResponse.redirect(new URL('/auth/login', req.nextUrl))
 
   if (token) {
     const checkAuthRequest = new NextRequest(new URL('/api/auth/check-auth', process.env.API_BASE_URL!))
-    checkAuthRequest.cookies.set('token', token.value)
+    checkAuthRequest.cookies.set(cookieName, token.value)
 
     const res = await fetch(checkAuthRequest)
     const { valid } = await res.json()

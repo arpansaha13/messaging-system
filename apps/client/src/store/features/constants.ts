@@ -9,6 +9,8 @@ export const GROUP_CHANNELS_API_TAG = 'Group_Channels'
 export const GROUP_MEMBERS_API_TAG = 'Group_Members'
 export const GROUP_INVITE_API_TAG = 'Group_Invite'
 
+export const INVITE_API_TAG = 'Invite'
+
 export const CHANNEL_API_TAG = 'Channel_ChannelId'
 
 export const CONTACTS_API_TAG = 'Contact'
