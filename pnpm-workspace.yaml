@@ -3,6 +3,9 @@ packages:
   - packages/*
 
 onlyBuiltDependencies:
+  - '@arpansaha13/utils'
   - cpu-features
+  - esbuild
   - protobufjs
+  - sqlite3
   - ssh2
