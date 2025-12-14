@@ -58,37 +58,41 @@ describe('UserGroup routes', () => {
     authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
   })
 
-  it('returns groups of a user', async () => {
-    const group = await groupRepo.save(groupRepo.create({ name: 'g1', founder: authUser }))
-    await userGroupRepo.save(userGroupRepo.create({ user: authUser, group: group }))
+  describe('GET /api/user-groups/user/:id', () => {
+    it('returns groups of a user', async () => {
+      const group = await groupRepo.save(groupRepo.create({ name: 'g1', founder: authUser }))
+      await userGroupRepo.save(userGroupRepo.create({ user: authUser, group: group }))
 
-    const res = await request(app).get(`/api/user-groups/user/${authUser.id}`).set('Cookie', authCookie)
-    expect(res.status).toBe(200)
-    expect(Array.isArray(res.body)).toBe(true)
-  })
-
-  it('allows joining a group', async () => {
-    // authUser is the inviter
-    const joiner = await userRepo.createUser({
-      email: 'ug3@test',
-      username: 'ug3',
-      globalName: 'UG3',
-      password: 'pass',
+      const res = await request(app).get(`/api/user-groups/user/${authUser.id}`).set('Cookie', authCookie)
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
     })
-    const group = await groupRepo.save(groupRepo.create({ name: 'g2', founder: authUser }))
 
-    const res = await request(app).post(`/api/user-groups/group/${group.id}/join`).set('Cookie', authCookie)
-    expect(res.status).toBe(201)
-    expect(res.body.id).toBeDefined()
+    it('returns 400 for invalid user id param', async () => {
+      const res = await request(app).get('/api/user-groups/user/abc').set('Cookie', authCookie)
+      expect(res.status).toBe(400)
+    })
   })
 
-  it('returns 400 for invalid user id param', async () => {
-    const res = await request(app).get('/api/user-groups/user/abc').set('Cookie', authCookie)
-    expect(res.status).toBe(400)
-  })
+  describe('POST /api/user-groups/group/:id/join', () => {
+    it('allows joining a group', async () => {
+      // authUser is the inviter
+      const joiner = await userRepo.createUser({
+        email: 'ug3@test',
+        username: 'ug3',
+        globalName: 'UG3',
+        password: 'pass',
+      })
+      const group = await groupRepo.save(groupRepo.create({ name: 'g2', founder: authUser }))
 
-  it('returns 400 for invalid group id param on join', async () => {
-    const res = await request(app).post('/api/user-groups/group/NaN/join').set('Cookie', authCookie)
-    expect(res.status).toBe(400)
+      const res = await request(app).post(`/api/user-groups/group/${group.id}/join`).set('Cookie', authCookie)
+      expect(res.status).toBe(201)
+      expect(res.body.id).toBeDefined()
+    })
+
+    it('returns 400 for invalid group id param on join', async () => {
+      const res = await request(app).post('/api/user-groups/group/NaN/join').set('Cookie', authCookie)
+      expect(res.status).toBe(400)
+    })
   })
 })

@@ -46,7 +46,7 @@ describe('Group routes', () => {
     const groupService = new GroupService(groupRepo)
     const channelService = new ChannelService(channelRepo)
     const userGroupService = new UserGroupService(userGroupRepo)
-    const inviteService = new InviteService(inviteRepo)
+    const inviteService = new InviteService(inviteRepo, userGroupRepo, channelRepo)
 
     app = express()
     app.use(cookieParser())
@@ -79,76 +79,97 @@ describe('Group routes', () => {
     authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
   })
 
-  it('creates a group and returns created payload', async () => {
-    const res = await request(app)
-      .post('/api/groups')
-      .set('Content-Type', 'application/json')
-      .set('Cookie', authCookie)
-      .send({ name: 'My Group' })
+  describe('POST /api/groups', () => {
+    it('creates a group and returns created payload', async () => {
+      const res = await request(app)
+        .post('/api/groups')
+        .set('Content-Type', 'application/json')
+        .set('Cookie', authCookie)
+        .send({ name: 'My Group' })
 
-    expect(res.status).toBe(201)
-    expect(res.body.id).toBeDefined()
-    expect(Array.isArray(res.body.channels)).toBe(true)
+      expect(res.status).toBe(201)
+      expect(res.body.id).toBeDefined()
+      expect(Array.isArray(res.body.channels)).toBe(true)
+    })
+
+    it('returns 400 for invalid create-group payload', async () => {
+      const res = await request(app)
+        .post('/api/groups')
+        .set('Content-Type', 'application/json')
+        .set('Cookie', authCookie)
+        .send({ name: '' })
+
+      expect(res.status).toBe(400)
+    })
   })
 
-  it('returns 400 for invalid create-group payload', async () => {
-    const res = await request(app)
-      .post('/api/groups')
-      .set('Content-Type', 'application/json')
-      .set('Cookie', authCookie)
-      .send({ name: '' })
-
-    expect(res.status).toBe(400)
+  describe('GET /api/groups/:id', () => {
+    it('returns 404 for unknown group', async () => {
+      const res = await request(app).get('/api/groups/9999').set('Cookie', authCookie)
+      expect(res.status).toBe(404)
+    })
   })
 
-  it('returns 404 for unknown group', async () => {
-    const res = await request(app).get('/api/groups/9999').set('Cookie', authCookie)
-    expect(res.status).toBe(404)
+  describe('POST /api/groups/:id/channels', () => {
+    it('creates a channel under group', async () => {
+      const created = await groupRepo.save(groupRepo.create({ name: 'grp', founder: authUser }))
+
+      const postRes = await request(app)
+        .post(`/api/groups/${created.id}/channels`)
+        .set('Cookie', authCookie)
+        .send({ name: 'chat' })
+
+      expect(postRes.status).toBe(201)
+      expect(postRes.body.groupId).toBe(created.id)
+    })
+
+    it('returns 400 for invalid create-channel payload', async () => {
+      const created = await groupRepo.save(groupRepo.create({ name: 'grpX', founder: authUser }))
+
+      const res = await request(app)
+        .post(`/api/groups/${created.id}/channels`)
+        .set('Content-Type', 'application/json')
+        .set('Cookie', authCookie)
+        .send({ name: '' })
+
+      expect(res.status).toBe(400)
+    })
   })
 
-  it('creates a channel under group and lists channels', async () => {
-    const created = await groupRepo.save(groupRepo.create({ name: 'grp', founder: authUser }))
+  describe('GET /api/groups/:id/channels', () => {
+    it('lists channels for a group', async () => {
+      const created = await groupRepo.save(groupRepo.create({ name: 'grpList', founder: authUser }))
 
-    const postRes = await request(app)
-      .post(`/api/groups/${created.id}/channels`)
-      .set('Cookie', authCookie)
-      .send({ name: 'chat' })
+      await channelRepo.save(channelRepo.create({ name: 'chat-list', group: created }))
 
-    expect(postRes.status).toBe(201)
-    expect(postRes.body.groupId).toBe(created.id)
+      const listRes = await request(app).get(`/api/groups/${created.id}/channels`).set('Cookie', authCookie)
 
-    const listRes = await request(app).get(`/api/groups/${created.id}/channels`).set('Cookie', authCookie)
-    expect(listRes.status).toBe(200)
-    expect(Array.isArray(listRes.body)).toBe(true)
+      expect(listRes.status).toBe(200)
+      expect(Array.isArray(listRes.body)).toBe(true)
+      expect(listRes.body.length).toBeGreaterThanOrEqual(1)
+      expect(listRes.body[0].name).toBeDefined()
+    })
   })
 
-  it('returns 400 for invalid create-channel payload', async () => {
-    const created = await groupRepo.save(groupRepo.create({ name: 'grpX', founder: authUser }))
+  describe('GET /api/groups/:id/members', () => {
+    it('returns members of a group', async () => {
+      const group = await groupRepo.save(groupRepo.create({ name: 'grp2', founder: authUser }))
+      await userGroupRepo.save(userGroupRepo.create({ user: authUser, group: group }))
 
-    const res = await request(app)
-      .post(`/api/groups/${created.id}/channels`)
-      .set('Content-Type', 'application/json')
-      .set('Cookie', authCookie)
-      .send({ name: '' })
-
-    expect(res.status).toBe(400)
+      const res = await request(app).get(`/api/groups/${group.id}/members`).set('Cookie', authCookie)
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+    })
   })
 
-  it('returns members of a group', async () => {
-    const group = await groupRepo.save(groupRepo.create({ name: 'grp2', founder: authUser }))
-    await userGroupRepo.save(userGroupRepo.create({ user: authUser, group: group }))
+  describe('POST /api/groups/:id/invites', () => {
+    it('creates an invite for a group', async () => {
+      const group = await groupRepo.save(groupRepo.create({ name: 'grp3', founder: authUser }))
 
-    const res = await request(app).get(`/api/groups/${group.id}/members`).set('Cookie', authCookie)
-    expect(res.status).toBe(200)
-    expect(Array.isArray(res.body)).toBe(true)
-  })
+      const res = await request(app).post(`/api/groups/${group.id}/invites`).set('Cookie', authCookie)
 
-  it('creates an invite for a group', async () => {
-    const group = await groupRepo.save(groupRepo.create({ name: 'grp3', founder: authUser }))
-
-    const res = await request(app).post(`/api/groups/${group.id}/invites`).set('Cookie', authCookie)
-
-    expect(res.status).toBe(201)
-    expect(res.body.hash).toBeDefined()
+      expect(res.status).toBe(201)
+      expect(res.body.hash).toBeDefined()
+    })
   })
 })

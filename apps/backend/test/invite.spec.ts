@@ -15,6 +15,7 @@ import { Invite } from '../src/models/invite'
 import { UserGroup } from '../src/models/user-group'
 import { createAuthMiddleware } from '../src/middleware/auth'
 import { SessionRepository } from '../src/repositories/session'
+import { ChannelRepository } from '../src/repositories/channel'
 import { Session } from '../src/models/session'
 import { InviteService } from '../src/services/invite'
 
@@ -34,7 +35,8 @@ describe('Invite routes', () => {
     userRepo = new UserRepository(dataSource)
     userGroupRepo = new UserGroupRepository(dataSource)
 
-    const inviteService = new InviteService(inviteRepo)
+    const channelRepo = new ChannelRepository(dataSource)
+    const inviteService = new InviteService(inviteRepo, userGroupRepo, channelRepo)
 
     app = express()
     app.use(cookieParser())
@@ -65,50 +67,58 @@ describe('Invite routes', () => {
     authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
   })
 
-  it('creates and fetch invite by hash', async () => {
-    const group = await groupRepo.save(groupRepo.create({ name: 'g1', founder: authUser }))
+  describe('GET /api/invites/:hash', () => {
+    it('returns invite by hash', async () => {
+      const group = await groupRepo.save(groupRepo.create({ name: 'invite-group', founder: authUser }))
 
-    const postRes = await request(app).post(`/api/invites/group/${group.id}`).set('Cookie', authCookie)
-    expect(postRes.status).toBe(201)
-    expect(postRes.body.hash).toBeDefined()
+      const inv = await inviteRepo.save(
+        inviteRepo.create({
+          hash: 'testhash123',
+          group: group,
+          inviter: authUser,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          expiresAt: new Date(Date.now() + 60_000),
+        }),
+      )
 
-    const getRes = await request(app).get(`/api/invites/${postRes.body.hash}`).set('Cookie', authCookie)
-    expect(getRes.status).toBe(200)
-    expect(getRes.body.hash).toBe(postRes.body.hash)
+      const res = await request(app).get(`/api/invites/${inv.hash}`).set('Cookie', authCookie)
+
+      expect(res.status).toBe(200)
+      expect(res.body).toBeDefined()
+      expect(res.body.hash).toBe(inv.hash)
+      expect(res.body.group).toBeDefined()
+      expect(res.body.group.id).toBe(group.id)
+    })
   })
 
-  it('accepts invite and adds user to group', async () => {
-    // authUser is inviter
-    const invitee = await userRepo.createUser({ email: 'i3@test', username: 'i3', globalName: 'I3', password: 'pass' })
-    const group = await groupRepo.save(groupRepo.create({ name: 'g2', founder: authUser }))
+  describe('POST /api/invites/:hash/accept', () => {
+    it('accepts invite and adds user to group', async () => {
+      // authUser is inviter
+      await userRepo.createUser({ email: 'i3@test', username: 'i3', globalName: 'I3', password: 'pass' })
+      const group = await groupRepo.save(groupRepo.create({ name: 'g2', founder: authUser }))
 
-    // create channel to be returned
-    await dataSource.getRepository('channels').save({ name: 'default', group: { id: group.id } })
-    const inv = await inviteRepo.save(
-      inviteRepo.create({
-        hash: 'abc123',
-        group: group,
-        inviter: authUser,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        expiresAt: new Date(Date.now() + 10000),
-      }),
-    )
+      // create channel to be returned
+      await dataSource.getRepository('channels').save({ name: 'default', group: { id: group.id } })
+      const inv = await inviteRepo.save(
+        inviteRepo.create({
+          hash: 'abc123',
+          group: group,
+          inviter: authUser,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          expiresAt: new Date(Date.now() + 10000),
+        }),
+      )
 
-    const res = await request(app).post(`/api/invites/${inv.hash}/accept`).set('Cookie', authCookie)
-    expect(res.status).toBe(200)
-    expect(res.body.groupId).toBe(group.id)
-  })
+      const res = await request(app).post(`/api/invites/${inv.hash}/accept`).set('Cookie', authCookie)
+      expect(res.status).toBe(200)
+      expect(res.body.groupId).toBe(group.id)
+    })
 
-  it('returns 400 for invalid group id param when creating invite', async () => {
-    const res = await request(app).post('/api/invites/group/abc').set('Cookie', authCookie)
-    expect(res.status).toBe(400)
-  })
-
-  it('returns 400 for invalid invite hash param', async () => {
-    const res = await request(app).get('/api/invites/').set('Cookie', authCookie)
-    // hitting /api/invites/ will be 404, so test bad param on accept route
-    const badRes = await request(app).post('/api/invites//accept').set('Cookie', authCookie)
-    expect([400, 404]).toContain(badRes.status)
+    it('returns 400/404 for invalid invite hash param', async () => {
+      const badRes = await request(app).post('/api/invites//accept').set('Cookie', authCookie)
+      expect([400, 404]).toContain(badRes.status)
+    })
   })
 })

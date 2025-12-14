@@ -16,7 +16,6 @@ import { Channel } from '../src/models/channel'
 describe('Channel routes', () => {
   let app: express.Express
   let channelRepo: ChannelRepository
-  let groupRepo: GroupRepository
   let userRepo: UserRepository
   let sessionRepo: SessionRepository
   let authUser: Request['user']
@@ -24,7 +23,6 @@ describe('Channel routes', () => {
 
   beforeAll(() => {
     channelRepo = new ChannelRepository(dataSource)
-    groupRepo = new GroupRepository(dataSource)
     userRepo = new UserRepository(dataSource)
 
     app = express()
@@ -65,13 +63,15 @@ describe('Channel routes', () => {
     authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
   })
 
-  it('returns 404 for non-existing channel', async () => {
-    const res = await request(app).get('/api/channels/9999').set('Cookie', authCookie)
-    expect(res.status).toBe(404)
-  })
+  describe('GET /api/channels/:id', () => {
+    it('returns 404 for non-existing channel', async () => {
+      const res = await request(app).get('/api/channels/9999').set('Cookie', authCookie)
+      expect(res.status).toBe(404)
+    })
 
-  it('returns 400 for invalid channel id param', async () => {
-    const res = await request(app).get('/api/channels/abc').set('Cookie', authCookie)
-    expect(res.status).toBe(400)
+    it('returns 400 for invalid channel id param', async () => {
+      const res = await request(app).get('/api/channels/abc').set('Cookie', authCookie)
+      expect(res.status).toBe(400)
+    })
   })
 })

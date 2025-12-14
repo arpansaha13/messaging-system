@@ -65,50 +65,59 @@ describe('Message routes', () => {
     authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
   })
 
-  it('returns empty array if no chat/messages exist', async () => {
-    const res = await request(app).get(`/api/messages/${authUser.id}`).set('Cookie', authCookie)
+  describe('GET /api/messages/:receiverId', () => {
+    it('returns empty array if no chat/messages exist', async () => {
+      const res = await request(app).get(`/api/messages/${authUser.id}`).set('Cookie', authCookie)
 
-    expect(res.status).toBe(200)
-    expect(Array.isArray(res.body)).toBe(true)
-    expect(res.body.length).toBe(0)
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+      expect(res.body.length).toBe(0)
+    })
+
+    it('returns messages between users', async () => {
+      // authUser is sender
+      const receiver = await userRepo.createUser({
+        email: 'm3@test',
+        username: 'm3',
+        globalName: 'M3',
+        password: 'pass',
+      })
+
+      // create a message and recipient rows to satisfy query
+      const msg = await msgRepo.save({ content: 'hello', sender: { id: authUser.id }, channel: null })
+      await dataSource
+        .getRepository('message_recipients')
+        .save({ message: { id: msg.id }, receiver: { id: receiver.id }, status: 'SENT' })
+
+      const res = await request(app).get(`/api/messages/${receiver.id}`).set('Cookie', authCookie)
+
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+      expect(res.body.length).toBeGreaterThan(0)
+    })
+
+    it('returns 400 for invalid receiver id param', async () => {
+      const res = await request(app).get('/api/messages/abc').set('Cookie', authCookie)
+      expect(res.status).toBe(400)
+    })
   })
 
-  it('returns messages between users', async () => {
-    // authUser is sender
-    const receiver = await userRepo.createUser({ email: 'm3@test', username: 'm3', globalName: 'M3', password: 'pass' })
+  describe('GET /api/messages/channel/:channelId', () => {
+    it('returns messages in a channel', async () => {
+      const channel = await channelRepo.save(channelRepo.create({ name: 'room', group: null }))
+      const msg = await dataSource
+        .getRepository('messages')
+        .save({ content: 'room msg', sender: { id: authUser.id }, channel: { id: channel.id } })
 
-    // create a message and recipient rows to satisfy query
-    const msg = await msgRepo.save({ content: 'hello', sender: { id: authUser.id }, channel: null })
-    await dataSource
-      .getRepository('message_recipients')
-      .save({ message: { id: msg.id }, receiver: { id: receiver.id }, status: 'SENT' })
+      const res = await request(app).get(`/api/messages/channel/${channel.id}`).set('Cookie', authCookie)
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+      expect(res.body.find((m: any) => m.id === msg.id)).toBeDefined()
+    })
 
-    const res = await request(app).get(`/api/messages/${receiver.id}`).set('Cookie', authCookie)
-
-    expect(res.status).toBe(200)
-    expect(Array.isArray(res.body)).toBe(true)
-    expect(res.body.length).toBeGreaterThan(0)
-  })
-
-  it('returns messages in a channel', async () => {
-    const channel = await channelRepo.save(channelRepo.create({ name: 'room', group: null }))
-    const msg = await dataSource
-      .getRepository('messages')
-      .save({ content: 'room msg', sender: { id: authUser.id }, channel: { id: channel.id } })
-
-    const res = await request(app).get(`/api/messages/channel/${channel.id}`).set('Cookie', authCookie)
-    expect(res.status).toBe(200)
-    expect(Array.isArray(res.body)).toBe(true)
-    expect(res.body.find((m: any) => m.id === msg.id)).toBeDefined()
-  })
-
-  it('returns 400 for invalid receiver id param', async () => {
-    const res = await request(app).get('/api/messages/abc').set('Cookie', authCookie)
-    expect(res.status).toBe(400)
-  })
-
-  it('returns 400 for invalid channel id param', async () => {
-    const res = await request(app).get('/api/messages/channel/xyz').set('Cookie', authCookie)
-    expect(res.status).toBe(400)
+    it('returns 400 for invalid channel id param', async () => {
+      const res = await request(app).get('/api/messages/channel/xyz').set('Cookie', authCookie)
+      expect(res.status).toBe(400)
+    })
   })
 })
