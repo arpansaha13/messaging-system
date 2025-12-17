@@ -1,0 +1,12 @@
+@import 'tailwindcss' theme(static);
+@import '@nuxt/ui';
+
+@config '../../../tailwind.config.ts';
+
+@theme {
+  --font-sans: 'Public Sans', sans-serif;
+}
+
+html.dark {
+  color-scheme: dark;
+}

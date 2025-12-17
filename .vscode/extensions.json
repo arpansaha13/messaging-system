@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "vue.volar",
+    "antfu.iconify",
+    "csstools.postcss",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "nuxtr.nuxt-vscode-extentions",
+    "streetsidesoftware.code-spell-checker",
+  ]
+}

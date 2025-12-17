@@ -1,0 +1,23 @@
+{
+  "servers": {
+    "nuxt": {
+      "url": "https://nuxt.com/mcp",
+      "type": "http"
+    },
+    "nuxt-ui": {
+      "url": "https://ui.nuxt.com/mcp",
+      "type": "http"
+    },
+    "playwright": {
+      "type": "local",
+      "command": "npx",
+      "tools": [
+        "*"
+      ],
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    }
+  },
+  "inputs": []
+}

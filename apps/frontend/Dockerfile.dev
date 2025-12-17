@@ -1,0 +1,22 @@
+# Base configuration
+ARG node_tag=22-alpine
+FROM node:${node_tag} AS base
+WORKDIR /app
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /app/
+RUN npm i -g --force corepack && corepack enable
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+COPY . .
+
+EXPOSE 3000
+
+# https://github.com/nitrojs/nitro/issues/885#issuecomment-1404897317
+RUN rm -rf /tmp/nitro/worker-*
+
+CMD [ "pnpm", "dev" ]

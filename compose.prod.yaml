@@ -61,6 +61,23 @@ services:
     networks:
       - messaging-network
 
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile.prod
+      args:
+        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+    image: messaging_system_frontend_prod
+    container_name: frontend_prod
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: ${API_BASE_URL}
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - messaging-network
+
   client:
     build:
       context: .

@@ -1,14 +1,12 @@
 {
   "prettier.enable": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
-  },
-  "files.associations": {
-    "*.css": "postcss"
-  },
-  "task.allowAutomaticTasks": "on",
-  "prettier.endOfLine": "lf",
+  "prettier.requireConfig": true,
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
-  "git.inputValidation": true
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  }
 }

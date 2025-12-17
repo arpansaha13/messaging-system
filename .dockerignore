@@ -19,3 +19,5 @@ yarn-error.log*
 .prettierrc*
 **/dist
 **/node_modules
+**/Dockerfile
+**/Dockerfile.*

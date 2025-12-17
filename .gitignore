@@ -27,9 +27,6 @@ dist
 *.env
 *.crt
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -37,6 +34,7 @@ next-env.d.ts
 # Logs
 logs
 *.log
+*.log*
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
@@ -54,3 +52,12 @@ lerna-debug.log*
 
 # Postgres Data Volume
 data
+
+# Nuxt
+.nuxt
+.nitro
+.cache
+.output
+
+# Nuxt fonts
+.data

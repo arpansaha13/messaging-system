@@ -4,8 +4,11 @@ packages:
 
 onlyBuiltDependencies:
   - '@arpansaha13/utils'
+  - '@parcel/watcher'
   - cpu-features
   - esbuild
   - protobufjs
-  - sqlite3
+  - sharp
   - ssh2
+  - unrs-resolver
+  - vue-demi
