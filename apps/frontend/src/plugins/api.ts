@@ -1,23 +1,37 @@
-export default defineNuxtPlugin(nuxtApp => {
-  // const csrftoken = useCookie(runtimeConfig.csrfCookieName)
+import { isNullOrUndefined } from '@arpansaha13/utils'
 
+export default defineNuxtPlugin(nuxtApp => {
   const api = $fetch.create({
     onRequest({ options }) {
-      // if (csrftoken.value) {
-      //   options.headers.set(HeaderNames.XCSRFToken, csrftoken.value)
-      // }
+      const runtimeConfig = useRuntimeConfig()
 
       if (import.meta.client) {
         options.credentials = 'include'
       } else {
-        const runtimeConfig = useRuntimeConfig()
-        options.baseURL = runtimeConfig.apiBaseUrl
+        const authCookieName = runtimeConfig.authCookieName
+        if (!authCookieName) return
 
-        // Server-side JS can read HttpOnly cookies
-        const token = useCookie(runtimeConfig.authCookieName)
+        const baseURL = runtimeConfig.apiBaseUrl
+        if (baseURL) {
+          options.baseURL = baseURL
+        }
+
+        const headers = new Headers(options.headers)
+        const token = useCookie<string | null>(authCookieName)
         if (token.value) {
-          // https://nuxt.com/docs/api/utils/dollarfetch#passing-headers-and-cookies
-          options.headers.set('Cookie', `${runtimeConfig.authCookieName}=${token.value}`)
+          headers.set('Cookie', `${authCookieName}=${token.value}`)
+        }
+        options.headers = headers
+
+        if (options.body) {
+          const filteredBody = new URLSearchParams()
+
+          Object.entries(options.body as Record<string, any>).forEach(([key, value]) => {
+            if (isNullOrUndefined(value)) return
+            filteredBody.append(key, String(value))
+          })
+
+          options.body = filteredBody
         }
       }
     },
@@ -30,7 +44,6 @@ export default defineNuxtPlugin(nuxtApp => {
     },
   })
 
-  // Expose to useNuxtApp().$api
   return {
     provide: {
       api,

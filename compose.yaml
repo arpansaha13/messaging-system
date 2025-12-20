@@ -3,13 +3,13 @@ services:
     image: nginx:alpine
     container_name: nginx
     ports:
-      - "3000:443"
+      - '3000:443'
     volumes:
       - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
-      - client
+      - frontend
     networks:
       - messaging-network
 
@@ -21,11 +21,11 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "7000:5432"
+      - '7000:5432'
     volumes:
       - ./data/default:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,11 +52,12 @@ services:
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
     ports:
-      - "4000:4000"
+      - '4000:4000'
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
+      - backend_root_node_modules:/app/node_modules
       - backend_node_modules:/app/apps/backend/node_modules
     networks:
       - messaging-network
@@ -65,44 +66,54 @@ services:
         - action: sync
           path: ./apps/backend/src
           target: /app/apps/backend/src
-          ignore:
-            - node_modules
+        - action: rebuild
+          path: ./apps/backend/tsconfig.json
 
-  client:
+  frontend:
     build:
       context: .
-      dockerfile: apps/client/Dockerfile.dev
-    container_name: client
+      dockerfile: apps/frontend/Dockerfile.dev
+    container_name: frontend
     environment:
       NODE_ENV: development
       API_BASE_URL: ${API_BASE_URL}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
-      NEXT_PUBLIC_SOCKET_IO_BASE_URL: ${NEXT_PUBLIC_SOCKET_IO_BASE_URL}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
+      NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      SOCKET_IO_BASE_URL: ${SOCKET_IO_BASE_URL}
     depends_on:
       backend:
         condition: service_started
     volumes:
-      - ./apps/client/.next:/app/apps/client/.next
-      - client_node_modules:/app/apps/client/node_modules
+      - frontend_root_node_modules:/app/node_modules
+      - frontend_node_modules:/app/apps/frontend/node_modules
     networks:
       - messaging-network
     develop:
       watch:
         - action: sync
-          path: ./apps/client/src
-          target: /app/apps/client/src
-          ignore:
-            - node_modules
+          path: ./apps/frontend/src
+          target: /app/apps/frontend/src
         - action: sync
-          path: ./apps/client/public
-          target: /app/apps/client/public
-          ignore:
-            - node_modules
+          path: ./apps/frontend/public
+          target: /app/apps/frontend/public
+        - action: sync
+          path: ./apps/frontend/nuxt.config.ts
+          target: /app/apps/frontend/nuxt.config.ts
+        - action: sync
+          path: ./apps/frontend/tsconfig.json
+          target: /app/apps/frontend/tsconfig.json
 
 volumes:
+  backend_root_node_modules:
+    driver: local
   backend_node_modules:
     driver: local
-  client_node_modules:
+  frontend_root_node_modules:
+    driver: local
+  frontend_node_modules:
     driver: local
 
 networks:

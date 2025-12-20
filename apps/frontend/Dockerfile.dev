@@ -1,22 +1,39 @@
-# Base configuration
-ARG node_tag=22-alpine
-FROM node:${node_tag} AS base
+FROM node:22-alpine
+
 WORKDIR /app
 
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc /app/
+# Enable corepack
 RUN npm i -g --force corepack && corepack enable
 
+# Copy root workspace and package manifests (for layer caching)
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
+COPY packages/constants/package.json ./packages/constants/package.json
+COPY packages/types/package.json ./packages/types/package.json
+COPY apps/frontend/package.json ./apps/frontend/
+
+# Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
 
-COPY . .
+# Copy shared packages
+COPY packages/constants ./packages/constants
+COPY packages/types ./packages/types
 
+# Build shared packages
+RUN cd /app/packages/constants && pnpm build
+RUN cd /app/packages/types && pnpm build
+
+# Copy frontend app source
+COPY apps/frontend ./apps/frontend
+
+# Change to frontend directory
+WORKDIR /app/apps/frontend
+
+# Expose port
 EXPOSE 3000
 
 # https://github.com/nitrojs/nitro/issues/885#issuecomment-1404897317
 RUN rm -rf /tmp/nitro/worker-*
 
-CMD [ "pnpm", "dev" ]
+# Start development server with Nuxt hot reload
+CMD ["pnpm", "dev"]

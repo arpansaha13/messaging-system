@@ -1,0 +1,73 @@
+import type { VNodeChild } from 'vue'
+import type { IMessage } from '@shared/types'
+
+export interface IChatListItem {
+  latestMsg: IMessage | null
+  receiver: IUser
+  chat: {
+    muted: boolean
+    archived: boolean
+    pinned: boolean
+  }
+}
+
+export interface IUser {
+  id: number
+  bio: string
+  dp: string | null
+  username: string
+  globalName: string
+  contact: {
+    id: number
+    alias: string
+  } | null
+}
+
+export interface IAuthUser extends Omit<IUser, 'contact'> {
+  email: string
+  createdAt: string
+  updatedAt: string
+  deletedAt: string
+  groups: IGroup['id'][]
+  channels: IChannel['id'][]
+}
+
+export interface IUserSearchResult extends IUser {
+  contact: {
+    id: number
+    alias: string
+  } | null
+}
+
+export interface IContact {
+  id: number
+  userId: number
+  alias: string
+  bio: string
+  dp: string | null
+  globalName: string
+  username: string
+}
+
+export interface IGroup {
+  id: number
+  name: string
+  founder: IUser
+}
+
+export interface IChannel {
+  id: number
+  name: string
+}
+
+export interface IInvite {
+  hash: string
+  expiresAt: string
+  group: Omit<IGroup, 'founder'>
+}
+
+export interface IContextMenuItem<T> {
+  label: string | ((payload: T) => string | VNodeChild)
+  action: (payload: T) => void
+}
+

@@ -1,7 +1,7 @@
 <template>
-  <UApp>
+  <UApp :toaster="{ position: 'top-right' }">
     <NuxtLayout>
-      <NuxtLoadingIndicator color="repeating-linear-gradient(to right,#00dc82 0%,#34cdfe 50%,#0047e1 100%)" />
+      <NuxtLoadingIndicator color="#10b981" />
       <NuxtPage />
     </NuxtLayout>
   </UApp>
@@ -9,8 +9,6 @@
 
 <script setup lang="ts">
 useHead({
-  titleTemplate: titleChunk => {
-    return titleChunk ? `${titleChunk} - Nuxt Template` : 'Nuxt Template'
-  },
+  titleTemplate: title => (title ? `${title} • Messaging System` : 'Messaging System'),
 })
 </script>

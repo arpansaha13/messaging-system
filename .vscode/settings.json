@@ -8,5 +8,7 @@
   },
   "editor.quickSuggestions": {
     "strings": "on"
-  }
+  },
+  "chat.agent.maxRequests": 40,
+  "chat.agent.thinking.generateTitles": false
 }

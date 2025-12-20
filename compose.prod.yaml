@@ -3,13 +3,15 @@ services:
     image: nginx:alpine
     container_name: nginx_prod
     ports:
-      - "80:80"
-      - "3000:3000"
+      - '80:80'
+      - '3000:3000'
     volumes:
       - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs:/etc/nginx/certs:ro
     depends_on:
       backend:
+        condition: service_started
+      frontend:
         condition: service_started
     networks:
       - messaging-network
@@ -22,11 +24,11 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "7001:5432"
+      - '7001:5432'
     volumes:
       - ./data/default:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -54,7 +56,7 @@ services:
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
     ports:
-      - "4000:4000"
+      - '4000:4000'
     depends_on:
       postgres:
         condition: service_healthy
@@ -72,33 +74,17 @@ services:
     environment:
       NODE_ENV: production
       API_BASE_URL: ${API_BASE_URL}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
+      NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      SOCKET_IO_BASE_URL: ${SOCKET_IO_BASE_URL}
     depends_on:
       backend:
         condition: service_started
     networks:
       - messaging-network
-
-  client:
-    build:
-      context: .
-      dockerfile: apps/client/Dockerfile.prod
-      args:
-        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
-        NEXT_PUBLIC_SOCKET_IO_BASE_URL: ${NEXT_PUBLIC_SOCKET_IO_BASE_URL}
-    image: messaging_system_frontend_prod
-    container_name: client_prod
-    environment:
-      NODE_ENV: production
-      API_BASE_URL: ${API_BASE_URL}
-    depends_on:
-      backend:
-        condition: service_started
-    networks:
-      - messaging-network
-
-volumes:
-  db_data_prod:
-    driver: local
 
 networks:
   messaging-network:

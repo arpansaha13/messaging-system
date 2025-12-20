@@ -11,19 +11,16 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
 
     // https://pinia.vuejs.org/
-    '@pinia/nuxt',
+    // '@pinia/nuxt',
 
     // https://image.nuxt.com
-    '@nuxt/image',
+    // '@nuxt/image',
 
     // https://eslint.nuxt.com/
     '@nuxt/eslint',
 
     // https://nuxt.com/docs/getting-started/testing
     '@nuxt/test-utils/module',
-
-    // https://html-validator.nuxtjs.org/
-    '@nuxtjs/html-validator',
   ],
 
   srcDir: 'src/',
@@ -33,45 +30,30 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en',
       },
-      link: [{ rel: 'icon', type: 'image/png', href: '/favicon.ico' }],
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     },
   },
 
+  imports: {
+    dirs: ['~/composables/api'],
+  },
+
+  devServer: {
+    port: 3000,
+  },
+
   runtimeConfig: {
-    env: '',
-    apiBaseUrl: '',
-    authCookieName: '',
+    apiBaseUrl: process.env.API_BASE_URL ?? '',
+    authCookieName: process.env.AUTH_COOKIE_NAME ?? '',
+    public: {
+      socketIoBaseUrl: process.env.SOCKET_IO_BASE_URL ?? '',
+      csrfCookieName: process.env.CSRF_COOKIE_NAME ?? '',
+    },
   },
 
   css: ['~/assets/css/main.css'],
 
-  colorMode: {
-    preference: 'dark',
-    classPrefix: '',
-    classSuffix: '',
+  ui: {
+    colorMode: false,
   },
-
-  htmlValidator: {
-    usePrettier: false,
-    logLevel: 'verbose',
-    failOnError: false,
-    options: {
-      extends: ['html-validate:document', 'html-validate:recommended', 'html-validate:standard'],
-      rules: {
-        'svg-focusable': 'off',
-        'no-unknown-elements': 'error',
-        // Conflicts or not needed as we use prettier formatting
-        'void-style': 'off',
-        'no-trailing-whitespace': 'off',
-        // Conflict with Nuxt defaults
-        'require-sri': 'off',
-        'attribute-boolean-style': 'off',
-        'doctype-style': 'off',
-        // Unreasonable rule
-        'no-inline-style': 'off',
-      },
-    },
-  },
-
-  compatibilityDate: '2025-03-15',
 })

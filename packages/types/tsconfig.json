@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "rootDir": "./lib",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "es2020",
+    "moduleResolution": "Bundler",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,

@@ -84,7 +84,7 @@ export class AuthService {
         this.sessionRepo.create({ token, expiresAt: new Date(Date.now() + maxAge) }),
       )
 
-      res.cookie(AUTH_COOKIE_NAME, session.key, { secure: false, sameSite: true, httpOnly: true, maxAge })
+      res.cookie(AUTH_COOKIE_NAME, session.key, { secure: true, sameSite: 'strict', httpOnly: true, maxAge })
       return res.status(200).send()
     }
     return res.status(401).send({ message: 'Invalid credentials' })

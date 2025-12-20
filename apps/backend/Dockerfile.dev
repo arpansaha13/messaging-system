@@ -16,13 +16,10 @@ COPY apps/backend/tsconfig.json ./apps/backend/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
   pnpm install --frozen-lockfile
 
-# Copy shared packages
-COPY packages/constants ./packages/constants
-COPY packages/types ./packages/types
-
-# Build shared packages
-RUN cd /app/packages/constants && pnpm build
-RUN cd /app/packages/types && pnpm build
+# Copy shared packages and build them
+COPY packages ./packages
+RUN pnpm -F @shared/constants build
+RUN pnpm -F @shared/types build
 
 # Copy backend source
 COPY apps/backend ./apps/backend
