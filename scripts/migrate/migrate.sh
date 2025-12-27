@@ -1,6 +1,6 @@
 #!/bin/bash
 # Migration helper script for Windows and Unix
-# Usage: ./scripts/migrate.sh [command]
+# Usage: ./scripts/migrate/migrate.sh [command]
 # Commands:
 #   run     - Run pending migrations
 #   revert  - Revert last migration

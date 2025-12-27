@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - scripts/*
 
 onlyBuiltDependencies:
   - '@arpansaha13/utils'
