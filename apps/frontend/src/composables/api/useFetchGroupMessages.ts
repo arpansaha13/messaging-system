@@ -12,5 +12,6 @@ export function useFetchGroupMessages(channelId: ComputedRef<IChannel['id'] | nu
       const { $api } = useNuxtApp()
       return $api<IGroupMessage[]>(`/api/messages/channel/${channelId.value}`)
     },
+    { deep: true },
   )
 }

@@ -12,5 +12,6 @@ export function useFetchPersonalMessages(receiverId: ComputedRef<IUser['id'] | n
       const { $api } = useNuxtApp()
       return $api<IMessage[]>(`/api/messages/${receiverId.value}`)
     },
+    { deep: true },
   )
 }

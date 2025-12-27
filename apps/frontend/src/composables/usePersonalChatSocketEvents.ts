@@ -1,6 +1,12 @@
 import { MessageStatus, SocketEvents } from '@shared/constants'
 import type { IMessage, SocketEventPayloads } from '@shared/types'
-import { updateLatestMessageStatus, initializeChat, unarchiveChat, getChatListData } from '~/services/chats'
+import {
+  initializeNewChat,
+  unarchiveChat,
+  getChatListData,
+  updateLatestMessageStatusInChatList,
+  updateLatestMessageInChatList,
+} from '~/services/chats'
 import type { IUser } from '~/types'
 
 export async function usePersonalChatSocketEvents() {
@@ -38,12 +44,12 @@ export async function usePersonalChatSocketEvents() {
 
       const chatExists = Boolean(findConversation(payload.senderId))
       if (!chatExists) {
-        await initializeChat(payload.senderId)
+        await initializeNewChat(payload.senderId)
       } else if (isConversationArchived(payload.senderId)) {
         await unarchiveChat(payload.senderId)
       }
 
-      // updateLatestMessage(payload.senderId, message)
+      updateLatestMessageInChatList(payload.senderId, message)
 
       connection.emit(SocketEvents.PERSONAL.STATUS_DELIVERED, {
         messageId: message.id,
@@ -56,7 +62,6 @@ export async function usePersonalChatSocketEvents() {
 
     const handleStatusSent = async (payload: SocketEventPayloads.Personal.OnSent) => {
       const tempMessage = tempMessages.getTempMessage(payload.receiverId, payload.hash)
-      console.log(tempMessage)
       if (!tempMessage) return
 
       const message: IMessage = {
@@ -69,22 +74,22 @@ export async function usePersonalChatSocketEvents() {
 
       const chatExists = Boolean(findConversation(payload.receiverId))
       if (!chatExists) {
-        await initializeChat(payload.receiverId)
+        await initializeNewChat(payload.receiverId)
       }
 
       tempMessages.deleteTempMessage(payload.receiverId, tempMessage.hash)
-      // updateLatestMessage(payload.receiverId, message)
+      updateLatestMessageInChatList(payload.receiverId, message)
       pushMessage(payload.receiverId, message)
     }
 
     const handleStatusDelivered = (payload: SocketEventPayloads.Personal.OnDelivered) => {
-      // updateLatestMessageStatus(payload.receiverId, payload.messageId, payload.status)
+      updateLatestMessageStatusInChatList(payload.receiverId, payload.messageId, payload.status)
       updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
     }
 
     const handleStatusRead = (payloadArray: SocketEventPayloads.Personal.OnRead[]) => {
       payloadArray.forEach(p => {
-        // updateLatestMessageStatus(p.receiverId, p.messageId, p.status)
+        updateLatestMessageStatusInChatList(p.receiverId, p.messageId, p.status)
         updateMessageStatus(p.receiverId, p.messageId, p.status)
       })
     }
@@ -137,7 +142,7 @@ export async function usePersonalChatSocketEvents() {
         receiverId: user.id,
       })
 
-      updateLatestMessageStatus(receiverId, message.id, MessageStatus.READ)
+      updateLatestMessageStatusInChatList(receiverId, message.id, MessageStatus.READ)
       updateMessageStatus(receiverId, message.id, MessageStatus.READ)
     })
 
@@ -168,7 +173,7 @@ function pushMessage(receiverId: IUser['id'], message: IMessage) {
   const { data: messages } = useNuxtData<IMessage[]>(asyncKeys.messages(receiverId))
   if (!messages.value) return
 
-  messages.value = [...messages.value, message]
+  messages.value.push(message)
 }
 
 function updateMessageStatus(
@@ -188,6 +193,4 @@ function updateMessageStatus(
       break
     }
   }
-
-  messages.value = [...messages.value]
 }

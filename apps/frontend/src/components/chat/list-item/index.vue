@@ -7,7 +7,12 @@
         :class="linkClasses"
         @contextmenu="onContextMenu"
       >
-        <UAvatar :src="receiver.dp || undefined" :alt="receiver.globalName" size="md" :ui="{ root: 'shadow-md' }" />
+        <UAvatar
+          :src="receiver.dp || undefined"
+          :alt="receiver.contact?.alias ?? receiver.globalName"
+          size="md"
+          :ui="{ root: 'shadow-md' }"
+        />
 
         <div class="ml-4 w-full py-3">
           <div class="flex items-center justify-between">
@@ -25,11 +30,9 @@
           </div>
 
           <div class="flex items-center justify-between text-gray-600 dark:text-gray-400">
-            <p class="flex items-center space-x-1 text-sm" :class="latestMsg === null ? 'h-5' : ''">
-              <MsgStatusIcon v-if="latestMsg && authUserIsSender" :status="latestMsg.status" />
-              <span v-if="latestMsg" class="line-clamp-1">{{ latestMsg.content }}</span>
-            </p>
-            <div v-if="$slots.default" class="flex flex-shrink-0 items-center text-gray-500 dark:text-gray-400">
+            <ChatListItemMessage :message="latestMsg" :is-sender="authUserIsSender" />
+
+            <div v-if="$slots.default" class="flex shrink-0 items-center text-gray-500 dark:text-gray-400">
               <slot />
             </div>
           </div>

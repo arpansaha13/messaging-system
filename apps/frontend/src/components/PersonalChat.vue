@@ -2,7 +2,7 @@
   <ChatWindow v-if="receiver">
     <template #header>
       <ChatHeader
-        :title="receiver.globalName"
+        :title="receiver.contact?.alias ?? receiver.globalName"
         :avatar="receiver.dp ?? undefined"
         :subtitle="isTyping ? 'typing...' : undefined"
       />

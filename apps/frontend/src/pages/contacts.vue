@@ -112,8 +112,8 @@
 
           <template #footer>
             <div class="flex justify-end gap-2">
-              <UButton variant="outline" label="Cancel" @click="isDeleteModalOpen = false" />
-              <UButton color="error" label="Delete" :loading="isDeletingContact" @click="submitDelete" />
+              <UButton block variant="outline" label="Cancel" @click="isDeleteModalOpen = false" />
+              <UButton block color="error" label="Delete" :loading="isDeletingContact" @click="submitDelete" />
             </div>
           </template>
         </UModal>

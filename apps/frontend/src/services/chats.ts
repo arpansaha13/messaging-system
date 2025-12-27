@@ -2,33 +2,61 @@ import type { IChatListItem, IChatsResponse, IUser } from '~/types'
 import type { IMessage } from '@shared/types'
 import type { MessageStatus } from '@shared/constants'
 
-export function fetchChats() {
+// =============================================
+// ================= API Calls =================
+// =============================================
+
+function apiPinChat(receiverId: IUser['id']) {
   const { $api } = useNuxtApp()
-  return $api<IChatsResponse>('/api/chats')
+  return $api(`/api/chats/${receiverId}/pin`, { method: 'PATCH' })
 }
 
-export function fetchChatByReceiver(receiverId: IUser['id']) {
+function apiUnpinChat(receiverId: IUser['id']) {
+  const { $api } = useNuxtApp()
+  return $api(`/api/chats/${receiverId}/unpin`, { method: 'PATCH' })
+}
+
+function apiArchiveChat(receiverId: IUser['id']) {
+  const { $api } = useNuxtApp()
+  return $api(`/api/chats/${receiverId}/archive`, { method: 'PATCH' })
+}
+
+function apiUnarchiveChat(receiverId: IUser['id']) {
+  const { $api } = useNuxtApp()
+  return $api(`/api/chats/${receiverId}/unarchive`, { method: 'PATCH' })
+}
+
+function apiDeleteChat(receiverId: IUser['id']) {
+  const { $api } = useNuxtApp()
+  return $api(`/api/chats/${receiverId}/delete`, { method: 'DELETE' })
+}
+
+function apiClearChat(receiverId: IUser['id']) {
+  const { $api } = useNuxtApp()
+  return $api(`/api/chats/${receiverId}/clear`, { method: 'DELETE' })
+}
+
+function apiFetchChatByReceiver(receiverId: IUser['id']) {
   const { $api } = useNuxtApp()
   return $api<IChatListItem>(`/api/chats/${receiverId}`)
 }
 
-// Get cached chatList using useNuxtData
+// =============================================
+// ================== Helpers ==================
+// =============================================
+
+/** Get cached chatList using useNuxtData */
 export function getChatListData() {
   return useNuxtData<IChatsResponse>(asyncKeys.chatList).data
 }
 
-// Helper to find chat in list
-function findChatIndex(receiverId: number, list: IChatListItem[]): number {
-  return list.findIndex(item => item.receiver.id === receiverId)
-}
-
-// Mutate the cached chatList data
+/** Mutate the cached chatList data */
 function mutateChatListData(mutator: (state: IChatsResponse) => void) {
   const chatListData = getChatListData()
   if (!chatListData.value) return
 
+  mutator(chatListData.value)
   const current = chatListData.value
-  mutator(current)
 
   // Trigger reactivity by reassigning
   chatListData.value = {
@@ -37,22 +65,11 @@ function mutateChatListData(mutator: (state: IChatsResponse) => void) {
   }
 }
 
-// Update a specific chat item in the list
-export function updateChatListItem(receiverId: number, updater: (item: IChatListItem) => void) {
-  mutateChatListData(state => {
-    const unarchiveIdx = findChatIndex(receiverId, state.unarchived)
-    if (unarchiveIdx !== -1) {
-      updater(state.unarchived[unarchiveIdx]!)
-    }
-
-    const archiveIdx = findChatIndex(receiverId, state.archived)
-    if (archiveIdx !== -1) {
-      updater(state.archived[archiveIdx]!)
-    }
-  })
+/** Helper to find chat in list */
+function findChatIndex(receiverId: IUser['id'], list: IChatListItem[]): number {
+  return list.findIndex(item => item.receiver.id === receiverId)
 }
 
-// Sort conversation list
 function sortChatList(list: IChatListItem[]) {
   list.sort((a, b) => {
     if (a.chat.pinned && !b.chat.pinned) return -1
@@ -64,17 +81,35 @@ function sortChatList(list: IChatListItem[]) {
   })
 }
 
-// Initialize a new chat
-export async function initializeChat(receiverId: number) {
-  const chat = await fetchChatByReceiver(receiverId)
+// =============================================
+// ============== Public Actions ===============
+// =============================================
+
+export async function initializeNewChat(receiverId: IUser['id']) {
+  const chat = await apiFetchChatByReceiver(receiverId)
   mutateChatListData(state => {
     state.unarchived.push(chat)
     sortChatList(state.unarchived)
   })
 }
 
-// Toggle pin status
-export async function togglePinChat(receiverId: number, pinned: boolean) {
+/** Update a specific chat item in the list */
+export function updateChatListItem(receiverId: IUser['id'], updater: (item: IChatListItem) => void) {
+  mutateChatListData(state => {
+    const unarchivedIdx = findChatIndex(receiverId, state.unarchived)
+    if (unarchivedIdx !== -1) {
+      updater(state.unarchived[unarchivedIdx]!)
+      return
+    }
+
+    const archivedIdx = findChatIndex(receiverId, state.archived)
+    if (archivedIdx !== -1) {
+      updater(state.archived[archivedIdx]!)
+    }
+  })
+}
+
+export async function togglePinChat(receiverId: IUser['id'], pinned: boolean) {
   updateChatListItem(receiverId, item => {
     item.chat.pinned = pinned
   })
@@ -85,17 +120,16 @@ export async function togglePinChat(receiverId: number, pinned: boolean) {
 
   try {
     if (pinned) {
-      await pinChat(receiverId)
+      await apiPinChat(receiverId)
     } else {
-      await unpinChat(receiverId)
+      await apiUnpinChat(receiverId)
     }
   } catch (error) {
     console.error('Error toggling pin:', error)
   }
 }
 
-// Archive chat
-export async function archiveChat(receiverId: number) {
+export async function archiveChat(receiverId: IUser['id']) {
   mutateChatListData(state => {
     const idx = findChatIndex(receiverId, state.unarchived)
     if (idx !== -1) {
@@ -108,14 +142,14 @@ export async function archiveChat(receiverId: number) {
   })
 
   try {
-    await archiveChatRequest(receiverId)
+    await apiArchiveChat(receiverId)
   } catch (error) {
+    // TODO: Rollback
     console.error('Error archiving chat:', error)
   }
 }
 
-// Unarchive chat
-export async function unarchiveChat(receiverId: number) {
+export async function unarchiveChat(receiverId: IUser['id']) {
   mutateChatListData(state => {
     const idx = findChatIndex(receiverId, state.archived)
     if (idx !== -1) {
@@ -127,14 +161,14 @@ export async function unarchiveChat(receiverId: number) {
   })
 
   try {
-    await unarchiveChatRequest(receiverId)
+    await apiUnarchiveChat(receiverId)
   } catch (error) {
+    // TODO: Rollback
     console.error('Error unarchiving chat:', error)
   }
 }
 
-// Delete chat
-export async function deleteChatLocally(receiverId: number, archivedList: boolean) {
+export async function deleteChat(receiverId: IUser['id'], archivedList: boolean) {
   mutateChatListData(state => {
     const list = archivedList ? state.archived : state.unarchived
     const idx = findChatIndex(receiverId, list)
@@ -144,29 +178,27 @@ export async function deleteChatLocally(receiverId: number, archivedList: boolea
   })
 
   try {
-    await deleteChat(receiverId)
+    await apiDeleteChat(receiverId)
   } catch (error) {
+    // TODO: Rollback
     console.error('Error deleting chat:', error)
   }
 }
 
-// Clear latest message
-export function clearLatestMessage(receiverId: number) {
+export function clearLatestMessageFromChatList(receiverId: IUser['id']) {
   updateChatListItem(receiverId, item => {
     item.latestMsg = null
   })
 }
 
-// Insert new unarchived chat
-export function insertUnarchivedChat(item: IChatListItem) {
+export function insertNewUnarchivedChat(item: IChatListItem) {
   mutateChatListData(state => {
     state.unarchived.push(item)
     sortChatList(state.unarchived)
   })
 }
 
-// Update latest message
-export function updateLatestMessage(receiverId: number, latestMsg: IMessage | null) {
+export function updateLatestMessageInChatList(receiverId: IUser['id'], latestMsg: IMessage | null) {
   mutateChatListData(state => {
     const archivedIdx = findChatIndex(receiverId, state.archived)
     if (archivedIdx !== -1) {
@@ -175,17 +207,16 @@ export function updateLatestMessage(receiverId: number, latestMsg: IMessage | nu
       state.unarchived.push(convo)
     }
 
-    const idx = findChatIndex(receiverId, state.unarchived)
-    if (idx !== -1) {
-      state.unarchived[idx]!.latestMsg = latestMsg
+    const unarchivedIdx = findChatIndex(receiverId, state.unarchived)
+    if (unarchivedIdx !== -1) {
+      state.unarchived[unarchivedIdx]!.latestMsg = latestMsg
       sortChatList(state.unarchived)
     }
   })
 }
 
-// Update message status
-export function updateLatestMessageStatus(
-  receiverId: number,
+export function updateLatestMessageStatusInChatList(
+  receiverId: IUser['id'],
   messageId: number,
   status: Exclude<MessageStatus, MessageStatus.SENDING>,
 ) {
@@ -196,51 +227,25 @@ export function updateLatestMessageStatus(
   })
 }
 
-// Upsert contact
-export function upsertContactInChat(receiverId: IUser['id'], newContact: { id: number; alias: string }) {
+export function upsertContactInChatList(
+  receiverId: IUser['id'],
+  newContact: NonNullable<IChatListItem['receiver']['contact']>,
+) {
   updateChatListItem(receiverId, item => {
-    if (!item.receiver.contact) {
-      item.receiver.contact = { id: newContact.id, alias: newContact.alias }
-    } else {
+    if (item.receiver.contact) {
       item.receiver.contact.alias = newContact.alias
+    } else {
+      item.receiver.contact = { ...newContact }
     }
   })
 }
 
-// Delete contact
-export function deleteContactFromChat(receiverId: IUser['id']) {
+export function deleteContactFromChatList(receiverId: IUser['id']) {
   updateChatListItem(receiverId, item => {
     item.receiver.contact = null
   })
 }
 
-// API call utilities
-async function archiveChatRequest(receiverId: IUser['id']) {
-  const { $api } = useNuxtApp()
-  return $api<undefined>(`/api/chats/${receiverId}/archive`, { method: 'PATCH' })
-}
-
-async function unarchiveChatRequest(receiverId: IUser['id']) {
-  const { $api } = useNuxtApp()
-  return $api<undefined>(`/api/chats/${receiverId}/unarchive`, { method: 'PATCH' })
-}
-
-async function pinChat(receiverId: IUser['id']) {
-  const { $api } = useNuxtApp()
-  return $api<undefined>(`/api/chats/${receiverId}/pin`, { method: 'PATCH' })
-}
-
-async function unpinChat(receiverId: IUser['id']) {
-  const { $api } = useNuxtApp()
-  return $api<undefined>(`/api/chats/${receiverId}/unpin`, { method: 'PATCH' })
-}
-
-async function deleteChat(receiverId: IUser['id']) {
-  const { $api } = useNuxtApp()
-  return $api<undefined>(`/api/chats/${receiverId}/delete`, { method: 'DELETE' })
-}
-
 export function clearChat(receiverId: IUser['id']) {
-  const { $api } = useNuxtApp()
-  return $api<undefined>(`/api/chats/${receiverId}/clear`, { method: 'DELETE' })
+  return apiClearChat(receiverId)
 }
