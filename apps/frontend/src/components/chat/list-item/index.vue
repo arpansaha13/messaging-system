@@ -1,20 +1,14 @@
 <template>
-  <ContextMenuWrapper v-slot="{ onContextMenu }">
-    <li class="relative">
+  <UContextMenu :items="contextMenuItems">
+    <div class="relative">
       <NuxtLink
         :to="{ query: { ...route.query, to: chatListItem.receiver.id } }"
-        class="flex w-full items-center rounded px-3 text-left transition-colors"
+        class="flex w-full items-center rounded px-3 py-3 text-left transition-colors"
         :class="linkClasses"
-        @contextmenu="onContextMenu"
       >
-        <UAvatar
-          :src="receiver.dp || undefined"
-          :alt="receiver.contact?.alias ?? receiver.globalName"
-          size="md"
-          :ui="{ root: 'shadow-md' }"
-        />
+        <UAvatar :src="receiver.dp || undefined" :alt="receiver.contact?.alias ?? receiver.globalName" size="md" />
 
-        <div class="ml-4 w-full py-3">
+        <div class="ml-4 w-full">
           <div class="flex items-center justify-between">
             <p class="text-base text-black dark:text-gray-50">
               <span v-if="receiver.contact?.alias">{{ receiver.contact.alias }}</span>
@@ -32,26 +26,29 @@
           <div class="flex items-center justify-between text-gray-600 dark:text-gray-400">
             <ChatListItemMessage :message="latestMsg" :is-sender="authUserIsSender" />
 
-            <div v-if="$slots.default" class="flex shrink-0 items-center text-gray-500 dark:text-gray-400">
-              <slot />
+            <div v-if="showIconBox" class="flex shrink-0 items-center text-gray-500 dark:text-gray-400">
+              <Icon v-if="chatListItem.chat.pinned" name="mdi:pin" />
             </div>
           </div>
         </div>
       </NuxtLink>
-
-      <ContextMenu :items="contextMenuItems" :payload="contextPayload" />
-    </li>
-  </ContextMenuWrapper>
+    </div>
+  </UContextMenu>
 </template>
 
 <script setup lang="ts">
 import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
-import type { IChatListItem, IContextMenuItem } from '~/types'
+import type { IChatListItem } from '~/types'
+import type { ContextMenuItem } from '@nuxt/ui'
+import { archiveChat, togglePinChat } from '~/services/chats'
 
 const props = defineProps<{
   chatListItem: IChatListItem
-  menuItems: IContextMenuItem<IChatListItem>[]
+}>()
+
+const emit = defineEmits<{
+  delete: [deleteTarget: IChatListItem]
 }>()
 
 const route = useRoute()
@@ -59,6 +56,10 @@ const { data: authUser } = await useFetchAuthUser()
 
 const receiver = computed(() => props.chatListItem.receiver)
 const latestMsg = computed(() => props.chatListItem.latestMsg)
+
+const showIconBox = computed(() => {
+  return props.chatListItem.chat.pinned
+})
 
 const receiverId = computed(() => {
   const query = route.query.to
@@ -98,8 +99,34 @@ const linkClasses = computed(() =>
   ),
 )
 
-const contextMenuItems = computed(() => props.menuItems as unknown as IContextMenuItem<unknown>[])
-const contextPayload = computed(() => props.chatListItem as unknown)
+const contextMenuItems = computed<ContextMenuItem[]>(() => [
+  [
+    {
+      label: props.chatListItem.chat.pinned ? 'Unpin chat' : 'Pin chat',
+      onSelect: (e: Event) => {
+        e.preventDefault()
+        togglePinChat(props.chatListItem.receiver.id, !props.chatListItem.chat.pinned)
+      },
+    },
+    {
+      label: 'Archive chat',
+      onSelect: (e: Event) => {
+        e.preventDefault()
+        archiveChat(props.chatListItem.receiver.id)
+      },
+    },
+  ],
+  [
+    {
+      label: 'Delete chat',
+      color: 'error',
+      onSelect: (e: Event) => {
+        e.preventDefault()
+        emit('delete', props.chatListItem)
+      },
+    },
+  ],
+])
 
 function getDateTime(dateString: string) {
   const diff = differenceInCalendarDays(new Date(), new Date(dateString))

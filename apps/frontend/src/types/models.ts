@@ -1,4 +1,3 @@
-import type { VNodeChild } from 'vue'
 import type { IMessage } from '@shared/types'
 
 export interface IChatListItem {
@@ -65,9 +64,3 @@ export interface IInvite {
   expiresAt: string
   group: Omit<IGroup, 'founder'>
 }
-
-export interface IContextMenuItem<T> {
-  label: string | ((payload: T) => string | VNodeChild)
-  action: (payload: T) => void
-}
-
