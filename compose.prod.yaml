@@ -11,6 +11,8 @@ services:
     depends_on:
       backend:
         condition: service_started
+      socket:
+        condition: service_started
       frontend:
         condition: service_started
     networks:
@@ -57,6 +59,28 @@ services:
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
     ports:
       - '4000:4000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-network
+
+  socket:
+    build:
+      context: .
+      dockerfile: apps/socket/Dockerfile.prod
+    image: messaging_system_socket_prod
+    container_name: socket_prod
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: 'false'
+      CLIENT_DOMAIN: ${CLIENT_DOMAIN}
     depends_on:
       postgres:
         condition: service_healthy

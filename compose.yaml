@@ -9,6 +9,7 @@ services:
       - ./data/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
+      - socket
       - frontend
     networks:
       - messaging-network
@@ -56,9 +57,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    volumes:
-      - backend_root_node_modules:/app/node_modules
-      - backend_node_modules:/app/apps/backend/node_modules
     networks:
       - messaging-network
     develop:
@@ -68,6 +66,34 @@ services:
           target: /app/apps/backend/src
         - action: rebuild
           path: ./apps/backend/tsconfig.json
+
+  socket:
+    build:
+      context: .
+      dockerfile: apps/socket/Dockerfile.dev
+    container_name: socket
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: 'true'
+      CLIENT_DOMAIN: ${CLIENT_DOMAIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/socket/src
+          target: /app/apps/socket/src
+        - action: rebuild
+          path: ./apps/socket/tsconfig.json
 
   frontend:
     build:
@@ -82,13 +108,10 @@ services:
       NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
-      SOCKET_IO_BASE_URL: ${SOCKET_IO_BASE_URL}
+      SOCKET_IO_BASE_URL: ${SOCKET_IO_BASE_URL:-}
     depends_on:
       backend:
         condition: service_started
-    volumes:
-      - frontend_root_node_modules:/app/node_modules
-      - frontend_node_modules:/app/apps/frontend/node_modules
     networks:
       - messaging-network
     develop:
@@ -105,16 +128,6 @@ services:
         - action: sync
           path: ./apps/frontend/tsconfig.json
           target: /app/apps/frontend/tsconfig.json
-
-volumes:
-  backend_root_node_modules:
-    driver: local
-  backend_node_modules:
-    driver: local
-  frontend_root_node_modules:
-    driver: local
-  frontend_node_modules:
-    driver: local
 
 networks:
   messaging-network:

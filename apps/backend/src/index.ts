@@ -1,7 +1,5 @@
 import 'reflect-metadata'
-import { createServer as createHttpServer } from 'node:http'
 import express from 'express'
-import { Server as SocketServer } from 'socket.io'
 import cookieParser from 'cookie-parser'
 import AppDataSource from './data-source'
 import { createAuthMiddleware } from './middleware/auth'
@@ -31,10 +29,6 @@ import { InviteRepository } from './repositories/invite'
 import { createUserGroupRouter } from './controllers/user-group'
 import { UserGroupService } from './services/user-group'
 import { UserGroupRepository } from './repositories/user-group'
-import { ChatsGateway } from './services/chats.gateway'
-import { ChatsStoreService } from './services/chats-store'
-import { PersonalChatsWsService } from './services/personal-chats.ws'
-import { GroupChatsWsService } from './services/group-chats.ws'
 import { AuthService } from './services/auth'
 import { UnverifiedUserRepository } from './repositories/unverified-user'
 import { MailService } from './services/mail'
@@ -47,10 +41,6 @@ async function bootstrap() {
     console.log('Data source initialized')
 
     const app = express()
-    const httpServer = createHttpServer(app)
-    const io = new SocketServer(httpServer, {
-      path: '/socket.io',
-    })
 
     app.use(cookieParser())
 
@@ -82,13 +72,6 @@ async function bootstrap() {
     const inviteService = new InviteService(inviteRepo, userGroupRepo, channelRepo)
     const userGroupService = new UserGroupService(userGroupRepo)
 
-    // Initialize WebSocket services
-    const chatsStore = new ChatsStoreService()
-    const personalChatsService = new PersonalChatsWsService(chatsStore)
-    const groupChatsService = new GroupChatsWsService(chatsStore)
-    const chatsGateway = new ChatsGateway(personalChatsService, groupChatsService)
-    chatsGateway.setup(io)
-
     // Setup routes
     app.use('/api/users', createUserRouter(userService))
     app.use('/api/contacts', createContactRouter(contactService))
@@ -100,7 +83,7 @@ async function bootstrap() {
     app.use('/api/invites', createInviteRouter(inviteService))
     app.use('/api/user-group', createUserGroupRouter(userGroupService))
 
-    httpServer.listen(PORT, () => {
+    app.listen(PORT, () => {
       console.log(`Backend listening on http://localhost:${PORT}`)
     })
   } catch (err) {

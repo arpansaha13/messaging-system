@@ -37,9 +37,6 @@ importers:
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2
-      socket.io:
-        specifier: ^4.8.1
-        version: 4.8.1
       typeorm:
         specifier: ^0.3.28
         version: 0.3.28(ioredis@5.8.2)(pg@8.16.3)(ts-node@10.9.2(@types/node@25.0.3)(typescript@5.9.3))
@@ -253,6 +250,40 @@ importers:
       vue-component-type-helpers:
         specifier: ^3.1.8
         version: 3.1.8
+
+  apps/socket:
+    dependencies:
+      '@shared/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      socket.io:
+        specifier: ^4.8.1
+        version: 4.8.1
+      typeorm:
+        specifier: ^0.3.28
+        version: 0.3.28(ioredis@5.8.2)(pg@8.16.3)(ts-node@10.9.2(@types/node@25.0.3)(typescript@5.9.3))
+    devDependencies:
+      '@shared/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@types/node':
+        specifier: ^25.0.2
+        version: 25.0.3
+      ts-node:
+        specifier: ^10.9.1
+        version: 10.9.2(@types/node@25.0.3)(typescript@5.9.3)
+      ts-node-dev:
+        specifier: ^2.0.0
+        version: 2.0.0(@types/node@25.0.3)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/constants: {}
 

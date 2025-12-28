@@ -1,0 +1,24 @@
+{
+  "name": "socket",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node -r reflect-metadata dist/index.js"
+  },
+  "dependencies": {
+    "@shared/constants": "workspace:*",
+    "pg": "^8.16.3",
+    "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.8.1",
+    "typeorm": "^0.3.28"
+  },
+  "devDependencies": {
+    "@shared/types": "workspace:*",
+    "@types/node": "^25.0.2",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}
