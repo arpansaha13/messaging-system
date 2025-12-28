@@ -32,7 +32,7 @@ import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
 const route = useRoute()
 const { socket } = await useSocket()
 const { data: authUser } = await useFetchAuthUser()
-const groupMessages = useGroupMessagesState()
+const groupMessages = useGroupMessagesStore()
 
 // Initialize socket events
 useGroupChatSocketEvents()

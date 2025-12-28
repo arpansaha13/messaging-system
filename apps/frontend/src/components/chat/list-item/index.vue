@@ -41,7 +41,6 @@ import { differenceInCalendarDays, format } from 'date-fns'
 import { classNames } from '@arpansaha13/utils'
 import type { IChatListItem } from '~/types'
 import type { ContextMenuItem } from '@nuxt/ui'
-import { archiveChat, togglePinChat } from '~/services/chats'
 
 const props = defineProps<{
   chatListItem: IChatListItem

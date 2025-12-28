@@ -24,14 +24,13 @@
 <script setup lang="ts">
 import type { IMessage, IMessageSending } from '@shared/types'
 import { MessageStatus, SocketEvents } from '@shared/constants'
-import { unarchiveChat } from '~/services/chats'
 
 const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
 const { socket } = await useSocket()
-const { getTyping } = useTypingState()
-const draftsState = useDraftsState()
-const personalMessages = usePersonalMessagesState()
+const { getTyping } = useTypingStore()
+const draftsState = useDraftsStore()
+const personalMessages = usePersonalMessagesStore()
 
 // Get receiver ID from route query param
 const receiverId = computed(() => {

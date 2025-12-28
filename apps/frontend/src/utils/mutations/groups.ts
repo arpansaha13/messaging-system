@@ -21,10 +21,12 @@ export async function createGroup(body: Pick<IGroup, 'name'>) {
   await refreshNuxtData(asyncKeys.groups)
 }
 
-export function createChannel(groupId: IGroup['id'], body: Pick<IChannel, 'name'>) {
+export async function createChannel(groupId: IGroup['id'], body: Pick<IChannel, 'name'>) {
   const { $api } = useNuxtApp()
-  return $api<{ groupId: IGroup['id']; channelId: IChannel['id'] }>(`/api/groups/${groupId}/channels`, {
+  const response = await $api<IChannel>(`/api/groups/${groupId}/channels`, {
     method: 'POST',
     body,
   })
+  await refreshNuxtData(asyncKeys.groupChannels(groupId))
+  return response
 }

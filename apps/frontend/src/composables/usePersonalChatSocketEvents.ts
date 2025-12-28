@@ -1,12 +1,5 @@
 import { MessageStatus, SocketEvents } from '@shared/constants'
 import type { IMessage, SocketEventPayloads } from '@shared/types'
-import {
-  initializeNewChat,
-  unarchiveChat,
-  getChatListData,
-  updateLatestMessageStatusInChatList,
-  updateLatestMessageInChatList,
-} from '~/services/chats'
 import type { IUser } from '~/types'
 
 export async function usePersonalChatSocketEvents() {
@@ -17,8 +10,8 @@ export async function usePersonalChatSocketEvents() {
   const route = useRoute()
   const { socket } = await useSocket()
   const { data: authUser } = await useFetchAuthUser()
-  const tempMessages = usePersonalMessagesState()
-  const { setTyping } = useTypingState()
+  const tempMessages = usePersonalMessagesStore()
+  const { setTyping } = useTypingStore()
 
   const currentReceiverId = computed(() => {
     const to = route.query.to

@@ -10,9 +10,6 @@ export default defineNuxtConfig({
     // https://vueuse.org/
     '@vueuse/nuxt',
 
-    // https://pinia.vuejs.org/
-    // '@pinia/nuxt',
-
     // https://image.nuxt.com
     // '@nuxt/image',
 
@@ -35,7 +32,7 @@ export default defineNuxtConfig({
   },
 
   imports: {
-    dirs: ['~/composables/api'],
+    dirs: ['~/store', '~/utils/mutations', '~/composables/api'],
   },
 
   devServer: {

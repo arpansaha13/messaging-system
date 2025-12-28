@@ -1,6 +1,6 @@
 import type { IUser } from '~/types'
 
-export function useTypingState() {
+export function useTypingStore() {
   const typingState = useState<Map<IUser['id'], boolean>>('typing', () => new Map())
 
   function setTyping(receiverId: IUser['id'], isTyping: boolean) {
@@ -21,5 +21,3 @@ export function useTypingState() {
     getTyping,
   }
 }
-
-

@@ -1,12 +1,11 @@
 import type { IChannel } from '~/types'
 import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
 import type { MessageStatus } from '@shared/constants'
-import { fetchGroupMessages } from '~/services/messages'
 
 type MessageMap = Map<IGroupMessage['id'], IGroupMessage>
 type TempMessageMap = Map<string, IGroupMessageSending>
 
-export function useGroupMessagesState() {
+export function useGroupMessagesStore() {
   const groupMessagesMap = useState<Map<IChannel['id'], MessageMap>>('group-messages', () => new Map())
   const tempGroupMessagesMap = useState<Map<IChannel['id'], TempMessageMap>>('group-temp-messages', () => new Map())
 
@@ -97,4 +96,3 @@ export function useGroupMessagesState() {
     getTempGroupMessage,
   }
 }
-

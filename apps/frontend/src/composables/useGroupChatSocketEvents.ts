@@ -8,7 +8,7 @@ export async function useGroupChatSocketEvents() {
 
   const { socket } = await useSocket()
   const { data: authUser } = await useFetchAuthUser()
-  const groupMessages = useGroupMessagesState()
+  const groupMessages = useGroupMessagesStore()
 
   watchEffect(onCleanup => {
     const connection = socket.value

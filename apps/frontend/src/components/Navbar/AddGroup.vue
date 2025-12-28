@@ -24,8 +24,6 @@
 </template>
 
 <script setup lang="ts">
-import { createGroup } from '~/services/groups'
-
 const groupName = ref('')
 const loading = ref(false)
 

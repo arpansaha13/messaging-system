@@ -123,7 +123,6 @@
 </template>
 
 <script setup lang="ts">
-import { deleteContact, patchContactAlias } from '~/services/contacts'
 import type { IContact } from '~/types'
 
 const toast = useToast()

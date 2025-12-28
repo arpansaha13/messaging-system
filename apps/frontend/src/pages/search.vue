@@ -95,7 +95,6 @@
 </template>
 
 <script setup lang="ts">
-import { addContact } from '~/services/contacts'
 import type { IUserSearchResult } from '~/types'
 
 const toast = useToast()

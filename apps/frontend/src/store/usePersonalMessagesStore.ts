@@ -3,7 +3,7 @@ import type { IMessageSending } from '@shared/types'
 
 type TempMessageMap = Map<string, IMessageSending>
 
-export function usePersonalMessagesState() {
+export function usePersonalMessagesStore() {
   const tempMessagesMap = useState<Map<IUser['id'], TempMessageMap>>('messages:temp', () => new Map())
 
   function cloneTempMessages() {

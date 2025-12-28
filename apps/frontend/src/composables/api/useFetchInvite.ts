@@ -1,6 +1,5 @@
 import type { MaybeRef } from 'vue'
 import type { IInvite } from '~/types'
-import { fetchInvite } from '~/services/invites'
 
 export function useFetchInvite(hash: MaybeRef<string | null | undefined>) {
   const hashRef = computed(() => unref(hash) ?? null)

@@ -22,7 +22,6 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent, AuthFormField, FormError } from '@nuxt/ui'
-import { signup } from '~/services/auth'
 
 definePageMeta({
   layout: 'auth',

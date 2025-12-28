@@ -1,6 +1,6 @@
 import type { IUser } from '~/types'
 
-export function useDraftsState() {
+export function useDraftsStore() {
   const drafts = useState<Map<IUser['id'], string>>('drafts', () => new Map())
 
   function setDraft(receiverId: IUser['id'], draft: string) {
@@ -31,5 +31,3 @@ export function useDraftsState() {
     getDraft,
   }
 }
-
-

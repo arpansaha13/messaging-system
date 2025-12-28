@@ -73,8 +73,6 @@
 </template>
 
 <script setup lang="ts">
-import { createChannel } from '~/services/channels'
-
 const route = useRoute()
 const { data: groups } = await useFetchGroups()
 
