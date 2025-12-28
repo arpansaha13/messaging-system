@@ -21,6 +21,7 @@
 import DeleteChatModal from '~/components/modal/DeleteChat.vue'
 import type { IChatListItem } from '~/types'
 
+const toast = useToast()
 const overlay = useOverlay()
 const deleteModal = overlay.create(DeleteChatModal)
 
@@ -28,13 +29,17 @@ const { data: chatList } = await useFetchChats()
 
 async function handleDelete(deleteTarget: IChatListItem) {
   const instance = deleteModal.open({ deleteTarget })
-  const shouldDelete = await instance.result
-  if (!shouldDelete) return
+  const result = await instance.result
 
-  const receiverId = deleteTarget.receiver.id
+  if (result.status === ModalStatus.CANCEL) return
 
-  // await deleteMessages(receiverId)
-  await deleteChat(receiverId, false)
-  await maybeClearActiveChat(receiverId)
+  if (result.status === ModalStatus.SUCCESS) {
+    maybeClearActiveChat(deleteTarget.receiver.id)
+  } else {
+    toast.add({
+      title: 'Failed to delete contact',
+      color: 'error',
+    })
+  }
 }
 </script>

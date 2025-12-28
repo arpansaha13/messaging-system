@@ -168,19 +168,22 @@ export async function unarchiveChat(receiverId: IUser['id']) {
   }
 }
 
+/**
+ * Deletes a personal chat.
+ *
+ * No optimistic updates. `DeleteChatModal` shows a loader during deletion.
+ */
 export async function deleteChat(receiverId: IUser['id'], archivedList: boolean) {
-  mutateChatListData(state => {
-    const list = archivedList ? state.archived : state.unarchived
-    const idx = findChatIndex(receiverId, list)
-    if (idx !== -1) {
-      list.splice(idx, 1)
-    }
-  })
-
   try {
     await apiDeleteChat(receiverId)
+    mutateChatListData(state => {
+      const list = archivedList ? state.archived : state.unarchived
+      const idx = findChatIndex(receiverId, list)
+      if (idx !== -1) {
+        list.splice(idx, 1)
+      }
+    })
   } catch (error) {
-    // TODO: Rollback
     console.error('Error deleting chat:', error)
   }
 }
