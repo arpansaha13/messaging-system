@@ -21,18 +21,13 @@
 import DeleteChatModal from '~/components/modal/DeleteChat.vue'
 import type { IChatListItem } from '~/types'
 
-const route = useRoute()
-const router = useRouter()
-
 const overlay = useOverlay()
 const deleteModal = overlay.create(DeleteChatModal)
 
 const { data: chatList } = await useFetchChats()
 
 async function handleDelete(deleteTarget: IChatListItem) {
-  const instance = deleteModal.open({
-    deleteTarget,
-  })
+  const instance = deleteModal.open({ deleteTarget })
   const shouldDelete = await instance.result
   if (!shouldDelete) return
 
@@ -41,15 +36,5 @@ async function handleDelete(deleteTarget: IChatListItem) {
   // await deleteMessages(receiverId)
   await deleteChat(receiverId, false)
   await maybeClearActiveChat(receiverId)
-}
-
-async function maybeClearActiveChat(receiverId: number) {
-  const query = { ...route.query }
-  const currentId = query.to ? Number(Array.isArray(query.to) ? query.to[0] : query.to) : null
-
-  if (currentId === receiverId) {
-    delete query.to
-    await router.replace({ path: route.path, query })
-  }
 }
 </script>

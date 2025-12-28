@@ -9,6 +9,9 @@ export async function addContact(body: { userIdToAdd: IUser['id']; alias: IConta
   await refreshNuxtData(asyncKeys.contacts)
 }
 
+/**
+ * No optimistic updates. `DeleteContactModal` shows a loader during deletion.
+ */
 export async function deleteContact(contactId: IContact['id']) {
   const { $api } = useNuxtApp()
   await $api<undefined>(`/api/contacts/${contactId}`, {
@@ -17,6 +20,9 @@ export async function deleteContact(contactId: IContact['id']) {
   await refreshNuxtData(asyncKeys.contacts)
 }
 
+/**
+ * No optimistic updates. `EditContactModal` shows a loader during update.
+ */
 export async function patchContactAlias(contactId: IContact['id'], newAlias: IContact['alias']) {
   const { $api } = useNuxtApp()
   await $api<undefined>(`/api/contacts/${contactId}`, {
