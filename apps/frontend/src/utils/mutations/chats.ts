@@ -255,13 +255,12 @@ export function clearChat(receiverId: IUser['id']) {
 
 export async function maybeClearActiveChat(receiverId: IUser['id']) {
   const route = useRoute()
-  const router = useRouter()
 
   const query = { ...route.query }
   const currentId = query.to ? Number(query.to as string) : null
 
   if (currentId === receiverId) {
     delete query.to
-    await router.replace({ path: route.path, query })
+    await navigateTo({ path: route.path, query }, { replace: true })
   }
 }

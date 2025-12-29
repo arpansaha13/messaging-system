@@ -21,13 +21,15 @@ export async function insertChats(client, users) {
         [user1, user2],
         [user2, user1],
       ]) {
+        const archived = faker.datatype.boolean()
+
         chatEntries.push({
           sender_id: sender.id,
           receiver_id: receiver.id,
           cleared_at: faker.date.past(),
           muted: faker.datatype.boolean(),
-          archived: faker.datatype.boolean(),
-          pinned: faker.datatype.boolean(),
+          archived,
+          pinned: !archived && faker.datatype.boolean(),
         })
 
         // 20 at a time

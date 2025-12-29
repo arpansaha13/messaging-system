@@ -44,10 +44,12 @@ import type { ContextMenuItem } from '@nuxt/ui'
 
 const props = defineProps<{
   chatListItem: IChatListItem
+  isArchived?: boolean
 }>()
 
 const emit = defineEmits<{
   delete: [deleteTarget: IChatListItem]
+  unarchive: [chatItem: IChatListItem]
 }>()
 
 const route = useRoute()
@@ -98,34 +100,51 @@ const linkClasses = computed(() =>
   ),
 )
 
-const contextMenuItems = computed<ContextMenuItem[]>(() => [
-  [
-    {
-      label: props.chatListItem.chat.pinned ? 'Unpin chat' : 'Pin chat',
-      onSelect: (e: Event) => {
-        e.preventDefault()
-        togglePinChat(props.chatListItem.receiver.id, !props.chatListItem.chat.pinned)
-      },
+const contextMenuItems = computed<ContextMenuItem[]>(() => {
+  const deleteItem = {
+    label: 'Delete chat',
+    color: 'error',
+    onSelect: (e: Event) => {
+      e.preventDefault()
+      emit('delete', props.chatListItem)
     },
-    {
-      label: 'Archive chat',
-      onSelect: (e: Event) => {
-        e.preventDefault()
-        archiveChat(props.chatListItem.receiver.id)
+  }
+
+  if (props.isArchived) {
+    return [
+      [
+        {
+          label: 'Unarchive chat',
+          onSelect: (e: Event) => {
+            e.preventDefault()
+            emit('unarchive', props.chatListItem)
+          },
+        },
+      ],
+      [deleteItem],
+    ]
+  }
+
+  return [
+    [
+      {
+        label: props.chatListItem.chat.pinned ? 'Unpin chat' : 'Pin chat',
+        onSelect: (e: Event) => {
+          e.preventDefault()
+          togglePinChat(props.chatListItem.receiver.id, !props.chatListItem.chat.pinned)
+        },
       },
-    },
-  ],
-  [
-    {
-      label: 'Delete chat',
-      color: 'error',
-      onSelect: (e: Event) => {
-        e.preventDefault()
-        emit('delete', props.chatListItem)
+      {
+        label: 'Archive chat',
+        onSelect: (e: Event) => {
+          e.preventDefault()
+          archiveChat(props.chatListItem.receiver.id)
+        },
       },
-    },
-  ],
-])
+    ],
+    [deleteItem],
+  ]
+})
 
 function getDateTime(dateString: string) {
   const diff = differenceInCalendarDays(new Date(), new Date(dateString))
