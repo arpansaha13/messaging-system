@@ -6,9 +6,12 @@ export default defineAppConfig({
       gray: 'gray',
     },
     card: {
+      defaultVariants: {
+        variant: 'subtle',
+      },
       variants: {
         variant: {
-          outline: {
+          subtle: {
             root: 'bg-gray-100',
             header: 'bg-white',
             footer: 'bg-white',

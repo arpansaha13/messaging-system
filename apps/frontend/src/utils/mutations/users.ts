@@ -1,11 +1,12 @@
 import type { IAuthUser, IUser, IUserSearchResult } from '~/types'
 
-export function patchAuthUser(body: Partial<Pick<IAuthUser, 'bio' | 'globalName'>>) {
+export async function patchAuthUser(body: Partial<Pick<IAuthUser, 'bio' | 'globalName'>>) {
   const { $api } = useNuxtApp()
-  return $api<IAuthUser>('/api/users/me', {
+  await $api<IAuthUser>('/api/users/me', {
     method: 'PATCH',
     body,
   })
+  await refreshNuxtData(asyncKeys.authUser)
 }
 
 export function fetchUser(userId: IUser['id']) {
