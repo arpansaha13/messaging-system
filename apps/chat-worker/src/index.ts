@@ -3,7 +3,6 @@ import AppDataSource from './data-source'
 import { RabbitMQService } from './services/rabbitmq.service'
 import { MessageProcessor } from './services/message-processor'
 import { StatusProcessor } from './services/status-processor'
-import { MemcachedService } from './services/memcached.service'
 
 async function bootstrap() {
   try {
@@ -12,10 +11,9 @@ async function bootstrap() {
     console.log('Data source initialized')
 
     // Initialize services
-    const memcachedService = new MemcachedService()
     const rabbitmqService = new RabbitMQService()
-    const messageProcessor = new MessageProcessor(rabbitmqService, memcachedService)
-    const statusProcessor = new StatusProcessor(rabbitmqService, memcachedService)
+    const messageProcessor = new MessageProcessor(rabbitmqService)
+    const statusProcessor = new StatusProcessor(rabbitmqService)
 
     // Connect to RabbitMQ
     await rabbitmqService.connect()
@@ -27,12 +25,10 @@ async function bootstrap() {
 
         switch (type) {
           case 'MESSAGE_SEND':
-            if (payload.groupId !== undefined) {
-              // Group message
-              await messageProcessor.processGroupMessage(payload)
-            } else {
-              // Personal message
+            if (payload.groupId === undefined) {
               await messageProcessor.processPersonalMessage(payload)
+            } else {
+              await messageProcessor.processGroupMessage(payload)
             }
             break
 

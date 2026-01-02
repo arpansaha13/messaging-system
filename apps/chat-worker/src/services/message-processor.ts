@@ -1,5 +1,4 @@
-import { MessageStatus } from '@shared/constants'
-import { SocketEvents } from '@shared/constants'
+import { MessageStatus, SocketEvents } from '@shared/constants'
 import AppDataSource from '../data-source'
 import { Message } from '../models/message'
 import { MessageRecipient } from '../models/message-recipient'
@@ -10,13 +9,9 @@ import { UserGroup } from '../models/user-group'
 import { Not } from 'typeorm'
 import type { SocketEventPayloads } from '@shared/types'
 import type { RabbitMQService } from './rabbitmq.service'
-import type { MemcachedService } from './memcached.service'
 
 export class MessageProcessor {
-  constructor(
-    private readonly rabbitmqService: RabbitMQService,
-    private readonly memcachedService: MemcachedService,
-  ) {}
+  constructor(private readonly rabbitmqService: RabbitMQService) {}
 
   async processPersonalMessage(payload: SocketEventPayloads.Personal.EmitMessage): Promise<void> {
     try {
@@ -84,41 +79,33 @@ export class MessageProcessor {
         return { message, messageRecipient }
       })
 
-      // Get sender's server ID
-      const senderServerId = await this.memcachedService.getUserServerMapping(payload.senderId)
+      // Publish SENT event to sender using userId as routing key
+      // RabbitMQ will route to the server queue that has a binding for this userId
+      await this.rabbitmqService.publishToOutgoing(payload.senderId.toString(), {
+        event: SocketEvents.PERSONAL.STATUS_SENT,
+        userId: payload.senderId,
+        data: {
+          hash: payload.hash,
+          messageId: message.id,
+          createdAt: message.createdAt,
+          receiverId: payload.receiverId,
+          status: messageRecipient.status,
+        },
+      })
 
-      // Publish SENT event to sender
-      if (senderServerId) {
-        await this.rabbitmqService.publishToOutgoing(senderServerId, {
-          event: SocketEvents.PERSONAL.STATUS_SENT,
-          userId: payload.senderId,
-          data: {
-            hash: payload.hash,
-            messageId: message.id,
-            createdAt: message.createdAt,
-            receiverId: payload.receiverId,
-            status: messageRecipient.status,
-          },
-        })
-      }
-
-      // Get receiver's server ID
-      const receiverServerId = await this.memcachedService.getUserServerMapping(payload.receiverId)
-
-      // Publish message to receiver
-      if (receiverServerId) {
-        await this.rabbitmqService.publishToOutgoing(receiverServerId, {
-          event: SocketEvents.PERSONAL.MESSAGE_RECEIVE,
-          userId: payload.receiverId,
-          data: {
-            messageId: message.id,
-            content: payload.content,
-            senderId: payload.senderId,
-            createdAt: message.createdAt,
-            status: messageRecipient.status,
-          },
-        })
-      }
+      // Publish message to receiver using userId as routing key
+      // RabbitMQ will route to the server queue that has a binding for this userId
+      await this.rabbitmqService.publishToOutgoing(payload.receiverId.toString(), {
+        event: SocketEvents.PERSONAL.MESSAGE_RECEIVE,
+        userId: payload.receiverId,
+        data: {
+          messageId: message.id,
+          content: payload.content,
+          senderId: payload.senderId,
+          createdAt: message.createdAt,
+          status: messageRecipient.status,
+        },
+      })
     } catch (error) {
       console.error('Error processing personal message:', error)
       throw error
@@ -174,44 +161,37 @@ export class MessageProcessor {
         return { message, receivers }
       })
 
-      // Get sender's server ID
-      const senderServerId = await this.memcachedService.getUserServerMapping(payload.senderId)
+      // Publish SENT event to sender using userId as routing key
+      // RabbitMQ will route to the server queue that has a binding for this userId
+      await this.rabbitmqService.publishToOutgoing(payload.senderId.toString(), {
+        event: SocketEvents.GROUP.STATUS_SENT,
+        userId: payload.senderId,
+        data: {
+          hash: payload.hash,
+          messageId: message.id,
+          groupId: payload.groupId,
+          channelId: payload.channelId,
+          createdAt: message.createdAt.toString(),
+          status: MessageStatus.SENT,
+        },
+      })
 
-      // Publish SENT event to sender
-      if (senderServerId) {
-        await this.rabbitmqService.publishToOutgoing(senderServerId, {
-          event: SocketEvents.GROUP.STATUS_SENT,
-          userId: payload.senderId,
+      // Publish message to all receivers using userId as routing key
+      // RabbitMQ will route to the server queue that has a binding for each userId
+      for (const receiver of receivers) {
+        await this.rabbitmqService.publishToOutgoing(receiver.id.toString(), {
+          event: SocketEvents.GROUP.MESSAGE_RECEIVE,
+          userId: receiver.id,
           data: {
-            hash: payload.hash,
             messageId: message.id,
+            content: payload.content,
+            senderId: payload.senderId,
             groupId: payload.groupId,
             channelId: payload.channelId,
             createdAt: message.createdAt.toString(),
             status: MessageStatus.SENT,
           },
         })
-      }
-
-      // Publish message to all receivers
-      for (const receiver of receivers) {
-        const receiverServerId = await this.memcachedService.getUserServerMapping(receiver.id)
-
-        if (receiverServerId) {
-          await this.rabbitmqService.publishToOutgoing(receiverServerId, {
-            event: SocketEvents.GROUP.MESSAGE_RECEIVE,
-            userId: receiver.id,
-            data: {
-              messageId: message.id,
-              content: payload.content,
-              senderId: payload.senderId,
-              groupId: payload.groupId,
-              channelId: payload.channelId,
-              createdAt: message.createdAt.toString(),
-              status: MessageStatus.SENT,
-            },
-          })
-        }
       }
     } catch (error) {
       console.error('Error processing group message:', error)

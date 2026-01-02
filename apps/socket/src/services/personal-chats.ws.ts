@@ -104,16 +104,9 @@ export class PersonalChatsWsService {
 
   async handleTyping(payload: SocketEventPayloads.Personal.EmitTyping) {
     try {
-      // Get receiver's server ID from Memcached
-      const receiverServerId = await this.memcachedService.getUserServerMapping(payload.receiverId)
-
-      if (!receiverServerId) {
-        // Receiver is not connected to any server
-        return
-      }
-
-      // Publish directly to receiver's server queue (bypassing worker)
-      await this.rabbitmqService.publishToOutgoing(receiverServerId, {
+      // Publish directly to receiver using userId as routing key
+      // RabbitMQ will route to the server queue that has a binding for this userId
+      await this.rabbitmqService.publishToOutgoing(payload.receiverId.toString(), {
         event: SocketEvents.PERSONAL.TYPING,
         userId: payload.receiverId,
         data: {

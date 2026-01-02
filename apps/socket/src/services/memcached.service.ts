@@ -62,37 +62,4 @@ export class MemcachedService {
   private getKey(userId: number): string {
     return `user:online:${userId}`
   }
-
-  async setUserServerMapping(userId: number, serverId: string): Promise<boolean> {
-    try {
-      const key = `user:server:${userId}`
-      const result = await this.client.set(key, serverId, { expires: 3600 }) // 1 hour TTL
-      return result !== null
-    } catch (error) {
-      console.error('Error setting user-server mapping:', error)
-      return false
-    }
-  }
-
-  async getUserServerMapping(userId: number): Promise<string | null> {
-    try {
-      const key = `user:server:${userId}`
-      const result = await this.client.get(key)
-      return result?.value?.toString() || null
-    } catch (error) {
-      console.error('Error getting user-server mapping:', error)
-      return null
-    }
-  }
-
-  async deleteUserServerMapping(userId: number): Promise<boolean> {
-    try {
-      const key = `user:server:${userId}`
-      const result = await this.client.delete(key)
-      return result !== null
-    } catch (error) {
-      console.error('Error deleting user-server mapping:', error)
-      return false
-    }
-  }
 }

@@ -3,7 +3,6 @@ import { MemcachedService } from './memcached.service'
 
 const INCOMING_EXCHANGE = 'incoming_messages'
 const OUTGOING_EXCHANGE = 'outgoing_messages'
-const USER_SERVER_MAPPING_PREFIX = 'user:server:'
 
 export class RabbitMQService {
   private connection: ChannelModel | null = null
@@ -38,7 +37,7 @@ export class RabbitMQService {
       await this.channel.assertExchange(OUTGOING_EXCHANGE, 'direct', { durable: true })
 
       // Declare server queue
-      await this.channel.assertQueue(this.serverQueue, { durable: true })
+      await this.channel.assertQueue(this.serverQueue, { exclusive: true })
 
       // Bind server queue to outgoing exchange with server ID as routing key
       await this.channel.bindQueue(this.serverQueue, OUTGOING_EXCHANGE, this.serverId)
@@ -75,9 +74,6 @@ export class RabbitMQService {
       const routingKey = userId.toString()
       await this.channel.bindQueue(this.serverQueue, OUTGOING_EXCHANGE, routingKey)
 
-      // Store userId -> serverId mapping in Memcached
-      await this.memcachedService.setUserServerMapping(userId, this.serverId)
-
       console.log(`Bound user ${userId} to queue ${this.serverQueue}`)
     } catch (error) {
       console.error(`Error binding user ${userId} to queue:`, error)
@@ -93,9 +89,6 @@ export class RabbitMQService {
     try {
       const routingKey = userId.toString()
       await this.channel.unbindQueue(this.serverQueue, OUTGOING_EXCHANGE, routingKey)
-
-      // Remove userId -> serverId mapping from Memcached
-      await this.memcachedService.deleteUserServerMapping(userId)
 
       console.log(`Unbound user ${userId} from queue ${this.serverQueue}`)
     } catch (error) {
