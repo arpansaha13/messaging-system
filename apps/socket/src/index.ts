@@ -1,12 +1,11 @@
-import 'reflect-metadata'
 import { createServer as createHttpServer } from 'node:http'
 import { Server as SocketServer } from 'socket.io'
-import AppDataSource from './data-source'
 import { ChatsGateway } from './services/chats.gateway'
 import { ChatsStoreService } from './services/chats-store'
 import { PersonalChatsWsService } from './services/personal-chats.ws'
 import { GroupChatsWsService } from './services/group-chats.ws'
 import { MemcachedService } from './services/memcached.service'
+import { RabbitMQService } from './services/rabbitmq.service'
 
 const PORT = process.env.PORT || 4000
 const PING_FLUSH_INTERVAL_MS = 5000 // 5 seconds
@@ -14,9 +13,6 @@ const ONLINE_STATUS_TTL = 60 // 60 seconds
 
 async function bootstrap() {
   try {
-    await AppDataSource.initialize()
-    console.log('Data source initialized')
-
     const httpServer = createHttpServer()
     const io = new SocketServer(httpServer, {
       path: '/socket.io',
@@ -29,10 +25,38 @@ async function bootstrap() {
     // Initialize services
     const chatsStore = new ChatsStoreService()
     const memcachedService = new MemcachedService()
-    const personalChatsService = new PersonalChatsWsService(chatsStore, memcachedService)
-    const groupChatsService = new GroupChatsWsService(chatsStore)
+    const rabbitmqService = new RabbitMQService(memcachedService)
+
+    // Connect to RabbitMQ
+    await rabbitmqService.connect()
+
+    const personalChatsService = new PersonalChatsWsService(
+      chatsStore,
+      memcachedService,
+      rabbitmqService,
+      io,
+    )
+    const groupChatsService = new GroupChatsWsService(chatsStore, rabbitmqService, io)
     const chatsGateway = new ChatsGateway(personalChatsService, groupChatsService)
     chatsGateway.setup(io)
+
+    // Setup RabbitMQ consumer for server queue
+    await rabbitmqService.consumeFromServerQueue((message, ack) => {
+      try {
+        const { event, userId, data } = message
+
+        // Find socket ID for the user
+        const socketId = chatsStore.getClient(userId)
+        if (socketId) {
+          io.to(socketId).emit(event, data)
+        }
+
+        ack()
+      } catch (error) {
+        console.error('Error processing message from RabbitMQ:', error)
+        ack() // Acknowledge to prevent infinite retries
+      }
+    })
 
     // Start periodic flush of ping tracking to memcached
     setInterval(async () => {
@@ -45,6 +69,15 @@ async function bootstrap() {
         console.error('Error flushing ping tracking to memcached:', error)
       }
     }, PING_FLUSH_INTERVAL_MS)
+
+    // Graceful shutdown
+    process.on('SIGTERM', async () => {
+      console.log('SIGTERM received, shutting down gracefully')
+      await rabbitmqService.disconnect()
+      httpServer.close(() => {
+        process.exit(0)
+      })
+    })
 
     httpServer.listen(PORT, () => {
       console.log(`WebSocket server listening on http://localhost:${PORT}`)

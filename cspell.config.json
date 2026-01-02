@@ -33,6 +33,7 @@
     "pnpx",
     "preinstall",
     "protobufjs",
+    "rabbitmq",
     "reactjs",
     "reduxjs",
     "reka",

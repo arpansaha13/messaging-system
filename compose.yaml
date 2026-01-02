@@ -75,15 +75,16 @@ services:
     environment:
       NODE_ENV: development
       PORT: 4000
-      DB_HOST: ${DB_HOST}
-      DB_PORT: 5432
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_LOGGING: 'true'
+      SERVER_ID: ${SOCKET_SERVER_ID:-server-1}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
       CLIENT_DOMAIN: ${CLIENT_DOMAIN}
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
     depends_on:
-      postgres:
+      rabbitmq:
         condition: service_healthy
     networks:
       - messaging-network
@@ -132,10 +133,58 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached
-    ports:
-      - '11211:11211'
     networks:
       - messaging-network
+
+  rabbitmq:
+    image: rabbitmq:4.2.2-management-alpine
+    container_name: rabbitmq
+    ports:
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ['CMD-SHELL', 'rabbitmq-diagnostics -q ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  chat-worker:
+    build:
+      context: .
+      dockerfile: apps/chat-worker/Dockerfile.dev
+    container_name: chat-worker
+    environment:
+      NODE_ENV: development
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: 'true'
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/chat-worker/src
+          target: /app/apps/chat-worker/src
+        - action: rebuild
+          path: ./apps/chat-worker/tsconfig.json
 
 networks:
   messaging-network:

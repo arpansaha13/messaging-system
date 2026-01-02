@@ -1,0 +1,30 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Enable corepack for pnpm
+RUN npm i -g --force corepack && corepack enable
+
+# Copy root workspace and package manifests (for layer caching)
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
+COPY packages/constants/package.json ./packages/constants/
+COPY packages/types/package.json ./packages/types/
+COPY apps/chat-worker/package.json ./apps/chat-worker/
+COPY apps/chat-worker/tsconfig.json ./apps/chat-worker/
+
+# Install dependencies (uses buildkit cache if available)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+  pnpm install --frozen-lockfile
+
+# Copy shared packages and build them
+COPY packages ./packages
+RUN pnpm -F @shared/constants build
+RUN pnpm -F @shared/types build
+
+# Copy chat-worker source
+COPY apps/chat-worker ./apps/chat-worker
+
+WORKDIR /app/apps/chat-worker
+
+# Use dev command (ts-node-dev) for hot reload inside container
+CMD ["pnpm", "dev"]

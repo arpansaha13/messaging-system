@@ -25,19 +25,19 @@ export class ChatsGateway {
   private setupEventListeners(socket: Socket, io: Server) {
     // Personal chat events
     socket.on(SocketEvents.PERSONAL.MESSAGE_SEND, (payload: SocketEventPayloads.Personal.EmitMessage) => {
-      this.personalChatsService.sendMessage(payload, io)
+      this.personalChatsService.sendMessage(payload)
     })
 
     socket.on(SocketEvents.PERSONAL.STATUS_DELIVERED, (payload: SocketEventPayloads.Personal.EmitDelivered) => {
-      this.personalChatsService.handleDelivered(payload, io)
+      this.personalChatsService.handleDelivered(payload)
     })
 
     socket.on(SocketEvents.PERSONAL.STATUS_READ, (payload: SocketEventPayloads.Personal.EmitRead) => {
-      this.personalChatsService.handleRead(payload, io)
+      this.personalChatsService.handleRead(payload)
     })
 
     socket.on(SocketEvents.PERSONAL.TYPING, (payload: SocketEventPayloads.Personal.EmitTyping) => {
-      this.personalChatsService.handleTyping(payload, io)
+      this.personalChatsService.handleTyping(payload)
     })
 
     socket.on(SocketEvents.PERSONAL.CHECK_ONLINE, (payload: SocketEventPayloads.Personal.EmitCheckOnline) => {
@@ -50,7 +50,7 @@ export class ChatsGateway {
     })
 
     socket.on(SocketEvents.GROUP.NEW_CHANNEL, (payload: SocketEventPayloads.Group.EmitNewChannel) => {
-      this.groupChatsService.handleNewChannel(payload, io)
+      this.groupChatsService.handleNewChannel(payload)
     })
 
     socket.on(SocketEvents.GROUP.JOIN_GROUP, (payload: SocketEventPayloads.Group.EmitJoinGroup) => {
@@ -58,7 +58,7 @@ export class ChatsGateway {
     })
 
     socket.on(SocketEvents.GROUP.MESSAGE_SEND, (payload: SocketEventPayloads.Group.EmitMessage) => {
-      this.groupChatsService.sendMessage(payload, socket)
+      this.groupChatsService.sendMessage(payload)
     })
 
     socket.on('disconnect', () => {

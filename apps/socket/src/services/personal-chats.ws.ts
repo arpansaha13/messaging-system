@@ -1,11 +1,7 @@
-import { SocketEvents, MessageStatus } from '@shared/constants'
+import { SocketEvents } from '@shared/constants'
 import { ChatsStoreService } from './chats-store'
 import { MemcachedService } from './memcached.service'
-import AppDataSource from '../data-source'
-import { Message } from '../models/message'
-import { MessageRecipient } from '../models/message-recipient'
-import { User } from '../models/user'
-import { Chat } from '../models/chat'
+import { RabbitMQService } from './rabbitmq.service'
 import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
@@ -13,9 +9,11 @@ export class PersonalChatsWsService {
   constructor(
     private readonly chatsStore: ChatsStoreService,
     private readonly memcachedService: MemcachedService,
+    private readonly rabbitmqService: RabbitMQService,
+    private readonly server: Server,
   ) {}
 
-  handleConnect(socket: Socket) {
+  async handleConnect(socket: Socket) {
     const userId = Number.parseInt(socket.handshake.query.userId as string)
     this.chatsStore.setClient(userId, socket.id)
 
@@ -24,6 +22,13 @@ export class PersonalChatsWsService {
 
     const groups = (socket.handshake.query.groups as string).split(',')
     groups.forEach((groupId: string) => this.chatsStore.addSocketToGroup(Number.parseInt(groupId), socket.id))
+
+    // Create RabbitMQ binding for this user
+    try {
+      await this.rabbitmqService.bindUserToQueue(userId)
+    } catch (error) {
+      console.error(`Error binding user ${userId} to queue:`, error)
+    }
 
     // Track ping events for this socket
     this.setupPingTracking(socket, userId)
@@ -39,124 +44,43 @@ export class PersonalChatsWsService {
     })
   }
 
-  handleDisconnect(socket: Socket) {
+  async handleDisconnect(socket: Socket) {
     const userId = Number.parseInt(socket.handshake.query.userId as string)
     this.chatsStore.deleteClient(userId)
+
+    // Remove RabbitMQ binding for this user
+    try {
+      await this.rabbitmqService.unbindUserFromQueue(userId)
+    } catch (error) {
+      console.error(`Error unbinding user ${userId} from queue:`, error)
+    }
   }
 
-  async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage, server: Server) {
-    const receiverSocketId = this.chatsStore.getClient(payload.receiverId)
-    const senderSocketId = this.chatsStore.getClient(payload.senderId)
-
+  async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage) {
     try {
-      const { message, messageRecipient } = await AppDataSource.manager.transaction(async txnManager => {
-        const [sender, receiver] = await Promise.all([
-          txnManager.findOneBy(User, { id: payload.senderId }),
-          txnManager.findOneBy(User, { id: payload.receiverId }),
-        ])
-
-        if (!sender || !receiver) {
-          throw new Error('Sender or receiver not found')
-        }
-
-        const [senderToReceiverChatExists, receiverToSenderChatExists] = await Promise.all([
-          txnManager.exists(Chat, {
-            where: {
-              sender_id: payload.senderId,
-              receiver_id: payload.receiverId,
-            },
-          }),
-          txnManager.exists(Chat, {
-            where: {
-              sender_id: payload.receiverId,
-              receiver_id: payload.senderId,
-            },
-          }),
-        ])
-
-        if (!senderToReceiverChatExists) {
-          const senderChat = new Chat()
-          senderChat.sender_id = payload.senderId
-          senderChat.receiver_id = payload.receiverId
-          senderChat.clearedAt = new Date()
-          senderChat.muted = false
-          senderChat.archived = false
-          senderChat.pinned = false
-          await txnManager.save(senderChat)
-        }
-
-        if (!receiverToSenderChatExists) {
-          const receiverChat = new Chat()
-          receiverChat.sender_id = payload.receiverId
-          receiverChat.receiver_id = payload.senderId
-          receiverChat.clearedAt = new Date()
-          receiverChat.muted = false
-          receiverChat.archived = false
-          receiverChat.pinned = false
-          await txnManager.save(receiverChat)
-        }
-
-        let message = new Message()
-        message.content = payload.content
-        message.sender = sender
-        message = await txnManager.save(message)
-
-        let messageRecipient = new MessageRecipient()
-        messageRecipient.message = message
-        messageRecipient.receiver = receiver
-        messageRecipient.status = MessageStatus.SENT
-        messageRecipient = await txnManager.save(messageRecipient)
-
-        return { message, messageRecipient }
-      })
-
-      if (senderSocketId) {
-        server.to(senderSocketId).emit(SocketEvents.PERSONAL.STATUS_SENT, {
-          hash: payload.hash,
-          messageId: message.id,
-          createdAt: message.createdAt,
-          receiverId: payload.receiverId,
-          status: messageRecipient.status,
-        })
-      }
-
-      // If receiver is not connected to socket - could mean offline
-      if (!receiverSocketId) {
+      // Basic validation
+      if (!payload.content || !payload.senderId || !payload.receiverId || !payload.hash) {
+        console.error('Invalid message payload:', payload)
         return
       }
 
-      // FIXME: If the receiver is offline has this chat archived,
-      // then this chat will stay archived even after getting a new message
-      // This is because unarchive on new message is done on client-side on MESSAGE_RECEIVE
-      server.to(receiverSocketId).emit(SocketEvents.PERSONAL.MESSAGE_RECEIVE, {
-        messageId: message.id,
-        content: payload.content,
-        senderId: payload.senderId,
-        createdAt: message.createdAt,
-        status: messageRecipient.status,
+      // Publish to incoming_messages exchange for worker to process
+      await this.rabbitmqService.publishToIncoming('personal.message', {
+        type: 'MESSAGE_SEND',
+        payload,
       })
     } catch (err) {
       console.error('Error sending message:', err)
     }
   }
 
-  async handleDelivered(payload: SocketEventPayloads.Personal.EmitDelivered, server: Server) {
+  async handleDelivered(payload: SocketEventPayloads.Personal.EmitDelivered) {
     try {
-      await AppDataSource.manager.update(
-        MessageRecipient,
-        { message: { id: payload.messageId }, receiver: { id: payload.receiverId } },
-        { status: MessageStatus.DELIVERED },
-      )
-
-      const senderSocketId = this.chatsStore.getClient(payload.senderId)
-
-      if (senderSocketId) {
-        server.to(senderSocketId).emit(SocketEvents.PERSONAL.STATUS_DELIVERED, {
-          messageId: payload.messageId,
-          receiverId: payload.receiverId,
-          status: MessageStatus.DELIVERED,
-        })
-      }
+      // Publish to incoming_messages exchange for worker to process
+      await this.rabbitmqService.publishToIncoming('personal.delivered', {
+        type: 'STATUS_DELIVERED',
+        payload,
+      })
     } catch (err) {
       console.error('Error handling delivered:', err)
     }
@@ -164,51 +88,42 @@ export class PersonalChatsWsService {
 
   async handleRead(
     payload: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[],
-    server: Server,
   ) {
     try {
       const payloadArray = Array.isArray(payload) ? payload : [payload]
 
-      const messageIds = payloadArray.map(p => p.messageId)
-
-      if (messageIds.length === 1) {
-        await AppDataSource.manager.update(
-          MessageRecipient,
-          { message: { id: messageIds[0] } },
-          { status: MessageStatus.READ },
-        )
-      } else {
-        await AppDataSource.manager
-          .createQueryBuilder()
-          .update(MessageRecipient)
-          .set({ status: MessageStatus.READ })
-          .where('message.id IN (:...messageIds)', { messageIds })
-          .execute()
-      }
-
-      const readPayloadToSender = payloadArray.map(p => ({
-        messageId: p.messageId,
-        receiverId: p.receiverId,
-        status: MessageStatus.READ,
-      }))
-
-      const senderSocketId = this.chatsStore.getClient(payloadArray[0].senderId)
-      if (senderSocketId) {
-        server.to(senderSocketId).emit(SocketEvents.PERSONAL.STATUS_READ, readPayloadToSender)
-      }
+      // Publish to incoming_messages exchange for worker to process
+      await this.rabbitmqService.publishToIncoming('personal.read', {
+        type: 'STATUS_READ',
+        payload: payloadArray,
+      })
     } catch (err) {
       console.error('Error handling read:', err)
     }
   }
 
-  handleTyping(payload: SocketEventPayloads.Personal.EmitTyping, server: Server) {
-    const receiverSocketId = this.chatsStore.getClient(payload.receiverId)
-    if (receiverSocketId) {
-      server.to(receiverSocketId).emit(SocketEvents.PERSONAL.TYPING, {
-        senderId: payload.senderId,
-        receiverId: payload.receiverId,
-        isTyping: payload.isTyping,
+  async handleTyping(payload: SocketEventPayloads.Personal.EmitTyping) {
+    try {
+      // Get receiver's server ID from Memcached
+      const receiverServerId = await this.memcachedService.getUserServerMapping(payload.receiverId)
+
+      if (!receiverServerId) {
+        // Receiver is not connected to any server
+        return
+      }
+
+      // Publish directly to receiver's server queue (bypassing worker)
+      await this.rabbitmqService.publishToOutgoing(receiverServerId, {
+        event: SocketEvents.PERSONAL.TYPING,
+        userId: payload.receiverId,
+        data: {
+          senderId: payload.senderId,
+          receiverId: payload.receiverId,
+          isTyping: payload.isTyping,
+        },
       })
+    } catch (err) {
+      console.error('Error handling typing:', err)
     }
   }
 
