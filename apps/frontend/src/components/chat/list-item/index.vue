@@ -6,7 +6,16 @@
         class="flex w-full items-center rounded px-3 py-3 text-left transition-colors"
         :class="linkClasses"
       >
-        <UAvatar :src="receiver.dp || undefined" :alt="receiver.contact?.alias ?? receiver.globalName" size="md" />
+        <UAvatar
+          :src="receiver.dp || undefined"
+          :alt="receiver.contact?.alias ?? receiver.globalName"
+          size="md"
+          :chip="
+            getOnlineStatus(receiver.id) && {
+              position: 'bottom-right',
+            }
+          "
+        />
 
         <div class="ml-4 w-full">
           <div class="flex items-center justify-between">
@@ -54,6 +63,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
+const { getOnlineStatus } = useOnlineStatusStore()
 
 const receiver = computed(() => props.chatListItem.receiver)
 const latestMsg = computed(() => props.chatListItem.latestMsg)

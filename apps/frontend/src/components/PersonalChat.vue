@@ -5,6 +5,7 @@
         :title="receiver.contact?.alias ?? receiver.globalName"
         :avatar="receiver.dp ?? undefined"
         :subtitle="isTyping ? 'typing...' : undefined"
+        :online-status="onlineStatus"
       />
     </template>
 
@@ -29,6 +30,7 @@ const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
 const { socket } = await useSocket()
 const { getTyping } = useTypingStore()
+const { getOnlineStatus } = useOnlineStatusStore()
 const draftsState = useDraftsStore()
 const personalMessages = usePersonalMessagesStore()
 
@@ -59,6 +61,7 @@ let typingTimeout: NodeJS.Timeout | null = null
 // Computed properties
 const authUserId = computed(() => authUser.value?.id)
 const isTyping = computed(() => getTyping(receiverId.value ?? undefined) ?? false)
+const onlineStatus = computed(() => getOnlineStatus(receiverId.value ?? undefined) ?? false)
 
 const tempMessages = computed(() => {
   if (!receiverId.value) return new Map<string, IMessageSending>()

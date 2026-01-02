@@ -25,6 +25,7 @@
     "heroicons",
     "iconify",
     "immer",
+    "memjs",
     "nestjs",
     "nextjs",
     "nuxt",

@@ -59,6 +59,14 @@ export namespace SocketEventPayloads {
     }
 
     export type OnTyping = EmitTyping
+
+    export interface EmitCheckOnline {
+      userIds: UserId[]
+    }
+
+    export interface OnCheckOnline {
+      statuses: Record<UserId, boolean>
+    }
   }
 
   export namespace Group {

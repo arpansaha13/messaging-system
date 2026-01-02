@@ -1,5 +1,6 @@
 import { SocketEvents, MessageStatus } from '@shared/constants'
 import { ChatsStoreService } from './chats-store'
+import { MemcachedService } from './memcached.service'
 import AppDataSource from '../data-source'
 import { Message } from '../models/message'
 import { MessageRecipient } from '../models/message-recipient'
@@ -9,7 +10,10 @@ import type { Server, Socket } from 'socket.io'
 import type { SocketEventPayloads } from '@shared/types'
 
 export class PersonalChatsWsService {
-  constructor(private readonly chatsStore: ChatsStoreService) {}
+  constructor(
+    private readonly chatsStore: ChatsStoreService,
+    private readonly memcachedService: MemcachedService,
+  ) {}
 
   handleConnect(socket: Socket) {
     const userId = Number.parseInt(socket.handshake.query.userId as string)
@@ -20,6 +24,19 @@ export class PersonalChatsWsService {
 
     const groups = (socket.handshake.query.groups as string).split(',')
     groups.forEach((groupId: string) => this.chatsStore.addSocketToGroup(Number.parseInt(groupId), socket.id))
+
+    // Track ping events for this socket
+    this.setupPingTracking(socket, userId)
+  }
+
+  private setupPingTracking(socket: Socket, userId: number) {
+    // Monitor socket.io ping packets
+    // Reference: https://stackoverflow.com/questions/30207156/observe-the-ping-of-socketio-client-at-server-side
+    socket.conn.on('packet', (packet: { type: string }) => {
+      if (packet.type === 'pong') {
+        this.chatsStore.trackPing(userId)
+      }
+    })
   }
 
   handleDisconnect(socket: Socket) {
@@ -191,6 +208,30 @@ export class PersonalChatsWsService {
         senderId: payload.senderId,
         receiverId: payload.receiverId,
         isTyping: payload.isTyping,
+      })
+    }
+  }
+
+  async handleCheckOnline(payload: SocketEventPayloads.Personal.EmitCheckOnline, socket: Socket) {
+    try {
+      const statusMap = await this.memcachedService.getBatchOnlineStatus(payload.userIds)
+      // Convert Map to Record for JSON serialization
+      const statuses: Record<number, boolean> = {}
+      statusMap.forEach((isOnline, userId) => {
+        statuses[userId] = isOnline
+      })
+      socket.emit(SocketEvents.PERSONAL.CHECK_ONLINE_RESPONSE, {
+        statuses,
+      })
+    } catch (error) {
+      console.error('Error handling check online:', error)
+      // Emit all false on error
+      const statuses: Record<number, boolean> = {}
+      payload.userIds.forEach(userId => {
+        statuses[userId] = false
+      })
+      socket.emit(SocketEvents.PERSONAL.CHECK_ONLINE_RESPONSE, {
+        statuses,
       })
     }
   }

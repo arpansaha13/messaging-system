@@ -40,6 +40,10 @@ export class ChatsGateway {
       this.personalChatsService.handleTyping(payload, io)
     })
 
+    socket.on(SocketEvents.PERSONAL.CHECK_ONLINE, (payload: SocketEventPayloads.Personal.EmitCheckOnline) => {
+      this.personalChatsService.handleCheckOnline(payload, socket)
+    })
+
     // Group chat events
     socket.on(SocketEvents.GROUP.NEW_GROUP, (payload: SocketEventPayloads.Group.EmitNewGroup) => {
       this.groupChatsService.handleNewGroup(payload, socket)

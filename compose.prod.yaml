@@ -110,6 +110,14 @@ services:
     networks:
       - messaging-network
 
+  memcached:
+    image: memcached:1.6.40-alpine
+    container_name: memcached_prod
+    ports:
+      - '11211:11211'
+    networks:
+      - messaging-network
+
 networks:
   messaging-network:
     driver: bridge

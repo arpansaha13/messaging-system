@@ -7,6 +7,7 @@ export class ChatsStoreService {
 
   private readonly userSocketMap = new Map<number, string>()
   private readonly groupSocketMap = new Map<number, Set<string>>()
+  private readonly pingTrackingSet = new Set<number>()
 
   getClient(userId: number): string | undefined {
     return this.userSocketMap.get(userId)
@@ -38,5 +39,15 @@ export class ChatsStoreService {
       const socketsSet = this.groupSocketMap.get(groupId)!
       socketsSet.delete(socketId)
     }
+  }
+
+  trackPing(userId: number): void {
+    this.pingTrackingSet.add(userId)
+  }
+
+  getAndClearPingTrackingSet(): number[] {
+    const userIds = Array.from(this.pingTrackingSet)
+    this.pingTrackingSet.clear()
+    return userIds
   }
 }

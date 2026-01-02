@@ -1,5 +1,5 @@
 <template>
-  <Icon v-if="iconName" :name="iconName" :style="{ color: iconColor }" />
+  <Icon v-if="iconName" :name="iconName" :style="{ color: iconColor }" class="shrink-0" />
 </template>
 
 <script setup lang="ts">

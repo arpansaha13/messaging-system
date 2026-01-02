@@ -27,7 +27,17 @@
                   class="group flex items-center justify-between p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
                 >
                   <div class="flex min-w-0 flex-1 items-center gap-3">
-                    <UAvatar :src="contact.dp || undefined" :alt="contact.alias" size="md" class="shadow-md" />
+                    <UAvatar
+                      :src="contact.dp || undefined"
+                      :alt="contact.alias"
+                      size="md"
+                      :chip="
+                        getOnlineStatus(contact.userId) && {
+                          position: 'bottom-right',
+                        }
+                      "
+                      class="shadow-md"
+                    />
                     <div class="flex min-w-0 flex-col">
                       <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                         {{ contact.alias }}
@@ -73,6 +83,7 @@ const route = useRoute()
 const toast = useToast()
 
 const { data: contacts } = await useFetchContacts()
+const { getOnlineStatus } = useOnlineStatusStore()
 
 const overlay = useOverlay()
 const editContactModal = overlay.create(EditContactModal)
