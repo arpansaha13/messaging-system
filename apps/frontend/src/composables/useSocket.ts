@@ -24,8 +24,6 @@ export async function useSocket(): Promise<SocketWrapper> {
         withCredentials: true,
         query: {
           userId: user.id,
-          groups: user.groups.join(','),
-          channels: user.channels.join(','),
         },
       })
     })

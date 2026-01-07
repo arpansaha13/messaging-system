@@ -1,34 +1,16 @@
 import { UserRepository } from '../repositories/user'
 import { ContactRepository } from '../repositories/contact'
-import { ChannelRepository } from '../repositories/channel'
-import { UserGroupRepository } from '../repositories/user-group'
 import { User } from '../models/user'
 import type { Request } from 'express'
-import type { Group } from '../models/group'
-import type { Channel } from '../models/channel'
-
-interface AuthUserResponse extends Pick<Request, 'user'> {
-  groups: Group['id'][]
-  channels: Channel['id'][]
-}
 
 export class UserService {
   constructor(
     private readonly userRepo: UserRepository,
     private readonly contactRepo: ContactRepository,
-    private readonly userGroupRepo: UserGroupRepository,
-    private readonly channelRepo: ChannelRepository,
   ) {}
 
-  async getAuthUser(authUser: Request['user']): Promise<AuthUserResponse> {
-    const groupIds = await this.userGroupRepo.getGroupIdsByUserId(authUser.id)
-    const channelIds = await this.channelRepo.getChannelIdsByGroupIds(groupIds)
-
-    return {
-      ...authUser,
-      groups: groupIds,
-      channels: channelIds,
-    }
+  async getAuthUser(authUser: Request['user']): Promise<Request['user']> {
+    return authUser
   }
 
   createUser(data: Partial<User>): Promise<User> {

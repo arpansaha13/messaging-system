@@ -3,6 +3,7 @@ import AppDataSource from './data-source'
 import { RabbitMQService } from './services/rabbitmq.service'
 import { MessageProcessor } from './services/message-processor'
 import { StatusProcessor } from './services/status-processor'
+import { ConnectionProcessor } from './services/connection-processor'
 
 async function bootstrap() {
   try {
@@ -14,11 +15,12 @@ async function bootstrap() {
     const rabbitmqService = new RabbitMQService()
     const messageProcessor = new MessageProcessor(rabbitmqService)
     const statusProcessor = new StatusProcessor(rabbitmqService)
+    const connectionProcessor = new ConnectionProcessor(rabbitmqService)
 
     // Connect to RabbitMQ
     await rabbitmqService.connect()
 
-    // Setup consumer
+    // Setup consumer for main worker queue (messages and status events)
     await rabbitmqService.consumeFromWorkerQueue(async (message, ack) => {
       try {
         const { type, payload } = message
@@ -47,6 +49,19 @@ async function bootstrap() {
         ack()
       } catch (error) {
         console.error('Error processing message:', error)
+        // Acknowledge to prevent infinite retries, but log the error
+        ack()
+      }
+    })
+
+    // Setup consumer for connection queue
+    await rabbitmqService.consumeFromConnectionQueue(async (message, ack) => {
+      try {
+        const { payload } = message
+        await connectionProcessor.processUserConnection(payload)
+        ack()
+      } catch (error) {
+        console.error('Error processing connection:', error)
         // Acknowledge to prevent infinite retries, but log the error
         ack()
       }

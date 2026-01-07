@@ -63,7 +63,7 @@ async function bootstrap() {
     // Initialize services
     const mailService = new MailService()
     const authService = new AuthService(userRepo, sessionRepo, unverifiedUserRepo, mailService)
-    const userService = new UserService(userRepo, contactRepo, userGroupRepo, channelRepo)
+    const userService = new UserService(userRepo, contactRepo)
     const contactService = new ContactService(contactRepo, userRepo)
     const groupService = new GroupService(groupRepo)
     const channelService = new ChannelService(channelRepo)

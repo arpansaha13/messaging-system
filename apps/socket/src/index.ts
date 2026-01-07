@@ -30,17 +30,12 @@ async function bootstrap() {
     // Connect to RabbitMQ
     await rabbitmqService.connect()
 
-    const personalChatsService = new PersonalChatsWsService(
-      chatsStore,
-      memcachedService,
-      rabbitmqService,
-      io,
-    )
+    const personalChatsService = new PersonalChatsWsService(chatsStore, memcachedService, rabbitmqService, io)
     const groupChatsService = new GroupChatsWsService(chatsStore, rabbitmqService, io)
     const chatsGateway = new ChatsGateway(personalChatsService, groupChatsService)
     chatsGateway.setup(io)
 
-    // Setup RabbitMQ consumer for server queue
+    // Setup RabbitMQ consumer for server queue (client events)
     await rabbitmqService.consumeFromServerQueue((message, ack) => {
       try {
         const { event, userId, data } = message
@@ -53,7 +48,37 @@ async function bootstrap() {
 
         ack()
       } catch (error) {
-        console.error('Error processing message from RabbitMQ:', error)
+        console.error('Error processing message from RabbitMQ server queue:', error)
+        ack() // Acknowledge to prevent infinite retries
+      }
+    })
+
+    await rabbitmqService.consumeFromSubscriptionQueue((message, ack) => {
+      try {
+        const { userId, groupIds, channelIds } = message
+
+        const socketId = chatsStore.getClient(userId)
+        if (socketId) {
+          const socket = io.sockets.sockets.get(socketId)
+          if (socket) {
+            // Subscribe user to channel rooms
+            socket.join(channelIds)
+
+            // Subscribe user to group rooms
+            groupIds.forEach((groupId: number) => {
+              chatsStore.addSocketToGroup(groupId, socketId)
+              socket.join(`group-${groupId}`)
+            })
+
+            console.log(
+              `Subscribed user ${userId} to channels=[${channelIds.join(',')}], groups=[${groupIds.join(',')}]`,
+            )
+          }
+        }
+
+        ack()
+      } catch (error) {
+        console.error('Error processing subscription message:', error)
         ack() // Acknowledge to prevent infinite retries
       }
     })

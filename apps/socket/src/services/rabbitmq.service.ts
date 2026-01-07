@@ -3,17 +3,20 @@ import { MemcachedService } from './memcached.service'
 
 const INCOMING_EXCHANGE = 'incoming_messages'
 const OUTGOING_EXCHANGE = 'outgoing_messages'
+const SUBSCRIPTION_EXCHANGE = 'subscription_data'
 
 export class RabbitMQService {
   private connection: ChannelModel | null = null
   private channel: Channel | null = null
   private readonly serverId: string
   private readonly serverQueue: string
+  private readonly subscriptionQueue: string
   private readonly memcachedService: MemcachedService
 
   constructor(memcachedService: MemcachedService) {
     this.serverId = process.env.SERVER_ID || 'server-1'
     this.serverQueue = `server-${this.serverId}`
+    this.subscriptionQueue = `subscription-${this.serverId}`
     this.memcachedService = memcachedService
   }
 
@@ -35,12 +38,17 @@ export class RabbitMQService {
       // Declare exchanges
       await this.channel.assertExchange(INCOMING_EXCHANGE, 'direct', { durable: true })
       await this.channel.assertExchange(OUTGOING_EXCHANGE, 'direct', { durable: true })
+      await this.channel.assertExchange(SUBSCRIPTION_EXCHANGE, 'direct', { durable: true })
 
-      // Declare server queue
+      // Declare server queues
       await this.channel.assertQueue(this.serverQueue, { exclusive: true })
+      await this.channel.assertQueue(this.subscriptionQueue, { exclusive: true })
 
       // Bind server queue to outgoing exchange with server ID as routing key
       await this.channel.bindQueue(this.serverQueue, OUTGOING_EXCHANGE, this.serverId)
+
+      // Bind subscription queue to subscription exchange with server ID as routing key
+      await this.channel.bindQueue(this.subscriptionQueue, SUBSCRIPTION_EXCHANGE, this.serverId)
 
       console.log(`RabbitMQ connected. Server ID: ${this.serverId}, Queue: ${this.serverQueue}`)
     } catch (error) {
@@ -158,11 +166,48 @@ export class RabbitMQService {
     }
   }
 
+  async consumeFromSubscriptionQueue(onMessage: (message: any, ack: () => void) => void): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel not initialized')
+    }
+
+    try {
+      await this.channel.consume(
+        this.subscriptionQueue,
+        async msg => {
+          if (!msg) {
+            return
+          }
+
+          try {
+            const content = JSON.parse(msg.content.toString())
+            onMessage(content, () => {
+              this.channel?.ack(msg)
+            })
+          } catch (error) {
+            console.error('Error processing message from subscription queue:', error)
+            this.channel?.nack(msg, false, false) // Reject and don't requeue
+          }
+        },
+        { noAck: false },
+      )
+
+      console.log(`Started consuming from queue: ${this.subscriptionQueue}`)
+    } catch (error) {
+      console.error('Error setting up subscription consumer:', error)
+      throw error
+    }
+  }
+
   getServerId(): string {
     return this.serverId
   }
 
   getServerQueue(): string {
     return this.serverQueue
+  }
+
+  getSubscriptionQueue(): string {
+    return this.subscriptionQueue
   }
 }

@@ -17,11 +17,19 @@ export class PersonalChatsWsService {
     const userId = Number.parseInt(socket.handshake.query.userId as string)
     this.chatsStore.setClient(userId, socket.id)
 
-    const channels = (socket.handshake.query.channels as string).split(',')
-    socket.join(channels)
+    const serverId = this.rabbitmqService.getServerId()
 
-    const groups = (socket.handshake.query.groups as string).split(',')
-    groups.forEach((groupId: string) => this.chatsStore.addSocketToGroup(Number.parseInt(groupId), socket.id))
+    try {
+      await this.rabbitmqService.publishToIncoming('connection.user', {
+        type: 'USER_CONNECTED',
+        payload: {
+          userId,
+          serverId,
+        },
+      })
+    } catch (error) {
+      console.error(`Error publishing connection event for user ${userId}:`, error)
+    }
 
     // Create RabbitMQ binding for this user
     try {
@@ -86,9 +94,7 @@ export class PersonalChatsWsService {
     }
   }
 
-  async handleRead(
-    payload: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[],
-  ) {
+  async handleRead(payload: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[]) {
     try {
       const payloadArray = Array.isArray(payload) ? payload : [payload]
 
