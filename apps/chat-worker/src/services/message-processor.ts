@@ -176,23 +176,22 @@ export class MessageProcessor {
         },
       })
 
-      // Publish message to all receivers using userId as routing key
-      // RabbitMQ will route to the server queue that has a binding for each userId
-      for (const receiver of receivers) {
-        await this.rabbitmqService.publishToOutgoing(receiver.id.toString(), {
-          event: SocketEvents.GROUP.MESSAGE_RECEIVE,
-          userId: receiver.id,
-          data: {
-            messageId: message.id,
-            content: payload.content,
-            senderId: payload.senderId,
-            groupId: payload.groupId,
-            channelId: payload.channelId,
-            createdAt: message.createdAt.toString(),
-            status: MessageStatus.SENT,
-          },
-        })
-      }
+      // Publish message to channel using channelId as routing key
+      // RabbitMQ will route to all server queues that have a binding for this channelId
+      // Each server that has users subscribed to this channel will receive the message
+      await this.rabbitmqService.publishToOutgoing(`channel:${payload.channelId}`, {
+        event: SocketEvents.GROUP.MESSAGE_RECEIVE,
+        channelId: payload.channelId,
+        data: {
+          messageId: message.id,
+          content: payload.content,
+          senderId: payload.senderId,
+          groupId: payload.groupId,
+          channelId: payload.channelId,
+          createdAt: message.createdAt.toString(),
+          status: MessageStatus.SENT,
+        },
+      })
     } catch (error) {
       console.error('Error processing group message:', error)
       throw error

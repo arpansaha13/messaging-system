@@ -62,6 +62,29 @@ export class PersonalChatsWsService {
     } catch (error) {
       console.error(`Error unbinding user ${userId} from queue:`, error)
     }
+
+    // Remove user's channels and groups, and unbind channels if no more subscribers
+    try {
+      const { channelIds, groupIds } = this.chatsStore.removeUserChannelsAndGroups(userId)
+
+      // Unbind channels that have no more subscribers
+      for (const channelId of channelIds) {
+        if (!this.chatsStore.hasChannelSubscribers(channelId)) {
+          await this.rabbitmqService.unbindChannelFromQueue(channelId)
+        }
+      }
+
+      // Clean up group mappings (remove socket from groups)
+      for (const groupId of groupIds) {
+        this.chatsStore.removeSocketFromGroup(groupId, socket.id)
+      }
+
+      console.log(
+        `Disconnected user ${userId}: unbound channels=[${channelIds.join(',')}], groups=[${groupIds.join(',')}]`,
+      )
+    } catch (error) {
+      console.error(`Error handling disconnect for user ${userId}:`, error)
+    }
   }
 
   async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage) {

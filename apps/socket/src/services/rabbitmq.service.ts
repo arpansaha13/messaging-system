@@ -105,6 +105,38 @@ export class RabbitMQService {
     }
   }
 
+  async bindChannelToQueue(channelId: number): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel not initialized')
+    }
+
+    try {
+      const routingKey = `channel:${channelId}`
+      await this.channel.bindQueue(this.serverQueue, OUTGOING_EXCHANGE, routingKey)
+
+      console.log(`Bound channel ${channelId} to queue ${this.serverQueue}`)
+    } catch (error) {
+      console.error(`Error binding channel ${channelId} to queue:`, error)
+      throw error
+    }
+  }
+
+  async unbindChannelFromQueue(channelId: number): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel not initialized')
+    }
+
+    try {
+      const routingKey = `channel:${channelId}`
+      await this.channel.unbindQueue(this.serverQueue, OUTGOING_EXCHANGE, routingKey)
+
+      console.log(`Unbound channel ${channelId} from queue ${this.serverQueue}`)
+    } catch (error) {
+      console.error(`Error unbinding channel ${channelId} from queue:`, error)
+      throw error
+    }
+  }
+
   async publishToIncoming(routingKey: string, message: any): Promise<boolean> {
     if (!this.channel) {
       throw new Error('RabbitMQ channel not initialized')

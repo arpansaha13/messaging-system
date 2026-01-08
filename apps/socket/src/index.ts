@@ -38,12 +38,19 @@ async function bootstrap() {
     // Setup RabbitMQ consumer for server queue (client events)
     await rabbitmqService.consumeFromServerQueue((message, ack) => {
       try {
-        const { event, userId, data } = message
+        const { event, userId, channelId, data } = message
 
-        // Find socket ID for the user
-        const socketId = chatsStore.getClient(userId)
-        if (socketId) {
-          io.to(socketId).emit(event, data)
+        // Handle user-targeted events
+        if (userId) {
+          const socketId = chatsStore.getClient(userId)
+          if (socketId) {
+            io.to(socketId).emit(event, data)
+          }
+        }
+        // Handle channel-targeted events
+        else if (channelId) {
+          const roomId = channelId.toString()
+          io.to(roomId).emit(event, data)
         }
 
         ack()
@@ -53,7 +60,7 @@ async function bootstrap() {
       }
     })
 
-    await rabbitmqService.consumeFromSubscriptionQueue((message, ack) => {
+    await rabbitmqService.consumeFromSubscriptionQueue(async (message, ack) => {
       try {
         const { userId, groupIds, channelIds } = message
 
@@ -61,8 +68,19 @@ async function bootstrap() {
         if (socketId) {
           const socket = io.sockets.sockets.get(socketId)
           if (socket) {
-            // Subscribe user to channel rooms
-            socket.join(channelIds)
+            // Bind each channel to this server's queue
+            const bindChannelPromises = []
+            for (const channelId of channelIds) {
+              bindChannelPromises.push(rabbitmqService.bindChannelToQueue(channelId))
+            }
+            await Promise.all(bindChannelPromises)
+
+            // Join Socket.IO rooms for each channel
+            socket.join(channelIds.map(id => id.toString()))
+
+            // Store channels and groups in chats store with reference counting
+            chatsStore.addUserChannels(userId, channelIds)
+            chatsStore.addUserGroups(userId, groupIds)
 
             // Subscribe user to group rooms
             groupIds.forEach((groupId: number) => {
