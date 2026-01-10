@@ -63,7 +63,7 @@ export class PersonalChatsWsService {
       console.error(`Error unbinding user ${userId} from queue:`, error)
     }
 
-    // Remove user's channels and groups, and unbind channels if no more subscribers
+    // Remove user's channels and groups, and unbind channels/groups if no more subscribers
     try {
       const { channelIds, groupIds } = this.chatsStore.removeUserChannelsAndGroups(userId)
 
@@ -74,9 +74,12 @@ export class PersonalChatsWsService {
         }
       }
 
-      // Clean up group mappings (remove socket from groups)
+      // Unbind groups that have no more subscribers and clean up mappings
       for (const groupId of groupIds) {
         this.chatsStore.removeSocketFromGroup(groupId, socket.id)
+        if (!this.chatsStore.hasGroupSubscribers(groupId)) {
+          await this.rabbitmqService.unbindGroupFromQueue(groupId)
+        }
       }
 
       console.log(

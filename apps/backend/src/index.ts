@@ -32,6 +32,7 @@ import { UserGroupRepository } from './repositories/user-group'
 import { AuthService } from './services/auth'
 import { UnverifiedUserRepository } from './repositories/unverified-user'
 import { MailService } from './services/mail'
+import { RabbitMQService } from './services/rabbitmq'
 
 const PORT = process.env.PORT || 4000
 
@@ -60,13 +61,20 @@ async function bootstrap() {
     const inviteRepo = new InviteRepository(AppDataSource)
     const userGroupRepo = new UserGroupRepository(AppDataSource)
 
+    const rabbitmqService = new RabbitMQService()
+    try {
+      await rabbitmqService.connect()
+    } catch (error) {
+      console.error('Failed to connect to RabbitMQ, continuing without event publishing:', error)
+    }
+
     // Initialize services
     const mailService = new MailService()
     const authService = new AuthService(userRepo, sessionRepo, unverifiedUserRepo, mailService)
     const userService = new UserService(userRepo, contactRepo)
     const contactService = new ContactService(contactRepo, userRepo)
     const groupService = new GroupService(groupRepo)
-    const channelService = new ChannelService(channelRepo)
+    const channelService = new ChannelService(channelRepo, rabbitmqService)
     const messageService = new MessageService(messageRepo, chatRepo)
     const chatService = new ChatService(chatRepo, contactRepo, messageRepo)
     const inviteService = new InviteService(inviteRepo, userGroupRepo, channelRepo)
@@ -82,6 +90,12 @@ async function bootstrap() {
     app.use('/api/chats', createChatRouter(chatService))
     app.use('/api/invites', createInviteRouter(inviteService))
     app.use('/api/user-group', createUserGroupRouter(userGroupService))
+
+    process.on('SIGTERM', async () => {
+      console.log('SIGTERM received, shutting down gracefully')
+      await rabbitmqService.disconnect()
+      process.exit(0)
+    })
 
     app.listen(PORT, () => {
       console.log(`Backend listening on http://localhost:${PORT}`)

@@ -2,7 +2,7 @@
   <NuxtLayout name="window">
     <template #left>
       <!-- Channel List Header -->
-      <UCard :ui="{ root: 'h-full flex flex-col', body: 'grow p-0 sm:p-0' }">
+      <UCard :ui="{ root: 'h-full flex flex-col', body: 'grow p-0 sm:p-0 overflow-auto' }">
         <template #header>
           <div class="flex justify-between">
             <UAvatar :alt="group?.name" size="3xl" class="shadow-md" />
@@ -43,7 +43,7 @@
           <h2 class="mt-3 text-lg font-semibold dark:text-gray-100">{{ group?.name ?? 'Group' }}</h2>
         </template>
 
-        <div class="flex-1 overflow-y-auto">
+        <div>
           <!-- Empty State -->
           <div v-if="!channels || channels.length === 0" class="p-4 text-center text-sm text-gray-500">
             <p>No channels yet</p>
@@ -51,7 +51,7 @@
           </div>
 
           <!-- Channels List -->
-          <div v-else>
+          <template v-else>
             <NuxtLink
               v-for="channel in channels"
               :key="channel.id"
@@ -61,7 +61,7 @@
             >
               <p class="font-medium text-gray-700 dark:text-gray-300">{{ channel.name }}</p>
             </NuxtLink>
-          </div>
+          </template>
         </div>
       </UCard>
     </template>

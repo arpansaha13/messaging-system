@@ -34,9 +34,6 @@ const { socket } = await useSocket()
 const { data: authUser } = await useFetchAuthUser()
 const groupMessages = useGroupMessagesStore()
 
-// Initialize socket events
-useGroupChatSocketEvents()
-
 // Get channel ID from route params
 const channelId = computed(() => {
   const id = route.params.channelId

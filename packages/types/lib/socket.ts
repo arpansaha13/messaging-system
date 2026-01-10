@@ -90,7 +90,10 @@ export namespace SocketEventPayloads {
     }
 
     export interface OnNewChannel {
+      id: number
+      name: string
       groupId: number
+      createdAt: string
     }
 
     export interface EmitMessage {

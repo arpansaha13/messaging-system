@@ -7,6 +7,7 @@ if (import.meta.client) {
   const { closeSocket } = await useSocket()
   usePersonalChatSocketEvents()
   useGroupChatSocketEvents()
+  useGroupEventsSocketEvents()
 
   onBeforeUnmount(() => {
     closeSocket()

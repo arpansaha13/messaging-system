@@ -38,18 +38,23 @@ async function bootstrap() {
     // Setup RabbitMQ consumer for server queue (client events)
     await rabbitmqService.consumeFromServerQueue((message, ack) => {
       try {
-        const { event, userId, channelId, data } = message
+        const { event, userId, channelId, groupId, data } = message
 
-        // Handle user-targeted events
+        // Handle user-targeted events (e.g., personal messages)
         if (userId) {
           const socketId = chatsStore.getClient(userId)
           if (socketId) {
             io.to(socketId).emit(event, data)
           }
         }
-        // Handle channel-targeted events
+        // Handle channel-targeted events (e.g., group messages)
         else if (channelId) {
           const roomId = channelId.toString()
+          io.to(roomId).emit(event, data)
+        }
+        // Handle group-targeted events (e.g., channel creation)
+        else if (groupId) {
+          const roomId = `group-${groupId}`
           io.to(roomId).emit(event, data)
         }
 
@@ -68,12 +73,15 @@ async function bootstrap() {
         if (socketId) {
           const socket = io.sockets.sockets.get(socketId)
           if (socket) {
-            // Bind each channel to this server's queue
-            const bindChannelPromises = []
+            // Bind each channel and group to this server's queue
+            const bindPromises = []
             for (const channelId of channelIds) {
-              bindChannelPromises.push(rabbitmqService.bindChannelToQueue(channelId))
+              bindPromises.push(rabbitmqService.bindChannelToQueue(channelId))
             }
-            await Promise.all(bindChannelPromises)
+            for (const groupId of groupIds) {
+              bindPromises.push(rabbitmqService.bindGroupToQueue(groupId))
+            }
+            await Promise.all(bindPromises)
 
             // Join Socket.IO rooms for each channel
             socket.join(channelIds.map(id => id.toString()))

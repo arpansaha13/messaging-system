@@ -137,6 +137,38 @@ export class RabbitMQService {
     }
   }
 
+  async bindGroupToQueue(groupId: number): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel not initialized')
+    }
+
+    try {
+      const routingKey = `group:${groupId}`
+      await this.channel.bindQueue(this.serverQueue, OUTGOING_EXCHANGE, routingKey)
+
+      console.log(`Bound group ${groupId} to queue ${this.serverQueue}`)
+    } catch (error) {
+      console.error(`Error binding group ${groupId} to queue:`, error)
+      throw error
+    }
+  }
+
+  async unbindGroupFromQueue(groupId: number): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel not initialized')
+    }
+
+    try {
+      const routingKey = `group:${groupId}`
+      await this.channel.unbindQueue(this.serverQueue, OUTGOING_EXCHANGE, routingKey)
+
+      console.log(`Unbound group ${groupId} from queue ${this.serverQueue}`)
+    } catch (error) {
+      console.error(`Error unbinding group ${groupId} from queue:`, error)
+      throw error
+    }
+  }
+
   async publishToIncoming(routingKey: string, message: any): Promise<boolean> {
     if (!this.channel) {
       throw new Error('RabbitMQ channel not initialized')

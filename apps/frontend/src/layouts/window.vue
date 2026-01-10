@@ -1,6 +1,6 @@
 <template>
   <div class="flex h-full gap-2 p-2">
-    <section class="flex h-full w-88 shrink-0 flex-col overflow-hidden rounded shadow-md">
+    <section class="flex h-full w-88 shrink-0 flex-col rounded shadow-md">
       <slot name="left" />
     </section>
 

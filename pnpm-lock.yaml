@@ -13,6 +13,9 @@ importers:
       '@shared/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      amqplib:
+        specifier: ^0.10.9
+        version: 0.10.9
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -44,6 +47,9 @@ importers:
       '@shared/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@types/amqplib':
+        specifier: ^0.10.8
+        version: 0.10.8
       '@types/cookie-parser':
         specifier: ^1.4.10
         version: 1.4.10(@types/express@5.0.6)

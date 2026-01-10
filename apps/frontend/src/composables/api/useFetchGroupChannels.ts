@@ -11,5 +11,6 @@ export function useFetchGroupChannels(groupId: ComputedRef<number | null>) {
       const { $api } = useNuxtApp()
       return $api<IChannel[]>(`/api/groups/${groupId.value}/channels`)
     },
+    { deep: true },
   )
 }
