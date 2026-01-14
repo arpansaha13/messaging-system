@@ -7,32 +7,18 @@ import { Group } from './models/group'
 import { Invite } from './models/invite'
 import { MessageRecipient } from './models/message-recipient'
 import { Message } from './models/message'
-import { Session } from './models/session'
-import { UnverifiedUser } from './models/unverified-user'
 import { UserGroup } from './models/user-group'
-import { User } from './models/user'
-import { Initial1765028940520 } from './migrations/1765028940520-initial'
+import { UserProfile } from './models/user'
+import { Initial1768410457029 } from './migrations/1768410457029-initial'
 
-const entities = [
-  Channel,
-  Chat,
-  Contact,
-  Group,
-  Invite,
-  Message,
-  MessageRecipient,
-  Session,
-  UnverifiedUser,
-  UserGroup,
-  User,
-]
+const entities = [Channel, Chat, Contact, Group, Invite, Message, MessageRecipient, UserGroup, UserProfile]
 
-const migrations = [Initial1765028940520]
+const migrations = [Initial1768410457029]
 
 const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 7000,
+  port: Number(process.env.DB_PORT) || 7020,
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'messaging_db',

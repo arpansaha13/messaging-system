@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
 import { BaseEntity } from './base'
-import { User } from './user'
+import { UserProfile } from './user'
 import { Channel } from './channel'
 import { MessageRecipient } from './message-recipient'
 
@@ -9,9 +9,9 @@ export class Message extends BaseEntity {
   @Column({ type: 'text', nullable: false })
   content!: string
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => UserProfile, { nullable: false })
   @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
-  sender!: User
+  sender!: UserProfile
 
   @ManyToOne(() => Channel, { nullable: true })
   @JoinColumn({ name: 'channel_id', referencedColumnName: 'id' })

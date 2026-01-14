@@ -7,24 +7,10 @@ import { Group } from './models/group'
 import { Invite } from './models/invite'
 import { MessageRecipient } from './models/message-recipient'
 import { Message } from './models/message'
-import { Session } from './models/session'
-import { UnverifiedUser } from './models/unverified-user'
 import { UserGroup } from './models/user-group'
-import { User } from './models/user'
+import { UserProfile } from './models/user'
 
-const entities = [
-  Channel,
-  Chat,
-  Contact,
-  Group,
-  Invite,
-  Message,
-  MessageRecipient,
-  Session,
-  UnverifiedUser,
-  UserGroup,
-  User,
-]
+const entities = [Channel, Chat, Contact, Group, Invite, Message, MessageRecipient, UserGroup, UserProfile]
 
 const AppDataSource = new DataSource({
   type: 'postgres',

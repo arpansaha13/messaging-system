@@ -11,7 +11,8 @@ export class InviteService {
     private readonly channelRepo: ChannelRepository,
   ) {}
 
-  async createInvite(authUser: Request['user'], groupId: number) {
+  async createInvite(context: any, groupId: number) {
+    const authUser = context.user
     const em = this.inviteRepo.manager
     return em.transaction(async txn => {
       // if invite exists and not expired, return existing
@@ -37,7 +38,8 @@ export class InviteService {
     return this.inviteRepo.findByHash(hash)
   }
 
-  async acceptInvite(authUser: Request['user'], inviteHash: string) {
+  async acceptInvite(context: any, inviteHash: string) {
+    const authUser = context.user
     const invite = await this.inviteRepo.findByHashWithGroup(inviteHash)
     if (!invite) throw new Error('This invite link is either invalid or expired.')
 

@@ -1,6 +1,9 @@
 {
   "prettier.enable": true,
-  "prettier.requireConfig": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "prettier.endOfLine": "lf",
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
   "files.associations": {
@@ -9,6 +12,7 @@
   "editor.quickSuggestions": {
     "strings": "on"
   },
-  "chat.agent.maxRequests": 40,
-  "chat.agent.thinking.generateTitles": false
+  "chat.agent.maxRequests": 100,
+  "chat.agent.thinking.generateTitles": false,
+  "github.copilot.chat.anthropic.tools.websearch.maxUses": 20
 }

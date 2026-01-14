@@ -1,16 +1,16 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
-import { User } from './user'
+import { UserProfile } from './user'
 import { BaseEntity } from './base'
 
 @Entity({ name: 'contacts' })
 export class Contact extends BaseEntity {
-  @ManyToOne(() => User, user => user.contacts, { nullable: false })
+  @ManyToOne(() => UserProfile, user => user.contacts, { nullable: false })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: User
+  user: UserProfile
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => UserProfile, { nullable: false })
   @JoinColumn({ name: 'user_id_in_contact', referencedColumnName: 'id' })
-  userInContact: User
+  userInContact: UserProfile
 
   @Column({ type: 'varchar', nullable: false })
   alias: string

@@ -11,8 +11,6 @@ export async function useSocket(): Promise<SocketWrapper> {
 
   if (import.meta.client) {
     const { data: authUser } = await useFetchAuthUser()
-    const runtimeConfig = useRuntimeConfig()
-    const socketBaseUrl = runtimeConfig.public.socketIoBaseUrl ?? ''
 
     watchEffect(() => {
       const user = authUser.value
@@ -20,7 +18,7 @@ export async function useSocket(): Promise<SocketWrapper> {
         return
       }
 
-      socket.value = io(socketBaseUrl, {
+      socket.value = io({
         withCredentials: true,
         query: {
           userId: user.id,

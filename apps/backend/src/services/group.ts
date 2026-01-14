@@ -8,7 +8,8 @@ import type { CreateGroupDto } from '../dto/group'
 export class GroupService {
   constructor(private readonly groupRepo: GroupRepository) {}
 
-  async createGroup(authUser: Request['user'], createGroupDto: CreateGroupDto) {
+  async createGroup(context: any, createGroupDto: CreateGroupDto) {
+    const authUser = context.user
     const em = this.groupRepo.manager
 
     return em.transaction(async txn => {

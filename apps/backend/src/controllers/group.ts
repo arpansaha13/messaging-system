@@ -16,13 +16,13 @@ export function createGroupRouter(
   const router = Router()
 
   router.get('/', async (req: Request, res) => {
-    const groups = await userGroupService.getGroupsOfUser(req.user.id)
+    const groups = await userGroupService.getGroupsOfUser(req.context)
     res.json(groups)
   })
 
   router.post('/', validateDto(CreateGroupDto), async (req: Request, res) => {
     try {
-      const created = await groupService.createGroup(req.user, req.body)
+      const created = await groupService.createGroup(req.context, req.body)
       res.status(201).json(created)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -73,7 +73,7 @@ export function createGroupRouter(
   router.post('/:groupId/invites', validateDto(GroupIdParamDto, 'params'), async (req: Request, res) => {
     const groupId = Number(req.params.groupId)
     try {
-      const invite = await inviteService.createInvite(req.user, groupId)
+      const invite = await inviteService.createInvite(req.context, groupId)
       res.status(201).json(invite)
     } catch (err: any) {
       res.status(400).json({ message: err.message })

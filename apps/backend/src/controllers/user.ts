@@ -7,13 +7,19 @@ export function createUserRouter(userService: UserService) {
   const router = Router()
 
   router.get('/me', async (req: Request, res: Response) => {
-    res.json(await userService.getAuthUser(req.user))
+    if (!req.context?.user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
+    res.json(await userService.getAuthUser(req.context))
   })
 
   router.patch('/me', validateDto(UpdateUserDto), async (req: Request, res: Response) => {
+    if (!req.context?.user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
     const data = req.body
     try {
-      const updated = await userService.updateUser(req.user.id, data)
+      const updated = await userService.updateUser(req.context, req.context.user.id, data)
       res.json(updated)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -23,8 +29,11 @@ export function createUserRouter(userService: UserService) {
   router.get('/search', async (req: Request, res: Response) => {
     const q = req.query.text as string | undefined
     if (!q) return res.json([])
+    if (!req.context?.user) {
+      return res.json([])
+    }
     try {
-      const results = await userService.findUsers(req.user.id, q)
+      const results = await userService.findUsers(req.context, req.context.user.id, q)
       res.json(results)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -33,8 +42,11 @@ export function createUserRouter(userService: UserService) {
 
   router.get('/:id', async (req: Request, res: Response) => {
     const id = Number(req.params.id)
+    if (!req.context?.user) {
+      return res.status(401).json({ message: 'Unauthorized' })
+    }
     try {
-      const user = await userService.getUserWithContactById(req.user.id, id)
+      const user = await userService.getUserWithContactById(req.context, req.context.user.id, id)
       res.json(user)
     } catch (err: any) {
       res.status(404).json({ message: err.message })
@@ -48,7 +60,7 @@ export function createUserRouter(userService: UserService) {
 
   router.put('/:id', validateDto(UpdateUserDto), async (req: Request, res: Response) => {
     const id = Number(req.params.id)
-    const updated = await userService.updateUser(id, req.body)
+    const updated = await userService.updateUser(req.context, id, req.body)
     res.json(updated)
   })
 

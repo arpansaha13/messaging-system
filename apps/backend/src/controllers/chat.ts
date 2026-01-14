@@ -8,7 +8,7 @@ export function createChatRouter(chatService: ChatService) {
 
   router.get('/', async (req, res) => {
     try {
-      const chats = await chatService.getChatsOfUser(req.user.id)
+      const chats = await chatService.getChatsOfUser(req.context)
       res.json(chats)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -18,7 +18,7 @@ export function createChatRouter(chatService: ChatService) {
   router.get('/:receiverId', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      const chat = await chatService.getChatOfUserWithReceiver(req.user.id, receiverId)
+      const chat = await chatService.getChatOfUserWithReceiver(req.context, receiverId)
       res.json(chat)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -28,7 +28,7 @@ export function createChatRouter(chatService: ChatService) {
   router.patch('/:receiverId/archive', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      await chatService.updateArchive(req.user.id, receiverId, true)
+      await chatService.updateArchive(req.context, receiverId, true)
       res.status(204).send()
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -38,7 +38,7 @@ export function createChatRouter(chatService: ChatService) {
   router.patch('/:receiverId/unarchive', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      await chatService.updateArchive(req.user.id, receiverId, false)
+      await chatService.updateArchive(req.context, receiverId, false)
       res.status(204).send()
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -48,7 +48,7 @@ export function createChatRouter(chatService: ChatService) {
   router.patch('/:receiverId/pin', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      await chatService.updatePin(req.user.id, receiverId, true)
+      await chatService.updatePin(req.context, receiverId, true)
       res.status(204).send()
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -58,7 +58,7 @@ export function createChatRouter(chatService: ChatService) {
   router.patch('/:receiverId/unpin', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      await chatService.updatePin(req.user.id, receiverId, false)
+      await chatService.updatePin(req.context, receiverId, false)
       res.status(204).send()
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -68,7 +68,7 @@ export function createChatRouter(chatService: ChatService) {
   router.delete('/:receiverId/clear', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      await chatService.clearChat(req.user.id, receiverId)
+      await chatService.clearChat(req.context, receiverId)
       res.status(204).send()
     } catch (err: any) {
       res.status(400).json({ message: err.message })
@@ -78,7 +78,7 @@ export function createChatRouter(chatService: ChatService) {
   router.delete('/:receiverId/delete', validateDto(ReceiverParamDto, 'params'), async (req, res) => {
     const receiverId = Number(req.params.receiverId)
     try {
-      await chatService.deleteChat(req.user.id, receiverId)
+      await chatService.deleteChat(req.context, receiverId)
       res.status(204).send()
     } catch (err: any) {
       res.status(400).json({ message: err.message })

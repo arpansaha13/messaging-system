@@ -11,19 +11,56 @@ import { insertGroupMessages } from './group-messages.mjs'
 
 dotEnvConfig()
 
+/**
+ * Validates mandatory environment variables
+ */
+const requiredEnvVars = [
+  'DB_HOST',
+  'DB_PORT',
+  'DB_USERNAME',
+  'DB_NAME',
+  'DB_PASSWORD',
+  'AUTH_DB_HOST',
+  'AUTH_DB_PORT',
+  'AUTH_DB_USERNAME',
+  'AUTH_DB_NAME',
+  'AUTH_DB_PASSWORD',
+]
+
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
+
+if (missingVars.length > 0) {
+  throw new Error(
+    `Missing mandatory environment variables:\n${missingVars.join('\n')}\n` +
+      `Please check your .env file or environment configuration.`,
+  )
+}
+
+// Messaging System Database Connection
 const client = new pg.Client({
-  host: process.env.DB_HOST ?? 'localhost',
-  port: Number.parseInt(process.env.DB_PORT ?? '7000'),
-  user: process.env.DB_USERNAME ?? 'postgres',
-  database: process.env.DB_NAME ?? 'messaging_db',
+  host: process.env.DB_HOST,
+  port: Number.parseInt(process.env.DB_PORT),
+  user: process.env.DB_USERNAME,
+  database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
+  ssl: process.env.NODE_ENV === 'development' ? false : { rejectUnauthorized: false },
+})
+
+// Auth System Database Connection
+const authClient = new pg.Client({
+  host: process.env.AUTH_DB_HOST,
+  port: Number.parseInt(process.env.AUTH_DB_PORT),
+  user: process.env.AUTH_DB_USERNAME,
+  database: process.env.AUTH_DB_NAME,
+  password: process.env.AUTH_DB_PASSWORD,
   ssl: process.env.NODE_ENV === 'development' ? false : { rejectUnauthorized: false },
 })
 
 async function seed() {
   await client.connect()
+  await authClient.connect()
 
-  console.group('Clearing existing data')
+  console.group('Clearing existing data in Messaging System Database')
 
   await client.query('DELETE FROM message_recipients')
   console.log('deleted message_recipients')
@@ -49,7 +86,24 @@ async function seed() {
   await client.query('DELETE FROM groups')
   console.log('deleted groups')
 
-  await client.query('DELETE FROM users')
+  await client.query('DELETE FROM user_profiles')
+  console.log('deleted user_profiles')
+
+  console.groupEnd()
+  console.log()
+
+  console.group('Clearing existing data in Auth System Database')
+
+  await authClient.query('DELETE FROM otps')
+  console.log('deleted otps')
+
+  await authClient.query('DELETE FROM sessions')
+  console.log('deleted sessions')
+
+  await authClient.query('DELETE FROM credentials')
+  console.log('deleted credentials')
+
+  await authClient.query('DELETE FROM users')
   console.log('deleted users')
 
   console.groupEnd()
@@ -62,56 +116,48 @@ async function seed() {
     return count
   }
 
-  async function printDatabaseSize() {
-    const result = await client.query(`
-      SELECT pg_size_pretty(pg_database_size(current_database())) AS size
-    `)
-    console.log(`Database size: ${result.rows[0].size}`)
+  async function printDatabaseSizes() {
+    const messagingResult = await client.query(`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`)
+    const authResult = await authClient.query(`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`)
+    console.log(`Messaging System Database size: ${messagingResult.rows[0].size}`)
+    console.log(`Auth System Database size: ${authResult.rows[0].size}`)
   }
 
   console.time('Seeding completed in')
 
-  console.log('inserting users...')
-  const users = await run(insertUsers.bind(this, client))
-  console.log(`inserted ${users.count} users\n`)
+  console.log('Inserting users to databases...')
+  const users = await run(insertUsers.bind(this, client, authClient))
 
-  console.log('inserting chats...')
+  console.log('Inserting chats...')
   const chats = await run(insertChats.bind(this, client, users.data))
-  console.log(`inserted ${chats.count} chats\n`)
 
-  console.log('inserting contacts...')
-  const contactsInsertCount = await run(insertContacts.bind(this, client, users.data))
-  console.log(`inserted ${contactsInsertCount} contacts\n`)
+  console.log('Inserting contacts...')
+  await run(insertContacts.bind(this, client, users.data))
 
-  console.log('inserting groups...')
+  console.log('Inserting groups...')
   const groups = await run(insertGroups.bind(this, client, users.data))
-  console.log(`inserted ${groups.count} groups\n`)
 
-  console.log('inserting user-groups...')
-  const userGroups = await run(insertUserGroups.bind(this, client, users.data, groups.data))
-  console.log(`inserted ${userGroups.count} user-groups\n`)
+  console.log('Inserting user-groups...')
+  await run(insertUserGroups.bind(this, client, users.data, groups.data))
 
-  console.log('inserting channels...')
-  const channels = await run(insertChannels.bind(this, client, groups.data))
-  console.log(`inserted ${channels.count} channels\n`)
+  console.log('Inserting channels...')
+  await run(insertChannels.bind(this, client, groups.data))
 
-  console.log('inserting messages...')
-  const { messagesInsertCount, recipientsInsertCount } = await run(insertMessages.bind(this, client, chats.data))
-  console.log(`inserted ${messagesInsertCount} messages and ${recipientsInsertCount} message-recipients\n`)
+  console.log('Inserting messages...')
+  await run(insertMessages.bind(this, client, chats.data))
 
-  console.log('inserting group messages...')
-  const { groupMessagesInsertCount, groupMessageRecipientsInsertCount } = await run(
-    insertGroupMessages.bind(this, client, groups.data),
-  )
-  console.log(
-    `inserted ${groupMessagesInsertCount} group messages and ${groupMessageRecipientsInsertCount} group-message message-recipients`,
-  )
+  console.log('Inserting group messages...')
+  await run(insertGroupMessages.bind(this, client, groups.data))
 
-  console.log()
   console.timeEnd('Seeding completed in')
-  await printDatabaseSize()
+  await printDatabaseSizes()
 
   await client.end()
+  await authClient.end()
 }
 
-seed().catch(e => console.error(e.stack))
+seed().catch(e => {
+  console.error('Seeding failed:')
+  console.error(e.message)
+  process.exit(1)
+})

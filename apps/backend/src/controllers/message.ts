@@ -10,7 +10,7 @@ export function createMessageRouter(messageService: MessageService) {
     const receiverId = Number(req.params.receiverId)
     const clearedAt = new Date(0)
     try {
-      const msgs = await messageService.getMessagesBetween(req.user.id, receiverId, clearedAt)
+      const msgs = await messageService.getMessagesBetween(req.context, receiverId, clearedAt)
       res.json(msgs)
     } catch (err: any) {
       res.status(400).json({ message: err.message })

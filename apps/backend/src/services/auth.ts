@@ -1,122 +1,154 @@
-import jwt from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
-import { UserRepository } from '../repositories/user'
-import { UnverifiedUserRepository } from '../repositories/unverified-user'
-import { MailService } from './mail'
-import AppDataSource from '../data-source'
-import { User } from '../models/user'
-import { UnverifiedUser } from '../models/unverified-user'
-import { SessionRepository } from '../repositories/session'
+import * as grpc from '@grpc/grpc-js'
+import { proto } from '../pb/auth'
 
-const JWT_SECRET = process.env.JWT_SECRET
-const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME
-const JWT_TOKEN_VALIDITY_SECONDS = Number(process.env.JWT_TOKEN_VALIDITY_SECONDS)
+// Type aliases for convenience
+type AuthServiceClient = proto.AuthServiceClient
+type SignupRequest = proto.SignupRequest
+type SignupResponse = proto.SignupResponse
+type VerifyOTPRequest = proto.VerifyOTPRequest
+type VerifyOTPResponse = proto.VerifyOTPResponse
+type LoginRequest = proto.LoginRequest
+type LoginResponse = proto.LoginResponse
+type ValidateSessionRequest = proto.ValidateSessionRequest
+type ValidateSessionResponse = proto.ValidateSessionResponse
+type LogoutRequest = proto.LogoutRequest
+type LogoutResponse = proto.LogoutResponse
+type GetUserRequest = proto.GetUserRequest
+type GetUserResponse = proto.GetUserResponse
+type GetUserByEmailRequest = proto.GetUserByEmailRequest
+type GetUserByEmailResponse = proto.GetUserByEmailResponse
+type DeleteUserRequest = proto.DeleteUserRequest
+type DeleteUserResponse = proto.DeleteUserResponse
+
+let authServiceClient: AuthServiceClient | null = null
+
+/**
+ * Initialize the gRPC connection to the auth service
+ */
+export function initializeAuthService(): AuthServiceClient {
+  if (authServiceClient) {
+    return authServiceClient
+  }
+
+  const credentials = grpc.ChannelCredentials.createInsecure()
+  authServiceClient = new proto.AuthServiceClient(process.env.AUTH_SYSTEM_HOST, credentials)
+
+  return authServiceClient
+}
+
+/**
+ * Close the gRPC connection to the auth service
+ */
+export async function closeAuthService(): Promise<void> {
+  if (!authServiceClient) {
+    return
+  }
+
+  authServiceClient.close()
+  authServiceClient = null
+}
+
+/**
+ * Create gRPC metadata with optional authorization token
+ */
+function createMetadata(token?: string): grpc.Metadata {
+  const metadata = new grpc.Metadata()
+  if (token) {
+    metadata.add('authorization', `Bearer ${token}`)
+  }
+  return metadata
+}
+
+/**
+ * Promisify a gRPC unary call with optional token
+ */
+function promisifyGrpcCall<TReq, TRes>(
+  call: (req: TReq, metadata: grpc.Metadata, callback: grpc.requestCallback<TRes>) => grpc.ClientUnaryCall,
+  request: TReq,
+  token?: string,
+): Promise<TRes> {
+  return new Promise((resolve, reject) => {
+    const metadata = createMetadata(token)
+    call(request, metadata, (err, response) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(response!)
+      }
+    })
+  })
+}
 
 export class AuthService {
-  constructor(
-    private readonly userRepo: UserRepository,
-    private readonly sessionRepo: SessionRepository,
-    private readonly unverifiedRepo: UnverifiedUserRepository,
-    private readonly mailService: MailService,
-  ) {}
-
-  private generateOtp(length = 4) {
-    let result = ''
-    const characters = '0123456789'
-    for (let i = 0; i < length; i++) result += characters.charAt(Math.floor(Math.random() * characters.length))
-    return result
+  /**
+   * Signup a new user with the auth system
+   */
+  static async signup(email: string, password: string): Promise<SignupResponse> {
+    const client = initializeAuthService()
+    const request = new proto.SignupRequest({ email, password })
+    return promisifyGrpcCall(client.Signup.bind(client), request)
   }
 
-  private generateHash(length = 8) {
-    return Math.random()
-      .toString(36)
-      .slice(2, 2 + length)
+  /**
+   * Verify OTP code with the auth system
+   */
+  static async verifyOTP(otpHash: string, code: string): Promise<VerifyOTPResponse> {
+    const client = initializeAuthService()
+    const request = new proto.VerifyOTPRequest({ otp_hash: otpHash, code })
+    return promisifyGrpcCall(client.VerifyOTP.bind(client), request)
   }
 
-  async checkAuth(req: any) {
-    const sessionKey = req.cookies?.[AUTH_COOKIE_NAME]
-    if (!sessionKey) return { valid: false }
-    const session = await this.sessionRepo.findByKey(sessionKey)
-    if (!session) return { valid: false }
-    try {
-      const payload: any = jwt.verify(session.token, JWT_SECRET)
-      const user_id = payload.user_id
-      if (!user_id) return { valid: false }
-      const exists = await this.userRepo.findById(user_id)
-      return { valid: !!exists }
-    } catch (err) {
-      console.error(err)
-      return { valid: false }
-    }
+  /**
+   * Login a user with the auth system
+   */
+  static async login(email: string, password: string): Promise<LoginResponse> {
+    const client = initializeAuthService()
+    const request = new proto.LoginRequest({ email, password })
+    return promisifyGrpcCall(client.Login.bind(client), request)
   }
 
-  async signUp(credentials: any) {
-    const hash = this.generateHash()
-    const otp = this.generateOtp()
-    const username = credentials.globalName + '-' + Math.random().toString(36).slice(2, 8)
-
-    const hashedPwd = await bcrypt.hash(credentials.password, await bcrypt.genSalt())
-
-    await this.unverifiedRepo.upsert(
-      {
-        hash,
-        otp,
-        email: credentials.email,
-        username,
-        globalName: credentials.globalName,
-        password: hashedPwd,
-      },
-      { conflictPaths: ['email'], skipUpdateIfNoValuesChanged: true },
-    )
-
-    await this.mailService.sendVerificationMail(credentials.email, credentials.globalName, hash, otp)
+  /**
+   * Validate a session token with the auth system
+   */
+  static async validateSession(token: string): Promise<ValidateSessionResponse> {
+    const client = initializeAuthService()
+    const request = new proto.ValidateSessionRequest()
+    return promisifyGrpcCall(client.ValidateSession.bind(client), request, token)
   }
 
-  async login(res: any, credentials: any) {
-    const user = await this.userRepo.findByEmail(credentials.email)
-
-    if (user && (await bcrypt.compare(credentials.password, user.password))) {
-      const payload = { user_id: user.id }
-      const token = jwt.sign(payload, JWT_SECRET)
-      const maxAge = JWT_TOKEN_VALIDITY_SECONDS * 1000
-
-      const session = await this.sessionRepo.save(
-        this.sessionRepo.create({ token, expiresAt: new Date(Date.now() + maxAge) }),
-      )
-
-      res.cookie(AUTH_COOKIE_NAME, session.key, { secure: true, sameSite: 'strict', httpOnly: true, maxAge })
-      return res.status(200).send()
-    }
-    return res.status(401).send({ message: 'Invalid credentials' })
+  /**
+   * Logout a session with the auth system
+   */
+  static async logout(token: string): Promise<LogoutResponse> {
+    const client = initializeAuthService()
+    const request = new proto.LogoutRequest()
+    return promisifyGrpcCall(client.Logout.bind(client), request, token)
   }
 
-  async logout(req: any, res: any) {
-    const sessionKey = req.cookies?.[AUTH_COOKIE_NAME]
-    if (sessionKey) await this.sessionRepo.deleteByKey(sessionKey)
-    res.cookie(AUTH_COOKIE_NAME, '', { maxAge: 0 })
-    return res.status(200).send()
+  /**
+   * Get user by user ID
+   */
+  static async getUser(userId: number, token: string): Promise<GetUserResponse> {
+    const client = initializeAuthService()
+    const request = new proto.GetUserRequest({ user_id: userId })
+    return promisifyGrpcCall(client.GetUser.bind(client), request, token)
   }
 
-  async validateVerificationLink(hash: string) {
-    const isValid = await this.unverifiedRepo.existsByHash(hash)
-    return { valid: isValid }
+  /**
+   * Get user by email
+   */
+  static async getUserByEmail(email: string, token: string): Promise<GetUserByEmailResponse> {
+    const client = initializeAuthService()
+    const request = new proto.GetUserByEmailRequest({ email })
+    return promisifyGrpcCall(client.GetUserByEmail.bind(client), request, token)
   }
 
-  async verifyAccount(hash: string, otp: string) {
-    const unverified = await this.unverifiedRepo.findByHash(hash)
-    if (!unverified) throw new Error('Invalid link')
-    // simple otp check
-    if (unverified.otp !== otp) throw new Error('Invalid otp')
-    // create user
-    await AppDataSource.manager.transaction(async txn => {
-      const newUser = txn.create(User, {
-        email: unverified.email,
-        globalName: unverified.globalName,
-        password: unverified.password,
-        username: unverified.username,
-      })
-      await txn.save(newUser)
-      await txn.delete(UnverifiedUser, { hash })
-    })
+  /**
+   * Delete a user
+   */
+  static async deleteUser(userId: number, token: string): Promise<DeleteUserResponse> {
+    const client = initializeAuthService()
+    const request = new proto.DeleteUserRequest({ user_id: userId })
+    return promisifyGrpcCall(client.DeleteUser.bind(client), request, token)
   }
 }

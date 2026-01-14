@@ -3,7 +3,7 @@ services:
     image: nginx:alpine
     container_name: nginx
     ports:
-      - '3000:443'
+      - '7000:443'
     volumes:
       - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs:/etc/nginx/certs:ro
@@ -14,15 +14,34 @@ services:
     networks:
       - messaging-network
 
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USERNAME}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - '7010:5432'
+    volumes:
+      - ./data/auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
   postgres:
-    image: postgres:15.10-alpine
+    image: postgres:16-alpine
     container_name: postgres
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - '7000:5432'
+      - '7020:5432'
     volumes:
       - ./data/default:/var/lib/postgresql/data
     healthcheck:
@@ -41,7 +60,7 @@ services:
     environment:
       NODE_ENV: development
       API_PORT: 4000
-      DB_HOST: ${DB_HOST} # postgres service name in docker network
+      DB_HOST: ${DB_HOST}
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -56,11 +75,16 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
+      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST:-auth:50051}
     ports:
-      - '4000:4000'
+      - '7030:4000'
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth:
+        condition: service_started
     networks:
       - messaging-network
     develop:
@@ -87,6 +111,8 @@ services:
       CLIENT_DOMAIN: ${CLIENT_DOMAIN}
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
+    # ports:
+    #   - '7040:4000'
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -99,6 +125,56 @@ services:
           target: /app/apps/socket/src
         - action: rebuild
           path: ./apps/socket/tsconfig.json
+
+  rabbitmq:
+    image: rabbitmq:4.2.2-management-alpine
+    container_name: rabbitmq
+    ports:
+      - '7050:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ['CMD-SHELL', 'rabbitmq-diagnostics -q ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  auth:
+    build:
+      context: ../auth-system
+      dockerfile: Dockerfile
+    container_name: auth-system
+    environment:
+      DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+      GRPC_HOST: ${GRPC_HOST}
+      GRPC_PORT: ${GRPC_PORT}
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
+      SESSION_CLEANUP_INTERVAL_MINUTES: ${SESSION_CLEANUP_INTERVAL_MINUTES}
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES}
+      OTP_LENGTH: ${OTP_LENGTH}
+      EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
+      EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+    # ports:
+    #   - '7060:${GRPC_PORT:-50051}'
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - messaging-network
+    expose:
+      - "50051"
 
   frontend:
     build:
@@ -113,7 +189,6 @@ services:
       NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
-      SOCKET_IO_BASE_URL: ${SOCKET_IO_BASE_URL:-}
     depends_on:
       backend:
         condition: service_started
@@ -137,22 +212,6 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached
-    networks:
-      - messaging-network
-
-  rabbitmq:
-    image: rabbitmq:4.2.2-management-alpine
-    container_name: rabbitmq
-    ports:
-      - '15672:15672'
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
-    healthcheck:
-      test: ['CMD-SHELL', 'rabbitmq-diagnostics -q ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - messaging-network
 

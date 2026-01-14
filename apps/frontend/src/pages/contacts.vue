@@ -42,7 +42,7 @@
                       <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                         {{ contact.alias }}
                       </p>
-                      <p class="truncate text-xs text-gray-500 dark:text-gray-400">@{{ contact.username }}</p>
+                      <!-- <p class="truncate text-xs text-gray-500 dark:text-gray-400">@{{ contact.username }}</p> -->
                     </div>
                   </div>
 

@@ -1,5 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
-import { User } from './user'
+import { UserProfile } from './user'
 import { Group } from './group'
 
 @Entity({ name: 'invites' })
@@ -7,9 +7,9 @@ export class Invite {
   @PrimaryColumn({ type: 'varchar' })
   hash!: string
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => UserProfile, { nullable: false })
   @JoinColumn({ name: 'inviter_id', referencedColumnName: 'id' })
-  inviter!: User
+  inviter!: UserProfile
 
   @ManyToOne(() => Group, { nullable: true })
   @JoinColumn({ name: 'group_id', referencedColumnName: 'id' })

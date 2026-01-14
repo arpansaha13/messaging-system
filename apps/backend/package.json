@@ -8,9 +8,11 @@
     "start": "node -r reflect-metadata dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "test:ci": "vitest run --coverage"
+    "test:ci": "vitest run --coverage",
+    "generate:proto": "protoc -I=proto --ts_out=src/pb auth.proto"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
     "@shared/constants": "workspace:*",
     "amqplib": "^0.10.9",
     "bcryptjs": "^3.0.3",
@@ -18,8 +20,10 @@
     "class-validator": "^0.14.3",
     "cookie-parser": "^1.4.6",
     "express": "^5.2.1",
+    "google-protobuf": "^4.0.1",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.16.3",
+    "protobufjs": "^8.0.0",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.28"
   },
@@ -31,6 +35,7 @@
     "@types/node": "^25.0.2",
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "4.0.15",
+    "protoc-gen-ts": "^0.8.7",
     "supertest": "^7.1.4",
     "testcontainers": "^11.10.0",
     "ts-node": "^10.9.1",

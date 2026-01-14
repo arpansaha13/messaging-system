@@ -12,7 +12,8 @@ export class MessageService {
     return this.repo.save(this.repo.create({ content, sender: { id: senderId }, channel: null }))
   }
 
-  getMessagesBetween(senderId: number, receiverId: number, clearedAt: Date) {
+  getMessagesBetween(context: any, receiverId: number, clearedAt: Date) {
+    const senderId = context.user.id
     return this.repo.getMessagesByUserId(senderId, receiverId, clearedAt)
   }
 

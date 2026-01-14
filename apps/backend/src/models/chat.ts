@@ -1,15 +1,15 @@
 import { Column, Entity, ManyToOne, JoinColumn, PrimaryColumn } from 'typeorm'
-import { User } from './user'
+import { UserProfile } from './user'
 
 @Entity({ name: 'chats' })
 export class Chat {
-  @PrimaryColumn({ name: 'sender_id', type: 'integer' })
-  @ManyToOne(() => User)
+  @PrimaryColumn({ name: 'sender_id', type: 'bigint' })
+  @ManyToOne(() => UserProfile)
   @JoinColumn({ name: 'sender_id', referencedColumnName: 'id' })
   sender_id!: number
 
-  @PrimaryColumn({ name: 'receiver_id', type: 'integer' })
-  @ManyToOne(() => User)
+  @PrimaryColumn({ name: 'receiver_id', type: 'bigint' })
+  @ManyToOne(() => UserProfile)
   @JoinColumn({ name: 'receiver_id', referencedColumnName: 'id' })
   receiver_id!: number
 

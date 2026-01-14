@@ -43,7 +43,6 @@ export default defineNuxtConfig({
     apiBaseUrl: process.env.API_BASE_URL ?? '',
     authCookieName: process.env.AUTH_COOKIE_NAME ?? '',
     public: {
-      socketIoBaseUrl: process.env.SOCKET_IO_BASE_URL ?? '',
       csrfCookieName: process.env.CSRF_COOKIE_NAME ?? '',
     },
   },

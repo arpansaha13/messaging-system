@@ -1,0 +1,152 @@
+syntax = "proto3";
+
+package proto;
+
+import "google/protobuf/timestamp.proto";
+
+// AuthService provides authentication and session management operations.
+// It handles user registration, email verification, login, session validation, and logout.
+service AuthService {
+    // Signup registers a new user with email and password.
+    // Returns user_id and sends verification OTP to email.
+  rpc Signup(SignupRequest) returns (SignupResponse);
+
+    // VerifyOTP verifies the OTP sent to user's email and marks user as verified.
+    // Returns generated username and initial session token.
+  rpc VerifyOTP(VerifyOTPRequest) returns (VerifyOTPResponse);
+
+    // Login authenticates user with email and password.
+    // User must be verified before login. Returns session token with expiry time.
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+    // ValidateSession validates an active session token.
+    // Token is extracted from request metadata (Authorization header).
+    // Returns user_id and validity status.
+  rpc ValidateSession(ValidateSessionRequest) returns (ValidateSessionResponse);
+
+    // RefreshSession extends the TTL of an active session.
+    // Token is extracted from request metadata (Authorization header).
+    // Returns a new session token.
+  rpc RefreshSession(RefreshSessionRequest) returns (RefreshSessionResponse);
+
+    // Logout soft-deletes the user's session.
+    // Token is extracted from request metadata (Authorization header).
+    // After logout, token becomes invalid.
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+    // GetUser retrieves user information by user_id.
+    // Used by other microservices to fetch user details.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+    // GetUserByEmail retrieves user details by email address.
+    // Used for user lookup operations.
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserByEmailResponse);
+
+    // DeleteUser deletes a user and all associated data.
+    // This is used when users close their accounts.
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+// SignupRequest contains email and password for user registration.
+message SignupRequest {
+  string email    = 1; // User's email address
+  string password = 2; // User's password (minimum 8 characters)
+}
+
+// SignupResponse returns confirmation message and newly created user_id.
+message SignupResponse {
+  string message  = 1; // Confirmation message
+  string otp_hash = 2; // Unique OTP hash received during signup
+}
+
+// VerifyOTPRequest contains user_id and OTP code for email verification.
+message VerifyOTPRequest {
+  string otp_hash = 1; // Unique OTP hash received during signup
+  string code     = 2; // 6-digit OTP code sent to email
+}
+
+// VerifyOTPResponse returns confirmation, generated username, and initial session token.
+message VerifyOTPResponse {
+  string message       = 1; // Confirmation message
+  string username      = 2; // Auto-generated username (email_prefix + random 6 digits)
+  string session_token = 3; // Initial session token for immediate login
+}
+
+// LoginRequest contains email and password for authentication.
+message LoginRequest {
+  string email    = 1; // User's email address
+  string password = 2; // User's password
+}
+
+// LoginResponse returns session token with expiry timestamp.
+message LoginResponse {
+  string                    session_token = 1; // Valid session token (32-byte hex)
+  google.protobuf.Timestamp expires_at    = 2; // Token expiration time (UTC)
+}
+
+// ValidateSessionRequest is empty; token is extracted from metadata.
+// Token should be in Authorization header as "Bearer <token>".
+message ValidateSessionRequest {}
+
+// ValidateSessionResponse returns user_id and token validity status.
+message ValidateSessionResponse {
+  int64 user_id = 1; // Bigint ID of the authenticated user
+  bool  valid   = 2; // True if token is valid and not expired
+}
+
+// RefreshSessionRequest is empty; token is extracted from metadata.
+// Token should be in Authorization header as "Bearer <token>".
+message RefreshSessionRequest {}
+
+// RefreshSessionResponse returns a new session token with extended TTL.
+message RefreshSessionResponse {
+  string new_session_token = 1; // New valid session token (32-byte hex)
+}
+
+// LogoutRequest is empty; token is extracted from metadata.
+// Token should be in Authorization header as "Bearer <token>".
+message LogoutRequest {}
+
+// LogoutResponse returns confirmation of logout.
+message LogoutResponse {
+  string message = 1; // Confirmation message ("logout successful")
+}
+
+// GetUserRequest contains user_id for user retrieval.
+message GetUserRequest {
+  int64 user_id = 1; // Bigint ID of the user
+}
+
+// UserData contains user information.
+message UserData {
+  int64                     user_id    = 1; // Bigint ID of the user
+  string                    email      = 2; // User's email address
+  string                    username   = 3; // User's username (auto-generated on verification)
+  bool                      verified   = 4; // Whether user has verified email
+  google.protobuf.Timestamp created_at = 5; // User creation timestamp (UTC)
+}
+
+// GetUserResponse returns user information.
+message GetUserResponse {
+  UserData user = 1; // User information
+}
+
+// GetUserByEmailRequest contains email for user lookup.
+message GetUserByEmailRequest {
+  string email = 1; // Email address to search for
+}
+
+// GetUserByEmailResponse returns user information for given email.
+message GetUserByEmailResponse {
+  UserData user = 1; // User information with given email
+}
+
+// DeleteUserRequest contains user_id for deletion.
+message DeleteUserRequest {
+  int64 user_id = 1; // Bigint ID of the user to delete
+}
+
+// DeleteUserResponse returns confirmation of user deletion.
+message DeleteUserResponse {
+  string message = 1; // Confirmation message ("user deleted successfully")
+}

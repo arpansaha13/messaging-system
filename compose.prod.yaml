@@ -18,17 +18,52 @@ services:
     networks:
       - messaging-network
 
+  # Auth System - Located outside this repository
+  auth:
+    build:
+      context: ../auth-system
+      dockerfile: Dockerfile
+    image: auth_system_prod
+    container_name: auth_system_prod
+    environment:
+      DATABASE_URL: postgresql://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@postgres:5432/${AUTH_DB_NAME}
+      GRPC_HOST: ${GRPC_HOST}
+      GRPC_PORT: ${GRPC_PORT}
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
+      SESSION_CLEANUP_INTERVAL_MINUTES: ${SESSION_CLEANUP_INTERVAL_MINUTES}
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      ENVIRONMENT: ${ENVIRONMENT}
+      LOG_LEVEL: ${LOG_LEVEL}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES}
+      OTP_LENGTH: ${OTP_LENGTH}
+      EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
+      EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-network
+    expose:
+      - "50051"
+
   postgres:
     image: postgres:15.10-alpine
     container_name: postgres_prod
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=pgcrypto"
     ports:
       - '7001:5432'
     volumes:
       - ./data/default:/var/lib/postgresql/data
+      - ./data/auth:/var/lib/postgresql/data_auth
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME}']
       interval: 10s
@@ -61,11 +96,14 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
+      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
     ports:
       - '4000:4000'
     depends_on:
       postgres:
         condition: service_healthy
+      auth:
+        condition: service_started
     networks:
       - messaging-network
 
@@ -108,7 +146,6 @@ services:
       NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
-      SOCKET_IO_BASE_URL: ${SOCKET_IO_BASE_URL}
     depends_on:
       backend:
         condition: service_started

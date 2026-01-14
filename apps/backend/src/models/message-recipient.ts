@@ -1,8 +1,8 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
 import { BaseEntity } from './base'
 import { Message } from './message'
-import { User } from './user'
 import { MessageStatus } from '@shared/constants'
+import { UserProfile } from './user'
 
 @Entity({ name: 'message_recipients' })
 export class MessageRecipient extends BaseEntity {
@@ -13,7 +13,7 @@ export class MessageRecipient extends BaseEntity {
   @Column({ name: 'status', type: 'varchar', nullable: false, default: MessageStatus.SENT })
   status!: MessageStatus
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => UserProfile, { nullable: false })
   @JoinColumn({ name: 'receiver_id', referencedColumnName: 'id' })
-  receiver!: User
+  receiver!: UserProfile
 }

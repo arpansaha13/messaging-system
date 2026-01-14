@@ -7,7 +7,7 @@ export function createUserGroupRouter(userGroupService: UserGroupService) {
   const router = Router()
 
   router.get('/user/:userId', validateDto(UserIdParam, 'params'), async (req: Request, res: any) => {
-    const groups = await userGroupService.getGroupsOfUser(Number(req.params.userId))
+    const groups = await userGroupService.getGroupsOfUser(req.context)
     res.json(groups)
   })
 
@@ -19,7 +19,7 @@ export function createUserGroupRouter(userGroupService: UserGroupService) {
   router.post('/group/:groupId/join', validateDto(GroupIdParam, 'params'), async (req: Request, res: any) => {
     const groupId = Number(req.params.groupId)
     try {
-      const added = await userGroupService.addUserToGroup(req.user.id, groupId)
+      const added = await userGroupService.addUserToGroup(req.context, groupId)
       res.status(201).json(added)
     } catch (err: any) {
       res.status(400).json({ message: err.message })

@@ -1,4 +1,4 @@
-import { type DataSource, Repository, Brackets } from 'typeorm'
+import { type DataSource, Repository } from 'typeorm'
 import { Contact } from '../models/contact'
 
 export class ContactRepository extends Repository<Contact> {
@@ -13,13 +13,8 @@ export class ContactRepository extends Repository<Contact> {
         alias: true,
         userInContact: {
           id: true,
-          // @ts-ignore
           dp: true,
-          // @ts-ignore
           bio: true,
-          // @ts-ignore
-          username: true,
-          // @ts-ignore
           globalName: true,
         },
       },
@@ -30,34 +25,17 @@ export class ContactRepository extends Repository<Contact> {
   }
 
   getContactsByUserIdAndQuery(userId: number, search: string) {
-    // Replace ILIKE (Postgres) with case-insensitive LIKE using lower()
-    const qb = this.createQueryBuilder('contact').innerJoin('contact.userInContact', 'userInContact')
+    const qb = this.createQueryBuilder('contact')
 
     const firstWord = `${search}%`
     const remainingWords = `% ${search}%`
 
-    qb.select([
-      'contact.id',
-      'contact.alias',
-      'userInContact.id',
-      'userInContact.globalName',
-      'userInContact.username',
-      'userInContact.bio',
-      'userInContact.dp',
-    ])
-      .where('contact.user.id = :userId', { userId })
-      .andWhere(
-        new Brackets(qb2 => {
-          qb2
-            .where('LOWER(contact.alias) LIKE LOWER(:firstWord)')
-            .orWhere('LOWER(contact.alias) LIKE LOWER(:remainingWords)')
-            .orWhere('LOWER(userInContact.globalName) LIKE LOWER(:firstWord)')
-            .orWhere('LOWER(userInContact.globalName) LIKE LOWER(:remainingWords)')
-            .orWhere('LOWER(userInContact.username) LIKE LOWER(:firstWord)')
-            .orWhere('LOWER(userInContact.username) LIKE LOWER(:remainingWords)')
-        }),
-      )
-      .setParameters({ firstWord, remainingWords })
+    qb.select(['contact.id', 'contact.alias', 'contact.userInContact'])
+      .where('contact.user_id = :userId', { userId })
+      .andWhere('LOWER(contact.alias) LIKE LOWER(:firstWord) OR LOWER(contact.alias) LIKE LOWER(:remainingWords)', {
+        firstWord,
+        remainingWords,
+      })
 
     return qb.getMany()
   }
@@ -65,8 +43,11 @@ export class ContactRepository extends Repository<Contact> {
   async createContact(user: any, userInContact: any, alias: string) {
     const newContact = new Contact()
     newContact.user = user
-    newContact.userInContact = userInContact
+    newContact.userInContact = userInContact.user_id
     newContact.alias = alias
+    // Store original objects for compatibility
+    newContact.user = user
+    newContact.userInContact = userInContact
     return this.save(newContact)
   }
 
@@ -85,16 +66,15 @@ export class ContactRepository extends Repository<Contact> {
     const partialQ = this.createQueryBuilder('contact')
       .select('contact.id', 'id')
       .addSelect('contact.alias', 'alias')
-      .addSelect('userInContact.id', 'userIdInContact')
-      .innerJoin('contact.userInContact', 'userInContact')
-      .where('contact.user.id = :userId', { userId })
+      .addSelect('contact.userInContact', 'userIdInContact')
+      .where('contact.user_id = :userId', { userId })
 
     if (Array.isArray(userInContactIds)) {
-      return partialQ.andWhere('contact.userInContact.id IN (:...userInContactIds)', { userInContactIds }).getRawMany()
+      return partialQ.andWhere('contact.userInContact IN (:...userInContactIds)', { userInContactIds }).getRawMany()
     }
 
     return partialQ
-      .andWhere('contact.userInContact.id = :userInContactId', { userInContactId: userInContactIds })
+      .andWhere('contact.userInContact = :userInContactId', { userInContactId: userInContactIds })
       .getRawOne()
   }
 

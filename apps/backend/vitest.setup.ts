@@ -1,15 +1,12 @@
 import 'reflect-metadata'
 import { DataSource } from 'typeorm'
 import { GenericContainer, Wait } from 'testcontainers'
-import { User } from './src/models/user'
 import { Chat } from './src/models/chat'
 import { Group } from './src/models/group'
 import { Invite } from './src/models/invite'
-import { Session } from './src/models/session'
 import { Contact } from './src/models/contact'
 import { Channel } from './src/models/channel'
 import { UserGroup } from './src/models/user-group'
-import { UnverifiedUser } from './src/models/unverified-user'
 import { Message } from './src/models/message'
 import { MessageRecipient } from './src/models/message-recipient'
 
@@ -63,19 +60,7 @@ beforeAll(async () => {
     database: 'testdb',
     synchronize: true,
     logging: false,
-    entities: [
-      User,
-      Session,
-      UnverifiedUser,
-      Contact,
-      Channel,
-      Chat,
-      Group,
-      Invite,
-      MessageRecipient,
-      Message,
-      UserGroup,
-    ],
+    entities: [Chat, Group, Invite, MessageRecipient, Message, UserGroup, Contact, Channel],
   })
 
   await dataSource.initialize()

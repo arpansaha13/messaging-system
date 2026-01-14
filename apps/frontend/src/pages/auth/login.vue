@@ -26,7 +26,6 @@ definePageMeta({
   layout: 'auth',
 })
 
-const router = useRouter()
 const toast = useToast()
 const isLoading = ref(false)
 
@@ -66,7 +65,7 @@ async function onLogin(e: FormSubmitEvent<LoginSchema>) {
       description: 'You are now logged in.',
       color: 'success',
     })
-    await router.replace('/')
+    await navigateTo('/', { replace: true })
   } catch (err: any) {
     toast.add({
       title: 'Login failed',

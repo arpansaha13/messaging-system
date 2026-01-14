@@ -14,7 +14,7 @@ export function createInviteRouter(inviteService: InviteService) {
 
   router.post('/:hash/accept', validateDto(InviteHashParam, 'params'), async (req: Request, res) => {
     try {
-      const result = await inviteService.acceptInvite(req.user, req.params.hash)
+      const result = await inviteService.acceptInvite(req.context, req.params.hash)
       res.json(result)
     } catch (err: any) {
       res.status(400).json({ message: err.message })

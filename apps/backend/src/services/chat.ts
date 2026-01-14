@@ -11,7 +11,8 @@ export class ChatService {
     private readonly messageRepo: MessageRepository,
   ) {}
 
-  async getChatsOfUser(userId: number) {
+  async getChatsOfUser(context: any) {
+    const userId = context.user.id
     const chats = await this.repo.getChatsOfUser(userId)
 
     const promises: Array<Promise<any>> = []
@@ -90,7 +91,8 @@ export class ChatService {
     return res
   }
 
-  async getChatOfUserWithReceiver(userId: number, receiverId: number) {
+  async getChatOfUserWithReceiver(context: any, receiverId: number) {
+    const userId = context.user.id
     const chat = await this.repo.getChatOfUserByReceiverId(userId, receiverId)
 
     if (isNullOrUndefined(chat)) {
@@ -103,19 +105,23 @@ export class ChatService {
     return { chat, message, contact }
   }
 
-  async updateArchive(senderId: number, receiverId: number, newValue: boolean) {
+  async updateArchive(context: any, receiverId: number, newValue: boolean) {
+    const senderId = context.user.id
     await this.repo.updateChatOptions(senderId, receiverId, { archived: newValue, pinned: false })
   }
 
-  async updatePin(senderId: number, receiverId: number, newValue: boolean) {
+  async updatePin(context: any, receiverId: number, newValue: boolean) {
+    const senderId = context.user.id
     await this.repo.updateChatOptions(senderId, receiverId, { pinned: newValue })
   }
 
-  async clearChat(senderId: number, receiverId: number) {
+  async clearChat(context: any, receiverId: number) {
+    const senderId = context.user.id
     await this.repo.updateChatOptions(senderId, receiverId, { clearedAt: new Date() })
   }
 
-  async deleteChat(senderId: number, receiverId: number) {
+  async deleteChat(context: any, receiverId: number) {
+    const senderId = context.user.id
     return this.repo.delete({ sender_id: senderId, receiver_id: receiverId })
   }
 

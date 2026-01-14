@@ -9,18 +9,18 @@ export function createContactRouter(contactService: ContactService) {
   router.get('/', async (req: Request, res: Response) => {
     const q = req.query.search as string | undefined
     if (q) {
-      const results = await contactService.getContactsByQuery(req.user.id, q)
+      const results = await contactService.getContactsByQuery(req.context, q)
       return res.json(results)
     }
 
-    const results = await contactService.getContacts(req.user.id)
+    const results = await contactService.getContacts(req.context)
     res.json(results)
   })
 
   router.post('/', validateDto(CreateContactDto), async (req: Request, res: Response) => {
     const { userIdToAdd, alias } = req.body
     try {
-      const created = await contactService.addContact(req.user.id, Number(userIdToAdd), alias)
+      const created = await contactService.addContact(req.context, Number(userIdToAdd), alias)
       res.status(201).json(created)
     } catch (err: any) {
       res.status(400).json({ message: err.message })

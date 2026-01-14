@@ -37,9 +37,12 @@ export default defineNuxtPlugin(nuxtApp => {
     },
     async onResponseError({ response }) {
       if (response.status === 401) {
-        await nuxtApp.runWithContext(() => {
-          reloadNuxtApp({ persistState: false, path: '/auth/login' })
-        })
+        // useCookie(nuxtApp.$config.authCookieName).value = null
+
+        // await nuxtApp.runWithContext(() => {
+        navigateTo('/auth/login')
+        // reloadNuxtApp({ persistState: false, path: '/auth/login' })
+        // })
       }
     },
   })

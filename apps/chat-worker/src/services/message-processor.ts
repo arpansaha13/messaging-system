@@ -2,7 +2,7 @@ import { MessageStatus, SocketEvents } from '@shared/constants'
 import AppDataSource from '../data-source'
 import { Message } from '../models/message'
 import { MessageRecipient } from '../models/message-recipient'
-import { User } from '../models/user'
+import { UserProfile } from '../models/user'
 import { Chat } from '../models/chat'
 import { Channel } from '../models/channel'
 import { UserGroup } from '../models/user-group'
@@ -17,8 +17,8 @@ export class MessageProcessor {
     try {
       const { message, messageRecipient } = await AppDataSource.manager.transaction(async txnManager => {
         const [sender, receiver] = await Promise.all([
-          txnManager.findOneBy(User, { id: payload.senderId }),
-          txnManager.findOneBy(User, { id: payload.receiverId }),
+          txnManager.findOneBy(UserProfile, { id: payload.senderId }),
+          txnManager.findOneBy(UserProfile, { id: payload.receiverId }),
         ])
 
         if (!sender || !receiver) {
@@ -116,7 +116,7 @@ export class MessageProcessor {
     try {
       const { message, receivers } = await AppDataSource.manager.transaction(async txnManager => {
         const [sender, channel] = await Promise.all([
-          txnManager.findOneBy(User, { id: payload.senderId }),
+          txnManager.findOneBy(UserProfile, { id: payload.senderId }),
           txnManager.findOneBy(Channel, { id: payload.channelId }),
         ])
 
