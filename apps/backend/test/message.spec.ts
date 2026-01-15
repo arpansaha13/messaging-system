@@ -1,7 +1,6 @@
 import express, { type Request } from 'express'
 import request from 'supertest'
 import cookieParser from 'cookie-parser'
-import jwt from 'jsonwebtoken'
 import { dataSource } from '../vitest.setup'
 import { createMessageRouter } from '../src/controllers/message'
 import { MessageRepository } from '../src/repositories/message'
@@ -11,12 +10,11 @@ import { MessageRecipient } from '../src/models/message-recipient'
 import { Message } from '../src/models/message'
 import { Chat } from '../src/models/chat'
 import { Channel } from '../src/models/channel'
-import { User } from '../src/models/user'
+import { UserProfile } from '../src/models/user'
 import { createAuthMiddleware } from '../src/middleware/auth'
-import { SessionRepository } from '../src/repositories/session'
 import { MessageService } from '../src/services/message'
 import { ChatRepository } from '../src/repositories/chat'
-import { Session } from '../src/models/session'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('Message routes', () => {
   let app: express.Express
@@ -24,8 +22,7 @@ describe('Message routes', () => {
   let userRepo: UserRepository
   let chatRepo: ChatRepository
   let channelRepo: ChannelRepository
-  let sessionRepo: SessionRepository
-  let authUser: Request['user']
+  let authUser: UserProfile
   let authCookie: string
 
   beforeAll(() => {
@@ -33,36 +30,36 @@ describe('Message routes', () => {
     userRepo = new UserRepository(dataSource)
     chatRepo = new ChatRepository(dataSource)
     channelRepo = new ChannelRepository(dataSource)
-    sessionRepo = new SessionRepository(dataSource)
 
     const messageService = new MessageService(msgRepo, chatRepo)
 
     app = express()
     app.use(cookieParser())
     app.use(express.json())
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
 
     app.use('/api/messages', createMessageRouter(messageService))
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(MessageRecipient).deleteAll()
     await dataSource.getRepository(Message).deleteAll()
     await dataSource.getRepository(Chat).deleteAll()
     await dataSource.getRepository(Channel).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
-    await dataSource.getRepository(Session).deleteAll()
+    await dataSource.getRepository(UserProfile).deleteAll()
 
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@g.test',
       username: 'authg',
-      globalName: 'Auth G',
-      password: 'pass',
     })
-    const payload = { user_id: authUser.id }
-    const token = jwt.sign(payload, process.env.JWT_SECRET!)
-    const session = await sessionRepo.save(sessionRepo.create({ token, expiresAt: new Date(Date.now() + 60_000) }))
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth G',
+      bio: 'Auth user bio',
+    })
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('GET /api/messages/:receiverId', () => {
@@ -76,11 +73,13 @@ describe('Message routes', () => {
 
     it('returns messages between users', async () => {
       // authUser is sender
-      const receiver = await userRepo.createUser({
+      const receiverData = MockAuthService.createMockUser({
         email: 'm3@test',
         username: 'm3',
+      })
+      const receiver = await userRepo.createUser({
+        id: receiverData.user_id,
         globalName: 'M3',
-        password: 'pass',
       })
 
       // create a message and recipient rows to satisfy query

@@ -1,9 +1,7 @@
 import express, { type Request } from 'express'
 import request from 'supertest'
 import cookieParser from 'cookie-parser'
-import jwt from 'jsonwebtoken'
 import { createAuthMiddleware } from '../src/middleware/auth'
-import { SessionRepository } from '../src/repositories/session'
 import { dataSource } from '../vitest.setup'
 import { createGroupRouter } from '../src/controllers/group'
 import { GroupRepository } from '../src/repositories/group'
@@ -15,14 +13,14 @@ import { GroupService } from '../src/services/group'
 import { ChannelService } from '../src/services/channel'
 import { UserGroupService } from '../src/services/user-group'
 import { InviteService } from '../src/services/invite'
-import { User } from '../src/models/user'
+import { UserProfile } from '../src/models/user'
 import { Group } from '../src/models/group'
 import { Channel } from '../src/models/channel'
 import { UserGroup } from '../src/models/user-group'
 import { Invite } from '../src/models/invite'
 import { Message } from '../src/models/message'
 import { MessageRecipient } from '../src/models/message-recipient'
-import { Session } from '../src/models/session'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('Group routes', () => {
   let app: express.Express
@@ -31,8 +29,7 @@ describe('Group routes', () => {
   let channelRepo: ChannelRepository
   let userGroupRepo: UserGroupRepository
   let inviteRepo: InviteRepository
-  let sessionRepo: SessionRepository
-  let authUser: Request['user']
+  let authUser: UserProfile
   let authCookie: string
 
   beforeAll(() => {
@@ -41,42 +38,44 @@ describe('Group routes', () => {
     channelRepo = new ChannelRepository(dataSource)
     userGroupRepo = new UserGroupRepository(dataSource)
     inviteRepo = new InviteRepository(dataSource)
-    sessionRepo = new SessionRepository(dataSource)
 
     const groupService = new GroupService(groupRepo)
-    const channelService = new ChannelService(channelRepo)
+    // Mock RabbitMQService for tests
+    const mockRabbitMQService = { publishMessage: async () => {} } as any
+    const channelService = new ChannelService(channelRepo, mockRabbitMQService)
     const userGroupService = new UserGroupService(userGroupRepo)
     const inviteService = new InviteService(inviteRepo, userGroupRepo, channelRepo)
 
     app = express()
     app.use(cookieParser())
     app.use(express.json())
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
 
     app.use('/api/groups', createGroupRouter(groupService, userGroupService, channelService, inviteService))
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(MessageRecipient).deleteAll()
     await dataSource.getRepository(Message).deleteAll()
     await dataSource.getRepository(Invite).deleteAll()
     await dataSource.getRepository(UserGroup).deleteAll()
     await dataSource.getRepository(Channel).deleteAll()
     await dataSource.getRepository(Group).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
-    await dataSource.getRepository(Session).deleteAll()
+    await dataSource.getRepository(UserProfile).deleteAll()
 
     // create a default authenticated user and session for tests that need auth
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@g.test',
       username: 'authg',
-      globalName: 'Auth G',
-      password: 'pass',
     })
-    const payload = { user_id: authUser.id }
-    const token = jwt.sign(payload, process.env.JWT_SECRET!)
-    const session = await sessionRepo.save(sessionRepo.create({ token, expiresAt: new Date(Date.now() + 60_000) }))
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth G',
+      bio: 'Auth user bio',
+    })
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('POST /api/groups', () => {

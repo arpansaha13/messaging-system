@@ -68,8 +68,8 @@ export class UserRepository extends Repository<UserProfile> {
   async findByQuery(authUserId: number, query: string): Promise<UserProfile[]> {
     return this.createQueryBuilder('user')
       .where('user.id != :authUserId', { authUserId })
-      .andWhere('(user.globalName ILIKE :query OR user.userId::text ILIKE :query)', { query: `%${query}%` })
-      .select(['user.id', 'user.globalName', 'user.userId', 'user.bio', 'user.dp'])
+      .andWhere('user.globalName ILIKE :query', { query: `%${query}%` })
+      .select(['user.id', 'user.globalName', 'user.bio', 'user.dp'])
       .limit(20)
       .getMany()
   }

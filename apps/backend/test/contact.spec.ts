@@ -7,79 +7,72 @@ import { createAuthMiddleware } from '../src/middleware/auth'
 import { ContactService } from '../src/services/contact'
 import { ContactRepository } from '../src/repositories/contact'
 import { UserRepository } from '../src/repositories/user'
-import { SessionRepository } from '../src/repositories/session'
-import { User } from '../src/models/user'
-import { Session } from '../src/models/session'
+import { UserProfile } from '../src/models/user'
 import { Contact } from '../src/models/contact'
-import jwt from 'jsonwebtoken'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('Contact routes', () => {
   let app: express.Express
   let userRepo: UserRepository
-  let sessionRepo: SessionRepository
   let contactRepo: ContactRepository
   let contactService: ContactService
-  let authUser: User
-  let otherUser1: User
-  let otherUser2: User
-  let authToken: string
+  let authUser: UserProfile
+  let otherUser1: UserProfile
+  let otherUser2: UserProfile
   let authCookie: string
 
   beforeAll(async () => {
     userRepo = new UserRepository(dataSource)
-    sessionRepo = new SessionRepository(dataSource)
     contactRepo = new ContactRepository(dataSource)
-    contactService = new ContactService(contactRepo, userRepo)
+    contactService = new ContactService(contactRepo)
 
     app = express()
     app.use(cookieParser())
     app.use(express.json())
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
     app.use('/api/contacts', createContactRouter(contactService))
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(Contact).deleteAll()
-    await dataSource.getRepository(Session).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
+    await dataSource.getRepository(UserProfile).deleteAll()
 
     // Create authenticated user
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@example.com',
-      globalName: 'Auth User',
       username: 'authuser',
-      password: 'hashedpassword',
+    })
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth User',
       bio: 'Auth user bio',
     })
 
     // Create other users
-    otherUser1 = await userRepo.createUser({
+    const otherMockUser1 = MockAuthService.createMockUser({
       email: 'user1@example.com',
-      globalName: 'User One',
       username: 'user1',
-      password: 'password',
+    })
+    otherUser1 = await dataSource.getRepository(UserProfile).save({
+      id: otherMockUser1.user_id,
+      globalName: 'User One',
       bio: 'User one bio',
     })
 
-    otherUser2 = await userRepo.createUser({
+    const otherMockUser2 = MockAuthService.createMockUser({
       email: 'user2@example.com',
-      globalName: 'User Two',
       username: 'user2',
-      password: 'password',
+    })
+    otherUser2 = await dataSource.getRepository(UserProfile).save({
+      id: otherMockUser2.user_id,
+      globalName: 'User Two',
       bio: 'User two bio',
     })
 
-    // Create session and cookie for authenticated requests
-    const payload = { user_id: authUser.id }
-    authToken = jwt.sign(payload, process.env.JWT_SECRET!)
-    const jwtValiditySeconds = Number.parseInt(process.env.JWT_TOKEN_VALIDITY_SECONDS!)
-    const session = await sessionRepo.save(
-      sessionRepo.create({
-        token: authToken,
-        expiresAt: new Date(Date.now() + jwtValiditySeconds * 1000),
-      }),
-    )
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    // Create auth cookie
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('GET /api/contacts/', () => {
@@ -117,17 +110,19 @@ describe('Contact routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).get('/api/contacts/').expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
   describe('POST /api/contacts/', () => {
     it('creates a new contact when authenticated', async () => {
-      const newUser = await userRepo.createUser({
+      const newUserData = MockAuthService.createMockUser({
         email: 'newcontact@example.com',
-        globalName: 'New Contact',
         username: 'newcontact',
-        password: 'password',
+      })
+      const newUser = await userRepo.createUser({
+        id: newUserData.user_id,
+        globalName: 'New Contact',
         bio: 'New contact bio',
       })
 
@@ -172,7 +167,7 @@ describe('Contact routes', () => {
         .send({ userIdToAdd: 99999, alias: 'Non-existent' })
         .expect(400)
 
-      expect(res.body.message).toBe('Invalid user id')
+      expect(res.body.message).toBe('User 99999 not found')
     })
 
     it('returns 401 when not authenticated', async () => {
@@ -181,7 +176,7 @@ describe('Contact routes', () => {
         .send({ userIdToAdd: otherUser1.id, alias: 'Friend' })
         .expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
 
     it('returns 400 when alias is empty', async () => {
@@ -224,7 +219,7 @@ describe('Contact routes', () => {
 
       const res = await request(app).patch(`/api/contacts/${contact.id}`).send({ new_alias: 'New Alias' }).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
 
     it('returns 400 when alias is empty', async () => {
@@ -255,7 +250,7 @@ describe('Contact routes', () => {
 
       const res = await request(app).delete(`/api/contacts/${contact.id}`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 })

@@ -43,11 +43,15 @@ export class ContactRepository extends Repository<Contact> {
   async createContact(user: any, userInContact: any, alias: string) {
     const newContact = new Contact()
     newContact.user = user
-    newContact.userInContact = userInContact.user_id
+    // Handle both UserProfile entities and plain user_id values
+    if (typeof userInContact === 'number') {
+      newContact.userInContact = { id: userInContact } as any
+    } else if (userInContact.user_id) {
+      newContact.userInContact = { id: userInContact.user_id } as any
+    } else {
+      newContact.userInContact = userInContact
+    }
     newContact.alias = alias
-    // Store original objects for compatibility
-    newContact.user = user
-    newContact.userInContact = userInContact
     return this.save(newContact)
   }
 

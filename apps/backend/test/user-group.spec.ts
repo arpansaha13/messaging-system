@@ -1,5 +1,4 @@
 import express, { type Request } from 'express'
-import jwt from 'jsonwebtoken'
 import request from 'supertest'
 import cookieParser from 'cookie-parser'
 import { dataSource } from '../vitest.setup'
@@ -9,19 +8,17 @@ import { GroupRepository } from '../src/repositories/group'
 import { UserRepository } from '../src/repositories/user'
 import { UserGroup } from '../src/models/user-group'
 import { Group } from '../src/models/group'
-import { User } from '../src/models/user'
+import { UserProfile } from '../src/models/user'
 import { createAuthMiddleware } from '../src/middleware/auth'
-import { SessionRepository } from '../src/repositories/session'
-import { Session } from '../src/models/session'
 import { UserGroupService } from '../src/services/user-group'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('UserGroup routes', () => {
   let app: express.Express
   let userGroupRepo: UserGroupRepository
   let groupRepo: GroupRepository
   let userRepo: UserRepository
-  let sessionRepo: SessionRepository
-  let authUser: Request['user']
+  let authUser: UserProfile
   let authCookie: string
 
   beforeAll(() => {
@@ -34,28 +31,28 @@ describe('UserGroup routes', () => {
     app = express()
     app.use(cookieParser())
     app.use(express.json())
-    sessionRepo = new SessionRepository(dataSource)
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
 
     app.use('/api/user-groups', createUserGroupRouter(userGroupService))
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(UserGroup).deleteAll()
     await dataSource.getRepository(Group).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
-    await dataSource.getRepository(Session).deleteAll()
+    await dataSource.getRepository(UserProfile).deleteAll()
 
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@g.test',
       username: 'authg',
-      globalName: 'Auth G',
-      password: 'pass',
     })
-    const payload = { user_id: authUser.id }
-    const token = jwt.sign(payload, process.env.JWT_SECRET!)
-    const session = await sessionRepo.save(sessionRepo.create({ token, expiresAt: new Date(Date.now() + 60_000) }))
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth G',
+      bio: 'Auth user bio',
+    })
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('GET /api/user-groups/user/:id', () => {
@@ -77,11 +74,13 @@ describe('UserGroup routes', () => {
   describe('POST /api/user-groups/group/:id/join', () => {
     it('allows joining a group', async () => {
       // authUser is the inviter
-      const joiner = await userRepo.createUser({
+      const joinerData = MockAuthService.createMockUser({
         email: 'ug3@test',
         username: 'ug3',
+      })
+      const joiner = await userRepo.createUser({
+        id: joinerData.user_id,
         globalName: 'UG3',
-        password: 'pass',
       })
       const group = await groupRepo.save(groupRepo.create({ name: 'g2', founder: authUser }))
 

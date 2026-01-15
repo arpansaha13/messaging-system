@@ -9,6 +9,9 @@ import { Channel } from './src/models/channel'
 import { UserGroup } from './src/models/user-group'
 import { Message } from './src/models/message'
 import { MessageRecipient } from './src/models/message-recipient'
+import { UserProfile } from './src/models/user'
+import { AuthService } from './src/services/auth'
+import { MockAuthService } from './test/mocks/auth-service'
 
 process.env.NODE_ENV = process.env.NODE_ENV ?? 'test'
 process.env.DB_SYNCHRONIZE = process.env.DB_SYNCHRONIZE ?? 'true'
@@ -60,14 +63,29 @@ beforeAll(async () => {
     database: 'testdb',
     synchronize: true,
     logging: false,
-    entities: [Chat, Group, Invite, MessageRecipient, Message, UserGroup, Contact, Channel],
+    entities: [Chat, Group, Invite, MessageRecipient, Message, UserGroup, Contact, Channel, UserProfile],
   })
 
   await dataSource.initialize()
   await dataSource.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
+
+  // Mock the AuthService gRPC calls
+  mockAuthServiceGrpcCalls()
 })
 
+/**
+ * Mock AuthService gRPC methods to use MockAuthService instead
+ */
+function mockAuthServiceGrpcCalls(): void {
+  ;(AuthService as any).validateSession = MockAuthService.validateSession
+  ;(AuthService as any).getUserByEmail = MockAuthService.getUserByEmail
+  ;(AuthService as any).getUser = MockAuthService.getUser
+}
+
 afterAll(async () => {
+  // Clear mock users after all tests
+  MockAuthService.clearMockUsers()
+
   if (dataSource?.isInitialized) await dataSource.destroy()
   if (container) await container.stop()
 })

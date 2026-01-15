@@ -9,32 +9,27 @@ import { ChatRepository } from '../src/repositories/chat'
 import { ContactRepository } from '../src/repositories/contact'
 import { MessageRepository } from '../src/repositories/message'
 import { UserRepository } from '../src/repositories/user'
-import { SessionRepository } from '../src/repositories/session'
-import { User } from '../src/models/user'
-import { Session } from '../src/models/session'
+import { UserProfile } from '../src/models/user'
 import { Chat } from '../src/models/chat'
 import { Message } from '../src/models/message'
 import { MessageRecipient } from '../src/models/message-recipient'
-import jwt from 'jsonwebtoken'
 import { Contact } from '../src/models/contact'
 import { MessageStatus } from '@shared/constants'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('Chat routes', () => {
   let app: express.Express
   let userRepo: UserRepository
-  let sessionRepo: SessionRepository
   let chatRepo: ChatRepository
   let contactRepo: ContactRepository
   let messageRepo: MessageRepository
   let chatService: ChatService
-  let authUser: User
-  let receiverUser: User
-  let authToken: string
+  let authUser: UserProfile
+  let receiverUser: UserProfile
   let authCookie: string
 
   beforeAll(async () => {
     userRepo = new UserRepository(dataSource)
-    sessionRepo = new SessionRepository(dataSource)
     chatRepo = new ChatRepository(dataSource)
     contactRepo = new ContactRepository(dataSource)
     messageRepo = new MessageRepository(dataSource)
@@ -43,47 +38,43 @@ describe('Chat routes', () => {
     app = express()
     app.use(cookieParser())
     app.use(express.json())
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
     app.use('/api/chats', createChatRouter(chatService))
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(MessageRecipient).deleteAll()
     await dataSource.getRepository(Message).deleteAll()
     await dataSource.getRepository(Chat).deleteAll()
     await dataSource.getRepository(Contact).deleteAll()
-    await dataSource.getRepository(Session).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
+    await dataSource.getRepository(UserProfile).deleteAll()
 
     // Create authenticated user
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@example.com',
-      globalName: 'Auth User',
       username: 'authuser',
-      password: 'hashedpassword',
+    })
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth User',
       bio: 'Auth user bio',
     })
 
     // Create receiver user
-    receiverUser = await userRepo.createUser({
+    const receiverMockUser = MockAuthService.createMockUser({
       email: 'receiver@example.com',
-      globalName: 'Receiver User',
       username: 'receiveruser',
-      password: 'password',
+    })
+    receiverUser = await dataSource.getRepository(UserProfile).save({
+      id: receiverMockUser.user_id,
+      globalName: 'Receiver User',
       bio: 'Receiver bio',
     })
 
-    // Create session and cookie for authenticated requests
-    const payload = { user_id: authUser.id }
-    authToken = jwt.sign(payload, process.env.JWT_SECRET!)
-    const jwtValiditySeconds = Number.parseInt(process.env.JWT_TOKEN_VALIDITY_SECONDS!)
-    const session = await sessionRepo.save(
-      sessionRepo.create({
-        token: authToken,
-        expiresAt: new Date(Date.now() + jwtValiditySeconds * 1000),
-      }),
-    )
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    // Create auth cookie
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('GET /api/chats/', () => {
@@ -115,7 +106,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).get('/api/chats/').expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
@@ -203,7 +194,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).get(`/api/chats/${receiverUser.id}`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
 
     it('returns 400 when receiverId is not a number', async () => {
@@ -234,7 +225,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).patch(`/api/chats/${receiverUser.id}/archive`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
@@ -259,7 +250,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).patch(`/api/chats/${receiverUser.id}/unarchive`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
@@ -284,7 +275,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).patch(`/api/chats/${receiverUser.id}/pin`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
@@ -309,7 +300,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).patch(`/api/chats/${receiverUser.id}/unpin`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
@@ -336,7 +327,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).delete(`/api/chats/${receiverUser.id}/clear`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 
@@ -361,7 +352,7 @@ describe('Chat routes', () => {
     it('returns 401 when not authenticated', async () => {
       const res = await request(app).delete(`/api/chats/${receiverUser.id}/delete`).expect(401)
 
-      expect(res.body.message).toBe('Unauthorized')
+      expect(res.body.error).toBe('Unauthorized')
     })
   })
 })

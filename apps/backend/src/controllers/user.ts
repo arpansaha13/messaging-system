@@ -54,8 +54,18 @@ export function createUserRouter(userService: UserService) {
   })
 
   router.post('/', validateDto(CreateUserDto), async (req: Request, res: Response) => {
-    const created = await userService.createUser(req.body)
-    res.status(201).json(created)
+    try {
+      // Filter to only UserProfile fields
+      const profileData = {
+        globalName: req.body.globalName,
+        bio: req.body.bio,
+        dp: req.body.dp,
+      }
+      const created = await userService.createUser(profileData)
+      res.status(201).json(created)
+    } catch (err: any) {
+      res.status(500).json({ message: err.message })
+    }
   })
 
   router.put('/:id', validateDto(UpdateUserDto), async (req: Request, res: Response) => {

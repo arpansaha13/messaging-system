@@ -59,17 +59,6 @@ export class MockAuthService {
   }
 
   /**
-   * Get user profile by user ID
-   */
-  static async getUser(userId: number): Promise<MockUser> {
-    const user = mockUsers.get(userId)
-    if (!user) {
-      throw new Error(`User ${userId} not found`)
-    }
-    return user
-  }
-
-  /**
    * Create a mock user for testing
    */
   static createMockUser(overrides?: Partial<MockUser>): MockUser {
@@ -137,5 +126,16 @@ export class MockAuthService {
   static async deleteUser(userId: number): Promise<{ message: string }> {
     mockUsers.delete(userId)
     return { message: 'user deleted successfully' }
+  }
+
+  /**
+   * Get user by ID
+   */
+  static async getUser(userId: number): Promise<MockUser> {
+    const user = mockUsers.get(userId)
+    if (!user) {
+      throw new Error(`User ${userId} not found`)
+    }
+    return user
   }
 }

@@ -1,24 +1,22 @@
 import express, { type Request } from 'express'
 import request from 'supertest'
 import cookieParser from 'cookie-parser'
-import jwt from 'jsonwebtoken'
 import { dataSource } from '../vitest.setup'
 import { createChannelRouter } from '../src/controllers/channel'
 import { ChannelRepository } from '../src/repositories/channel'
 import { GroupRepository } from '../src/repositories/group'
 import { UserRepository } from '../src/repositories/user'
 import { createAuthMiddleware } from '../src/middleware/auth'
-import { SessionRepository } from '../src/repositories/session'
-import { User } from '../src/models/user'
+import { UserProfile } from '../src/models/user'
 import { Group } from '../src/models/group'
 import { Channel } from '../src/models/channel'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('Channel routes', () => {
   let app: express.Express
   let channelRepo: ChannelRepository
   let userRepo: UserRepository
-  let sessionRepo: SessionRepository
-  let authUser: Request['user']
+  let authUser: UserProfile
   let authCookie: string
 
   beforeAll(() => {
@@ -29,8 +27,7 @@ describe('Channel routes', () => {
     app.use(cookieParser())
     app.use(express.json())
 
-    sessionRepo = new SessionRepository(dataSource)
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
 
     const channelService: any = {
       getChannel: (id: number) => channelRepo.findOne({ where: { id } }),
@@ -43,24 +40,22 @@ describe('Channel routes', () => {
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(Channel).deleteAll()
     await dataSource.getRepository(Group).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
-    await dataSource
-      .getRepository('sessions')
-      .delete({})
-      .catch(() => {})
+    await dataSource.getRepository(UserProfile).deleteAll()
 
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@c.test',
       username: 'authc',
-      globalName: 'Auth C',
-      password: 'pass',
     })
-    const payload = { user_id: authUser.id }
-    const token = jwt.sign(payload, process.env.JWT_SECRET!)
-    const session = await sessionRepo.save(sessionRepo.create({ token, expiresAt: new Date(Date.now() + 60_000) }))
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth C',
+      bio: 'Auth user bio',
+    })
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('GET /api/channels/:id', () => {

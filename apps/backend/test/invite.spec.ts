@@ -1,23 +1,21 @@
 import express, { type Request } from 'express'
 import request from 'supertest'
 import cookieParser from 'cookie-parser'
-import jwt from 'jsonwebtoken'
 import { dataSource } from '../vitest.setup'
 import { createInviteRouter } from '../src/controllers/invite'
 import { InviteRepository } from '../src/repositories/invite'
 import { GroupRepository } from '../src/repositories/group'
 import { UserRepository } from '../src/repositories/user'
 import { UserGroupRepository } from '../src/repositories/user-group'
-import { User } from '../src/models/user'
+import { UserProfile } from '../src/models/user'
 import { Group } from '../src/models/group'
 import { Channel } from '../src/models/channel'
 import { Invite } from '../src/models/invite'
 import { UserGroup } from '../src/models/user-group'
 import { createAuthMiddleware } from '../src/middleware/auth'
-import { SessionRepository } from '../src/repositories/session'
 import { ChannelRepository } from '../src/repositories/channel'
-import { Session } from '../src/models/session'
 import { InviteService } from '../src/services/invite'
+import { MockAuthService } from './mocks/auth-service'
 
 describe('Invite routes', () => {
   let app: express.Express
@@ -25,8 +23,7 @@ describe('Invite routes', () => {
   let groupRepo: GroupRepository
   let userRepo: UserRepository
   let userGroupRepo: UserGroupRepository
-  let sessionRepo: SessionRepository
-  let authUser: Request['user']
+  let authUser: UserProfile
   let authCookie: string
 
   beforeAll(() => {
@@ -41,30 +38,30 @@ describe('Invite routes', () => {
     app = express()
     app.use(cookieParser())
     app.use(express.json())
-    sessionRepo = new SessionRepository(dataSource)
-    app.use(createAuthMiddleware(sessionRepo, userRepo))
+    app.use(createAuthMiddleware())
 
     app.use('/api/invites', createInviteRouter(inviteService))
   })
 
   beforeEach(async () => {
+    MockAuthService.clearMockUsers()
     await dataSource.getRepository(UserGroup).deleteAll()
     await dataSource.getRepository(Invite).deleteAll()
     await dataSource.getRepository(Channel).deleteAll()
     await dataSource.getRepository(Group).deleteAll()
-    await dataSource.getRepository(User).deleteAll()
-    await dataSource.getRepository(Session).deleteAll()
+    await dataSource.getRepository(UserProfile).deleteAll()
 
-    authUser = await userRepo.createUser({
+    const authMockUser = MockAuthService.createMockUser({
       email: 'auth@g.test',
       username: 'authg',
-      globalName: 'Auth G',
-      password: 'pass',
     })
-    const payload = { user_id: authUser.id }
-    const token = jwt.sign(payload, process.env.JWT_SECRET!)
-    const session = await sessionRepo.save(sessionRepo.create({ token, expiresAt: new Date(Date.now() + 60_000) }))
-    authCookie = `${process.env.AUTH_COOKIE_NAME}=${session.key}`
+    authUser = await dataSource.getRepository(UserProfile).save({
+      id: authMockUser.user_id,
+      globalName: 'Auth G',
+      bio: 'Auth user bio',
+    })
+    const token = MockAuthService.generateMockToken(authUser.id)
+    authCookie = `${process.env.AUTH_COOKIE_NAME}=${token}`
   })
 
   describe('GET /api/invites/:hash', () => {
@@ -95,7 +92,8 @@ describe('Invite routes', () => {
   describe('POST /api/invites/:hash/accept', () => {
     it('accepts invite and adds user to group', async () => {
       // authUser is inviter
-      await userRepo.createUser({ email: 'i3@test', username: 'i3', globalName: 'I3', password: 'pass' })
+      const userData = MockAuthService.createMockUser({ email: 'i3@test', username: 'i3' })
+      await userRepo.createUser({ id: userData.user_id, globalName: 'I3' })
       const group = await groupRepo.save(groupRepo.create({ name: 'g2', founder: authUser }))
 
       // create channel to be returned

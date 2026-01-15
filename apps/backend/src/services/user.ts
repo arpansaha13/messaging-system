@@ -24,9 +24,13 @@ export class UserService {
 
   async getAuthUser(context: Request['context']): Promise<AuthUserResponse | null> {
     const userResponse = await AuthService.getUser(context.user.id, context.token)
-    const user = userResponse.user
+    // Handle both real gRPC response and mock response
+    const user = (userResponse as any).user || userResponse
 
     const profile = await this.userRepo.findByUserId(user.user_id)
+    if (!profile) {
+      return null
+    }
 
     return {
       id: user.user_id,
