@@ -3,8 +3,7 @@ services:
     image: nginx:alpine
     container_name: nginx_prod
     ports:
-      - '80:80'
-      - '443:443'
+      - '7000:443'
     volumes:
       - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs:/etc/nginx/certs:ro
@@ -18,15 +17,32 @@ services:
     networks:
       - messaging-network
 
-  # Auth System - Located outside this repository
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db_prod
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USERNAME}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - '7010:5432'
+    volumes:
+      - ./data/auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
   auth:
-    build:
-      context: ../auth-system
-      dockerfile: Dockerfile
     image: auth_system_prod
     container_name: auth_system_prod
+    expose:
+      - "50051"
     environment:
-      DATABASE_URL: postgresql://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@postgres:5432/${AUTH_DB_NAME}
+      DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
       GRPC_HOST: ${GRPC_HOST}
       GRPC_PORT: ${GRPC_PORT}
       SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
@@ -45,27 +61,24 @@ services:
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
     depends_on:
-      postgres:
+      auth-db:
         condition: service_healthy
     networks:
       - messaging-network
-    expose:
-      - "50051"
 
   postgres:
-    image: postgres:15.10-alpine
+    image: postgres:16-alpine
     container_name: postgres_prod
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_INITDB_ARGS: "-c shared_preload_libraries=pgcrypto"
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - '7001:5432'
+      - '7020:5432'
     volumes:
       - ./data/default:/var/lib/postgresql/data
-      - ./data/auth:/var/lib/postgresql/data_auth
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME}']
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -73,15 +86,12 @@ services:
       - messaging-network
 
   backend:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile.prod
     image: messaging_system_backend_prod
     container_name: backend_prod
     environment:
       NODE_ENV: production
       API_PORT: 4000
-      DB_HOST: postgres
+      DB_HOST: ${DB_HOST}
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -89,18 +99,20 @@ services:
       DB_LOGGING: 'false'
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
       JWT_SECRET: ${JWT_SECRET}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       SESSION_SECRET: ${SESSION_SECRET}
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
-      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
+      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST:-auth:50051}
     ports:
-      - '4000:4000'
+      - '7030:4000'
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       auth:
         condition: service_started
@@ -108,9 +120,6 @@ services:
       - messaging-network
 
   socket:
-    build:
-      context: .
-      dockerfile: apps/socket/Dockerfile.prod
     image: messaging_system_socket_prod
     container_name: socket_prod
     environment:
@@ -119,23 +128,20 @@ services:
       SERVER_ID: ${SOCKET_SERVER_ID:-server-1}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
       CLIENT_DOMAIN: ${CLIENT_DOMAIN}
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
     depends_on:
       rabbitmq:
         condition: service_healthy
+      memcached:
+        condition: service_started
     networks:
       - messaging-network
 
   frontend:
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile.prod
-      args:
-        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
     image: messaging_system_frontend_prod
     container_name: frontend_prod
     environment:
@@ -154,7 +160,7 @@ services:
 
   memcached:
     image: memcached:1.6.40-alpine
-    container_name: memcached_prod
+    container_name: memcached
     networks:
       - messaging-network
 
@@ -175,18 +181,15 @@ services:
       - messaging-network
 
   chat-worker:
-    build:
-      context: .
-      dockerfile: apps/chat-worker/Dockerfile.prod
     image: messaging_system_chat_worker_prod
     container_name: chat_worker_prod
     environment:
       NODE_ENV: production
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
-      DB_HOST: postgres
+      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS:-guest}
+      DB_HOST: ${DB_HOST}
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}

@@ -5,7 +5,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "start": "node -r reflect-metadata dist/index.js"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@shared/constants": "workspace:*",

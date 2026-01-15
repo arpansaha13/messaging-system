@@ -111,11 +111,11 @@ services:
       CLIENT_DOMAIN: ${CLIENT_DOMAIN}
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
-    # ports:
-    #   - '7040:4000'
     depends_on:
       rabbitmq:
         condition: service_healthy
+      memcached:
+        condition: service_started
     networks:
       - messaging-network
     develop:

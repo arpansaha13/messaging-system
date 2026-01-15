@@ -1,0 +1,32 @@
+services:
+  auth:
+    build:
+      context: ../auth-system
+      dockerfile: Dockerfile
+    image: messaging_system_auth_prod
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile.prod
+    image: messaging_system_backend_prod
+
+  socket:
+    build:
+      context: .
+      dockerfile: apps/socket/Dockerfile.prod
+    image: messaging_system_socket_prod
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile.prod
+      args:
+        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+    image: messaging_system_frontend_prod
+
+  chat-worker:
+    build:
+      context: .
+      dockerfile: apps/chat-worker/Dockerfile.prod
+    image: messaging_system_chat_worker_prod
