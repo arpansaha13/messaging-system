@@ -109,7 +109,7 @@ async function onSignup(event: FormSubmitEvent<SignupSchema>) {
     })
     await router.push('/auth/login')
   } catch (error: any) {
-    const message = Array.isArray(error.message) ? error.message[0] : error.message
+    const message = Array.isArray(error.data.message) ? error.data.message[0] : error.data.message
     toast.add({
       title: 'Sign up failed',
       description: message || 'An error occurred during sign up',

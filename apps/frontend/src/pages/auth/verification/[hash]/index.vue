@@ -46,13 +46,11 @@ definePageMeta({
 type VerificationStatus = 'verifying' | 'verified' | 'expired' | 'error'
 
 const route = useRoute()
-const router = useRouter()
 const toast = useToast()
 
 const isLoading = ref(false)
 const verificationStatus = ref<VerificationStatus>('verifying')
 const errorMessage = ref('')
-const authForm = useTemplateRef<any>('authForm')
 
 const verificationSchema = z.object({
   otp: z.string().min(1, 'OTP is required'),
@@ -85,7 +83,7 @@ async function onVerify(event: FormSubmitEvent<VerificationSchema>) {
       color: 'success',
     })
   } catch (error: any) {
-    const message = error.message || 'Verification failed'
+    const message = error.data.message || 'Verification failed'
     if (message.includes('expired')) {
       verificationStatus.value = 'expired'
     } else {

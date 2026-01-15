@@ -10,7 +10,7 @@ export function createAuthRouter(): Router {
    */
   router.post('/signup', async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body
+      const { email, password, globalName } = req.body
 
       // Validate input
       if (!email || !password) {
@@ -32,14 +32,14 @@ export function createAuthRouter(): Router {
 
       // Handle specific error types
       if (message.includes('conflict')) {
-        return res.status(409).json({ error: 'Email already registered' })
+        return res.status(409).json({ message: 'Email already registered' })
       }
 
       if (message.includes('validation')) {
-        return res.status(400).json({ error: message })
+        return res.status(400).json({ message })
       }
 
-      res.status(500).json({ error: message })
+      res.status(500).json({ message })
     }
   })
 
@@ -54,7 +54,7 @@ export function createAuthRouter(): Router {
       // Validate input
       if (!email || !password) {
         return res.status(400).json({
-          error: 'Email and password are required',
+          message: 'Email and password are required',
         })
       }
 
@@ -90,14 +90,14 @@ export function createAuthRouter(): Router {
 
       // Handle specific error types
       if (message.includes('unauthorized') || message.includes('not verified')) {
-        return res.status(401).json({ error: 'Invalid email or password' })
+        return res.status(401).json({ message: 'Invalid email or password' })
       }
 
       if (message.includes('validation')) {
-        return res.status(400).json({ error: message })
+        return res.status(400).json({ message })
       }
 
-      res.status(500).json({ error: message })
+      res.status(500).json({ message })
     }
   })
 
@@ -113,7 +113,7 @@ export function createAuthRouter(): Router {
       // Validate input
       if (!otpHash || !code) {
         return res.status(400).json({
-          error: 'OTP hash and code are required',
+          message: 'OTP hash and code are required',
         })
       }
 
@@ -139,18 +139,18 @@ export function createAuthRouter(): Router {
 
       // Handle specific error types
       if (message.includes('invalid') || message.includes('expired')) {
-        return res.status(401).json({ error: 'Invalid or expired OTP code' })
+        return res.status(401).json({ message: 'Invalid or expired OTP code' })
       }
 
       if (message.includes('validation')) {
-        return res.status(400).json({ error: message })
+        return res.status(400).json({ message })
       }
 
       if (message.includes('not found')) {
-        return res.status(404).json({ error: 'OTP not found' })
+        return res.status(404).json({ message: 'OTP not found' })
       }
 
-      res.status(500).json({ error: message })
+      res.status(500).json({ message })
     }
   })
 

@@ -25,7 +25,7 @@ export function login(body: LoginBody) {
 
 export function signup(body: SignupBody) {
   const { $api } = useNuxtApp()
-  return $api('/api/auth/sign-up', {
+  return $api('/api/auth/signup', {
     method: 'POST',
     body,
   })

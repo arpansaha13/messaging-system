@@ -69,7 +69,7 @@ async function onLogin(e: FormSubmitEvent<LoginSchema>) {
   } catch (err: any) {
     toast.add({
       title: 'Login failed',
-      description: err.message || 'An error occurred during login',
+      description: err.data.message || 'An error occurred during login',
       color: 'error',
     })
     if (err.status !== HttpStatus.UNAUTHORIZED) {
