@@ -13,7 +13,7 @@ import { UserProfile } from './src/models/user'
 import { AuthService } from './src/services/auth'
 import { MockAuthService } from './test/mocks/auth-service'
 
-process.env.NODE_ENV = process.env.NODE_ENV ?? 'test'
+process.env.ENVIRONMENT = process.env.ENVIRONMENT ?? 'test'
 process.env.DB_SYNCHRONIZE = process.env.DB_SYNCHRONIZE ?? 'true'
 process.env.DB_LOGGING = process.env.DB_LOGGING ?? 'false'
 
@@ -26,11 +26,6 @@ process.env.JWT_SECRET = 'test-secret-jwt-key'
 process.env.JWT_TOKEN_VALIDITY_SECONDS = '300' // 5 minutes for test runs
 
 process.env.SESSION_SECRET = 'test-secret-session-key'
-
-process.env.MAIL_HOST = 'localhost'
-process.env.MAIL_USER = 'testuser'
-process.env.MAIL_PASSWORD = 'testpass'
-process.env.MAIL_FROM = 'test@example.com'
 
 process.env.DB_HOST = 'localhost'
 process.env.DB_PORT = '5432'

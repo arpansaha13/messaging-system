@@ -43,7 +43,7 @@ const client = new pg.Client({
   user: process.env.DB_USERNAME,
   database: process.env.DB_NAME,
   password: process.env.DB_PASSWORD,
-  ssl: process.env.NODE_ENV === 'development' ? false : { rejectUnauthorized: false },
+  ssl: process.env.ENVIRONMENT === 'development' ? false : { rejectUnauthorized: false },
 })
 
 // Auth System Database Connection
@@ -53,7 +53,12 @@ const authClient = new pg.Client({
   user: process.env.AUTH_DB_USERNAME,
   database: process.env.AUTH_DB_NAME,
   password: process.env.AUTH_DB_PASSWORD,
-  ssl: process.env.NODE_ENV === 'development' ? false : { rejectUnauthorized: false },
+  ssl:
+    process.env.ENVIRONMENT === 'development'
+      ? false
+      : {
+          rejectUnauthorized: false,
+        },
 })
 
 async function seed() {

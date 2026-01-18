@@ -22,8 +22,9 @@ const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'messaging_db',
-  synchronize: process.env.DB_SYNCHRONIZE === 'true',
+  synchronize: process.env.ENVIRONMENT === 'test',
   logging: process.env.DB_LOGGING === 'true',
+  ssl: process.env.ENVIRONMENT === 'production',
   entities,
   migrations,
 })

@@ -1,18 +1,38 @@
-version: "3.8"
-
 services:
   nginx:
     image: nginx:alpine
     container_name: nginx_prod
     ports:
-      - '443:443'
+      - "7000:443"
     volumes:
       - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs:/etc/nginx/certs:ro
     depends_on:
-      - backend
-      - socket
-      - frontend
+      backend:
+        condition: service_started
+      socket:
+        condition: service_started
+      frontend:
+        condition: service_started
+    networks:
+      - messaging-network
+
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db_prod
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USERNAME}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - "7010:5432"
+    volumes:
+      - ./data/auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - messaging-network
 
@@ -23,7 +43,7 @@ services:
       - "50051"
     environment:
       ENVIRONMENT: production
-      DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@${AUTH_DB_HOST}:5432/${AUTH_DB_NAME}
+      DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
       GRPC_HOST: ${GRPC_HOST}
       GRPC_PORT: ${GRPC_PORT}
       SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
@@ -40,6 +60,28 @@ services:
       OTP_LENGTH: ${OTP_LENGTH}
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - messaging-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_prod
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "7020:5432"
+    volumes:
+      - ./data/default:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - messaging-network
 
@@ -57,19 +99,23 @@ services:
       DB_LOGGING: "false"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER}
-      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS}
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
       JWT_SECRET: ${JWT_SECRET}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       SESSION_SECRET: ${SESSION_SECRET}
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
-      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
+      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST:-auth:50051}
     ports:
       - "7030:4000"
     depends_on:
-      - rabbitmq
-      - auth
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth:
+        condition: service_started
     networks:
       - messaging-network
 
@@ -79,17 +125,19 @@ services:
     environment:
       ENVIRONMENT: production
       PORT: 4000
-      SERVER_ID: ${SOCKET_SERVER_ID}
+      SERVER_ID: ${SOCKET_SERVER_ID:-server-1}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER}
-      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS}
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
       CLIENT_DOMAIN: ${CLIENT_DOMAIN}
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
     depends_on:
-      - rabbitmq
-      - memcached
+      rabbitmq:
+        condition: service_healthy
+      memcached:
+        condition: service_started
     networks:
       - messaging-network
 
@@ -100,12 +148,13 @@ services:
       ENVIRONMENT: production
       API_BASE_URL: ${API_BASE_URL}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
-      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
       NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
-      NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME}
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
     depends_on:
-      - backend
+      backend:
+        condition: service_started
     networks:
       - messaging-network
 
@@ -121,8 +170,8 @@ services:
     ports:
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 10s
@@ -138,8 +187,8 @@ services:
       ENVIRONMENT: production
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER}
-      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS}
+      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS:-guest}
       DB_HOST: ${DB_HOST}
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
@@ -149,7 +198,10 @@ services:
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - messaging-network
 

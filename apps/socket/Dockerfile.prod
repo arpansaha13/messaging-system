@@ -57,7 +57,6 @@ COPY apps/socket/package.json ./
 # Copy only production node_modules
 COPY --from=deps /app/node_modules ./node_modules
 
-ENV NODE_ENV=production
 EXPOSE 4000
 
 CMD ["pnpm", "start"]
