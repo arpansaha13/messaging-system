@@ -5,14 +5,39 @@ services:
     image: nginx:alpine
     container_name: nginx_prod
     ports:
-      - '443:443'
+      - "80:80"
+      - "443:443"
+    environment:
+      - NGINX_DOMAIN_NAME=${NGINX_DOMAIN_NAME}
+      - NGINX_ENVSUBST_FILTER=NGINX_DOMAIN_NAME
     volumes:
-      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./data/certs:/etc/nginx/certs:ro
+      - ./nginx.prod.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+      - ./data/certs/certbot-etc:/etc/letsencrypt:ro
+      - ./data/certs/certbot-var:/var/lib/letsencrypt:ro
     depends_on:
       - backend
       - socket
       - frontend
+    networks:
+      - messaging-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot_prod
+    volumes:
+      - ./data/certs/certbot-etc:/etc/letsencrypt
+      - ./data/certs/certbot-var:/var/lib/letsencrypt
+    command: >
+      certonly --standalone
+      --preferred-challenges http
+      --http-01-port 8080
+      -d ${CERTBOT_DOMAIN}
+      --email ${CERTBOT_EMAIL}
+      --agree-tos
+      --no-eff-email
+      --non-interactive
+    depends_on:
+      - nginx
     networks:
       - messaging-network
 

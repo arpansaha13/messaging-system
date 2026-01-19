@@ -17,6 +17,7 @@
   "words": [
     "arpan",
     "arpansaha",
+    "certbot",
     "convo",
     "csrftoken",
     "esno",
@@ -25,6 +26,7 @@
     "heroicons",
     "iconify",
     "immer",
+    "letsencrypt",
     "memjs",
     "nestjs",
     "nextjs",
