@@ -1,6 +1,6 @@
 import { Request, Router } from 'express'
 import { validateDto } from '../utils/validate-dto'
-import { CreateGroupDto, GroupIdParam as GroupIdParamDto } from '../dto/group'
+import { CreateGroupDto, GroupIdParam as GroupIdParamDto, HandleNewChannelDto, HandleJoinGroupDto } from '../dto/group'
 import { CreateChannelDto } from '../dto/channel'
 import type { ChannelService } from '../services/channel'
 import type { GroupService } from '../services/group'
@@ -75,6 +75,24 @@ export function createGroupRouter(
     try {
       const invite = await inviteService.createInvite(req.context, groupId)
       res.status(201).json(invite)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.post('/channel/new', validateDto(HandleNewChannelDto), async (req: Request, res) => {
+    try {
+      const result = await groupService.handleNewChannel(req.context, req.body)
+      res.json(result)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.post('/join', validateDto(HandleJoinGroupDto), async (req: Request, res) => {
+    try {
+      const result = await groupService.handleJoinGroup(req.context, req.body)
+      res.json(result)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
     }

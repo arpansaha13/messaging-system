@@ -17,8 +17,6 @@ export async function useGroupChatSocketEvents() {
       return
     }
 
-    const handleNewChannel = () => {}
-
     const handleStatusSent = (payload: SocketEventPayloads.Group.OnSent) => {
       const tempMessage = tempGroupMessages.getTempGroupMessage(payload.channelId, payload.hash)
       if (!tempMessage) {
@@ -48,11 +46,6 @@ export async function useGroupChatSocketEvents() {
         status: MessageStatus.DELIVERED,
       }
 
-      connection.emit(SocketEvents.GROUP.STATUS_DELIVERED, {
-        messageId: message.id,
-        receiverId: user.id,
-      })
-
       const { data: messages } = useNuxtData<IGroupMessage[]>(asyncKeys.groupMessages(payload.channelId))
       if (!messages.value) {
         return
@@ -61,12 +54,10 @@ export async function useGroupChatSocketEvents() {
       upsertGroupMessages(payload.channelId, [message])
     }
 
-    connection.on(SocketEvents.GROUP.NEW_CHANNEL, handleNewChannel)
     connection.on(SocketEvents.GROUP.STATUS_SENT, handleStatusSent)
     connection.on(SocketEvents.GROUP.MESSAGE_RECEIVE, handleMessageReceive)
 
     onCleanup(() => {
-      connection.off(SocketEvents.GROUP.NEW_CHANNEL, handleNewChannel)
       connection.off(SocketEvents.GROUP.STATUS_SENT, handleStatusSent)
       connection.off(SocketEvents.GROUP.MESSAGE_RECEIVE, handleMessageReceive)
     })

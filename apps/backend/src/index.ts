@@ -69,9 +69,9 @@ async function bootstrap() {
 
     // Initialize services
     const contactService = new ContactService(contactRepo)
-    const groupService = new GroupService(groupRepo)
+    const groupService = new GroupService(groupRepo, rabbitmqService)
     const channelService = new ChannelService(channelRepo, rabbitmqService)
-    const messageService = new MessageService(messageRepo, chatRepo)
+    const messageService = new MessageService(messageRepo, rabbitmqService)
     const chatService = new ChatService(chatRepo, contactRepo, messageRepo)
     const inviteService = new InviteService(inviteRepo, userGroupRepo, channelRepo)
     const userGroupService = new UserGroupService(userGroupRepo)

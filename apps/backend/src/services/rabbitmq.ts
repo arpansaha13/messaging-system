@@ -1,5 +1,6 @@
 import { connect as amqpConnect, type Channel, type ChannelModel } from 'amqplib'
 
+const INCOMING_EXCHANGE = 'incoming_messages'
 const OUTGOING_EXCHANGE = 'outgoing_messages'
 
 export class RabbitMQService {
@@ -22,7 +23,8 @@ export class RabbitMQService {
 
       this.channel = await this.connection.createChannel()
 
-      // Declare outgoing exchange if not exists
+      // Declare exchanges if not exist
+      await this.channel.assertExchange(INCOMING_EXCHANGE, 'direct', { durable: true })
       await this.channel.assertExchange(OUTGOING_EXCHANGE, 'direct', { durable: true })
 
       console.log('RabbitMQ connected from backend')
@@ -58,6 +60,20 @@ export class RabbitMQService {
       this.channel.publish(OUTGOING_EXCHANGE, routingKey, messageBuffer, { persistent: true })
     } catch (error) {
       console.error('Error publishing to outgoing exchange:', error)
+      throw error
+    }
+  }
+
+  async publishToIncoming(routingKey: string, message: any): Promise<void> {
+    if (!this.channel) {
+      throw new Error('RabbitMQ channel not initialized')
+    }
+
+    try {
+      const messageBuffer = Buffer.from(JSON.stringify(message))
+      this.channel.publish(INCOMING_EXCHANGE, routingKey, messageBuffer, { persistent: true })
+    } catch (error) {
+      console.error('Error publishing to incoming exchange:', error)
       throw error
     }
   }

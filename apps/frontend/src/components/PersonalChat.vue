@@ -25,6 +25,7 @@
 <script setup lang="ts">
 import type { IMessage, IMessageSending } from '@shared/types'
 import { MessageStatus, SocketEvents } from '@shared/constants'
+import { sendPersonalMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
@@ -116,16 +117,8 @@ const sendMessage = async (message: string) => {
     inputValue.value = ''
     if (typingTimeout) clearTimeout(typingTimeout)
 
-    // Emit message via socket
-    if (socket.value) {
-      socket.value.emit(SocketEvents.PERSONAL.MESSAGE_SEND, {
-        hash: newMessage.hash,
-        content: newMessage.content,
-        senderId: newMessage.senderId,
-        status: newMessage.status,
-        receiverId: receiverId.value,
-      })
-    }
+    // Send message via HTTP API instead of socket
+    await sendPersonalMessage(receiverId.value, newMessage.content, newMessage.hash)
   } catch (error) {
     console.error('Error sending message:', error)
   }

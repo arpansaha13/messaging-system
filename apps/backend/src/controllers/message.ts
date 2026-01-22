@@ -1,6 +1,13 @@
 import { type Request, Router } from 'express'
 import { validateDto } from '../utils/validate-dto'
-import { ReceiverIdParam, ChannelIdParam } from '../dto/message'
+import {
+  ReceiverIdParam,
+  ChannelIdParam,
+  SendPersonalMessageDto,
+  HandleDeliveredDto,
+  HandleReadMultipleDto,
+  SendGroupMessageDto,
+} from '../dto/message'
 import type { MessageService } from '../services/message'
 
 export function createMessageRouter(messageService: MessageService) {
@@ -22,6 +29,42 @@ export function createMessageRouter(messageService: MessageService) {
     try {
       const msgs = await messageService.getMessagesInChannel(channelId)
       res.json(msgs)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.post('/send/personal', validateDto(SendPersonalMessageDto), async (req: Request, res) => {
+    try {
+      const result = await messageService.sendPersonalMessage(req.context, req.body)
+      res.json(result)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.post('/send/group', validateDto(SendGroupMessageDto), async (req: Request, res) => {
+    try {
+      const result = await messageService.sendGroupMessage(req.context, req.body)
+      res.json(result)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.post('/status/delivered', validateDto(HandleDeliveredDto), async (req: Request, res) => {
+    try {
+      const result = await messageService.handleDelivered(req.context, req.body)
+      res.json(result)
+    } catch (err: any) {
+      res.status(400).json({ message: err.message })
+    }
+  })
+
+  router.post('/status/read', validateDto(HandleReadMultipleDto), async (req: Request, res) => {
+    try {
+      const result = await messageService.handleRead(req.context, req.body.messages)
+      res.json(result)
     } catch (err: any) {
       res.status(400).json({ message: err.message })
     }

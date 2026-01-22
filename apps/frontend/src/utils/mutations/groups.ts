@@ -84,3 +84,30 @@ export function upsertGroupMessages(channelId: IChannel['id'], newMessages: IGro
     })
   })
 }
+
+// =============================================
+// ============== Group Operations =============
+// =============================================
+
+export async function handleNewChannel(groupId: number, channelId: number, name: string) {
+  const { $api } = useNuxtApp()
+  return $api('/api/groups/channel/new', {
+    method: 'POST',
+    body: {
+      groupId,
+      channelId,
+      name,
+    },
+  })
+}
+
+export async function handleJoinGroup(groupId: number, channels: string[]) {
+  const { $api } = useNuxtApp()
+  return $api('/api/groups/join', {
+    method: 'POST',
+    body: {
+      groupId,
+      channels,
+    },
+  })
+}

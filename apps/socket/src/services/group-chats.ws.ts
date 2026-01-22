@@ -11,7 +11,7 @@ export class GroupChatsWsService {
     private readonly server: Server,
   ) {}
 
-  // Read receipts for for group chats - "DELIVERED" and "READ" - are not handled
+  // Socket server only maintains group subscriptions for receiving events from workers.
 
   async handleNewGroup(payload: SocketEventPayloads.Group.EmitNewGroup, senderSocket: Socket) {
     this.chatsStore.addSocketToGroup(payload.groupId, senderSocket.id)
@@ -34,23 +34,5 @@ export class GroupChatsWsService {
   async handleJoinGroup(payload: SocketEventPayloads.Group.EmitJoinGroup, senderSocket: Socket) {
     this.chatsStore.addSocketToGroup(payload.groupId, senderSocket.id)
     senderSocket.join(payload.channels.split(','))
-  }
-
-  async sendMessage(payload: SocketEventPayloads.Group.EmitMessage) {
-    try {
-      // Basic validation
-      if (!payload.content || !payload.senderId || !payload.groupId || !payload.channelId || !payload.hash) {
-        console.error('Invalid group message payload:', payload)
-        return
-      }
-
-      // Publish to incoming_messages exchange for worker to process
-      await this.rabbitmqService.publishToIncoming('group.message', {
-        type: 'MESSAGE_SEND',
-        payload,
-      })
-    } catch (err) {
-      console.error('Error sending group message:', err)
-    }
   }
 }

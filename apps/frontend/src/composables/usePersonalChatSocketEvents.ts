@@ -1,6 +1,7 @@
 import { MessageStatus, SocketEvents } from '@shared/constants'
 import type { IMessage, SocketEventPayloads } from '@shared/types'
 import type { IUser } from '~/types'
+import { handleDelivered, handleRead } from '~/utils/mutations/messages'
 
 export async function usePersonalChatSocketEvents() {
   if (!import.meta.client) {
@@ -44,11 +45,12 @@ export async function usePersonalChatSocketEvents() {
 
       updateLatestMessageInChatList(payload.senderId, message)
 
-      connection.emit(SocketEvents.PERSONAL.STATUS_DELIVERED, {
-        messageId: message.id,
-        receiverId: user.id,
-        senderId: payload.senderId,
-      })
+      // Notify server that message was delivered via HTTP API
+      try {
+        await handleDelivered(message.id, user.id, payload.senderId)
+      } catch (error) {
+        console.error('Error sending delivered status:', error)
+      }
 
       pushMessage(payload.senderId, message)
     }
@@ -140,7 +142,10 @@ export async function usePersonalChatSocketEvents() {
     })
 
     if (payloads.length > 0) {
-      connection.emit(SocketEvents.PERSONAL.STATUS_READ, payloads)
+      // Send read status via HTTP API
+      handleRead(payloads).catch(error => {
+        console.error('Error sending read status:', error)
+      })
     }
   })
 }

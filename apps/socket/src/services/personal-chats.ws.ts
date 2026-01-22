@@ -90,50 +90,6 @@ export class PersonalChatsWsService {
     }
   }
 
-  async sendMessage(payload: SocketEventPayloads.Personal.EmitMessage) {
-    try {
-      // Basic validation
-      if (!payload.content || !payload.senderId || !payload.receiverId || !payload.hash) {
-        console.error('Invalid message payload:', payload)
-        return
-      }
-
-      // Publish to incoming_messages exchange for worker to process
-      await this.rabbitmqService.publishToIncoming('personal.message', {
-        type: 'MESSAGE_SEND',
-        payload,
-      })
-    } catch (err) {
-      console.error('Error sending message:', err)
-    }
-  }
-
-  async handleDelivered(payload: SocketEventPayloads.Personal.EmitDelivered) {
-    try {
-      // Publish to incoming_messages exchange for worker to process
-      await this.rabbitmqService.publishToIncoming('personal.delivered', {
-        type: 'STATUS_DELIVERED',
-        payload,
-      })
-    } catch (err) {
-      console.error('Error handling delivered:', err)
-    }
-  }
-
-  async handleRead(payload: SocketEventPayloads.Personal.EmitRead | SocketEventPayloads.Personal.EmitRead[]) {
-    try {
-      const payloadArray = Array.isArray(payload) ? payload : [payload]
-
-      // Publish to incoming_messages exchange for worker to process
-      await this.rabbitmqService.publishToIncoming('personal.read', {
-        type: 'STATUS_READ',
-        payload: payloadArray,
-      })
-    } catch (err) {
-      console.error('Error handling read:', err)
-    }
-  }
-
   async handleTyping(payload: SocketEventPayloads.Personal.EmitTyping) {
     try {
       // Publish directly to receiver using userId as routing key

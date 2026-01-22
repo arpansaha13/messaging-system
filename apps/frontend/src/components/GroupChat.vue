@@ -26,11 +26,11 @@
 
 <script setup lang="ts">
 import type { IChannel } from '~/types'
-import { MessageStatus, SocketEvents } from '@shared/constants'
+import { MessageStatus } from '@shared/constants'
 import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
+import { sendGroupMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()
-const { socket } = await useSocket()
 const { data: authUser } = await useFetchAuthUser()
 const groupMessages = useGroupMessagesStore()
 
@@ -117,17 +117,8 @@ const sendMessage = async (message: string) => {
     // Add temp message to UI
     groupMessages.upsertTempGroupMessages(channelId.value as number, [newMessage])
 
-    // Emit message via socket
-    if (socket.value) {
-      socket.value.emit(SocketEvents.GROUP.MESSAGE_SEND, {
-        hash: newMessage.hash,
-        content: newMessage.content,
-        senderId: newMessage.senderId,
-        status: newMessage.status,
-        channelId: channelId.value,
-        groupId: groupId.value,
-      })
-    }
+    // Send message via HTTP API instead of socket
+    await sendGroupMessage(groupId.value, channelId.value, newMessage.content, newMessage.hash)
   } catch (error) {
     console.error('Error sending message:', error)
   }
