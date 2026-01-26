@@ -53,12 +53,7 @@ const authClient = new pg.Client({
   user: process.env.AUTH_DB_USERNAME,
   database: process.env.AUTH_DB_NAME,
   password: process.env.AUTH_DB_PASSWORD,
-  ssl:
-    process.env.ENVIRONMENT === 'development'
-      ? false
-      : {
-          rejectUnauthorized: false,
-        },
+  ssl: process.env.ENVIRONMENT === 'production',
 })
 
 async function seed() {
@@ -82,8 +77,8 @@ async function seed() {
   await client.query('DELETE FROM channels')
   console.log('deleted channels')
 
-  await client.query('DELETE FROM user_group')
-  console.log('deleted user_group')
+  await client.query('DELETE FROM user_groups')
+  console.log('deleted user_groups')
 
   await client.query('DELETE FROM invites')
   console.log('deleted invites')

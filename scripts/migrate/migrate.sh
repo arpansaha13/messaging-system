@@ -1,50 +1,64 @@
 #!/bin/bash
-# Migration helper script for Windows and Unix
-# Usage: ./scripts/migrate/migrate.sh [command]
-# Commands:
-#   run     - Run pending migrations
-#   revert  - Revert last migration
-#   show    - Show migration status
-#   create  - Create a new migration file [name]
-#   generate - Auto-generate migration from entities [name]
 
-COMMAND=${1:-run}
-MIGRATION_NAME=$2
+# Script to run database migrations for messaging-system backend
+# Usage: ./scripts/migrate.sh [up|down|status]
 
-case $COMMAND in
-  run)
-    echo "Running pending migrations..."
-    cd apps/backend && pnpm run build && pnpx typeorm migration:run -d dist/data-source.js
-    ;;
-  revert)
-    echo "Reverting last migration..."
-    cd apps/backend && pnpx typeorm migration:revert -d dist/data-source.js
-    ;;
-  show)
-    echo "Showing migration status..."
-    cd apps/backend && pnpx typeorm migration:show -d dist/data-source.js
-    ;;
-  create)
-    if [ -z "$MIGRATION_NAME" ]; then
-      echo "Error: Migration name required"
-      echo "Usage: ./scripts/migrate.sh create <name>"
-      exit 1
-    fi
-    echo "Creating migration: $MIGRATION_NAME"
-    cd apps/backend && pnpx typeorm migration:create src/migrations/$MIGRATION_NAME
-    ;;
-  generate)
-    if [ -z "$MIGRATION_NAME" ]; then
-      echo "Error: Migration name required"
-      echo "Usage: ./scripts/migrate.sh generate <name>"
-      exit 1
-    fi
-    echo "Generating migration: $MIGRATION_NAME"
-    cd apps/backend && pnpm run build && pnpx typeorm migration:generate -d dist/data-source.js src/migrations/$MIGRATION_NAME
-    ;;
-  *)
-    echo "Unknown command: $COMMAND"
-    echo "Available commands: run, revert, show, create, generate"
+set -e
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 [up|down|status]"
+    echo "  up     - Apply all pending migrations"
+    echo "  down   - Rollback the last migration"
+    echo "  status - Show migration status"
     exit 1
-    ;;
+fi
+
+COMMAND=$1
+MIGRATIONS_DIR="apps/backend-go/migrations"
+
+# Check if migrations directory exists
+if [ ! -d "$MIGRATIONS_DIR" ]; then
+    echo "Error: migrations directory not found at $MIGRATIONS_DIR"
+    exit 1
+fi
+
+# Load environment variables
+if [ -f ".env" ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+fi
+
+# Use DATABASE_URL from environment or default
+DB_URL="${DATABASE_URL:-postgres://user:password@localhost:5432/messaging}"
+
+case "$COMMAND" in
+    up)
+        echo "Applying migrations..."
+        for migration_file in "$MIGRATIONS_DIR"/*.up.sql; do
+            if [ -f "$migration_file" ]; then
+                echo "Running: $migration_file"
+                psql "$DB_URL" -f "$migration_file"
+            fi
+        done
+        echo "Migrations applied successfully!"
+        ;;
+    down)
+        echo "Rolling back migrations..."
+        # Apply down migrations in reverse order
+        for migration_file in $(ls -r "$MIGRATIONS_DIR"/*.down.sql); do
+            if [ -f "$migration_file" ]; then
+                echo "Rolling back: $migration_file"
+                psql "$DB_URL" -f "$migration_file"
+            fi
+        done
+        echo "Migrations rolled back successfully!"
+        ;;
+    status)
+        echo "Checking migration status..."
+        psql "$DB_URL" -c "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;"
+        ;;
+    *)
+        echo "Error: Unknown command '$COMMAND'"
+        echo "Use 'up', 'down', or 'status'"
+        exit 1
+        ;;
 esac

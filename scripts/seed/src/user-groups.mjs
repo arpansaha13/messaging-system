@@ -66,7 +66,7 @@ export async function insertUserGroups(client, users, groups) {
       .join(', ')
 
     const query = `
-      INSERT INTO user_group (user_id, group_id)
+      INSERT INTO user_groups (user_id, group_id)
       VALUES ${placeholders}
     `
 

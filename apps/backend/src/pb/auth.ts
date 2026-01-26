@@ -917,6 +917,343 @@ export namespace proto {
             return LogoutResponse.deserialize(bytes);
         }
     }
+    export class ForgotPasswordRequest extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            email?: string;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("email" in data && data.email != undefined) {
+                    this.email = data.email;
+                }
+            }
+        }
+        get email() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+        }
+        set email(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        static fromObject(data: {
+            email?: string;
+        }): ForgotPasswordRequest {
+            const message = new ForgotPasswordRequest({});
+            if (data.email != null) {
+                message.email = data.email;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                email?: string;
+            } = {};
+            if (this.email != null) {
+                data.email = this.email;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.email.length)
+                writer.writeString(1, this.email);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ForgotPasswordRequest {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new ForgotPasswordRequest();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.email = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): ForgotPasswordRequest {
+            return ForgotPasswordRequest.deserialize(bytes);
+        }
+    }
+    export class ForgotPasswordResponse extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            message?: string;
+            otp_hash?: string;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("message" in data && data.message != undefined) {
+                    this.message = data.message;
+                }
+                if ("otp_hash" in data && data.otp_hash != undefined) {
+                    this.otp_hash = data.otp_hash;
+                }
+            }
+        }
+        get message() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+        }
+        set message(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        get otp_hash() {
+            return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
+        }
+        set otp_hash(value: string) {
+            pb_1.Message.setField(this, 2, value);
+        }
+        static fromObject(data: {
+            message?: string;
+            otp_hash?: string;
+        }): ForgotPasswordResponse {
+            const message = new ForgotPasswordResponse({});
+            if (data.message != null) {
+                message.message = data.message;
+            }
+            if (data.otp_hash != null) {
+                message.otp_hash = data.otp_hash;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                message?: string;
+                otp_hash?: string;
+            } = {};
+            if (this.message != null) {
+                data.message = this.message;
+            }
+            if (this.otp_hash != null) {
+                data.otp_hash = this.otp_hash;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.message.length)
+                writer.writeString(1, this.message);
+            if (this.otp_hash.length)
+                writer.writeString(2, this.otp_hash);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ForgotPasswordResponse {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new ForgotPasswordResponse();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.message = reader.readString();
+                        break;
+                    case 2:
+                        message.otp_hash = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): ForgotPasswordResponse {
+            return ForgotPasswordResponse.deserialize(bytes);
+        }
+    }
+    export class ResetPasswordRequest extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            otp_hash?: string;
+            code?: string;
+            password?: string;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("otp_hash" in data && data.otp_hash != undefined) {
+                    this.otp_hash = data.otp_hash;
+                }
+                if ("code" in data && data.code != undefined) {
+                    this.code = data.code;
+                }
+                if ("password" in data && data.password != undefined) {
+                    this.password = data.password;
+                }
+            }
+        }
+        get otp_hash() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+        }
+        set otp_hash(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        get code() {
+            return pb_1.Message.getFieldWithDefault(this, 2, "") as string;
+        }
+        set code(value: string) {
+            pb_1.Message.setField(this, 2, value);
+        }
+        get password() {
+            return pb_1.Message.getFieldWithDefault(this, 3, "") as string;
+        }
+        set password(value: string) {
+            pb_1.Message.setField(this, 3, value);
+        }
+        static fromObject(data: {
+            otp_hash?: string;
+            code?: string;
+            password?: string;
+        }): ResetPasswordRequest {
+            const message = new ResetPasswordRequest({});
+            if (data.otp_hash != null) {
+                message.otp_hash = data.otp_hash;
+            }
+            if (data.code != null) {
+                message.code = data.code;
+            }
+            if (data.password != null) {
+                message.password = data.password;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                otp_hash?: string;
+                code?: string;
+                password?: string;
+            } = {};
+            if (this.otp_hash != null) {
+                data.otp_hash = this.otp_hash;
+            }
+            if (this.code != null) {
+                data.code = this.code;
+            }
+            if (this.password != null) {
+                data.password = this.password;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.otp_hash.length)
+                writer.writeString(1, this.otp_hash);
+            if (this.code.length)
+                writer.writeString(2, this.code);
+            if (this.password.length)
+                writer.writeString(3, this.password);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ResetPasswordRequest {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new ResetPasswordRequest();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.otp_hash = reader.readString();
+                        break;
+                    case 2:
+                        message.code = reader.readString();
+                        break;
+                    case 3:
+                        message.password = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): ResetPasswordRequest {
+            return ResetPasswordRequest.deserialize(bytes);
+        }
+    }
+    export class ResetPasswordResponse extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            message?: string;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("message" in data && data.message != undefined) {
+                    this.message = data.message;
+                }
+            }
+        }
+        get message() {
+            return pb_1.Message.getFieldWithDefault(this, 1, "") as string;
+        }
+        set message(value: string) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        static fromObject(data: {
+            message?: string;
+        }): ResetPasswordResponse {
+            const message = new ResetPasswordResponse({});
+            if (data.message != null) {
+                message.message = data.message;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                message?: string;
+            } = {};
+            if (this.message != null) {
+                data.message = this.message;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.message.length)
+                writer.writeString(1, this.message);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ResetPasswordResponse {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new ResetPasswordResponse();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.message = reader.readString();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): ResetPasswordResponse {
+            return ResetPasswordResponse.deserialize(bytes);
+        }
+    }
     export class GetUserRequest extends pb_1.Message {
         #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
@@ -1567,6 +1904,24 @@ export namespace proto {
                 responseSerialize: (message: LogoutResponse) => Buffer.from(message.serialize()),
                 responseDeserialize: (bytes: Buffer) => LogoutResponse.deserialize(new Uint8Array(bytes))
             },
+            ForgotPassword: {
+                path: "/proto.AuthService/ForgotPassword",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: ForgotPasswordRequest) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => ForgotPasswordRequest.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: ForgotPasswordResponse) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => ForgotPasswordResponse.deserialize(new Uint8Array(bytes))
+            },
+            ResetPassword: {
+                path: "/proto.AuthService/ResetPassword",
+                requestStream: false,
+                responseStream: false,
+                requestSerialize: (message: ResetPasswordRequest) => Buffer.from(message.serialize()),
+                requestDeserialize: (bytes: Buffer) => ResetPasswordRequest.deserialize(new Uint8Array(bytes)),
+                responseSerialize: (message: ResetPasswordResponse) => Buffer.from(message.serialize()),
+                responseDeserialize: (bytes: Buffer) => ResetPasswordResponse.deserialize(new Uint8Array(bytes))
+            },
             GetUser: {
                 path: "/proto.AuthService/GetUser",
                 requestStream: false,
@@ -1602,6 +1957,8 @@ export namespace proto {
         abstract ValidateSession(call: grpc_1.ServerUnaryCall<ValidateSessionRequest, ValidateSessionResponse>, callback: grpc_1.sendUnaryData<ValidateSessionResponse>): void;
         abstract RefreshSession(call: grpc_1.ServerUnaryCall<RefreshSessionRequest, RefreshSessionResponse>, callback: grpc_1.sendUnaryData<RefreshSessionResponse>): void;
         abstract Logout(call: grpc_1.ServerUnaryCall<LogoutRequest, LogoutResponse>, callback: grpc_1.sendUnaryData<LogoutResponse>): void;
+        abstract ForgotPassword(call: grpc_1.ServerUnaryCall<ForgotPasswordRequest, ForgotPasswordResponse>, callback: grpc_1.sendUnaryData<ForgotPasswordResponse>): void;
+        abstract ResetPassword(call: grpc_1.ServerUnaryCall<ResetPasswordRequest, ResetPasswordResponse>, callback: grpc_1.sendUnaryData<ResetPasswordResponse>): void;
         abstract GetUser(call: grpc_1.ServerUnaryCall<GetUserRequest, GetUserResponse>, callback: grpc_1.sendUnaryData<GetUserResponse>): void;
         abstract GetUserByEmail(call: grpc_1.ServerUnaryCall<GetUserByEmailRequest, GetUserByEmailResponse>, callback: grpc_1.sendUnaryData<GetUserByEmailResponse>): void;
         abstract DeleteUser(call: grpc_1.ServerUnaryCall<DeleteUserRequest, DeleteUserResponse>, callback: grpc_1.sendUnaryData<DeleteUserResponse>): void;
@@ -1627,6 +1984,12 @@ export namespace proto {
         };
         Logout: GrpcUnaryServiceInterface<LogoutRequest, LogoutResponse> = (message: LogoutRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<LogoutResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<LogoutResponse>, callback?: grpc_1.requestCallback<LogoutResponse>): grpc_1.ClientUnaryCall => {
             return super.Logout(message, metadata, options, callback);
+        };
+        ForgotPassword: GrpcUnaryServiceInterface<ForgotPasswordRequest, ForgotPasswordResponse> = (message: ForgotPasswordRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<ForgotPasswordResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<ForgotPasswordResponse>, callback?: grpc_1.requestCallback<ForgotPasswordResponse>): grpc_1.ClientUnaryCall => {
+            return super.ForgotPassword(message, metadata, options, callback);
+        };
+        ResetPassword: GrpcUnaryServiceInterface<ResetPasswordRequest, ResetPasswordResponse> = (message: ResetPasswordRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<ResetPasswordResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<ResetPasswordResponse>, callback?: grpc_1.requestCallback<ResetPasswordResponse>): grpc_1.ClientUnaryCall => {
+            return super.ResetPassword(message, metadata, options, callback);
         };
         GetUser: GrpcUnaryServiceInterface<GetUserRequest, GetUserResponse> = (message: GetUserRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<GetUserResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<GetUserResponse>, callback?: grpc_1.requestCallback<GetUserResponse>): grpc_1.ClientUnaryCall => {
             return super.GetUser(message, metadata, options, callback);

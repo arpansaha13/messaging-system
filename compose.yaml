@@ -55,11 +55,12 @@ services:
   backend:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile.dev
+      dockerfile: apps/backend-go/Dockerfile
     container_name: backend
     environment:
       ENVIRONMENT: development
       API_PORT: 4000
+      DATABASE_URL: ${DATABASE_URL}
       DB_HOST: ${DB_HOST}
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
@@ -89,11 +90,16 @@ services:
       - messaging-network
     develop:
       watch:
-        - action: sync
-          path: ./apps/backend/src
-          target: /app/apps/backend/src
         - action: rebuild
-          path: ./apps/backend/tsconfig.json
+          path: ./apps/backend-go/cmd
+        - action: rebuild
+          path: ./apps/backend-go/internal
+        - action: rebuild
+          path: ./apps/backend-go/pb
+        - action: rebuild
+          path: ./apps/backend-go/go.mod
+        - action: rebuild
+          path: ./apps/backend-go/go.sum
 
   socket:
     build:

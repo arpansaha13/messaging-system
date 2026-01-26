@@ -12,8 +12,8 @@
               </h3>
               <p class="text-sm ">
                 <span>{{ contact.globalName }}</span>
-                {{ ' ' }}
-                <span class="text-gray-500 dark:text-gray-400">@{{ contact.username }}</span>
+                <!-- {{ ' ' }}
+                <span class="text-gray-500 dark:text-gray-400">@{{ contact.username }}</span> -->
               </p>
             </div>
           </div>

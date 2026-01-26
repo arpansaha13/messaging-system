@@ -1,0 +1,35 @@
+FROM golang:1.25-alpine AS builder
+
+# Add required build dependencies
+RUN apk add --no-cache gcc musl-dev
+
+WORKDIR /app
+
+# https://medium.com/@marcin.niemira/optimise-docker-build-for-go-c03d6eb8b4b
+
+ENV CGO_ENABLED=1
+ENV GOCACHE=/go-cache
+ENV GOMODCACHE=/gomod-cache
+
+COPY apps/backend-go/go.mod apps/backend-go/go.sum ./
+COPY apps/backend-go/cmd/ ./cmd/
+COPY apps/backend-go/internal/ ./internal/
+COPY apps/backend-go/pb/ ./pb/
+
+RUN --mount=type=cache,target=/gomod-cache \
+  --mount=type=cache,target=/go-cache \
+  go build -ldflags="-w -s" \
+  -o server ./cmd/server
+
+FROM alpine:3.22.0
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copy binary from builder
+COPY --from=builder /app/server .
+
+EXPOSE 4000
+
+CMD ["./server"]

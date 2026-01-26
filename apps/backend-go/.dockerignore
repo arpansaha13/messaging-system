@@ -1,0 +1,15 @@
+.air.toml
+.git
+.gitignore
+.env
+.env.example
+.DS_Store
+*.swp
+*.swo
+*.md
+tmp/
+testdata/
+migrations/
+scripts/
+tests/
+README.md

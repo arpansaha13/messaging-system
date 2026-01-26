@@ -14,7 +14,6 @@ export interface IUser {
   id: number
   bio: string
   dp: string | null
-  username: string
   globalName: string
   contact: {
     id: number
@@ -24,11 +23,7 @@ export interface IUser {
 
 export interface IAuthUser extends Omit<IUser, 'contact'> {
   email: string
-  createdAt: string
-  updatedAt: string
-  deletedAt: string
-  groups: IGroup['id'][]
-  channels: IChannel['id'][]
+  username: string
 }
 
 export interface IUserSearchResult extends IUser {
@@ -45,7 +40,7 @@ export interface IContact {
   bio: string
   dp: string | null
   globalName: string
-  username: string
+  // username: string
 }
 
 export interface IGroup {

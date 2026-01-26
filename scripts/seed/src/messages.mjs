@@ -25,7 +25,7 @@ export async function insertMessages(client, chats) {
 
       const recipient = {
         receiver_id: receiver_id,
-        status: faker.helpers.arrayElement(['SENT', 'DELIVERED', 'READ']),
+        status: faker.helpers.arrayElement([1, 2, 3]),
         created_at: createdAt,
         updated_at: updatedAt,
       }

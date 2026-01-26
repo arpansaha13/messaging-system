@@ -10,6 +10,11 @@ interface SignupBody {
   confirmPassword: string
 }
 
+interface SignupResoonse {
+  otpHash: string
+  message: string
+}
+
 interface VerificationBody {
   hash: string
   otp: string
@@ -25,7 +30,7 @@ export function login(body: LoginBody) {
 
 export function signup(body: SignupBody) {
   const { $api } = useNuxtApp()
-  return $api('/api/auth/signup', {
+  return $api<SignupResoonse>('/api/auth/signup', {
     method: 'POST',
     body,
   })

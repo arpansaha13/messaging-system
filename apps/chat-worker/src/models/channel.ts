@@ -7,7 +7,10 @@ export class Channel extends BaseEntity {
   @Column({ type: 'varchar', name: 'name', nullable: false })
   name!: string
 
-  @ManyToOne(() => Group, { nullable: true })
+  @Column({ name: 'group_id', nullable: false })
+  groupId!: number
+
+  @ManyToOne(() => Group, { nullable: false })
   @JoinColumn({ name: 'group_id', referencedColumnName: 'id' })
-  group?: Group
+  group!: Group
 }

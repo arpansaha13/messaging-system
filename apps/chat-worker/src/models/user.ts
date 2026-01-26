@@ -4,7 +4,7 @@ import { Contact } from './contact'
 
 @Entity({ name: 'user_profiles' })
 export class UserProfile extends BaseEntityNoPk {
-  @PrimaryColumn({ type: 'bigint', name: 'id' })
+  @PrimaryColumn({ name: 'id' })
   id!: number
 
   @Column({ type: 'varchar', name: 'global_name', nullable: false })

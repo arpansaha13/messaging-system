@@ -38,7 +38,7 @@ export async function insertGroupMessages(client, groups) {
             messageRecipientEntries.push({
               message_id: message.id,
               receiver_id: memberId,
-              status: faker.helpers.arrayElement(['SENT', 'DELIVERED', 'READ']),
+              status: faker.helpers.arrayElement([1, 2, 3]),
               created_at: message.created_at,
               updated_at: message.updated_at,
             })
@@ -65,7 +65,7 @@ export async function insertGroupMessages(client, groups) {
         messageRecipientEntries.push({
           message_id: message.id,
           receiver_id: memberId,
-          status: faker.helpers.arrayElement(['SENT', 'DELIVERED', 'READ']),
+          status: faker.helpers.arrayElement([1, 2, 3]),
           created_at: message.created_at,
           updated_at: message.updated_at,
         })

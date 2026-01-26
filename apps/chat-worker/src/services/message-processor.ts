@@ -29,22 +29,22 @@ export class MessageProcessor {
         const [senderToReceiverChatExists, receiverToSenderChatExists] = await Promise.all([
           txnManager.exists(Chat, {
             where: {
-              sender_id: payload.senderId,
-              receiver_id: payload.receiverId,
+              senderId: payload.senderId,
+              receiverId: payload.receiverId,
             },
           }),
           txnManager.exists(Chat, {
             where: {
-              sender_id: payload.receiverId,
-              receiver_id: payload.senderId,
+              senderId: payload.receiverId,
+              receiverId: payload.senderId,
             },
           }),
         ])
 
         if (!senderToReceiverChatExists) {
           const senderChat = new Chat()
-          senderChat.sender_id = payload.senderId
-          senderChat.receiver_id = payload.receiverId
+          senderChat.senderId = payload.senderId
+          senderChat.receiverId = payload.receiverId
           senderChat.clearedAt = new Date()
           senderChat.muted = false
           senderChat.archived = false
@@ -54,8 +54,8 @@ export class MessageProcessor {
 
         if (!receiverToSenderChatExists) {
           const receiverChat = new Chat()
-          receiverChat.sender_id = payload.receiverId
-          receiverChat.receiver_id = payload.senderId
+          receiverChat.senderId = payload.receiverId
+          receiverChat.receiverId = payload.senderId
           receiverChat.clearedAt = new Date()
           receiverChat.muted = false
           receiverChat.archived = false
@@ -63,10 +63,14 @@ export class MessageProcessor {
           await txnManager.save(receiverChat)
         }
 
+        const timestamp = new Date()
+
         // Create message
         let message = new Message()
         message.content = payload.content
         message.sender = sender
+        message.createdAt = timestamp
+        message.updatedAt = timestamp
         message = await txnManager.save(message)
 
         // Create message recipient
@@ -74,6 +78,8 @@ export class MessageProcessor {
         messageRecipient.message = message
         messageRecipient.receiver = receiver
         messageRecipient.status = MessageStatus.SENT
+        messageRecipient.createdAt = timestamp
+        messageRecipient.updatedAt = timestamp
         messageRecipient = await txnManager.save(messageRecipient)
 
         return { message, messageRecipient }

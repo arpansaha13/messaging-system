@@ -1,15 +1,29 @@
-import { Entity, Column, ManyToOne, JoinColumn, PrimaryColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 import { UserProfile } from './user'
 import { Group } from './group'
 
 @Entity({ name: 'invites' })
 export class Invite {
-  @PrimaryColumn({ type: 'varchar' })
-  hash!: string
+  @PrimaryGeneratedColumn()
+  id!: number
+
+  @Column({ name: 'inviter_id', nullable: false })
+  inviterId!: number
 
   @ManyToOne(() => UserProfile, { nullable: false })
   @JoinColumn({ name: 'inviter_id', referencedColumnName: 'id' })
   inviter!: UserProfile
+
+  @Column({ name: 'group_id', nullable: true })
+  groupId?: number
 
   @ManyToOne(() => Group, { nullable: true })
   @JoinColumn({ name: 'group_id', referencedColumnName: 'id' })

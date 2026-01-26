@@ -100,14 +100,14 @@ async function onSignup(event: FormSubmitEvent<SignupSchema>) {
   isLoading.value = true
   try {
     // Remove confirmPassword before sending to API
-    const { confirmPassword, ...signupData } = event.data
-    await signup(signupData as Parameters<typeof signup>[0])
+    const { ...signupData } = event.data
+    const resp = await signup(signupData)
     toast.add({
       title: 'Account created!',
       description: 'Please verify your account using the link sent to your email.',
       color: 'success',
     })
-    await router.push('/auth/login')
+    await router.push(`/auth/verification/${resp.otpHash}`)
   } catch (error: any) {
     const message = Array.isArray(error.data.message) ? error.data.message[0] : error.data.message
     toast.add({
