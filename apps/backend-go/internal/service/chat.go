@@ -115,17 +115,22 @@ func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsRes
 			// Continue with nil message
 		}
 
-		item := &ChatItemDTO{
-			LatestMsg: &dto.MessageResponseDTO{
+		var latestMsgDTO *dto.MessageResponseDTO
+		if latestMsg != nil {
+			latestMsgDTO = &dto.MessageResponseDTO{
 				ID:        latestMsg.ID,
 				SenderID:  latestMsg.SenderID,
 				Content:   latestMsg.Content,
 				Status:    latestMsg.Status,
 				CreatedAt: latestMsg.CreatedAt,
 				UpdatedAt: latestMsg.UpdatedAt,
-			},
-			Receiver: receiverInfoMap[chat.ReceiverID_pk],
-			Chat:     chatMetadataMap[chat.ID],
+			}
+		}
+
+		item := &ChatItemDTO{
+			LatestMsg: latestMsgDTO,
+			Receiver:  receiverInfoMap[chat.ReceiverID_pk],
+			Chat:      chatMetadataMap[chat.ID],
 		}
 
 		if item.Chat.Archived {
