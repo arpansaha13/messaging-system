@@ -13,7 +13,7 @@ import (
 )
 
 // SetupChatRoutes sets up chat routes
-func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatService *service.ChatService) {
+func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatService service.IChatService) {
 	protectedRouter.HandleFunc("/api/chats", getUserChatsHandler(chatService)).Methods("GET")
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/pin", pinChatHandler(chatService)).Methods("PATCH")
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/unpin", unpinChatHandler(chatService)).Methods("PATCH")
@@ -23,7 +23,7 @@ func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatServic
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/delete", deleteChatHandler(chatService)).Methods("DELETE")
 }
 
-func getUserChatsHandler(chatService *service.ChatService) http.HandlerFunc {
+func getUserChatsHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
@@ -39,7 +39,7 @@ func getUserChatsHandler(chatService *service.ChatService) http.HandlerFunc {
 	}
 }
 
-func pinChatHandler(chatService *service.ChatService) http.HandlerFunc {
+func pinChatHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
@@ -61,7 +61,7 @@ func pinChatHandler(chatService *service.ChatService) http.HandlerFunc {
 	}
 }
 
-func unpinChatHandler(chatService *service.ChatService) http.HandlerFunc {
+func unpinChatHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
@@ -83,7 +83,7 @@ func unpinChatHandler(chatService *service.ChatService) http.HandlerFunc {
 	}
 }
 
-func archiveChatHandler(chatService *service.ChatService) http.HandlerFunc {
+func archiveChatHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
@@ -105,7 +105,7 @@ func archiveChatHandler(chatService *service.ChatService) http.HandlerFunc {
 	}
 }
 
-func unarchiveChatHandler(chatService *service.ChatService) http.HandlerFunc {
+func unarchiveChatHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
@@ -127,7 +127,7 @@ func unarchiveChatHandler(chatService *service.ChatService) http.HandlerFunc {
 	}
 }
 
-func clearChatHandler(chatService *service.ChatService) http.HandlerFunc {
+func clearChatHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
@@ -149,7 +149,7 @@ func clearChatHandler(chatService *service.ChatService) http.HandlerFunc {
 	}
 }
 
-func deleteChatHandler(chatService *service.ChatService) http.HandlerFunc {
+func deleteChatHandler(chatService service.IChatService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)

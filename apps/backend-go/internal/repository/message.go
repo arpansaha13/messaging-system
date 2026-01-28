@@ -142,3 +142,5 @@ func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelI
 
 	return messages, nil
 }
+
+var _ IMessageRepository = (*MessageRepository)(nil)

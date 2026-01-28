@@ -14,13 +14,13 @@ import (
 )
 
 // SetupUserGroupRoutes sets up user group routes
-func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userGroupService *service.UserGroupService) {
+func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userGroupService service.IUserGroupService) {
 	protectedRouter.HandleFunc("/api/groups/{groupID}/members", addUserToGroupHandler(userGroupService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/groups/{groupID}/members", getGroupMembersHandler(userGroupService)).Methods("GET")
 	protectedRouter.HandleFunc("/api/users/groups", getUserGroupsHandler(userGroupService)).Methods("GET")
 }
 
-func addUserToGroupHandler(userGroupService *service.UserGroupService) http.HandlerFunc {
+func addUserToGroupHandler(userGroupService service.IUserGroupService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
@@ -55,7 +55,7 @@ func addUserToGroupHandler(userGroupService *service.UserGroupService) http.Hand
 	}
 }
 
-func getGroupMembersHandler(userGroupService *service.UserGroupService) http.HandlerFunc {
+func getGroupMembersHandler(userGroupService service.IUserGroupService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
@@ -87,7 +87,7 @@ func getGroupMembersHandler(userGroupService *service.UserGroupService) http.Han
 	}
 }
 
-func getUserGroupsHandler(userGroupService *service.UserGroupService) http.HandlerFunc {
+func getUserGroupsHandler(userGroupService service.IUserGroupService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)

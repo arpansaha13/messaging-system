@@ -72,3 +72,5 @@ func (r *UserRepository) Search(ctx context.Context, query string, limit int) ([
 
 	return userProfiles, nil
 }
+
+var _ IUserRepository = (*UserRepository)(nil)

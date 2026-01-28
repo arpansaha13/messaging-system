@@ -111,3 +111,5 @@ func (r *ChatRepository) Update(ctx context.Context, chat *domain.Chat) error {
 	}
 	return nil
 }
+
+var _ IChatRepository = (*ChatRepository)(nil)

@@ -10,14 +10,14 @@ import (
 
 // MessageService handles message business logic
 type MessageService struct {
-	messageRepo          *repository.MessageRepository
-	messageRecipientRepo *repository.MessageRecipientRepository
-	chatRepo             *repository.ChatRepository
+	messageRepo          repository.IMessageRepository
+	messageRecipientRepo repository.IMessageRecipientRepository
+	chatRepo             repository.IChatRepository
 	rabbitmqService      *RabbitMQService
 }
 
 // NewMessageService creates a new message service
-func NewMessageService(messageRepo *repository.MessageRepository, messageRecipientRepo *repository.MessageRecipientRepository, chatRepo *repository.ChatRepository, rabbitmqService *RabbitMQService) *MessageService {
+func NewMessageService(messageRepo repository.IMessageRepository, messageRecipientRepo repository.IMessageRecipientRepository, chatRepo repository.IChatRepository, rabbitmqService *RabbitMQService) *MessageService {
 	return &MessageService{
 		messageRepo:          messageRepo,
 		messageRecipientRepo: messageRecipientRepo,
@@ -146,3 +146,5 @@ func (s *MessageService) GetChannelMessages(ctx context.Context, channelID int64
 	}
 	return messages, nil
 }
+
+var _ IMessageService = (*MessageService)(nil)

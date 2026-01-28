@@ -37,12 +37,12 @@ type ChatsResponseDTO struct {
 
 // ChatService handles chat business logic
 type ChatService struct {
-	chatRepo    *repository.ChatRepository
-	messageRepo *repository.MessageRepository
+	chatRepo    repository.IChatRepository
+	messageRepo repository.IMessageRepository
 }
 
 // NewChatService creates a new chat service
-func NewChatService(chatRepo *repository.ChatRepository, messageRepo *repository.MessageRepository) *ChatService {
+func NewChatService(chatRepo repository.IChatRepository, messageRepo repository.IMessageRepository) *ChatService {
 	return &ChatService{
 		chatRepo:    chatRepo,
 		messageRepo: messageRepo,
@@ -308,3 +308,5 @@ func (s *ChatService) DeleteChat(ctx context.Context, userID, receiverID int64) 
 
 	return nil
 }
+
+var _ IChatService = (*ChatService)(nil)

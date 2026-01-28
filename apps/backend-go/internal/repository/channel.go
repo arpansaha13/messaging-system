@@ -81,3 +81,5 @@ func (r *ChannelRepository) Update(ctx context.Context, channel *domain.Channel)
 	}
 	return nil
 }
+
+var _ IChannelRepository = (*ChannelRepository)(nil)

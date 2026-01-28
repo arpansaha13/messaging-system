@@ -14,12 +14,12 @@ import (
 )
 
 // SetupInviteRoutes sets up invite routes
-func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteService *service.InviteService) {
+func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteService service.IInviteService) {
 	protectedRouter.HandleFunc("/api/invites", sendInviteHandler(inviteService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/invites", getInvitesHandler(inviteService)).Methods("GET")
 }
 
-func sendInviteHandler(inviteService *service.InviteService) http.HandlerFunc {
+func sendInviteHandler(inviteService service.IInviteService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.SendInviteRequestDTO
 
@@ -51,7 +51,7 @@ func sendInviteHandler(inviteService *service.InviteService) http.HandlerFunc {
 	}
 }
 
-func getInvitesHandler(inviteService *service.InviteService) http.HandlerFunc {
+func getInvitesHandler(inviteService service.IInviteService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)

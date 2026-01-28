@@ -71,3 +71,5 @@ func (r *InviteRepository) Update(ctx context.Context, invite *domain.Invite) er
 	}
 	return nil
 }
+
+var _ IInviteRepository = (*InviteRepository)(nil)

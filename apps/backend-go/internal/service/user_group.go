@@ -10,13 +10,13 @@ import (
 
 // UserGroupService handles user group membership logic
 type UserGroupService struct {
-	userGroupRepo *repository.UserGroupRepository
-	userRepo      *repository.UserRepository
-	groupRepo     *repository.GroupRepository
+	userGroupRepo repository.IUserGroupRepository
+	userRepo      repository.IUserRepository
+	groupRepo     repository.IGroupRepository
 }
 
 // NewUserGroupService creates a new user group service
-func NewUserGroupService(userGroupRepo *repository.UserGroupRepository, userRepo *repository.UserRepository, groupRepo *repository.GroupRepository) *UserGroupService {
+func NewUserGroupService(userGroupRepo repository.IUserGroupRepository, userRepo repository.IUserRepository, groupRepo repository.IGroupRepository) *UserGroupService {
 	return &UserGroupService{
 		userGroupRepo: userGroupRepo,
 		userRepo:      userRepo,
@@ -59,3 +59,5 @@ func (s *UserGroupService) GetUserGroups(ctx context.Context, userID int64) ([]*
 	}
 	return groups, nil
 }
+
+var _ IUserGroupService = (*UserGroupService)(nil)

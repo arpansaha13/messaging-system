@@ -102,3 +102,5 @@ func (r *MessageRecipientRepository) Delete(ctx context.Context, recipientID int
 	}
 	return nil
 }
+
+var _ IMessageRecipientRepository = (*MessageRecipientRepository)(nil)

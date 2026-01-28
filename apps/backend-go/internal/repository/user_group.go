@@ -96,3 +96,5 @@ func (r *UserGroupRepository) Update(ctx context.Context, userGroup *domain.User
 	}
 	return nil
 }
+
+var _ IUserGroupRepository = (*UserGroupRepository)(nil)

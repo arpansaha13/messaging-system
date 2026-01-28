@@ -10,12 +10,12 @@ import (
 
 // ContactService handles contact business logic
 type ContactService struct {
-	contactRepo *repository.ContactRepository
-	userRepo    *repository.UserRepository
+	contactRepo repository.IContactRepository
+	userRepo    repository.IUserRepository
 }
 
 // NewContactService creates a new contact service
-func NewContactService(contactRepo *repository.ContactRepository, userRepo *repository.UserRepository) *ContactService {
+func NewContactService(contactRepo repository.IContactRepository, userRepo repository.IUserRepository) *ContactService {
 	return &ContactService{
 		contactRepo: contactRepo,
 		userRepo:    userRepo,
@@ -53,3 +53,5 @@ func (s *ContactService) GetContacts(ctx context.Context, userID int64) ([]*repo
 	}
 	return contacts, nil
 }
+
+var _ IContactService = (*ContactService)(nil)

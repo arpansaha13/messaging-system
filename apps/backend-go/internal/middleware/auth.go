@@ -18,7 +18,7 @@ const (
 )
 
 // AuthMiddleware validates JWT token with the auth service via gRPC and fetches user details
-func AuthMiddleware(authClient *service.AuthServiceClient) func(http.Handler) http.Handler {
+func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Get token from Authorization header or cookie
@@ -98,6 +98,16 @@ func getToken(r *http.Request) string {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
+	// First try to get token from Authorization header
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		// Expected format: "Bearer <token>"
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			return authHeader[7:]
+		}
+	}
+
+	// Fall back to cookie
 	cookie, err := r.Cookie(cfg.AuthCookieName)
 	if err == nil && cookie.Value != "" {
 		return cookie.Value

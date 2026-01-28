@@ -10,12 +10,12 @@ import (
 
 // ChannelService handles channel business logic
 type ChannelService struct {
-	channelRepo *repository.ChannelRepository
-	groupRepo   *repository.GroupRepository
+	channelRepo repository.IChannelRepository
+	groupRepo   repository.IGroupRepository
 }
 
 // NewChannelService creates a new channel service
-func NewChannelService(channelRepo *repository.ChannelRepository, groupRepo *repository.GroupRepository) *ChannelService {
+func NewChannelService(channelRepo repository.IChannelRepository, groupRepo repository.IGroupRepository) *ChannelService {
 	return &ChannelService{
 		channelRepo: channelRepo,
 		groupRepo:   groupRepo,
@@ -73,3 +73,5 @@ func (s *ChannelService) GetChannelByID(ctx context.Context, channelID int64) (*
 	}
 	return channel, nil
 }
+
+var _ IChannelService = (*ChannelService)(nil)

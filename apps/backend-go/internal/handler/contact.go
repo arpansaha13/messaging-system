@@ -14,12 +14,12 @@ import (
 )
 
 // SetupContactRoutes sets up contact routes
-func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contactService *service.ContactService) {
+func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contactService service.IContactService) {
 	protectedRouter.HandleFunc("/api/contacts", addContactHandler(contactService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/contacts", getContactsHandler(contactService)).Methods("GET")
 }
 
-func addContactHandler(contactService *service.ContactService) http.HandlerFunc {
+func addContactHandler(contactService service.IContactService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.AddContactRequestDTO
 
@@ -49,7 +49,7 @@ func addContactHandler(contactService *service.ContactService) http.HandlerFunc 
 	}
 }
 
-func getContactsHandler(contactService *service.ContactService) http.HandlerFunc {
+func getContactsHandler(contactService service.IContactService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)

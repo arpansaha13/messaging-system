@@ -112,3 +112,5 @@ func (r *ContactRepository) GetContactByUserIds(ctx context.Context, userID, con
 
 	return &contact, nil
 }
+
+var _ IContactRepository = (*ContactRepository)(nil)

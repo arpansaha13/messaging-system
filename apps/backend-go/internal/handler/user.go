@@ -14,14 +14,14 @@ import (
 )
 
 // SetupUserRoutes sets up user routes
-func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userService *service.UserService) {
+func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userService service.IUserService) {
 	protectedRouter.HandleFunc("/api/users/me", getUserMeHandler(userService)).Methods("GET")
 	protectedRouter.HandleFunc("/api/users/search", searchUserProfilesHandler(userService)).Methods("GET")
 	protectedRouter.HandleFunc("/api/users/{id}", getUserProfileByIDHandler(userService)).Methods("GET")
 }
 
 // getUserMeHandler returns the authenticated user's auth details
-func getUserMeHandler(userService *service.UserService) http.HandlerFunc {
+func getUserMeHandler(userService service.IUserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
@@ -48,7 +48,7 @@ func getUserMeHandler(userService *service.UserService) http.HandlerFunc {
 }
 
 // searchUserProfilesHandler searches for user profiles
-func searchUserProfilesHandler(userService *service.UserService) http.HandlerFunc {
+func searchUserProfilesHandler(userService service.IUserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		query := r.URL.Query().Get("q")
 		if query == "" {
@@ -80,7 +80,7 @@ func searchUserProfilesHandler(userService *service.UserService) http.HandlerFun
 }
 
 // getUserProfileByIDHandler retrieves a user profile by ID
-func getUserProfileByIDHandler(userService *service.UserService) http.HandlerFunc {
+func getUserProfileByIDHandler(userService service.IUserService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseInt(vars["id"], 10, 64)

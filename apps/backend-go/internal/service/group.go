@@ -10,13 +10,13 @@ import (
 
 // GroupService handles group business logic
 type GroupService struct {
-	groupRepo     *repository.GroupRepository
-	userGroupRepo *repository.UserGroupRepository
-	userRepo      *repository.UserRepository
+	groupRepo     repository.IGroupRepository
+	userGroupRepo repository.IUserGroupRepository
+	userRepo      repository.IUserRepository
 }
 
 // NewGroupService creates a new group service
-func NewGroupService(groupRepo *repository.GroupRepository, userGroupRepo *repository.UserGroupRepository, userRepo *repository.UserRepository) *GroupService {
+func NewGroupService(groupRepo repository.IGroupRepository, userGroupRepo repository.IUserGroupRepository, userRepo repository.IUserRepository) *GroupService {
 	return &GroupService{
 		groupRepo:     groupRepo,
 		userGroupRepo: userGroupRepo,
@@ -56,3 +56,5 @@ func (s *GroupService) GetGroups(ctx context.Context) ([]*domain.Group, error) {
 	}
 	return groups, nil
 }
+
+var _ IGroupService = (*GroupService)(nil)

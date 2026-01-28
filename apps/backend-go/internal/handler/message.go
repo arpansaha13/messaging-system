@@ -14,7 +14,7 @@ import (
 )
 
 // SetupMessageRoutes sets up message routes
-func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, messageService *service.MessageService) {
+func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, messageService service.IMessageService) {
 	protectedRouter.HandleFunc("/api/messages/send/personal", sendPersonalMessageHandler(messageService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/messages/send/group", sendGroupMessageHandler(messageService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/messages/{receiverID}", getMessagesHandler(messageService)).Methods("GET")
@@ -23,7 +23,7 @@ func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, message
 	protectedRouter.HandleFunc("/api/messages/status/read", handleReadHandler(messageService)).Methods("POST")
 }
 
-func sendPersonalMessageHandler(messageService *service.MessageService) http.HandlerFunc {
+func sendPersonalMessageHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.SendPersonalMessageDTO
 
@@ -46,7 +46,7 @@ func sendPersonalMessageHandler(messageService *service.MessageService) http.Han
 	}
 }
 
-func sendGroupMessageHandler(messageService *service.MessageService) http.HandlerFunc {
+func sendGroupMessageHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.SendGroupMessageDTO
 
@@ -69,7 +69,7 @@ func sendGroupMessageHandler(messageService *service.MessageService) http.Handle
 	}
 }
 
-func getMessagesHandler(messageService *service.MessageService) http.HandlerFunc {
+func getMessagesHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
@@ -117,7 +117,7 @@ func getMessagesHandler(messageService *service.MessageService) http.HandlerFunc
 	}
 }
 
-func handleDeliveredHandler(messageService *service.MessageService) http.HandlerFunc {
+func handleDeliveredHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.HandleDeliveredDTO
 
@@ -139,7 +139,7 @@ func handleDeliveredHandler(messageService *service.MessageService) http.Handler
 	}
 }
 
-func handleReadHandler(messageService *service.MessageService) http.HandlerFunc {
+func handleReadHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.HandleReadMultipleDTO
 
@@ -171,7 +171,7 @@ func handleReadHandler(messageService *service.MessageService) http.HandlerFunc 
 	}
 }
 
-func getChannelMessagesHandler(messageService *service.MessageService) http.HandlerFunc {
+func getChannelMessagesHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
@@ -215,7 +215,7 @@ func getChannelMessagesHandler(messageService *service.MessageService) http.Hand
 	}
 }
 
-func markMessageReadHandler(messageService *service.MessageService) http.HandlerFunc {
+func markMessageReadHandler(messageService service.IMessageService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// This handler is no longer used - status is sent via /api/messages/status/read
 		middleware.WriteError(w, &domain.ValidationError{Message: "invalid endpoint - use /api/messages/status/read"})

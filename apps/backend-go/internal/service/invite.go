@@ -10,13 +10,13 @@ import (
 
 // InviteService handles invite business logic
 type InviteService struct {
-	inviteRepo *repository.InviteRepository
-	groupRepo  *repository.GroupRepository
-	userRepo   *repository.UserRepository
+	inviteRepo repository.IInviteRepository
+	groupRepo  repository.IGroupRepository
+	userRepo   repository.IUserRepository
 }
 
 // NewInviteService creates a new invite service
-func NewInviteService(inviteRepo *repository.InviteRepository, groupRepo *repository.GroupRepository, userRepo *repository.UserRepository) *InviteService {
+func NewInviteService(inviteRepo repository.IInviteRepository, groupRepo repository.IGroupRepository, userRepo repository.IUserRepository) *InviteService {
 	return &InviteService{
 		inviteRepo: inviteRepo,
 		groupRepo:  groupRepo,
@@ -64,3 +64,5 @@ func (s *InviteService) GetInvites(ctx context.Context, userID int64) ([]*domain
 	}
 	return invites, nil
 }
+
+var _ IInviteService = (*InviteService)(nil)

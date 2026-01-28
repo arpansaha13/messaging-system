@@ -14,12 +14,12 @@ import (
 )
 
 // SetupGroupRoutes sets up group routes
-func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupService *service.GroupService) {
+func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupService service.IGroupService) {
 	protectedRouter.HandleFunc("/api/groups", createGroupHandler(groupService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/groups", getGroupsHandler(groupService)).Methods("GET")
 }
 
-func createGroupHandler(groupService *service.GroupService) http.HandlerFunc {
+func createGroupHandler(groupService service.IGroupService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.CreateGroupRequestDTO
 
@@ -49,7 +49,7 @@ func createGroupHandler(groupService *service.GroupService) http.HandlerFunc {
 	}
 }
 
-func getGroupsHandler(groupService *service.GroupService) http.HandlerFunc {
+func getGroupsHandler(groupService service.IGroupService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		groups, err := groupService.GetGroups(r.Context())
 		if err != nil {

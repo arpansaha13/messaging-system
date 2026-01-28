@@ -14,13 +14,13 @@ import (
 )
 
 // SetupChannelRoutes sets up channel routes
-func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channelService *service.ChannelService) {
+func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channelService service.IChannelService) {
 	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", createChannelHandler(channelService)).Methods("POST")
 	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", getGroupChannelsHandler(channelService)).Methods("GET")
 	protectedRouter.HandleFunc("/api/channels/{channelID}", getChannelInfoHandler(channelService)).Methods("GET")
 }
 
-func createChannelHandler(channelService *service.ChannelService) http.HandlerFunc {
+func createChannelHandler(channelService service.IChannelService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
@@ -59,7 +59,7 @@ func createChannelHandler(channelService *service.ChannelService) http.HandlerFu
 	}
 }
 
-func getGroupChannelsHandler(channelService *service.ChannelService) http.HandlerFunc {
+func getGroupChannelsHandler(channelService service.IChannelService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
@@ -90,7 +90,7 @@ func getGroupChannelsHandler(channelService *service.ChannelService) http.Handle
 	}
 }
 
-func getChannelInfoHandler(channelService *service.ChannelService) http.HandlerFunc {
+func getChannelInfoHandler(channelService service.IChannelService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)

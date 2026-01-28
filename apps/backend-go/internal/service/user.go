@@ -10,12 +10,12 @@ import (
 
 // UserService handles user profile business logic
 type UserService struct {
-	userRepo    *repository.UserRepository
-	contactRepo *repository.ContactRepository
+	userRepo    repository.IUserRepository
+	contactRepo repository.IContactRepository
 }
 
 // NewUserService creates a new user service
-func NewUserService(userRepo *repository.UserRepository, contactRepo *repository.ContactRepository) *UserService {
+func NewUserService(userRepo repository.IUserRepository, contactRepo repository.IContactRepository) *UserService {
 	return &UserService{
 		userRepo:    userRepo,
 		contactRepo: contactRepo,
@@ -58,3 +58,5 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, authUserID,
 
 	return userProfile, contact, nil
 }
+
+var _ IUserService = (*UserService)(nil)

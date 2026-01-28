@@ -69,3 +69,5 @@ func (r *GroupRepository) Update(ctx context.Context, group *domain.Group) error
 	}
 	return nil
 }
+
+var _ IGroupRepository = (*GroupRepository)(nil)
