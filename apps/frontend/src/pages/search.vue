@@ -10,7 +10,6 @@
             icon="i-lucide-search"
             variant="subtle"
             class="w-full"
-            @update:model-value="handleSearch"
           />
         </template>
 
@@ -27,18 +26,18 @@
             :key="user.id"
             class="flex cursor-pointer items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
           >
-            <div class="flex items-center gap-3">
+            <ULink class="flex items-center gap-3" :to="{ query: { ...route.query, to: user.id } }">
               <UAvatar :src="user.dp || undefined" :alt="user.globalName" size="md" :ui="{ root: 'shadow-md' }" />
               <div class="flex flex-col">
                 <p class="font-medium text-gray-900 dark:text-gray-100">
                   {{ user.globalName }}
                 </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">@{{ user.username }}</p>
+                <!-- <p class="text-xs text-gray-500 dark:text-gray-400">@{{ user.username }}</p> -->
                 <p v-if="user.bio" class="mt-1 text-xs text-gray-600 dark:text-gray-400">
                   {{ user.bio }}
                 </p>
               </div>
-            </div>
+            </ULink>
 
             <div v-if="!user.contact" class="shrink-0">
               <!-- Add to Contacts Modal -->
@@ -54,7 +53,7 @@
                         <h3 class="font-semibold text-gray-900 dark:text-gray-100">
                           {{ selectedUser.globalName }}
                         </h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">@{{ selectedUser.username }}</p>
+                        <!-- <p class="text-sm text-gray-500 dark:text-gray-400">@{{ selectedUser.username }}</p> -->
                         <p v-if="selectedUser.bio" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                           {{ selectedUser.bio }}
                         </p>
@@ -98,13 +97,12 @@
 import type { IUserSearchResult } from '~/types'
 
 const toast = useToast()
+const route = useRoute()
 
 // Search state
 const searchQuery = ref('')
 const searchResults = ref<IUserSearchResult[]>([])
 const isSearching = ref(false)
-const lastSearchQuery = ref('')
-let searchTimeout: NodeJS.Timeout | null = null
 
 // Add contact modal state
 const isAddModalOpen = ref(false)
@@ -112,32 +110,39 @@ const selectedUser = ref<IUserSearchResult | null>(null)
 const aliasInput = ref('')
 const isAddingContact = ref(false)
 
-// Search users
+// Search users with debounced query
+const debouncedSearchQuery = ref('')
+
 const { data: allUsers, status: usersStatus } = useAsyncData(
   'search:users',
-  () => $fetch('/api/users/search', { query: { text: searchQuery.value || '' } }),
+  () => $fetch('/api/users/search', { query: { q: debouncedSearchQuery.value || '' } }),
   {
-    watch: [searchQuery],
+    watch: [debouncedSearchQuery],
     lazy: true,
+    server: false,
+    immediate: false,
   },
 )
 
-function handleSearch() {
-  if (searchTimeout) clearTimeout(searchTimeout)
+// Debounced search handler
+const debouncedSearch = useDebounceFn(() => {
+  const trimmedQuery = searchQuery.value.trim()
 
-  searchTimeout = setTimeout(() => {
-    if (searchQuery.value.trim() === lastSearchQuery.value) return
-    lastSearchQuery.value = searchQuery.value.trim()
+  if (trimmedQuery) {
     isSearching.value = true
+    debouncedSearchQuery.value = trimmedQuery
+  } else {
+    searchResults.value = []
+    debouncedSearchQuery.value = ''
+  }
+}, 1000)
 
-    if (searchQuery.value.trim()) {
-      refreshNuxtData('search:users')
-    } else {
-      searchResults.value = []
-    }
-  }, 1000)
-}
+// Watch searchQuery and trigger debounced search
+watch(searchQuery, () => {
+  debouncedSearch()
+})
 
+// Update results when data arrives
 watch([allUsers, usersStatus], () => {
   if (usersStatus.value === 'success' && allUsers.value) {
     searchResults.value = allUsers.value as IUserSearchResult[]

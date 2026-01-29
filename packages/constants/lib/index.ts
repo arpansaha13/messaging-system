@@ -1,8 +1,8 @@
 export enum MessageStatus {
   SENDING = 'SENDING',
-  SENT = 'SENT',
-  DELIVERED = 'DELIVERED',
-  READ = 'READ',
+  SENT = 1,
+  DELIVERED = 2,
+  READ = 3,
 }
 
 enum SocketEvents_Personal {

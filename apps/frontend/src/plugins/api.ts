@@ -36,6 +36,12 @@ export default defineNuxtPlugin(nuxtApp => {
       }
     },
     async onResponseError({ response }) {
+      try {
+        response._data = JSON.parse(response._data)
+      } catch {
+        // Not a JSON response
+      }
+
       if (response.status === 401) {
         // useCookie(nuxtApp.$config.authCookieName).value = null
 
