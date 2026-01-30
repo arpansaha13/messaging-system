@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	pb "github.com/arpansaha13/messaging-system/apps/backend-go/pb"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/pb"
 )
 
 // ValidateSessionResponse represents the auth service response
@@ -112,7 +112,10 @@ func (m *MockAuthService) SetDefaultGetUserResponse(resp *GetUserResponse) {
 
 // MockAuthServiceClient wraps the mock auth service to work with the auth middleware
 type MockAuthServiceClient struct {
-	mockAuth *MockAuthService
+	mockAuth      *MockAuthService
+	SignupFunc    func(ctx context.Context, email, password string) (*pb.SignupResponse, error)
+	LoginFunc     func(ctx context.Context, email, password string) (*pb.LoginResponse, error)
+	VerifyOTPFunc func(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error)
 }
 
 // NewMockAuthServiceClient creates a new mock auth service client
@@ -154,16 +157,25 @@ func (c *MockAuthServiceClient) GetUser(ctx context.Context, userID int64, token
 
 // Signup is a stub implementation of the IAuthServiceClient interface
 func (c *MockAuthServiceClient) Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
+	if c.SignupFunc != nil {
+		return c.SignupFunc(ctx, email, password)
+	}
 	return &pb.SignupResponse{}, nil
 }
 
 // Login is a stub implementation of the IAuthServiceClient interface
 func (c *MockAuthServiceClient) Login(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
+	if c.LoginFunc != nil {
+		return c.LoginFunc(ctx, email, password)
+	}
 	return &pb.LoginResponse{}, nil
 }
 
 // VerifyOTP is a stub implementation of the IAuthServiceClient interface
 func (c *MockAuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
+	if c.VerifyOTPFunc != nil {
+		return c.VerifyOTPFunc(ctx, otpHash, code)
+	}
 	return &pb.VerifyOTPResponse{}, nil
 }
 

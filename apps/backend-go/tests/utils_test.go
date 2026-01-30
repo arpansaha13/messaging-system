@@ -13,7 +13,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
+	pbMocks "github.com/arpansaha13/messaging-system/apps/backend-go/pb/mocks"
 )
 
 // TestFixture represents a common test fixture for all test cases
@@ -237,12 +237,12 @@ func (h *HTTPTestHelper) SetToken(token string) {
 // SetUserID sets the user ID in the mock auth service
 func (h *HTTPTestHelper) SetUserID(userID int64) {
 	authMock := GetAuthServiceMock()
-	authMock.SetValidateSessionResponse(h.Token, &mocks.ValidateSessionResponse{
+	authMock.SetValidateSessionResponse(h.Token, &pbMocks.ValidateSessionResponse{
 		Valid:  true,
 		UserID: userID,
 		Error:  nil,
 	})
-	authMock.SetGetUserResponse(userID, &mocks.GetUserResponse{
+	authMock.SetGetUserResponse(userID, &pbMocks.GetUserResponse{
 		ID:       userID,
 		Email:    "test@example.com",
 		Username: "testuser",

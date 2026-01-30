@@ -16,13 +16,13 @@ import (
 )
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)
-func SetupAuthRoutes(router *mux.Router, authServiceClient *service.AuthServiceClient) {
+func SetupAuthRoutes(router *mux.Router, authServiceClient service.IAuthServiceClient) {
 	router.HandleFunc("/api/auth/signup", signupHandler(authServiceClient)).Methods("POST")
 	router.HandleFunc("/api/auth/login", loginHandler(authServiceClient)).Methods("POST")
 	router.HandleFunc("/api/auth/verify/{otpHash}", verifyOTPHandler(authServiceClient)).Methods("POST")
 }
 
-func signupHandler(authServiceClient *service.AuthServiceClient) http.HandlerFunc {
+func signupHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.SignupRequestDTO
 
@@ -63,7 +63,7 @@ func signupHandler(authServiceClient *service.AuthServiceClient) http.HandlerFun
 	}
 }
 
-func loginHandler(authServiceClient *service.AuthServiceClient) http.HandlerFunc {
+func loginHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.LoginRequestDTO
 
@@ -128,7 +128,7 @@ func loginHandler(authServiceClient *service.AuthServiceClient) http.HandlerFunc
 	}
 }
 
-func verifyOTPHandler(authServiceClient *service.AuthServiceClient) http.HandlerFunc {
+func verifyOTPHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		otpHash := vars["otpHash"]

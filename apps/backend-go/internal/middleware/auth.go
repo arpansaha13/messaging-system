@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	userIDContextKey   = "userID"
-	authUserContextKey = "authUser"
+	UserIDContextKey   = "userID"
+	AuthUserContextKey = "authUser"
 )
 
 // AuthMiddleware validates JWT token with the auth service via gRPC and fetches user details
@@ -65,8 +65,8 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 
 			// Add user ID, auth user, and token to context
 			userIDStr := strconv.FormatInt(resp.UserId, 10)
-			ctx := context.WithValue(r.Context(), userIDContextKey, userIDStr)
-			ctx = context.WithValue(ctx, authUserContextKey, authUser)
+			ctx := context.WithValue(r.Context(), UserIDContextKey, userIDStr)
+			ctx = context.WithValue(ctx, AuthUserContextKey, authUser)
 			ctx = utils.SetTokenInContext(ctx, token)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
@@ -75,7 +75,7 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 
 // GetUserIDFromContext extracts user ID from request context
 func GetUserIDFromContext(r *http.Request) string {
-	userID, ok := r.Context().Value(userIDContextKey).(string)
+	userID, ok := r.Context().Value(UserIDContextKey).(string)
 	if !ok {
 		return ""
 	}
@@ -84,7 +84,7 @@ func GetUserIDFromContext(r *http.Request) string {
 
 // GetAuthUserFromContext extracts auth user from request context
 func GetAuthUserFromContext(r *http.Request) *domain.AuthUser {
-	authUser, ok := r.Context().Value(authUserContextKey).(*domain.AuthUser)
+	authUser, ok := r.Context().Value(AuthUserContextKey).(*domain.AuthUser)
 	if !ok {
 		return nil
 	}
