@@ -59,4 +59,33 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, authUserID,
 	return userProfile, contact, nil
 }
 
+// UpdateUserProfile updates a user's profile information
+func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, globalName, bio *string, dp *string) (*domain.UserProfile, error) {
+	// Get existing profile
+	userProfile, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		log.Printf("failed to get user profile for update: %v", err)
+		return nil, err
+	}
+
+	// Update fields if provided
+	if globalName != nil {
+		userProfile.GlobalName = *globalName
+	}
+	if bio != nil {
+		userProfile.Bio = *bio
+	}
+	if dp != nil {
+		userProfile.DP = dp
+	}
+
+	// Save updated profile
+	if err := s.userRepo.Update(ctx, userProfile); err != nil {
+		log.Printf("failed to update user profile: %v", err)
+		return nil, err
+	}
+
+	return userProfile, nil
+}
+
 var _ IUserService = (*UserService)(nil)

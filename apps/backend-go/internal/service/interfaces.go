@@ -23,6 +23,7 @@ type IUserService interface {
 	GetUserProfile(ctx context.Context, userID int64) (*domain.UserProfile, error)
 	SearchUserProfiles(ctx context.Context, query string) ([]*domain.UserProfile, error)
 	GetUserProfileWithContact(ctx context.Context, authUserID, userID int64) (*domain.UserProfile, *domain.Contact, error)
+	UpdateUserProfile(ctx context.Context, userID int64, globalName, bio, dp *string) (*domain.UserProfile, error)
 }
 
 // ContactService defines the interface for contact service operations

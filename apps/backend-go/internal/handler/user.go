@@ -16,6 +16,7 @@ import (
 // SetupUserRoutes sets up user routes
 func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userService service.IUserService) {
 	protectedRouter.HandleFunc("/api/users/me", getUserMeHandler(userService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/me", updateUserMeHandler(userService)).Methods("PATCH")
 	protectedRouter.HandleFunc("/api/users/search", searchUserProfilesHandler(userService)).Methods("GET")
 	protectedRouter.HandleFunc("/api/users/{id}", getUserProfileByIDHandler(userService)).Methods("GET")
 }
@@ -43,6 +44,41 @@ func getUserMeHandler(userService service.IUserService) http.HandlerFunc {
 			GlobalName: userProfile.GlobalName,
 			DP:         userProfile.DP,
 			Bio:        userProfile.Bio,
+		})
+	}
+}
+
+// updateUserMeHandler updates the authenticated user's profile
+func updateUserMeHandler(userService service.IUserService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authUser := middleware.GetAuthUserFromContext(r)
+		if authUser == nil {
+			middleware.WriteError(w, &domain.UnauthorizedError{Message: "unauthorized"})
+			return
+		}
+
+		var req dto.UpdateUserRequestDTO
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
+			return
+		}
+
+		// Update the user profile
+		updatedProfile, err := userService.UpdateUserProfile(r.Context(), authUser.UserID, req.GlobalName, req.Bio, req.DP)
+		if err != nil {
+			middleware.WriteError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
+			ID:         authUser.UserID,
+			Email:      authUser.Email,
+			Username:   authUser.Username,
+			GlobalName: updatedProfile.GlobalName,
+			DP:         updatedProfile.DP,
+			Bio:        updatedProfile.Bio,
 		})
 	}
 }

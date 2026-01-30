@@ -19,6 +19,15 @@ type VerifyOTPRequestDTO struct {
 	Code string `json:"code"`
 }
 
+// User Request DTOs
+
+// UpdateUserRequestDTO represents an update user request
+type UpdateUserRequestDTO struct {
+	GlobalName *string `json:"globalName,omitempty"`
+	DP         *string `json:"dp,omitempty"`
+	Bio        *string `json:"bio,omitempty"`
+}
+
 // Chat Request DTOs
 
 // CreateChatRequestDTO represents a create chat request
