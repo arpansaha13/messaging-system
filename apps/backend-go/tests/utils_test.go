@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"testing"
+	"time"
 
 	"gorm.io/gorm"
 
@@ -159,12 +160,13 @@ func (t *TestDB) CreateTestContact(userID, userIDInContact int64) (*domain.Conta
 }
 
 // CreateTestInvite creates a test invite
-func (t *TestDB) CreateTestInvite(groupID, userID, invitedBy int64, status string) (*domain.Invite, error) {
+func (t *TestDB) CreateTestInvite(groupID, inviterID int64, hash string) (*domain.Invite, error) {
+	expiresAt := time.Now().Add(24 * time.Hour)
 	invite := &domain.Invite{
-		GroupID:   groupID,
-		UserID:    userID,
-		InvitedBy: invitedBy,
-		Status:    status,
+		Hash:      hash,
+		InviterID: inviterID,
+		GroupID:   &groupID,
+		ExpiresAt: &expiresAt,
 	}
 	if err := t.DB.Create(invite).Error; err != nil {
 		return nil, err

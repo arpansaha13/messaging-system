@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -15,23 +14,84 @@ import (
 
 // SetupInviteRoutes sets up invite routes
 func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteService service.IInviteService) {
-	protectedRouter.HandleFunc("/api/invites", sendInviteHandler(inviteService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/invites", getInvitesHandler(inviteService)).Methods("GET")
+	router.HandleFunc("/api/invites/{hash}", findInviteHandler(inviteService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/invites/{hash}/accept", acceptInviteHandler(inviteService)).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups/{groupId}/invites", createInviteHandler(inviteService)).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups/join", joinGroupHandler(inviteService)).Methods("POST")
 }
 
-func sendInviteHandler(inviteService service.IInviteService) http.HandlerFunc {
+func findInviteHandler(inviteService service.IInviteService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req dto.SendInviteRequestDTO
+		vars := mux.Vars(r)
+		hash := vars["hash"]
 
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
+		if hash == "" {
+			middleware.WriteError(w, &domain.ValidationError{Message: "hash parameter is required"})
+			return
+		}
+
+		invite, err := inviteService.FindByHash(r.Context(), hash)
+		if err != nil {
+			middleware.WriteError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(dto.InviteResponseDTO{
+			Hash:      invite.Hash,
+			InviterID: invite.InviterID,
+			GroupID:   invite.GroupID,
+			CreatedAt: invite.CreatedAt,
+			UpdatedAt: invite.UpdatedAt,
+			ExpiresAt: invite.ExpiresAt,
+		})
+	}
+}
+
+func acceptInviteHandler(inviteService service.IInviteService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		hash := vars["hash"]
+
+		if hash == "" {
+			middleware.WriteError(w, &domain.ValidationError{Message: "hash parameter is required"})
 			return
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
+		if userID == "" {
+			middleware.WriteError(w, &domain.ValidationError{Message: "user not authenticated"})
+			return
+		}
 
-		invite, err := inviteService.SendInvite(r.Context(), req.GroupID, req.UserID, userIDInt)
+		result, err := inviteService.AcceptInvite(r.Context(), parseUserID(userID), hash)
+		if err != nil {
+			middleware.WriteError(w, err)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}
+}
+
+func createInviteHandler(inviteService service.IInviteService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		groupID := parseGroupID(vars["groupId"])
+
+		if groupID == 0 {
+			middleware.WriteError(w, &domain.ValidationError{Message: "group_id parameter is required"})
+			return
+		}
+
+		userID := middleware.GetUserIDFromContext(r)
+		if userID == "" {
+			middleware.WriteError(w, &domain.ValidationError{Message: "user not authenticated"})
+			return
+		}
+
+		invite, err := inviteService.CreateInvite(r.Context(), parseUserID(userID), groupID)
 		if err != nil {
 			middleware.WriteError(w, err)
 			return
@@ -40,42 +100,42 @@ func sendInviteHandler(inviteService service.IInviteService) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(dto.InviteResponseDTO{
-			ID:        invite.ID,
+			Hash:      invite.Hash,
+			InviterID: invite.InviterID,
 			GroupID:   invite.GroupID,
-			UserID:    invite.UserID,
-			InvitedBy: invite.InvitedBy,
-			Status:    invite.Status,
 			CreatedAt: invite.CreatedAt,
 			UpdatedAt: invite.UpdatedAt,
+			ExpiresAt: invite.ExpiresAt,
 		})
 	}
 }
 
-func getInvitesHandler(inviteService service.IInviteService) http.HandlerFunc {
+func joinGroupHandler(inviteService service.IInviteService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
+		var req dto.JoinGroupDTO
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
+			return
+		}
 
-		invites, err := inviteService.GetInvites(r.Context(), userIDInt)
+		if req.InviteHash == "" {
+			middleware.WriteError(w, &domain.ValidationError{Message: "inviteHash is required"})
+			return
+		}
+
+		userID := middleware.GetUserIDFromContext(r)
+		if userID == "" {
+			middleware.WriteError(w, &domain.ValidationError{Message: "user not authenticated"})
+			return
+		}
+
+		result, err := inviteService.AcceptInvite(r.Context(), parseUserID(userID), req.InviteHash)
 		if err != nil {
 			middleware.WriteError(w, err)
 			return
 		}
 
-		inviteResponses := make([]dto.InviteResponseDTO, len(invites))
-		for i, invite := range invites {
-			inviteResponses[i] = dto.InviteResponseDTO{
-				ID:        invite.ID,
-				GroupID:   invite.GroupID,
-				UserID:    invite.UserID,
-				InvitedBy: invite.InvitedBy,
-				Status:    invite.Status,
-				CreatedAt: invite.CreatedAt,
-				UpdatedAt: invite.UpdatedAt,
-			}
-		}
-
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(inviteResponses)
+		json.NewEncoder(w).Encode(result)
 	}
 }

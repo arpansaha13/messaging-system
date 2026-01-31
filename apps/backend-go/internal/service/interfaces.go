@@ -70,8 +70,9 @@ type IGroupService interface {
 
 // InviteService defines the interface for invite service operations
 type IInviteService interface {
-	SendInvite(ctx context.Context, groupID, userID, invitedBy int64) (*domain.Invite, error)
-	GetInvites(ctx context.Context, userID int64) ([]*domain.Invite, error)
+	CreateInvite(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error)
+	FindByHash(ctx context.Context, hash string) (*domain.Invite, error)
+	AcceptInvite(ctx context.Context, userID int64, inviteHash string) (*AcceptInviteResponseDTO, error)
 }
 
 // UserGroupService defines the interface for user group service operations

@@ -74,7 +74,7 @@ func main() {
 	channelService := service.NewChannelService(channelRepo, groupRepo)
 	contactService := service.NewContactService(contactRepo, userRepo)
 	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)
-	inviteService := service.NewInviteService(inviteRepo, groupRepo, userRepo)
+	inviteService := service.NewInviteService(inviteRepo, groupRepo, userGroupRepo, channelRepo)
 	userGroupService := service.NewUserGroupService(userGroupRepo, userRepo, groupRepo)
 
 	// Setup HTTP router

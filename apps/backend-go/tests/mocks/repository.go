@@ -450,11 +450,11 @@ func (m *MockMessageRepository) Delete(ctx context.Context, messageID int64) err
 
 // MockInviteRepository is a mock implementation of IInviteRepository
 type MockInviteRepository struct {
-	CreateFunc         func(ctx context.Context, invite *domain.Invite) error
-	GetByIDFunc        func(ctx context.Context, inviteID int64) (*domain.Invite, error)
-	GetUserInvitesFunc func(ctx context.Context, userID int64) ([]*domain.Invite, error)
-	UpdateFunc         func(ctx context.Context, invite *domain.Invite) error
-	DeleteFunc         func(ctx context.Context, inviteID int64) error
+	CreateFunc             func(ctx context.Context, invite *domain.Invite) error
+	GetByHashFunc          func(ctx context.Context, hash string) (*domain.Invite, error)
+	GetByHashWithGroupFunc func(ctx context.Context, hash string) (*domain.Invite, error)
+	UpdateFunc             func(ctx context.Context, invite *domain.Invite) error
+	DeleteFunc             func(ctx context.Context, hash string) error
 }
 
 func (m *MockInviteRepository) Create(ctx context.Context, invite *domain.Invite) error {
@@ -464,16 +464,16 @@ func (m *MockInviteRepository) Create(ctx context.Context, invite *domain.Invite
 	return nil
 }
 
-func (m *MockInviteRepository) GetByID(ctx context.Context, inviteID int64) (*domain.Invite, error) {
-	if m.GetByIDFunc != nil {
-		return m.GetByIDFunc(ctx, inviteID)
+func (m *MockInviteRepository) GetByHash(ctx context.Context, hash string) (*domain.Invite, error) {
+	if m.GetByHashFunc != nil {
+		return m.GetByHashFunc(ctx, hash)
 	}
 	return nil, nil
 }
 
-func (m *MockInviteRepository) GetUserInvites(ctx context.Context, userID int64) ([]*domain.Invite, error) {
-	if m.GetUserInvitesFunc != nil {
-		return m.GetUserInvitesFunc(ctx, userID)
+func (m *MockInviteRepository) GetByHashWithGroup(ctx context.Context, hash string) (*domain.Invite, error) {
+	if m.GetByHashWithGroupFunc != nil {
+		return m.GetByHashWithGroupFunc(ctx, hash)
 	}
 	return nil, nil
 }
@@ -485,9 +485,9 @@ func (m *MockInviteRepository) Update(ctx context.Context, invite *domain.Invite
 	return nil
 }
 
-func (m *MockInviteRepository) Delete(ctx context.Context, inviteID int64) error {
+func (m *MockInviteRepository) Delete(ctx context.Context, hash string) error {
 	if m.DeleteFunc != nil {
-		return m.DeleteFunc(ctx, inviteID)
+		return m.DeleteFunc(ctx, hash)
 	}
 	return nil
 }

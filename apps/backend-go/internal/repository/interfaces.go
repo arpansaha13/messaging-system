@@ -80,9 +80,9 @@ type IGroupRepository interface {
 // InviteRepository defines the interface for invite repository operations
 type IInviteRepository interface {
 	Create(ctx context.Context, invite *domain.Invite) error
-	GetByID(ctx context.Context, inviteID int64) (*domain.Invite, error)
-	GetUserInvites(ctx context.Context, userID int64) ([]*domain.Invite, error)
-	Delete(ctx context.Context, inviteID int64) error
+	GetByHash(ctx context.Context, hash string) (*domain.Invite, error)
+	GetByHashWithGroup(ctx context.Context, hash string) (*domain.Invite, error)
+	Delete(ctx context.Context, hash string) error
 	Update(ctx context.Context, invite *domain.Invite) error
 }
 

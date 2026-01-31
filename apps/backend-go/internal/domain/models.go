@@ -116,14 +116,13 @@ type UserGroup struct {
 
 // Invite represents an invitation to join a group
 type Invite struct {
-	ID        int64     `gorm:"primaryKey"`
-	GroupID   int64     `gorm:"index"`
-	UserID    int64     `gorm:"index"`
-	InvitedBy int64     `gorm:"not null"`
-	Status    string    `gorm:"default:'pending'"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
-	DeletedAt *time.Time
+	Hash      string     `gorm:"primaryKey" json:"hash"`
+	InviterID int64      `gorm:"index"`
+	GroupID   *int64     `gorm:"index"`
+	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	Group     *Group     `gorm:"foreignKey:GroupID;references:ID" json:"group,omitempty"`
 }
 
 // RequestContext holds request context with authenticated user info

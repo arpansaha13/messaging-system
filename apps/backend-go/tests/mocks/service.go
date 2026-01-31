@@ -206,20 +206,28 @@ func (m *MockMessageService) GetChannelMessages(ctx context.Context, channelID i
 
 // MockInviteService is a mock implementation of IInviteService
 type MockInviteService struct {
-	SendInviteFunc func(ctx context.Context, groupID, userID, invitedBy int64) (*domain.Invite, error)
-	GetInvitesFunc func(ctx context.Context, userID int64) ([]*domain.Invite, error)
+	CreateInviteFunc func(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error)
+	FindByHashFunc   func(ctx context.Context, hash string) (*domain.Invite, error)
+	AcceptInviteFunc func(ctx context.Context, userID int64, inviteHash string) (*service.AcceptInviteResponseDTO, error)
 }
 
-func (m *MockInviteService) SendInvite(ctx context.Context, groupID, userID, invitedBy int64) (*domain.Invite, error) {
-	if m.SendInviteFunc != nil {
-		return m.SendInviteFunc(ctx, groupID, userID, invitedBy)
+func (m *MockInviteService) CreateInvite(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error) {
+	if m.CreateInviteFunc != nil {
+		return m.CreateInviteFunc(ctx, inviterID, groupID)
 	}
 	return nil, nil
 }
 
-func (m *MockInviteService) GetInvites(ctx context.Context, userID int64) ([]*domain.Invite, error) {
-	if m.GetInvitesFunc != nil {
-		return m.GetInvitesFunc(ctx, userID)
+func (m *MockInviteService) FindByHash(ctx context.Context, hash string) (*domain.Invite, error) {
+	if m.FindByHashFunc != nil {
+		return m.FindByHashFunc(ctx, hash)
+	}
+	return nil, nil
+}
+
+func (m *MockInviteService) AcceptInvite(ctx context.Context, userID int64, inviteHash string) (*service.AcceptInviteResponseDTO, error) {
+	if m.AcceptInviteFunc != nil {
+		return m.AcceptInviteFunc(ctx, userID, inviteHash)
 	}
 	return nil, nil
 }

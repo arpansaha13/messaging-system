@@ -139,13 +139,18 @@ type UserGroupResponseDTO struct {
 
 // InviteResponseDTO represents an invite in responses
 type InviteResponseDTO struct {
-	ID        int64     `json:"id"`
-	GroupID   int64     `json:"groupId"`
-	UserID    int64     `json:"userId"`
-	InvitedBy int64     `json:"invitedBy"`
-	Status    string    `json:"status"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	Hash      string     `json:"hash"`
+	InviterID int64      `json:"inviterId"`
+	GroupID   *int64     `json:"groupId,omitempty"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
+}
+
+// AcceptInviteResponseDTO represents the response when accepting an invite
+type AcceptInviteResponseDTO struct {
+	GroupID  int64   `json:"groupId"`
+	Channels []int64 `json:"channels"`
 }
 
 // Paginated Response DTOs

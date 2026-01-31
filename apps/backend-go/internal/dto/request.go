@@ -101,8 +101,12 @@ type AddUserToGroupRequestDTO struct {
 
 // Invite Request DTOs
 
-// SendInviteRequestDTO represents a send invite request
-type SendInviteRequestDTO struct {
-	GroupID int64 `json:"group_id"`
-	UserID  int64 `json:"user_id"`
+// InviteHashParamDTO represents the hash parameter for invite endpoints
+type InviteHashParamDTO struct {
+	Hash string `json:"hash"`
+}
+
+// JoinGroupDTO represents a request to join a group via invite hash
+type JoinGroupDTO struct {
+	InviteHash string `json:"inviteHash"`
 }
