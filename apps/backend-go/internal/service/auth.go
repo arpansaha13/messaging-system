@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "github.com/arpansaha13/messaging-system/apps/backend-go/pb"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/pb"
 )
 
 // defaultTimeout is the default timeout for service operations

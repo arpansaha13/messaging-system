@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestChannelServiceCreateChannel(t *testing.T) {
@@ -44,7 +45,7 @@ func TestChannelServiceCreateChannel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
 			mockGroupRepo := &mocks.MockGroupRepository{}
-			svc := NewChannelService(mockRepo, mockGroupRepo)
+			svc := service.NewChannelService(mockRepo, mockGroupRepo)
 
 			channel, err := svc.CreateChannel(context.Background(), tt.channelName, tt.groupID)
 
@@ -90,7 +91,7 @@ func TestChannelServiceGetChannels(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
 			mockGroupRepo := &mocks.MockGroupRepository{}
-			svc := NewChannelService(mockRepo, mockGroupRepo)
+			svc := service.NewChannelService(mockRepo, mockGroupRepo)
 
 			channels, err := svc.GetChannels(context.Background())
 
@@ -140,7 +141,7 @@ func TestChannelServiceGetChannelsByGroupID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
 			mockGroupRepo := &mocks.MockGroupRepository{}
-			svc := NewChannelService(mockRepo, mockGroupRepo)
+			svc := service.NewChannelService(mockRepo, mockGroupRepo)
 
 			channels, err := svc.GetChannelsByGroupID(context.Background(), tt.groupID)
 
@@ -188,7 +189,7 @@ func TestChannelServiceGetChannelByID(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
 			mockGroupRepo := &mocks.MockGroupRepository{}
-			svc := NewChannelService(mockRepo, mockGroupRepo)
+			svc := service.NewChannelService(mockRepo, mockGroupRepo)
 
 			channel, err := svc.GetChannelByID(context.Background(), tt.channelID)
 

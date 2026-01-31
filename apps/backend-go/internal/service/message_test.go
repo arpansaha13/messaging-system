@@ -1,27 +1,27 @@
-package service
+package service_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMessageService_SendPersonalMessage(t *testing.T) {
 	tests := []struct {
-		name                string
-		senderID            int64
-		receiverID          int64
-		content             string
-		hash                string
-		mockMessageRepo     func() *mocks.MockMessageRepository
-		mockRecipientRepo   func() *mocks.MockMessageRecipientRepository
-		mockChatRepo        func() *mocks.MockChatRepository
-		mockRabbitMQService func() *RabbitMQService
-		expectedError       bool
+		name              string
+		senderID          int64
+		receiverID        int64
+		content           string
+		hash              string
+		mockMessageRepo   func() *mocks.MockMessageRepository
+		mockRecipientRepo func() *mocks.MockMessageRecipientRepository
+		mockChatRepo      func() *mocks.MockChatRepository
+		expectedError     bool
 	}{
 		{
 			name:       "successful send personal message",
@@ -47,13 +47,7 @@ func TestMessageService_SendPersonalMessage(t *testing.T) {
 			mockChatRepo: func() *mocks.MockChatRepository {
 				return &mocks.MockChatRepository{}
 			},
-			mockRabbitMQService: func() *RabbitMQService {
-				return &RabbitMQService{
-					channel: nil,
-					conn:    nil,
-				}
-			},
-			expectedError: true, // Expected error because RabbitMQ is not connected
+			expectedError: true, // Expected error because RabbitMQ service is nil
 		},
 	}
 
@@ -62,9 +56,9 @@ func TestMessageService_SendPersonalMessage(t *testing.T) {
 			mockMessageRepo := tt.mockMessageRepo()
 			mockRecipientRepo := tt.mockRecipientRepo()
 			mockChatRepo := tt.mockChatRepo()
-			mockRabbitMQ := tt.mockRabbitMQService()
 
-			svc := NewMessageService(mockMessageRepo, mockRecipientRepo, mockChatRepo, mockRabbitMQ)
+			// Pass nil for RabbitMQ since it's not connected, should return error
+			svc := service.NewMessageService(mockMessageRepo, mockRecipientRepo, mockChatRepo, nil)
 
 			err := svc.SendPersonalMessage(context.Background(), tt.senderID, tt.receiverID, tt.content, tt.hash)
 
@@ -79,17 +73,16 @@ func TestMessageService_SendPersonalMessage(t *testing.T) {
 
 func TestMessageService_SendGroupMessage(t *testing.T) {
 	tests := []struct {
-		name                string
-		senderID            int64
-		groupID             int64
-		channelID           int64
-		content             string
-		hash                string
-		mockMessageRepo     func() *mocks.MockMessageRepository
-		mockRecipientRepo   func() *mocks.MockMessageRecipientRepository
-		mockChatRepo        func() *mocks.MockChatRepository
-		mockRabbitMQService func() *RabbitMQService
-		expectedError       bool
+		name              string
+		senderID          int64
+		groupID           int64
+		channelID         int64
+		content           string
+		hash              string
+		mockMessageRepo   func() *mocks.MockMessageRepository
+		mockRecipientRepo func() *mocks.MockMessageRecipientRepository
+		mockChatRepo      func() *mocks.MockChatRepository
+		expectedError     bool
 	}{
 		{
 			name:      "successful send group message",
@@ -116,13 +109,7 @@ func TestMessageService_SendGroupMessage(t *testing.T) {
 			mockChatRepo: func() *mocks.MockChatRepository {
 				return &mocks.MockChatRepository{}
 			},
-			mockRabbitMQService: func() *RabbitMQService {
-				return &RabbitMQService{
-					channel: nil,
-					conn:    nil,
-				}
-			},
-			expectedError: true, // Expected error because RabbitMQ is not connected
+			expectedError: true, // Expected error because RabbitMQ service is nil
 		},
 	}
 
@@ -131,9 +118,9 @@ func TestMessageService_SendGroupMessage(t *testing.T) {
 			mockMessageRepo := tt.mockMessageRepo()
 			mockRecipientRepo := tt.mockRecipientRepo()
 			mockChatRepo := tt.mockChatRepo()
-			mockRabbitMQ := tt.mockRabbitMQService()
 
-			svc := NewMessageService(mockMessageRepo, mockRecipientRepo, mockChatRepo, mockRabbitMQ)
+			// Pass nil for RabbitMQ since it's not connected, should return error
+			svc := service.NewMessageService(mockMessageRepo, mockRecipientRepo, mockChatRepo, nil)
 
 			err := svc.SendGroupMessage(context.Background(), tt.senderID, tt.groupID, tt.channelID, tt.content, tt.hash)
 

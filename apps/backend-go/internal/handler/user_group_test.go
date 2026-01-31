@@ -13,7 +13,7 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestUserGroupHandler_AddUserToGroup(t *testing.T) {

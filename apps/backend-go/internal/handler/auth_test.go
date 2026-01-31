@@ -15,7 +15,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
-	pb "github.com/arpansaha13/messaging-system/apps/backend-go/pb"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/pb"
 	pbMocks "github.com/arpansaha13/messaging-system/apps/backend-go/pb/mocks"
 )
 

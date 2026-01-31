@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestInviteService_SendInvite(t *testing.T) {
@@ -92,7 +93,7 @@ func TestInviteService_SendInvite(t *testing.T) {
 			mockGroupRepo := tt.mockGroupRepo()
 			mockUserRepo := tt.mockUserRepo()
 
-			svc := NewInviteService(mockInviteRepo, mockGroupRepo, mockUserRepo)
+			svc := service.NewInviteService(mockInviteRepo, mockGroupRepo, mockUserRepo)
 
 			invite, err := svc.SendInvite(context.Background(), tt.groupID, tt.userID, tt.invitedBy)
 
@@ -152,7 +153,7 @@ func TestInviteService_GetInvites(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
-			svc := NewInviteService(mockRepo, &mocks.MockGroupRepository{}, &mocks.MockUserRepository{})
+			svc := service.NewInviteService(mockRepo, &mocks.MockGroupRepository{}, &mocks.MockUserRepository{})
 
 			invites, err := svc.GetInvites(context.Background(), tt.userID)
 

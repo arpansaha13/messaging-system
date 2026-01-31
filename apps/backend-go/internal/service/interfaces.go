@@ -5,7 +5,7 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
-	pb "github.com/arpansaha13/messaging-system/apps/backend-go/pb"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/pb"
 )
 
 // AuthServiceClient defines the interface for auth service client operations

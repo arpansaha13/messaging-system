@@ -141,3 +141,8 @@ func (m *MockRabbitMQService) Consume(queueName string) (<-chan amqp.Delivery, e
 func (m *MockRabbitMQService) Close() error {
 	return nil
 }
+
+// IsConnected checks if RabbitMQ is connected (always true for mock)
+func (m *MockRabbitMQService) IsConnected() bool {
+	return true
+}

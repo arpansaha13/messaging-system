@@ -15,7 +15,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestContactHandler_AddContact(t *testing.T) {

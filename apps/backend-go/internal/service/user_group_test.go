@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestUserGroupServiceAddUserToGroup(t *testing.T) {
@@ -56,7 +57,7 @@ func TestUserGroupServiceAddUserToGroup(t *testing.T) {
 			mockUserRepo := tt.mockUserRepo()
 			mockGroupRepo := tt.mockGroupRepo()
 
-			svc := NewUserGroupService(mockUserGroupRepo, mockUserRepo, mockGroupRepo)
+			svc := service.NewUserGroupService(mockUserGroupRepo, mockUserRepo, mockGroupRepo)
 
 			userGroup, err := svc.AddUserToGroup(context.Background(), tt.userID, tt.groupID)
 
@@ -114,7 +115,7 @@ func TestUserGroupServiceGetGroupMembers(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
-			svc := NewUserGroupService(mockRepo, &mocks.MockUserRepository{}, &mocks.MockGroupRepository{})
+			svc := service.NewUserGroupService(mockRepo, &mocks.MockUserRepository{}, &mocks.MockGroupRepository{})
 
 			members, err := svc.GetGroupMembers(context.Background(), tt.groupID)
 
@@ -171,7 +172,7 @@ func TestUserGroupServiceGetUserGroups(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
-			svc := NewUserGroupService(mockRepo, &mocks.MockUserRepository{}, &mocks.MockGroupRepository{})
+			svc := service.NewUserGroupService(mockRepo, &mocks.MockUserRepository{}, &mocks.MockGroupRepository{})
 
 			userGroups, err := svc.GetUserGroups(context.Background(), tt.userID)
 

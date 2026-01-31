@@ -200,5 +200,8 @@ func (r *RabbitMQService) Close() error {
 
 // IsConnected checks if RabbitMQ is connected
 func (r *RabbitMQService) IsConnected() bool {
+	if r == nil {
+		return false
+	}
 	return r.conn != nil && r.channel != nil && !r.conn.IsClosed()
 }

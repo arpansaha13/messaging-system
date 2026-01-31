@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -9,7 +9,8 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestContactServiceAddContact(t *testing.T) {
@@ -74,7 +75,7 @@ func TestContactServiceAddContact(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockContactRepo := tt.mockContactRepo()
 			mockUserRepo := tt.mockUserRepo()
-			svc := NewContactService(mockContactRepo, mockUserRepo)
+			svc := service.NewContactService(mockContactRepo, mockUserRepo)
 
 			contact, err := svc.AddContact(context.Background(), tt.userID, tt.userIDInContact)
 
@@ -132,7 +133,7 @@ func TestContactServiceGetContacts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
-			svc := NewContactService(mockRepo, &mocks.MockUserRepository{})
+			svc := service.NewContactService(mockRepo, &mocks.MockUserRepository{})
 
 			contacts, err := svc.GetContacts(context.Background(), tt.userID)
 

@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	pb "github.com/arpansaha13/messaging-system/apps/backend-go/pb"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/pb"
 )
 
 // MockAuthServiceClient is a mock implementation of the gRPC auth service client
@@ -66,14 +67,14 @@ func TestAuthService_ValidateSession(t *testing.T) {
 	tests := []struct {
 		name          string
 		token         string
-		mockFunc      func() IAuthServiceClient
+		mockFunc      func() service.IAuthServiceClient
 		expectedError bool
 		validateResp  func(t *testing.T, resp *pb.ValidateSessionResponse)
 	}{
 		{
 			name:  "successful validate session",
 			token: "valid_token",
-			mockFunc: func() IAuthServiceClient {
+			mockFunc: func() service.IAuthServiceClient {
 				return &MockAuthServiceClient{
 					ValidateSessionFunc: func(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
 						return &pb.ValidateSessionResponse{
@@ -92,7 +93,7 @@ func TestAuthService_ValidateSession(t *testing.T) {
 		{
 			name:  "empty token",
 			token: "",
-			mockFunc: func() IAuthServiceClient {
+			mockFunc: func() service.IAuthServiceClient {
 				return &MockAuthServiceClient{
 					ValidateSessionFunc: func(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
 						return nil, nil
@@ -125,7 +126,7 @@ func TestAuthService_Signup(t *testing.T) {
 		name          string
 		email         string
 		password      string
-		mockFunc      func() IAuthServiceClient
+		mockFunc      func() service.IAuthServiceClient
 		expectedError bool
 		validateResp  func(t *testing.T, resp *pb.SignupResponse)
 	}{
@@ -133,7 +134,7 @@ func TestAuthService_Signup(t *testing.T) {
 			name:     "successful signup",
 			email:    "test@example.com",
 			password: "password123",
-			mockFunc: func() IAuthServiceClient {
+			mockFunc: func() service.IAuthServiceClient {
 				return &MockAuthServiceClient{
 					SignupFunc: func(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
 						return &pb.SignupResponse{
@@ -174,7 +175,7 @@ func TestAuthService_Login(t *testing.T) {
 		name          string
 		email         string
 		password      string
-		mockFunc      func() IAuthServiceClient
+		mockFunc      func() service.IAuthServiceClient
 		expectedError bool
 		validateResp  func(t *testing.T, resp *pb.LoginResponse)
 	}{
@@ -182,7 +183,7 @@ func TestAuthService_Login(t *testing.T) {
 			name:     "successful login",
 			email:    "test@example.com",
 			password: "password123",
-			mockFunc: func() IAuthServiceClient {
+			mockFunc: func() service.IAuthServiceClient {
 				return &MockAuthServiceClient{
 					LoginFunc: func(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
 						return &pb.LoginResponse{
@@ -221,7 +222,7 @@ func TestAuthService_VerifyOTP(t *testing.T) {
 		name          string
 		otpHash       string
 		code          string
-		mockFunc      func() IAuthServiceClient
+		mockFunc      func() service.IAuthServiceClient
 		expectedError bool
 		validateResp  func(t *testing.T, resp *pb.VerifyOTPResponse)
 	}{
@@ -229,7 +230,7 @@ func TestAuthService_VerifyOTP(t *testing.T) {
 			name:    "successful verify OTP",
 			otpHash: "otp_hash_123",
 			code:    "123456",
-			mockFunc: func() IAuthServiceClient {
+			mockFunc: func() service.IAuthServiceClient {
 				return &MockAuthServiceClient{
 					VerifyOTPFunc: func(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
 						return &pb.VerifyOTPResponse{
@@ -271,7 +272,7 @@ func TestAuthService_GetUser(t *testing.T) {
 		name          string
 		userID        int64
 		token         string
-		mockFunc      func() IAuthServiceClient
+		mockFunc      func() service.IAuthServiceClient
 		expectedError bool
 		validateResp  func(t *testing.T, resp *pb.GetUserResponse)
 	}{
@@ -279,7 +280,7 @@ func TestAuthService_GetUser(t *testing.T) {
 			name:   "successful get user",
 			userID: 1,
 			token:  "jwt_token_123",
-			mockFunc: func() IAuthServiceClient {
+			mockFunc: func() service.IAuthServiceClient {
 				return &MockAuthServiceClient{
 					GetUserFunc: func(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
 						return &pb.GetUserResponse{

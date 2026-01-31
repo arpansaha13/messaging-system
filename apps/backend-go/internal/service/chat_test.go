@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -9,7 +9,8 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestChatService_GetUserChats(t *testing.T) {
@@ -41,7 +42,7 @@ func TestChatService_GetUserChats(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			response, err := svc.GetUserChats(context.Background(), tt.userID)
 
@@ -89,7 +90,7 @@ func TestChatService_PinChat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			err := svc.PinChat(context.Background(), tt.userID, tt.receiverID)
 
@@ -136,7 +137,7 @@ func TestChatService_UnpinChat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			err := svc.UnpinChat(context.Background(), tt.userID, tt.receiverID)
 
@@ -183,7 +184,7 @@ func TestChatService_ArchiveChat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			err := svc.ArchiveChat(context.Background(), tt.userID, tt.receiverID)
 
@@ -230,7 +231,7 @@ func TestChatService_UnarchiveChat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			err := svc.UnarchiveChat(context.Background(), tt.userID, tt.receiverID)
 
@@ -277,7 +278,7 @@ func TestChatService_ClearChat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			err := svc.ClearChat(context.Background(), tt.userID, tt.receiverID)
 
@@ -324,7 +325,7 @@ func TestChatService_DeleteChat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockChatRepo := tt.mockChatRepo()
 			mockMessageRepo := tt.mockMessageRepo()
-			svc := NewChatService(mockChatRepo, mockMessageRepo)
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
 			err := svc.DeleteChat(context.Background(), tt.userID, tt.receiverID)
 

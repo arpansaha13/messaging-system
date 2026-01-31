@@ -14,7 +14,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestUserHandler_GetUserMe(t *testing.T) {

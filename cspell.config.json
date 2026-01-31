@@ -43,6 +43,7 @@
     "stretchr",
     "tailwindcss",
     "testcontainers",
+    "timestamppb",
     "tstamp",
     "typeorm",
     "unarchived",
