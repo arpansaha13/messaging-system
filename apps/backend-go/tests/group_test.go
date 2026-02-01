@@ -7,7 +7,7 @@ import (
 )
 
 // TestGroupCreate tests the POST /api/groups endpoint
-func TestGroupCreate(t *testing.T) {
+func TestGroupService_CreateGroup(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Create group successfully",
@@ -90,7 +90,7 @@ func TestGroupCreate(t *testing.T) {
 }
 
 // TestGroupGet tests the GET /api/groups endpoint
-func TestGroupGet(t *testing.T) {
+func TestGroupService_GetGroups(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get all groups",

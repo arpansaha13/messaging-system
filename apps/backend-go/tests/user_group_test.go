@@ -9,7 +9,7 @@ import (
 )
 
 // TestUserGroupAdd tests the POST /api/groups/{groupID}/members endpoint
-func TestUserGroupAdd(t *testing.T) {
+func TestUserGroupService_AddUserToGroup(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Add user to group successfully",
@@ -127,7 +127,7 @@ func TestUserGroupAdd(t *testing.T) {
 }
 
 // TestUserGroupGetMembers tests the GET /api/groups/{groupID}/members endpoint
-func TestUserGroupGetMembers(t *testing.T) {
+func TestUserGroupService_GetMembers(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get group members successfully",
@@ -245,7 +245,7 @@ func TestUserGroupGetMembers(t *testing.T) {
 }
 
 // TestUserGroupGetUserGroups tests the GET /api/users/groups endpoint
-func TestUserGroupGetUserGroups(t *testing.T) {
+func TestUserGroupService_GetUserGroups(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get user groups successfully",

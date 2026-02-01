@@ -7,7 +7,7 @@ import (
 )
 
 // TestContactAdd tests the POST /api/contacts endpoint
-func TestContactAdd(t *testing.T) {
+func TestContactService_AddContact(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Add contact successfully",
@@ -82,7 +82,7 @@ func TestContactAdd(t *testing.T) {
 }
 
 // TestContactGet tests the GET /api/contacts endpoint
-func TestContactGet(t *testing.T) {
+func TestContactService_GetContacts(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get contacts for user with contacts",

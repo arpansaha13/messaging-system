@@ -20,7 +20,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
-	pbMocks "github.com/arpansaha13/messaging-system/apps/backend-go/pb/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 	globalCtx             context.Context
 	globalHTTPServer      *http.Server
 	globalHTTPServerAddr  string
-	globalAuthServiceMock *pbMocks.MockAuthService
+	globalAuthServiceMock *mocks.MockAuthService
 )
 
 // TestMain sets up shared database for all tests
@@ -167,14 +167,14 @@ func GetHTTPServerAddr() string {
 }
 
 // GetAuthServiceMock returns the mock auth service
-func GetAuthServiceMock() *pbMocks.MockAuthService {
+func GetAuthServiceMock() *mocks.MockAuthService {
 	return globalAuthServiceMock
 }
 
 // setupHTTPServer sets up the HTTP server with mocked auth service
 func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	// Create mock auth service
-	globalAuthServiceMock = pbMocks.NewMockAuthService()
+	globalAuthServiceMock = mocks.NewMockAuthService()
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
@@ -210,7 +210,7 @@ func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	router.Use(middleware.ErrorMiddleware)
 
 	// Create mock auth service client and auth middleware
-	mockAuthClient := pbMocks.NewMockAuthServiceClient(globalAuthServiceMock)
+	mockAuthClient := mocks.NewMockAuthServiceClient(globalAuthServiceMock)
 	authMiddlewareFunc := middleware.AuthMiddleware(mockAuthClient)
 
 	// Protected router with auth middleware

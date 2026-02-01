@@ -7,7 +7,7 @@ import (
 )
 
 // TestChatGet tests the GET /api/chats endpoint
-func TestChatGet(t *testing.T) {
+func TestChatService_GetChats(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get chats for user with multiple conversations",
@@ -94,7 +94,7 @@ func TestChatGet(t *testing.T) {
 }
 
 // TestChatPin tests the PATCH /api/chats/{id}/pin endpoint
-func TestChatPin(t *testing.T) {
+func TestChatService_PinChat(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Pin chat successfully",
@@ -164,7 +164,7 @@ func TestChatPin(t *testing.T) {
 }
 
 // TestChatUnpin tests the PATCH /api/chats/{id}/unpin endpoint
-func TestChatUnpin(t *testing.T) {
+func TestChatService_UnpinChat(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Unpin pinned chat successfully",
@@ -226,7 +226,7 @@ func TestChatUnpin(t *testing.T) {
 }
 
 // TestChatArchive tests the PATCH /api/chats/{id}/archive endpoint
-func TestChatArchive(t *testing.T) {
+func TestChatService_ArchiveChat(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Archive chat successfully and verify pin is removed",
@@ -289,7 +289,7 @@ func TestChatArchive(t *testing.T) {
 }
 
 // TestChatUnarchive tests the PATCH /api/chats/{id}/unarchive endpoint
-func TestChatUnarchive(t *testing.T) {
+func TestChatService_UnarchiveChat(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Unarchive archived chat successfully",
@@ -351,7 +351,7 @@ func TestChatUnarchive(t *testing.T) {
 }
 
 // TestChatDelete tests the DELETE /api/chats/{id}/delete endpoint
-func TestChatDelete(t *testing.T) {
+func TestChatService_DeleteChat(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Delete chat successfully",
@@ -405,7 +405,7 @@ func TestChatDelete(t *testing.T) {
 }
 
 // TestChatClear tests the DELETE /api/chats/{id}/clear endpoint
-func TestChatClear(t *testing.T) {
+func TestChatService_ClearChat(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Clear chat message history successfully",

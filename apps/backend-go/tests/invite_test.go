@@ -8,7 +8,7 @@ import (
 )
 
 // TestInviteFindByHash tests the GET /api/invites/:hash endpoint
-func TestInviteFindByHash(t *testing.T) {
+func TestInviteService_FindByHash(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Find invite by hash successfully",
@@ -78,7 +78,7 @@ func TestInviteFindByHash(t *testing.T) {
 }
 
 // TestInviteAccept tests the POST /api/invites/:hash/accept endpoint
-func TestInviteAccept(t *testing.T) {
+func TestInviteService_AcceptInvite(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Accept invite successfully",
@@ -151,7 +151,7 @@ func TestInviteAccept(t *testing.T) {
 }
 
 // TestCreateInvite tests the POST /api/groups/:groupId/invites endpoint
-func TestCreateInvite(t *testing.T) {
+func TestInviteService_CreateInvite(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Create invite successfully",
@@ -211,7 +211,7 @@ func TestCreateInvite(t *testing.T) {
 }
 
 // TestJoinGroup tests the POST /api/groups/join endpoint
-func TestJoinGroup(t *testing.T) {
+func TestInviteService_JoinGroup(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Join group successfully with invite hash",

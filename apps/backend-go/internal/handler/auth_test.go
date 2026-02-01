@@ -16,7 +16,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/pb"
-	pbMocks "github.com/arpansaha13/messaging-system/apps/backend-go/pb/mocks"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
 func TestAuthHandler_Signup(t *testing.T) {
@@ -34,7 +34,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 				Password: "password123",
 			},
 			mockFunc: func() service.IAuthServiceClient {
-				return &pbMocks.MockAuthServiceClient{
+				return &mocks.MockAuthServiceClient{
 					SignupFunc: func(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
 						return &pb.SignupResponse{
 							Message: "signup successful",
@@ -56,7 +56,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 				Password: "password123",
 			},
 			mockFunc: func() service.IAuthServiceClient {
-				return &pbMocks.MockAuthServiceClient{
+				return &mocks.MockAuthServiceClient{
 					SignupFunc: func(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
 						return nil, &domain.ConflictError{Message: "email already exists"}
 					},
@@ -71,7 +71,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 				Password: "",
 			},
 			mockFunc: func() service.IAuthServiceClient {
-				return &pbMocks.MockAuthServiceClient{
+				return &mocks.MockAuthServiceClient{
 					SignupFunc: func(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
 						return nil, &domain.ValidationError{Message: "invalid request"}
 					},
@@ -120,7 +120,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				Password: "password123",
 			},
 			mockFunc: func() service.IAuthServiceClient {
-				return &pbMocks.MockAuthServiceClient{
+				return &mocks.MockAuthServiceClient{
 					LoginFunc: func(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
 						return &pb.LoginResponse{
 							SessionToken: "token123",
@@ -141,7 +141,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				Password: "wrongpassword",
 			},
 			mockFunc: func() service.IAuthServiceClient {
-				return &pbMocks.MockAuthServiceClient{
+				return &mocks.MockAuthServiceClient{
 					LoginFunc: func(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
 						return nil, &domain.UnauthorizedError{Message: "invalid email or password"}
 					},
@@ -156,7 +156,7 @@ func TestAuthHandler_Login(t *testing.T) {
 				Password: "",
 			},
 			mockFunc: func() service.IAuthServiceClient {
-				return &pbMocks.MockAuthServiceClient{
+				return &mocks.MockAuthServiceClient{
 					LoginFunc: func(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
 						return nil, &domain.ValidationError{Message: "invalid request"}
 					},

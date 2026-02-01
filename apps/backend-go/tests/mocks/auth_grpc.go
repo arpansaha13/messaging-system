@@ -116,6 +116,7 @@ type MockAuthServiceClient struct {
 	SignupFunc    func(ctx context.Context, email, password string) (*pb.SignupResponse, error)
 	LoginFunc     func(ctx context.Context, email, password string) (*pb.LoginResponse, error)
 	VerifyOTPFunc func(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error)
+	LogoutFunc    func(ctx context.Context, token string) (*pb.LogoutResponse, error)
 }
 
 // NewMockAuthServiceClient creates a new mock auth service client
@@ -177,6 +178,14 @@ func (c *MockAuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code str
 		return c.VerifyOTPFunc(ctx, otpHash, code)
 	}
 	return &pb.VerifyOTPResponse{}, nil
+}
+
+// Logout is a stub implementation of the IAuthServiceClient interface
+func (c *MockAuthServiceClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
+	if c.LogoutFunc != nil {
+		return c.LogoutFunc(ctx, token)
+	}
+	return &pb.LogoutResponse{}, nil
 }
 
 // Close is a stub implementation of the IAuthServiceClient interface

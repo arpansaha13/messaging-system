@@ -9,7 +9,7 @@ import (
 )
 
 // TestMessageGet tests the GET /api/messages/{id} endpoint
-func TestMessageGet(t *testing.T) {
+func TestMessageService_GetMessages(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get personal messages between users",
@@ -106,7 +106,7 @@ func TestMessageGet(t *testing.T) {
 }
 
 // TestMessageMarkDelivered tests the POST /api/messages/status/delivered endpoint
-func TestMessageMarkDelivered(t *testing.T) {
+func TestMessageService_MarkDelivered(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Mark message as delivered (RabbitMQ unavailable returns 500)",
@@ -168,7 +168,7 @@ func TestMessageMarkDelivered(t *testing.T) {
 }
 
 // TestMessageMarkRead tests the POST /api/messages/status/read endpoint
-func TestMessageMarkRead(t *testing.T) {
+func TestMessageService_MarkRead(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Mark message as read (RabbitMQ unavailable returns 500)",

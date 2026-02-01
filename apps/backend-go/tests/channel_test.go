@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestChannelCreate tests the POST /api/groups/{id}/channels endpoint
-func TestChannelCreate(t *testing.T) {
+// TestChannelService_CreateChannel tests the POST /api/groups/{id}/channels endpoint
+func TestChannelService_CreateChannel(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Create channel in group successfully",
@@ -143,8 +143,8 @@ func TestChannelCreate(t *testing.T) {
 	}
 }
 
-// TestChannelGetByGroup tests the GET /api/groups/{id}/channels endpoint
-func TestChannelGetByGroup(t *testing.T) {
+// TestChannelService_GetChannels tests the GET /api/groups/{id}/channels endpoint
+func TestChannelService_GetChannels(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get channels by group ID",
@@ -272,8 +272,8 @@ func TestChannelGetByGroup(t *testing.T) {
 	}
 }
 
-// TestChannelGetInfo tests the GET /api/channels/{id} endpoint
-func TestChannelGetInfo(t *testing.T) {
+// TestChannelService_GetChannelInfo tests the GET /api/channels/{id} endpoint
+func TestChannelService_GetChannelInfo(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get channel info by channel ID",

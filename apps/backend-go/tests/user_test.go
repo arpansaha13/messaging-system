@@ -8,7 +8,7 @@ import (
 )
 
 // TestUserGetMe tests the GET /api/users/me endpoint
-func TestUserGetMe(t *testing.T) {
+func TestUserService_GetMe(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get authenticated user profile",
@@ -55,7 +55,7 @@ func TestUserGetMe(t *testing.T) {
 }
 
 // TestUserSearch tests the GET /api/users/search endpoint
-func TestUserSearch(t *testing.T) {
+func TestUserService_SearchUsers(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Search user profiles successfully",
@@ -155,7 +155,7 @@ func TestUserSearch(t *testing.T) {
 }
 
 // TestUserGetProfile tests the GET /api/users/{id} endpoint
-func TestUserGetProfile(t *testing.T) {
+func TestUserService_GetProfile(t *testing.T) {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get user profile by ID successfully",
