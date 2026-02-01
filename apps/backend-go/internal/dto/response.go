@@ -127,12 +127,12 @@ type ContactResponseDTO struct {
 
 // UserGroupResponseDTO represents a user group membership in responses
 type UserGroupResponseDTO struct {
-	ID        int64     `json:"id"`
-	UserID    int64     `json:"userId"`
-	GroupID   int64     `json:"groupId"`
-	Role      string    `json:"role"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        int64                  `json:"id"`
+	User      UserProfileResponseDTO `json:"user"`
+	GroupID   int64                  `json:"groupId"`
+	Role      string                 `json:"role"`
+	CreatedAt time.Time              `json:"createdAt"`
+	UpdatedAt time.Time              `json:"updatedAt"`
 }
 
 // Invite Response DTOs

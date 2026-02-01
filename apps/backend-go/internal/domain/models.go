@@ -112,6 +112,7 @@ type UserGroup struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 	DeletedAt *time.Time
+	User      *UserProfile `gorm:"foreignKey:UserID;references:ID"`
 }
 
 // Invite represents an invitation to join a group

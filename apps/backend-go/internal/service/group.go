@@ -47,12 +47,22 @@ func (s *GroupService) CreateGroup(ctx context.Context, name string, founderID i
 	return group, nil
 }
 
-// GetGroups retrieves all groups
-func (s *GroupService) GetGroups(ctx context.Context) ([]*domain.Group, error) {
-	groups, err := s.groupRepo.GetAll(ctx)
+// GetGroups retrieves all groups the user belongs to
+func (s *GroupService) GetGroups(ctx context.Context, userID int64) ([]*domain.Group, error) {
+	userGroups, err := s.userGroupRepo.GetUserGroups(ctx, userID)
 	if err != nil {
-		log.Printf("failed to get groups: %v", err)
+		log.Printf("failed to get user groups: %v", err)
 		return nil, err
+	}
+
+	groups := make([]*domain.Group, len(userGroups))
+	for i, ug := range userGroups {
+		group, err := s.groupRepo.GetByID(ctx, ug.GroupID)
+		if err != nil {
+			log.Printf("failed to get group: %v", err)
+			return nil, err
+		}
+		groups[i] = group
 	}
 	return groups, nil
 }

@@ -1,10 +1,10 @@
 <template>
-  <div class="flex h-full gap-2 p-2">
-    <section class="flex h-full w-88 shrink-0 flex-col rounded shadow-md">
+  <div :class="['grid h-full gap-2 p-2', $slots.right ? 'grid-cols-4' : 'grid-cols-3']">
+    <section class="flex h-full shrink-0 grow flex-col rounded shadow-md">
       <slot name="left" />
     </section>
 
-    <section class="h-full grow overflow-hidden rounded shadow-md">
+    <section class="col-span-2 h-full grow overflow-hidden rounded shadow-md">
       <!-- Personal Chat -->
       <PersonalChat v-if="isPersonalChat" />
 
@@ -14,6 +14,10 @@
       <div v-else class="flex h-full items-center justify-center text-gray-500">
         <p>Select a chat to start a conversation</p>
       </div>
+    </section>
+
+    <section v-if="$slots.right" class="flex h-full shrink-0 grow flex-col rounded shadow-md">
+      <slot name="right" />
     </section>
   </div>
 </template>

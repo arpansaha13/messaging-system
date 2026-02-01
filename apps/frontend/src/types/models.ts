@@ -21,6 +21,15 @@ export interface IUser {
   } | null
 }
 
+export interface IUserGroup {
+  id: number
+  user: IUser
+  groupId: number
+  role: string
+  updatedAt: string
+  createdAt: string
+}
+
 export interface IAuthUser extends Omit<IUser, 'contact'> {
   email: string
   username: string

@@ -51,7 +51,10 @@ func createGroupHandler(groupService service.IGroupService) http.HandlerFunc {
 
 func getGroupsHandler(groupService service.IGroupService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		groups, err := groupService.GetGroups(r.Context())
+		userID := middleware.GetUserIDFromContext(r)
+		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
+
+		groups, err := groupService.GetGroups(r.Context(), userIDInt)
 		if err != nil {
 			middleware.WriteError(w, err)
 			return

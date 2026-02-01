@@ -31,7 +31,7 @@ func (m *MockContactService) GetContacts(ctx context.Context, userID int64) ([]*
 // MockGroupService is a mock implementation of IGroupService
 type MockGroupService struct {
 	CreateGroupFunc func(ctx context.Context, name string, founderID int64) (*domain.Group, error)
-	GetGroupsFunc   func(ctx context.Context) ([]*domain.Group, error)
+	GetGroupsFunc   func(ctx context.Context, userID int64) ([]*domain.Group, error)
 }
 
 func (m *MockGroupService) CreateGroup(ctx context.Context, name string, founderID int64) (*domain.Group, error) {
@@ -41,9 +41,9 @@ func (m *MockGroupService) CreateGroup(ctx context.Context, name string, founder
 	return nil, nil
 }
 
-func (m *MockGroupService) GetGroups(ctx context.Context) ([]*domain.Group, error) {
+func (m *MockGroupService) GetGroups(ctx context.Context, userID int64) ([]*domain.Group, error) {
 	if m.GetGroupsFunc != nil {
-		return m.GetGroupsFunc(ctx)
+		return m.GetGroupsFunc(ctx, userID)
 	}
 	return nil, nil
 }
@@ -237,13 +237,6 @@ type MockUserGroupService struct {
 	AddUserToGroupFunc  func(ctx context.Context, userID, groupID int64) (*domain.UserGroup, error)
 	GetGroupMembersFunc func(ctx context.Context, groupID int64) ([]*domain.UserGroup, error)
 	GetUserGroupsFunc   func(ctx context.Context, userID int64) ([]*domain.UserGroup, error)
-}
-
-func (m *MockUserGroupService) AddUserToGroup(ctx context.Context, userID, groupID int64) (*domain.UserGroup, error) {
-	if m.AddUserToGroupFunc != nil {
-		return m.AddUserToGroupFunc(ctx, userID, groupID)
-	}
-	return nil, nil
 }
 
 func (m *MockUserGroupService) GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error) {

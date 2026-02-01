@@ -12,7 +12,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
-func TestGroupServiceCreateGroup(t *testing.T) {
+func TestGroupService_CreateGroup(t *testing.T) {
 	tests := []struct {
 		name          string
 		groupName     string
@@ -60,24 +60,18 @@ func TestGroupServiceCreateGroup(t *testing.T) {
 	}
 }
 
-func TestGroupServiceGetGroups(t *testing.T) {
+func TestGroupService_GetGroups(t *testing.T) {
 	tests := []struct {
 		name          string
-		mockFunc      func() *mocks.MockGroupRepository
+		userGroups    []*domain.UserGroup
 		expectedError bool
 		validateResp  func(t *testing.T, groups []*domain.Group)
 	}{
 		{
 			name: "successful get groups",
-			mockFunc: func() *mocks.MockGroupRepository {
-				return &mocks.MockGroupRepository{
-					GetAllFunc: func(ctx context.Context) ([]*domain.Group, error) {
-						return []*domain.Group{
-							{ID: 1, Name: "Group 1", FounderID: 1},
-							{ID: 2, Name: "Group 2", FounderID: 2},
-						}, nil
-					},
-				}
+			userGroups: []*domain.UserGroup{
+				{ID: 1, UserID: 1, GroupID: 1, Role: "founder"},
+				{ID: 2, UserID: 1, GroupID: 2, Role: "member"},
 			},
 			expectedError: false,
 			validateResp: func(t *testing.T, groups []*domain.Group) {
@@ -87,14 +81,8 @@ func TestGroupServiceGetGroups(t *testing.T) {
 			},
 		},
 		{
-			name: "empty groups list",
-			mockFunc: func() *mocks.MockGroupRepository {
-				return &mocks.MockGroupRepository{
-					GetAllFunc: func(ctx context.Context) ([]*domain.Group, error) {
-						return []*domain.Group{}, nil
-					},
-				}
-			},
+			name:          "empty groups list",
+			userGroups:    []*domain.UserGroup{},
 			expectedError: false,
 			validateResp: func(t *testing.T, groups []*domain.Group) {
 				assert.Len(t, groups, 0)
@@ -102,14 +90,30 @@ func TestGroupServiceGetGroups(t *testing.T) {
 		},
 	}
 
+	mockGroupRepo := &mocks.MockGroupRepository{
+		GetByIDFunc: func(ctx context.Context, groupID int64) (*domain.Group, error) {
+			if groupID == 1 {
+				return &domain.Group{ID: 1, Name: "Group 1", FounderID: 1}, nil
+			}
+			if groupID == 2 {
+				return &domain.Group{ID: 2, Name: "Group 2", FounderID: 2}, nil
+			}
+			return nil, nil
+		},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockRepo := tt.mockFunc()
-			mockUserGroupRepo := &mocks.MockUserGroupRepository{}
-			mockUserRepo := &mocks.MockUserRepository{}
-			svc := service.NewGroupService(mockRepo, mockUserGroupRepo, mockUserRepo)
+			mockUserGroupRepo := &mocks.MockUserGroupRepository{
+				GetUserGroupsFunc: func(ctx context.Context, userID int64) ([]*domain.UserGroup, error) {
+					return tt.userGroups, nil
+				},
+			}
 
-			groups, err := svc.GetGroups(context.Background())
+			mockUserRepo := &mocks.MockUserRepository{}
+			svc := service.NewGroupService(mockGroupRepo, mockUserGroupRepo, mockUserRepo)
+
+			groups, err := svc.GetGroups(context.Background(), 1)
 
 			if tt.expectedError {
 				assert.Error(t, err)

@@ -66,7 +66,7 @@ type IChannelService interface {
 // GroupService defines the interface for group service operations
 type IGroupService interface {
 	CreateGroup(ctx context.Context, name string, founderID int64) (*domain.Group, error)
-	GetGroups(ctx context.Context) ([]*domain.Group, error)
+	GetGroups(ctx context.Context, userID int64) ([]*domain.Group, error)
 }
 
 // InviteService defines the interface for invite service operations
@@ -78,7 +78,5 @@ type IInviteService interface {
 
 // UserGroupService defines the interface for user group service operations
 type IUserGroupService interface {
-	AddUserToGroup(ctx context.Context, userID, groupID int64) (*domain.UserGroup, error)
 	GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error)
-	GetUserGroups(ctx context.Context, userID int64) ([]*domain.UserGroup, error)
 }

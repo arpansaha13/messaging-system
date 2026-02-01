@@ -46,12 +46,14 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 
 func TestGroupHandler_GetGroups(t *testing.T) {
 	mockService := &mocks.MockGroupService{
-		GetGroupsFunc: func(ctx context.Context) ([]*domain.Group, error) {
+		GetGroupsFunc: func(ctx context.Context, userID int64) ([]*domain.Group, error) {
 			return []*domain.Group{}, nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/groups", nil)
+	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
 

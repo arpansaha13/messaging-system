@@ -1,11 +1,6 @@
-import type { IChannel, IGroup, IInvite, IUser } from '~/types'
+import type { IChannel, IGroup, IInvite } from '~/types'
 import type { IGroupMessage } from '@shared/types'
 import type { MessageStatus } from '@shared/constants'
-
-export function fetchGroupMembers(groupId: IGroup['id']) {
-  const { $api } = useNuxtApp()
-  return $api<IUser[]>(`/api/groups/${groupId}/members`)
-}
 
 export function createInvite(groupId: IGroup['id']) {
   const { $api } = useNuxtApp()

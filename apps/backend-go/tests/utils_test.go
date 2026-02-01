@@ -132,6 +132,17 @@ func (t *TestDB) CreateTestGroup(name string, founderID int64) (*domain.Group, e
 	if err := t.DB.Create(group).Error; err != nil {
 		return nil, err
 	}
+
+	// Add founder as a member of the group with OWNER role
+	userGroup := &domain.UserGroup{
+		UserID:  founderID,
+		GroupID: group.ID,
+		Role:    "OWNER",
+	}
+	if err := t.DB.Create(userGroup).Error; err != nil {
+		return nil, err
+	}
+
 	return group, nil
 }
 

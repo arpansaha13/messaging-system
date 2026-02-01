@@ -42,10 +42,10 @@ func (r *UserGroupRepository) GetByID(ctx context.Context, userGroupID int64) (*
 	return &userGroup, nil
 }
 
-// GetGroupMembers retrieves all members of a group
+// GetGroupMembers retrieves all members of a group with user data
 func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error) {
 	var members []*domain.UserGroup
-	err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&members).Error
+	err := r.db.WithContext(ctx).Preload("User").Where("group_id = ?", groupID).Find(&members).Error
 
 	if err != nil {
 		return nil, &domain.InternalError{Message: "failed to get group members", Err: err}
