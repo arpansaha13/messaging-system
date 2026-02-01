@@ -22,6 +22,11 @@ func SetupAuthRoutes(router *mux.Router, authServiceClient service.IAuthServiceC
 	router.HandleFunc("/api/auth/verify/{otpHash}", verifyOTPHandler(authServiceClient)).Methods("POST")
 }
 
+// SetupAuthProtectedRoutes sets up authenticated auth routes
+func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient service.IAuthServiceClient) {
+	protectedRouter.HandleFunc("/api/auth/logout", logoutHandler(authServiceClient)).Methods("POST")
+}
+
 func signupHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req dto.SignupRequestDTO
@@ -183,6 +188,51 @@ func verifyOTPHandler(authServiceClient service.IAuthServiceClient) http.Handler
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(dto.VerifyOTPResponseDTO{
 			Message: "verification successful",
+		})
+	}
+}
+func logoutHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Get the session token from the cookie
+		cfg, err := config.Load()
+		if err != nil {
+			log.Fatalf("failed to load config: %v", err)
+		}
+
+		cookie, err := r.Cookie(cfg.AuthCookieName)
+		if err != nil {
+			middleware.WriteError(w, &domain.UnauthorizedError{Message: "no session token found"})
+			return
+		}
+
+		sessionToken := cookie.Value
+
+		// Call auth service to logout
+		_, err = authServiceClient.Logout(r.Context(), sessionToken)
+		if err != nil {
+			errMsg := err.Error()
+			if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "invalid") {
+				middleware.WriteError(w, &domain.UnauthorizedError{Message: "invalid or expired session"})
+				return
+			}
+			middleware.WriteError(w, &domain.InternalError{Message: "logout failed", Err: err})
+			return
+		}
+
+		// Clear the session cookie by setting MaxAge to -1
+		http.SetCookie(w, &http.Cookie{
+			Name:     cfg.AuthCookieName,
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "logout successful",
 		})
 	}
 }

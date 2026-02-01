@@ -18,6 +18,7 @@ type MockAuthServiceClient struct {
 	LoginFunc           func(ctx context.Context, email, password string) (*pb.LoginResponse, error)
 	VerifyOTPFunc       func(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error)
 	GetUserFunc         func(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error)
+	LogoutFunc          func(ctx context.Context, token string) (*pb.LogoutResponse, error)
 	CloseFunc           func() error
 }
 
@@ -52,6 +53,13 @@ func (m *MockAuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code str
 func (m *MockAuthServiceClient) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
 	if m.GetUserFunc != nil {
 		return m.GetUserFunc(ctx, userID, token)
+	}
+	return nil, nil
+}
+
+func (m *MockAuthServiceClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
+	if m.GetUserFunc != nil {
+		return m.LogoutFunc(ctx, token)
 	}
 	return nil, nil
 }

@@ -117,6 +117,29 @@ func (a *AuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string)
 	return resp, nil
 }
 
+// Logout logs out a user session with the auth service
+func (a *AuthServiceClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
+	if token == "" {
+		return nil, fmt.Errorf("empty token")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	defer cancel()
+
+	// Add token to context as metadata for gRPC request
+	ctxWithMetadata := utils.WithAuthMetadata(ctx, token)
+
+	req := &pb.LogoutRequest{}
+
+	log.Printf("logging out session token with auth service")
+	resp, err := a.client.Logout(ctxWithMetadata, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to logout: %w", err)
+	}
+
+	return resp, nil
+}
+
 // GetUser retrieves user information from the auth service
 func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)

@@ -217,8 +217,12 @@ func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	protectedRouter := router.PathPrefix("").Subrouter()
 	protectedRouter.Use(authMiddlewareFunc)
 
+	// Setup public auth routes first
+	handler.SetupAuthRoutes(router, mockAuthClient)
+
 	// Setup routes - user group routes must be registered before user routes
 	// to ensure /api/users/groups matches before /api/users/{id}
+	handler.SetupAuthProtectedRoutes(protectedRouter, mockAuthClient)
 	handler.SetupUserGroupRoutes(router, protectedRouter, userGroupService)
 	handler.SetupUserRoutes(router, protectedRouter, userService)
 	handler.SetupMessageRoutes(router, protectedRouter, messageService)

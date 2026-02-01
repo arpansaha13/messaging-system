@@ -90,6 +90,7 @@ func main() {
 
 	// Setup routes
 	handler.SetupAuthRoutes(router, authClient)
+	handler.SetupAuthProtectedRoutes(protectedRouter, authClient)
 	handler.SetupUserRoutes(router, protectedRouter, userService)
 	handler.SetupMessageRoutes(router, protectedRouter, messageService)
 	handler.SetupChatRoutes(router, protectedRouter, chatService)

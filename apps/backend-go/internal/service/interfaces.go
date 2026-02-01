@@ -14,6 +14,7 @@ type IAuthServiceClient interface {
 	Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error)
 	Login(ctx context.Context, email, password string) (*pb.LoginResponse, error)
 	VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error)
+	Logout(ctx context.Context, token string) (*pb.LogoutResponse, error)
 	GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error)
 	Close() error
 }
