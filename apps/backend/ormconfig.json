@@ -1,5 +1,0 @@
-{
-  "dataSource": "dist/data-source.js",
-  "migrationsDir": "dist/migrations",
-  "entityPrefix": ""
-}
