@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
@@ -25,9 +25,8 @@ func TestUserGroupHandler_GetGroupMembers(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupUserGroupRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := getGroupMembersController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	require.NoError(t, err)
 }

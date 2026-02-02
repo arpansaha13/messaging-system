@@ -15,29 +15,27 @@ import (
 
 // SetupUserRoutes sets up user routes
 func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userService service.IUserService) {
-	protectedRouter.HandleFunc("/api/users/me", getUserMeHandler(userService)).Methods("GET")
-	protectedRouter.HandleFunc("/api/users/me", updateUserMeHandler(userService)).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/users/search", searchUserProfilesHandler(userService)).Methods("GET")
-	protectedRouter.HandleFunc("/api/users/{id}", getUserProfileByIDHandler(userService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/me", AdaptController(getUserMeController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/me", AdaptController(updateUserMeController(userService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/api/users/search", AdaptController(searchUserProfilesController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/{id}", AdaptController(getUserProfileByIDController(userService))).Methods("GET")
 }
 
-// getUserMeHandler returns the authenticated user's auth details
-func getUserMeHandler(userService service.IUserService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// getUserMeController returns the authenticated user's auth details
+func getUserMeController(userService service.IUserService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
-			middleware.WriteError(w, &domain.UnauthorizedError{Message: "unauthorized"})
-			return
+			return &domain.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		userProfile, err := userService.GetUserProfile(r.Context(), authUser.UserID)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
+		return json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
 			ID:         authUser.UserID,
 			Email:      authUser.Email,
 			Username:   authUser.Username,
@@ -48,31 +46,28 @@ func getUserMeHandler(userService service.IUserService) http.HandlerFunc {
 	}
 }
 
-// updateUserMeHandler updates the authenticated user's profile
-func updateUserMeHandler(userService service.IUserService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// updateUserMeController updates the authenticated user's profile
+func updateUserMeController(userService service.IUserService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
-			middleware.WriteError(w, &domain.UnauthorizedError{Message: "unauthorized"})
-			return
+			return &domain.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		var req dto.UpdateUserRequestDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		// Update the user profile
 		updatedProfile, err := userService.UpdateUserProfile(r.Context(), authUser.UserID, req.GlobalName, req.Bio, req.DP)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
+		return json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
 			ID:         authUser.UserID,
 			Email:      authUser.Email,
 			Username:   authUser.Username,
@@ -83,20 +78,18 @@ func updateUserMeHandler(userService service.IUserService) http.HandlerFunc {
 	}
 }
 
-// searchUserProfilesHandler searches for user profiles
-func searchUserProfilesHandler(userService service.IUserService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// searchUserProfilesController searches for user profiles
+func searchUserProfilesController(userService service.IUserService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		query := r.URL.Query().Get("q")
 		if query == "" {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode([]any{})
-			return
+			return json.NewEncoder(w).Encode([]any{})
 		}
 
 		userProfiles, err := userService.SearchUserProfiles(r.Context(), query)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		profileResponses := make([]dto.UserProfileResponseDTO, len(userProfiles))
@@ -111,30 +104,27 @@ func searchUserProfilesHandler(userService service.IUserService) http.HandlerFun
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(profileResponses)
+		return json.NewEncoder(w).Encode(profileResponses)
 	}
 }
 
-// getUserProfileByIDHandler retrieves a user profile by ID
-func getUserProfileByIDHandler(userService service.IUserService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+// getUserProfileByIDController retrieves a user profile by ID
+func getUserProfileByIDController(userService service.IUserService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		id, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid user id"})
-			return
+			return &domain.ValidationError{Message: "invalid user id"}
 		}
 
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
-			middleware.WriteError(w, &domain.UnauthorizedError{Message: "unauthorized"})
-			return
+			return &domain.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		userProfile, contact, err := userService.GetUserProfileWithContact(r.Context(), authUser.UserID, id)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		var contactInfo *dto.ContactInfoDTO
@@ -146,7 +136,7 @@ func getUserProfileByIDHandler(userService service.IUserService) http.HandlerFun
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dto.UserProfileResponseDTO{
+		return json.NewEncoder(w).Encode(dto.UserProfileResponseDTO{
 			ID:         userProfile.ID,
 			GlobalName: userProfile.GlobalName,
 			DP:         userProfile.DP,

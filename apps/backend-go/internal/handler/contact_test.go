@@ -15,6 +15,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/repository"
+	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/tests/mocks"
 )
 
@@ -24,7 +25,7 @@ func TestContactHandler_AddContact(t *testing.T) {
 		userID        int64
 		requestBody   *dto.AddContactRequestDTO
 		mockFunc      func() *mocks.MockContactService
-		expectedError bool
+		expectedError error
 		validateResp  func(t *testing.T, contact *domain.Contact)
 	}{
 		{
@@ -45,7 +46,7 @@ func TestContactHandler_AddContact(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
+			expectedError: nil,
 			validateResp: func(t *testing.T, contact *domain.Contact) {
 				assert.Equal(t, int64(1), contact.ID)
 				assert.Equal(t, int64(1), contact.UserID)
@@ -65,7 +66,7 @@ func TestContactHandler_AddContact(t *testing.T) {
 					},
 				}
 			},
-			expectedError: true,
+			expectedError: &domain.NotFoundError{Message: "user not found"},
 		},
 	}
 
@@ -84,14 +85,15 @@ func TestContactHandler_AddContact(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			// Call the handler function directly
-			handler := addContactHandler(mockService)
-			handler(w, req)
+			// Call the controller function directly
+			controller := addContactController(mockService)
+			err = controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusCreated, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, utils.Ptr(domain.NotFoundError{Message: "user not found"}).Error(), err.Error())
 			} else {
-				assert.Equal(t, http.StatusCreated, w.Code)
+				require.NoError(t, err)
 				var resp dto.ContactResponseDTO
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				require.NoError(t, err)
@@ -106,7 +108,7 @@ func TestContactHandler_GetContacts(t *testing.T) {
 		name          string
 		userID        int64
 		mockFunc      func() *mocks.MockContactService
-		expectedError bool
+		expectedError error
 		validateResp  func(t *testing.T, contacts []dto.ContactResponseDTO)
 	}{
 		{
@@ -119,7 +121,7 @@ func TestContactHandler_GetContacts(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
+			expectedError: nil,
 			validateResp: func(t *testing.T, contacts []dto.ContactResponseDTO) {
 				// Validate response structure
 				assert.NotNil(t, contacts)
@@ -137,13 +139,14 @@ func TestContactHandler_GetContacts(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			handler := getContactsHandler(mockService)
-			handler(w, req)
+			controller := getContactsController(mockService)
+			err := controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusOK, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, http.StatusOK, w.Code)
+				require.NoError(t, err)
 			}
 		})
 	}

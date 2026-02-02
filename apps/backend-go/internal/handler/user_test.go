@@ -19,11 +19,11 @@ import (
 
 func TestUserHandler_GetUserMe(t *testing.T) {
 	tests := []struct {
-		name          string
-		userID        int64
-		mockFunc      func() *mocks.MockUserService
-		expectedError bool
-		validateResp  func(t *testing.T, resp *dto.AuthUserResponseDTO)
+		name           string
+		userID         int64
+		mockFunc       func() *mocks.MockUserService
+		expectedError  error
+		validateResp   func(t *testing.T, resp *dto.AuthUserResponseDTO)
 	}{
 		{
 			name:   "successful get user me",
@@ -39,7 +39,7 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
+			expectedError: nil,
 			validateResp: func(t *testing.T, resp *dto.AuthUserResponseDTO) {
 				assert.Equal(t, "Test User", resp.GlobalName)
 				assert.Equal(t, "Hello world", resp.Bio)
@@ -55,7 +55,7 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 					},
 				}
 			},
-			expectedError: true,
+			expectedError: &domain.NotFoundError{Message: "user not found"},
 		},
 	}
 
@@ -74,13 +74,14 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			handler := getUserMeHandler(mockService)
-			handler(w, req)
+			controller := getUserMeController(mockService)
+			err := controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusOK, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, http.StatusOK, w.Code)
+				require.NoError(t, err)
 				var resp dto.AuthUserResponseDTO
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				require.NoError(t, err)
@@ -95,7 +96,7 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 		name          string
 		query         string
 		mockFunc      func() *mocks.MockUserService
-		expectedError bool
+		expectedError error
 		validateResp  func(t *testing.T, profiles []dto.UserProfileResponseDTO)
 	}{
 		{
@@ -111,7 +112,7 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
+			expectedError: nil,
 			validateResp: func(t *testing.T, profiles []dto.UserProfileResponseDTO) {
 				assert.Len(t, profiles, 2)
 				assert.Equal(t, "test user 1", profiles[0].GlobalName)
@@ -127,7 +128,7 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
+			expectedError: nil,
 			validateResp: func(t *testing.T, profiles []dto.UserProfileResponseDTO) {
 				assert.Len(t, profiles, 0)
 			},
@@ -141,13 +142,14 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/api/users/search?q="+tt.query, nil)
 			w := httptest.NewRecorder()
 
-			handler := searchUserProfilesHandler(mockService)
-			handler(w, req)
+			controller := searchUserProfilesController(mockService)
+			err := controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusOK, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, http.StatusOK, w.Code)
+				require.NoError(t, err)
 				var profiles []dto.UserProfileResponseDTO
 				err := json.NewDecoder(w.Body).Decode(&profiles)
 				require.NoError(t, err)
@@ -163,7 +165,7 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 		userID        int64
 		requestBody   *dto.UpdateUserRequestDTO
 		mockFunc      func() *mocks.MockUserService
-		expectedError bool
+		expectedError error
 		validateResp  func(t *testing.T, profile *domain.UserProfile)
 	}{
 		{
@@ -184,7 +186,7 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
+			expectedError: nil,
 			validateResp: func(t *testing.T, profile *domain.UserProfile) {
 				assert.Equal(t, "Updated Name", profile.GlobalName)
 				assert.Equal(t, "Updated Bio", profile.Bio)
@@ -210,13 +212,14 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			handler := updateUserMeHandler(mockService)
-			handler(w, req)
+			controller := updateUserMeController(mockService)
+			err = controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusOK, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, http.StatusOK, w.Code)
+				require.NoError(t, err)
 			}
 		})
 	}

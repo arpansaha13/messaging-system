@@ -9,47 +9,42 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
 )
 
 // SetupChannelRoutes sets up channel routes
 func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channelService service.IChannelService) {
-	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", createChannelHandler(channelService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", getGroupChannelsHandler(channelService)).Methods("GET")
-	protectedRouter.HandleFunc("/api/channels/{channelID}", getChannelInfoHandler(channelService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", AdaptController(createChannelController(channelService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", AdaptController(getGroupChannelsController(channelService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/channels/{channelID}", AdaptController(getChannelInfoController(channelService))).Methods("GET")
 }
 
-func createChannelHandler(channelService service.IChannelService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func createChannelController(channelService service.IChannelService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid group id"})
-			return
+			return &domain.ValidationError{Message: "invalid group id"}
 		}
 
 		var req dto.CreateChannelRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		if req.Name == "" {
-			middleware.WriteError(w, &domain.ValidationError{Message: "channel name is required"})
-			return
+			return &domain.ValidationError{Message: "channel name is required"}
 		}
 
 		channel, err := channelService.CreateChannel(r.Context(), req.Name, groupID)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(dto.ChannelResponseDTO{
+		return json.NewEncoder(w).Encode(dto.ChannelResponseDTO{
 			ID:        channel.ID,
 			Name:      channel.Name,
 			GroupID:   channel.GroupID,
@@ -59,19 +54,17 @@ func createChannelHandler(channelService service.IChannelService) http.HandlerFu
 	}
 }
 
-func getGroupChannelsHandler(channelService service.IChannelService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getGroupChannelsController(channelService service.IChannelService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid group id"})
-			return
+			return &domain.ValidationError{Message: "invalid group id"}
 		}
 
 		channels, err := channelService.GetChannelsByGroupID(r.Context(), groupID)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		channelResponses := make([]dto.ChannelResponseDTO, len(channels))
@@ -86,27 +79,25 @@ func getGroupChannelsHandler(channelService service.IChannelService) http.Handle
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(channelResponses)
+		return json.NewEncoder(w).Encode(channelResponses)
 	}
 }
 
-func getChannelInfoHandler(channelService service.IChannelService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getChannelInfoController(channelService service.IChannelService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid channel id"})
-			return
+			return &domain.ValidationError{Message: "invalid channel id"}
 		}
 
 		channel, err := channelService.GetChannelByID(r.Context(), channelID)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dto.ChannelResponseDTO{
+		return json.NewEncoder(w).Encode(dto.ChannelResponseDTO{
 			ID:        channel.ID,
 			Name:      channel.Name,
 			GroupID:   channel.GroupID,

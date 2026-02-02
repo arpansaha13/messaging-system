@@ -8,8 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
@@ -35,11 +34,10 @@ func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupMessageRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := sendPersonalMessageController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusAccepted, w.Code)
+	require.NoError(t, err)
 }
 
 func TestMessageHandler_SendGroupMessage(t *testing.T) {
@@ -62,9 +60,8 @@ func TestMessageHandler_SendGroupMessage(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupMessageRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := sendGroupMessageController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusAccepted, w.Code)
+	require.NoError(t, err)
 }

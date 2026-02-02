@@ -15,17 +15,16 @@ import (
 
 // SetupGroupRoutes sets up group routes
 func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupService service.IGroupService) {
-	protectedRouter.HandleFunc("/api/groups", createGroupHandler(groupService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups", getGroupsHandler(groupService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/groups", AdaptController(createGroupController(groupService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups", AdaptController(getGroupsController(groupService))).Methods("GET")
 }
 
-func createGroupHandler(groupService service.IGroupService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func createGroupController(groupService service.IGroupService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.CreateGroupRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -33,13 +32,12 @@ func createGroupHandler(groupService service.IGroupService) http.HandlerFunc {
 
 		group, err := groupService.CreateGroup(r.Context(), req.Name, userIDInt)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(dto.GroupResponseDTO{
+		return json.NewEncoder(w).Encode(dto.GroupResponseDTO{
 			ID:        group.ID,
 			Name:      group.Name,
 			FounderID: group.FounderID,
@@ -49,15 +47,14 @@ func createGroupHandler(groupService service.IGroupService) http.HandlerFunc {
 	}
 }
 
-func getGroupsHandler(groupService service.IGroupService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getGroupsController(groupService service.IGroupService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		groups, err := groupService.GetGroups(r.Context(), userIDInt)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		groupResponses := make([]dto.GroupResponseDTO, len(groups))
@@ -72,6 +69,6 @@ func getGroupsHandler(groupService service.IGroupService) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(groupResponses)
+		return json.NewEncoder(w).Encode(groupResponses)
 	}
 }

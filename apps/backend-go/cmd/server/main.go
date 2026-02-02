@@ -80,7 +80,8 @@ func main() {
 	// Setup HTTP router
 	router := mux.NewRouter()
 
-	// Apply middlewares
+	// Apply middlewares in order: Recovery (outermost) -> Logging -> Error
+	router.Use(middleware.RecoveryMiddleware)
 	router.Use(middleware.LoggingMiddleware)
 	router.Use(middleware.ErrorMiddleware)
 

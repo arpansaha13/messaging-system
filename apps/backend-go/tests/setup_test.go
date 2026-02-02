@@ -205,7 +205,8 @@ func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	// Setup HTTP router
 	router := mux.NewRouter()
 
-	// Apply middleware
+	// Apply middleware in order: Recovery (outermost) -> Logging -> Error
+	router.Use(middleware.RecoveryMiddleware)
 	router.Use(middleware.LoggingMiddleware)
 	router.Use(middleware.ErrorMiddleware)
 

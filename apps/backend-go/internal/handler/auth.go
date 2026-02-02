@@ -11,35 +11,32 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
 )
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)
 func SetupAuthRoutes(router *mux.Router, authServiceClient service.IAuthServiceClient) {
-	router.HandleFunc("/api/auth/signup", signupHandler(authServiceClient)).Methods("POST")
-	router.HandleFunc("/api/auth/login", loginHandler(authServiceClient)).Methods("POST")
-	router.HandleFunc("/api/auth/verify/{otpHash}", verifyOTPHandler(authServiceClient)).Methods("POST")
+	router.HandleFunc("/api/auth/signup", AdaptController(signupController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/api/auth/login", AdaptController(loginController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/api/auth/verify/{otpHash}", AdaptController(verifyOTPController(authServiceClient))).Methods("POST")
 }
 
 // SetupAuthProtectedRoutes sets up authenticated auth routes
 func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient service.IAuthServiceClient) {
-	protectedRouter.HandleFunc("/api/auth/logout", logoutHandler(authServiceClient)).Methods("POST")
+	protectedRouter.HandleFunc("/api/auth/logout", AdaptController(logoutController(authServiceClient))).Methods("POST")
 }
 
-func signupHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func signupController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.SignupRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if req.Email == "" || req.Password == "" {
-			middleware.WriteError(w, &domain.ValidationError{Message: "email and password are required"})
-			return
+			return &domain.ValidationError{Message: "email and password are required"}
 		}
 
 		// Call auth service to signup
@@ -48,39 +45,34 @@ func signupHandler(authServiceClient service.IAuthServiceClient) http.HandlerFun
 			// Check error message for specific error types
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "already exists") || strings.Contains(errMsg, "conflict") {
-				middleware.WriteError(w, &domain.ConflictError{Message: "email already registered"})
-				return
+				return &domain.ConflictError{Message: "email already registered"}
 			}
 			if strings.Contains(errMsg, "validation") {
-				middleware.WriteError(w, &domain.ValidationError{Message: errMsg})
-				return
+				return &domain.ValidationError{Message: errMsg}
 			}
-			middleware.WriteError(w, &domain.InternalError{Message: "signup failed", Err: err})
-			return
+			return &domain.InternalError{Message: "signup failed", Err: err}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(dto.SignupResponseDTO{
+		return json.NewEncoder(w).Encode(dto.SignupResponseDTO{
 			Message: signupResp.Message,
 			OtpHash: signupResp.OtpHash,
 		})
 	}
 }
 
-func loginHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func loginController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.LoginRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if req.Email == "" || req.Password == "" {
-			middleware.WriteError(w, &domain.ValidationError{Message: "email and password are required"})
-			return
+			return &domain.ValidationError{Message: "email and password are required"}
 		}
 
 		// Call auth service to login
@@ -88,15 +80,12 @@ func loginHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "unauthorized") || strings.Contains(errMsg, "not verified") {
-				middleware.WriteError(w, &domain.UnauthorizedError{Message: "invalid email or password"})
-				return
+				return &domain.UnauthorizedError{Message: "invalid email or password"}
 			}
 			if strings.Contains(errMsg, "validation") {
-				middleware.WriteError(w, &domain.ValidationError{Message: errMsg})
-				return
+				return &domain.ValidationError{Message: errMsg}
 			}
-			middleware.WriteError(w, &domain.InternalError{Message: "login failed", Err: err})
-			return
+			return &domain.InternalError{Message: "login failed", Err: err}
 		}
 
 		// Calculate cookie max age in seconds
@@ -127,28 +116,26 @@ func loginHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc
 		})
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dto.LoginResponseDTO{
+		return json.NewEncoder(w).Encode(dto.LoginResponseDTO{
 			Message: "login successful",
 		})
 	}
 }
 
-func verifyOTPHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func verifyOTPController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		otpHash := vars["otpHash"]
 
 		var req dto.VerifyOTPRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if otpHash == "" || req.Code == "" {
-			middleware.WriteError(w, &domain.ValidationError{Message: "otp hash and code are required"})
-			return
+			return &domain.ValidationError{Message: "otp hash and code are required"}
 		}
 
 		// Call auth service to verify OTP
@@ -156,19 +143,15 @@ func verifyOTPHandler(authServiceClient service.IAuthServiceClient) http.Handler
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "invalid") || strings.Contains(errMsg, "expired") {
-				middleware.WriteError(w, &domain.UnauthorizedError{Message: "invalid or expired otp code"})
-				return
+				return &domain.UnauthorizedError{Message: "invalid or expired otp code"}
 			}
 			if strings.Contains(errMsg, "not found") {
-				middleware.WriteError(w, &domain.NotFoundError{Message: "otp not found"})
-				return
+				return &domain.NotFoundError{Message: "otp not found"}
 			}
 			if strings.Contains(errMsg, "validation") {
-				middleware.WriteError(w, &domain.ValidationError{Message: errMsg})
-				return
+				return &domain.ValidationError{Message: errMsg}
 			}
-			middleware.WriteError(w, &domain.InternalError{Message: "verification failed", Err: err})
-			return
+			return &domain.InternalError{Message: "verification failed", Err: err}
 		}
 
 		// Get auth cookie name from environment or use default
@@ -186,13 +169,14 @@ func verifyOTPHandler(authServiceClient service.IAuthServiceClient) http.Handler
 		})
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(dto.VerifyOTPResponseDTO{
+		return json.NewEncoder(w).Encode(dto.VerifyOTPResponseDTO{
 			Message: "verification successful",
 		})
 	}
 }
-func logoutHandler(authServiceClient service.IAuthServiceClient) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+
+func logoutController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		// Get the session token from the cookie
 		cfg, err := config.Load()
 		if err != nil {
@@ -201,8 +185,7 @@ func logoutHandler(authServiceClient service.IAuthServiceClient) http.HandlerFun
 
 		cookie, err := r.Cookie(cfg.AuthCookieName)
 		if err != nil {
-			middleware.WriteError(w, &domain.UnauthorizedError{Message: "no session token found"})
-			return
+			return &domain.UnauthorizedError{Message: "no session token found"}
 		}
 
 		sessionToken := cookie.Value
@@ -212,11 +195,9 @@ func logoutHandler(authServiceClient service.IAuthServiceClient) http.HandlerFun
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "invalid") {
-				middleware.WriteError(w, &domain.UnauthorizedError{Message: "invalid or expired session"})
-				return
+				return &domain.UnauthorizedError{Message: "invalid or expired session"}
 			}
-			middleware.WriteError(w, &domain.InternalError{Message: "logout failed", Err: err})
-			return
+			return &domain.InternalError{Message: "logout failed", Err: err}
 		}
 
 		// Clear the session cookie by setting MaxAge to -1
@@ -231,7 +212,7 @@ func logoutHandler(authServiceClient service.IAuthServiceClient) http.HandlerFun
 		})
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
+		return json.NewEncoder(w).Encode(map[string]string{
 			"message": "logout successful",
 		})
 	}

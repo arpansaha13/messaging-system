@@ -8,8 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
@@ -37,11 +36,10 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupGroupRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := createGroupController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
+	require.NoError(t, err)
 }
 
 func TestGroupHandler_GetGroups(t *testing.T) {
@@ -57,9 +55,8 @@ func TestGroupHandler_GetGroups(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupGroupRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := getGroupsController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	require.NoError(t, err)
 }

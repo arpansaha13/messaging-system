@@ -11,6 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
@@ -34,14 +35,13 @@ func TestInviteHandler_FindByHash(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/invites/abc123", nil)
+	req = mux.SetURLVars(req, map[string]string{"hash": "abc123"})
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupInviteRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := findInviteController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-
+	require.NoError(t, err)
 	var result dto.InviteResponseDTO
 	json.NewDecoder(w.Body).Decode(&result)
 	assert.Equal(t, "abc123", result.Hash)
@@ -58,17 +58,16 @@ func TestInviteHandler_AcceptInvite(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/invites/abc123/accept", nil)
+	req = mux.SetURLVars(req, map[string]string{"hash": "abc123"})
 	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "2")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupInviteRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := acceptInviteController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-
+	require.NoError(t, err)
 	var result service.AcceptInviteResponseDTO
 	json.NewDecoder(w.Body).Decode(&result)
 	assert.Equal(t, int64(1), result.GroupID)
@@ -90,17 +89,16 @@ func TestInviteHandler_CreateInvite(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodPost, "/api/groups/1/invites", nil)
+	req = mux.SetURLVars(req, map[string]string{"groupId": "1"})
 	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupInviteRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := createInviteController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusCreated, w.Code)
-
+	require.NoError(t, err)
 	var result dto.InviteResponseDTO
 	json.NewDecoder(w.Body).Decode(&result)
 	assert.Equal(t, "newhash", result.Hash)
@@ -126,12 +124,10 @@ func TestInviteHandler_JoinGroup(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupInviteRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := joinGroupController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-
+	require.NoError(t, err)
 	var result service.AcceptInviteResponseDTO
 	json.NewDecoder(w.Body).Decode(&result)
 	assert.Equal(t, int64(1), result.GroupID)

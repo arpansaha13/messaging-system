@@ -15,17 +15,16 @@ import (
 
 // SetupContactRoutes sets up contact routes
 func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contactService service.IContactService) {
-	protectedRouter.HandleFunc("/api/contacts", addContactHandler(contactService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/contacts", getContactsHandler(contactService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/contacts", AdaptController(addContactController(contactService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/contacts", AdaptController(getContactsController(contactService))).Methods("GET")
 }
 
-func addContactHandler(contactService service.IContactService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func addContactController(contactService service.IContactService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.AddContactRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -33,13 +32,12 @@ func addContactHandler(contactService service.IContactService) http.HandlerFunc 
 
 		contact, err := contactService.AddContact(r.Context(), userIDInt, req.UserIDInContact)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(dto.ContactResponseDTO{
+		return json.NewEncoder(w).Encode(dto.ContactResponseDTO{
 			ID:         contact.ID,
 			GlobalName: "", // This would be populated when fetching contacts via GetContacts
 			DP:         nil,
@@ -49,15 +47,14 @@ func addContactHandler(contactService service.IContactService) http.HandlerFunc 
 	}
 }
 
-func getContactsHandler(contactService service.IContactService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getContactsController(contactService service.IContactService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		contacts, err := contactService.GetContacts(r.Context(), userIDInt)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		contactResponses := make([]dto.ContactResponseDTO, len(contacts))
@@ -73,6 +70,6 @@ func getContactsHandler(contactService service.IContactService) http.HandlerFunc
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(contactResponses)
+		return json.NewEncoder(w).Encode(contactResponses)
 	}
 }

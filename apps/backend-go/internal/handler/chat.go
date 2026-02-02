@@ -14,159 +14,152 @@ import (
 
 // SetupChatRoutes sets up chat routes
 func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatService service.IChatService) {
-	protectedRouter.HandleFunc("/api/chats", getUserChatsHandler(chatService)).Methods("GET")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/pin", pinChatHandler(chatService)).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/unpin", unpinChatHandler(chatService)).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/archive", archiveChatHandler(chatService)).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/unarchive", unarchiveChatHandler(chatService)).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/clear", clearChatHandler(chatService)).Methods("DELETE")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/delete", deleteChatHandler(chatService)).Methods("DELETE")
+	protectedRouter.HandleFunc("/api/chats", AdaptController(getUserChatsController(chatService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/chats/{receiverID}/pin", AdaptController(pinChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/api/chats/{receiverID}/unpin", AdaptController(unpinChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/api/chats/{receiverID}/archive", AdaptController(archiveChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/api/chats/{receiverID}/unarchive", AdaptController(unarchiveChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/api/chats/{receiverID}/clear", AdaptController(clearChatController(chatService))).Methods("DELETE")
+	protectedRouter.HandleFunc("/api/chats/{receiverID}/delete", AdaptController(deleteChatController(chatService))).Methods("DELETE")
 }
 
-func getUserChatsHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getUserChatsController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		chatsResponse, err := chatService.GetUserChats(r.Context(), userIDInt)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(chatsResponse)
+		return json.NewEncoder(w).Encode(chatsResponse)
 	}
 }
 
-func pinChatHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func pinChatController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := chatService.PinChat(r.Context(), userIDInt, receiverID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }
 
-func unpinChatHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func unpinChatController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := chatService.UnpinChat(r.Context(), userIDInt, receiverID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }
 
-func archiveChatHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func archiveChatController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := chatService.ArchiveChat(r.Context(), userIDInt, receiverID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }
 
-func unarchiveChatHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func unarchiveChatController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := chatService.UnarchiveChat(r.Context(), userIDInt, receiverID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }
 
-func clearChatHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func clearChatController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := chatService.ClearChat(r.Context(), userIDInt, receiverID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }
 
-func deleteChatHandler(chatService service.IChatService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func deleteChatController(chatService service.IChatService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := chatService.DeleteChat(r.Context(), userIDInt, receiverID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
+		return nil
 	}
 }

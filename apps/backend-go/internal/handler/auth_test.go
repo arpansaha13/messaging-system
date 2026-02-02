@@ -21,11 +21,11 @@ import (
 
 func TestAuthHandler_Signup(t *testing.T) {
 	tests := []struct {
-		name           string
-		requestBody    *dto.SignupRequestDTO
-		mockFunc       func() service.IAuthServiceClient
-		expectedStatus int
-		validateResp   func(t *testing.T, resp *dto.SignupResponseDTO)
+		name          string
+		requestBody   *dto.SignupRequestDTO
+		mockFunc      func() service.IAuthServiceClient
+		expectedError error
+		validateResp  func(t *testing.T, resp *dto.SignupResponseDTO)
 	}{
 		{
 			name: "successful signup",
@@ -43,7 +43,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 					},
 				}
 			},
-			expectedStatus: http.StatusCreated,
+			expectedError: nil,
 			validateResp: func(t *testing.T, resp *dto.SignupResponseDTO) {
 				assert.Equal(t, "signup successful", resp.Message)
 				assert.Equal(t, "hash123", resp.OtpHash)
@@ -62,7 +62,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 					},
 				}
 			},
-			expectedStatus: http.StatusConflict,
+			expectedError: &domain.ConflictError{Message: "email already registered"},
 		},
 		{
 			name: "invalid email and password",
@@ -77,7 +77,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 					},
 				}
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedError: &domain.ValidationError{Message: "email and password are required"},
 		},
 	}
 
@@ -91,15 +91,20 @@ func TestAuthHandler_Signup(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/auth/signup", bytes.NewBuffer(body))
 			w := httptest.NewRecorder()
 
-			handler := signupHandler(mockService)
-			handler(w, req)
+			controller := signupController(mockService)
+			err = controller(w, req)
 
-			assert.Equal(t, tt.expectedStatus, w.Code)
-			if tt.validateResp != nil && w.Code == http.StatusCreated {
-				var resp dto.SignupResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
+			} else {
 				require.NoError(t, err)
-				tt.validateResp(t, &resp)
+				if tt.validateResp != nil {
+					var resp dto.SignupResponseDTO
+					err := json.NewDecoder(w.Body).Decode(&resp)
+					require.NoError(t, err)
+					tt.validateResp(t, &resp)
+				}
 			}
 		})
 	}
@@ -107,11 +112,11 @@ func TestAuthHandler_Signup(t *testing.T) {
 
 func TestAuthHandler_Login(t *testing.T) {
 	tests := []struct {
-		name           string
-		requestBody    *dto.LoginRequestDTO
-		mockFunc       func() service.IAuthServiceClient
-		expectedStatus int
-		validateResp   func(t *testing.T, resp *dto.LoginResponseDTO)
+		name          string
+		requestBody   *dto.LoginRequestDTO
+		mockFunc      func() service.IAuthServiceClient
+		expectedError error
+		validateResp  func(t *testing.T, resp *dto.LoginResponseDTO)
 	}{
 		{
 			name: "successful login",
@@ -129,7 +134,7 @@ func TestAuthHandler_Login(t *testing.T) {
 					},
 				}
 			},
-			expectedStatus: http.StatusOK,
+			expectedError: nil,
 			validateResp: func(t *testing.T, resp *dto.LoginResponseDTO) {
 				assert.Equal(t, "login successful", resp.Message)
 			},
@@ -147,7 +152,7 @@ func TestAuthHandler_Login(t *testing.T) {
 					},
 				}
 			},
-			expectedStatus: http.StatusUnauthorized,
+			expectedError: &domain.UnauthorizedError{Message: "invalid email or password"},
 		},
 		{
 			name: "missing email and password",
@@ -162,7 +167,7 @@ func TestAuthHandler_Login(t *testing.T) {
 					},
 				}
 			},
-			expectedStatus: http.StatusBadRequest,
+			expectedError: &domain.ValidationError{Message: "email and password are required"},
 		},
 	}
 
@@ -176,15 +181,20 @@ func TestAuthHandler_Login(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBuffer(body))
 			w := httptest.NewRecorder()
 
-			handler := loginHandler(mockService)
-			handler(w, req)
+			controller := loginController(mockService)
+			err = controller(w, req)
 
-			assert.Equal(t, tt.expectedStatus, w.Code)
-			if tt.validateResp != nil && w.Code == http.StatusOK {
-				var resp dto.LoginResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
+			} else {
 				require.NoError(t, err)
-				tt.validateResp(t, &resp)
+				if tt.validateResp != nil {
+					var resp dto.LoginResponseDTO
+					err := json.NewDecoder(w.Body).Decode(&resp)
+					require.NoError(t, err)
+					tt.validateResp(t, &resp)
+				}
 			}
 		})
 	}

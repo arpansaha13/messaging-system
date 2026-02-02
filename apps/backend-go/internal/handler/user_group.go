@@ -9,28 +9,25 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
 )
 
 // SetupUserGroupRoutes sets up user group routes
 func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userGroupService service.IUserGroupService) {
-	protectedRouter.HandleFunc("/api/groups/{groupID}/members", getGroupMembersHandler(userGroupService)).Methods("GET")
+	protectedRouter.HandleFunc("/api/groups/{groupID}/members", AdaptController(getGroupMembersController(userGroupService))).Methods("GET")
 }
 
-func getGroupMembersHandler(userGroupService service.IUserGroupService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getGroupMembersController(userGroupService service.IUserGroupService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid group id"})
-			return
+			return &domain.ValidationError{Message: "invalid group id"}
 		}
 
 		members, err := userGroupService.GetGroupMembers(r.Context(), groupID)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		memberResponses := make([]dto.UserGroupResponseDTO, len(members))
@@ -52,6 +49,6 @@ func getGroupMembersHandler(userGroupService service.IUserGroupService) http.Han
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(memberResponses)
+		return json.NewEncoder(w).Encode(memberResponses)
 	}
 }

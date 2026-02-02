@@ -23,8 +23,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		groupID       string
 		requestBody   *dto.CreateChannelRequestDTO
 		mockFunc      func() *mocks.MockChannelService
-		expectedError bool
-		expectedCode  int
+		expectedError error
 		validateResp  func(t *testing.T, channel *dto.ChannelResponseDTO)
 	}{
 		{
@@ -44,8 +43,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
-			expectedCode:  http.StatusCreated,
+			expectedError: nil,
 			validateResp: func(t *testing.T, channel *dto.ChannelResponseDTO) {
 				assert.Equal(t, int64(1), channel.ID)
 				assert.Equal(t, "general", channel.Name)
@@ -61,8 +59,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: true,
-			expectedCode:  http.StatusBadRequest,
+			expectedError: &domain.ValidationError{Message: "invalid group id"},
 		},
 		{
 			name:    "empty channel name",
@@ -73,8 +70,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: true,
-			expectedCode:  http.StatusBadRequest,
+			expectedError: &domain.ValidationError{Message: "channel name is required"},
 		},
 	}
 
@@ -92,14 +88,14 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			router := mux.NewRouter()
-			SetupChannelRoutes(router, router, mockService)
-			router.ServeHTTP(w, req)
+			controller := createChannelController(mockService)
+			err = controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusCreated, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, tt.expectedCode, w.Code)
+				require.NoError(t, err)
 				var resp dto.ChannelResponseDTO
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				require.NoError(t, err)
@@ -114,8 +110,7 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 		name          string
 		groupID       string
 		mockFunc      func() *mocks.MockChannelService
-		expectedError bool
-		expectedCode  int
+		expectedError error
 		validateResp  func(t *testing.T, channels []dto.ChannelResponseDTO)
 	}{
 		{
@@ -139,8 +134,7 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
-			expectedCode:  http.StatusOK,
+			expectedError: nil,
 			validateResp: func(t *testing.T, channels []dto.ChannelResponseDTO) {
 				assert.Equal(t, 2, len(channels))
 				assert.Equal(t, "general", channels[0].Name)
@@ -153,8 +147,7 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: true,
-			expectedCode:  http.StatusBadRequest,
+			expectedError: &domain.ValidationError{Message: "invalid group id"},
 		},
 	}
 
@@ -169,14 +162,14 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			router := mux.NewRouter()
-			SetupChannelRoutes(router, router, mockService)
-			router.ServeHTTP(w, req)
+			controller := getGroupChannelsController(mockService)
+			err := controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusOK, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, tt.expectedCode, w.Code)
+				require.NoError(t, err)
 				var resp []dto.ChannelResponseDTO
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				require.NoError(t, err)
@@ -191,8 +184,7 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 		name          string
 		channelID     string
 		mockFunc      func() *mocks.MockChannelService
-		expectedError bool
-		expectedCode  int
+		expectedError error
 		validateResp  func(t *testing.T, channel *dto.ChannelResponseDTO)
 	}{
 		{
@@ -209,8 +201,7 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 					},
 				}
 			},
-			expectedError: false,
-			expectedCode:  http.StatusOK,
+			expectedError: nil,
 			validateResp: func(t *testing.T, channel *dto.ChannelResponseDTO) {
 				assert.Equal(t, int64(1), channel.ID)
 				assert.Equal(t, "general", channel.Name)
@@ -222,8 +213,7 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: true,
-			expectedCode:  http.StatusBadRequest,
+			expectedError: &domain.ValidationError{Message: "invalid channel id"},
 		},
 	}
 
@@ -238,14 +228,14 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			router := mux.NewRouter()
-			SetupChannelRoutes(router, router, mockService)
-			router.ServeHTTP(w, req)
+			controller := getChannelInfoController(mockService)
+			err := controller(w, req)
 
-			if tt.expectedError {
-				assert.NotEqual(t, http.StatusOK, w.Code)
+			if tt.expectedError != nil {
+				require.Error(t, err)
+				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
-				assert.Equal(t, tt.expectedCode, w.Code)
+				require.NoError(t, err)
 				var resp dto.ChannelResponseDTO
 				err := json.NewDecoder(w.Body).Decode(&resp)
 				require.NoError(t, err)

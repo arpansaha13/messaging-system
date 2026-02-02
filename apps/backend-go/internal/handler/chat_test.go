@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend-go/internal/service"
@@ -30,11 +30,10 @@ func TestChatHandler_GetUserChats(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := getUserChatsController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
+	require.NoError(t, err)
 }
 
 func TestChatHandler_PinChat(t *testing.T) {
@@ -51,11 +50,10 @@ func TestChatHandler_PinChat(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := pinChatController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	require.NoError(t, err)
 }
 
 func TestChatHandler_UnpinChat(t *testing.T) {
@@ -72,11 +70,10 @@ func TestChatHandler_UnpinChat(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := unpinChatController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	require.NoError(t, err)
 }
 
 func TestChatHandler_ArchiveChat(t *testing.T) {
@@ -93,11 +90,10 @@ func TestChatHandler_ArchiveChat(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := archiveChatController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	require.NoError(t, err)
 }
 
 func TestChatHandler_UnarchiveChat(t *testing.T) {
@@ -114,11 +110,10 @@ func TestChatHandler_UnarchiveChat(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := unarchiveChatController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	require.NoError(t, err)
 }
 
 func TestChatHandler_ClearChat(t *testing.T) {
@@ -135,11 +130,10 @@ func TestChatHandler_ClearChat(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := clearChatController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	require.NoError(t, err)
 }
 
 func TestChatHandler_DeleteChat(t *testing.T) {
@@ -156,9 +150,8 @@ func TestChatHandler_DeleteChat(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	router := mux.NewRouter()
-	SetupChatRoutes(router, router, mockService)
-	router.ServeHTTP(w, req)
+	controller := deleteChatController(mockService)
+	err := controller(w, req)
 
-	assert.Equal(t, http.StatusNoContent, w.Code)
+	require.NoError(t, err)
 }

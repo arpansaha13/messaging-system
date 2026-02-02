@@ -15,67 +15,62 @@ import (
 
 // SetupMessageRoutes sets up message routes
 func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, messageService service.IMessageService) {
-	protectedRouter.HandleFunc("/api/messages/send/personal", sendPersonalMessageHandler(messageService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/send/group", sendGroupMessageHandler(messageService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/{receiverID}", getMessagesHandler(messageService)).Methods("GET")
-	protectedRouter.HandleFunc("/api/channels/{channelID}/messages", getChannelMessagesHandler(messageService)).Methods("GET")
-	protectedRouter.HandleFunc("/api/messages/status/delivered", handleDeliveredHandler(messageService)).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/status/read", handleReadHandler(messageService)).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/send/personal", AdaptController(sendPersonalMessageController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/send/group", AdaptController(sendGroupMessageController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/{receiverID}", AdaptController(getMessagesController(messageService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/channels/{channelID}/messages", AdaptController(getChannelMessagesController(messageService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/messages/status/delivered", AdaptController(handleDeliveredController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/status/read", AdaptController(handleReadController(messageService))).Methods("POST")
 }
 
-func sendPersonalMessageHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func sendPersonalMessageController(messageService service.IMessageService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.SendPersonalMessageDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		senderID, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := messageService.SendPersonalMessage(r.Context(), senderID, req.ReceiverID, req.Content, req.Hash); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusAccepted)
-		json.NewEncoder(w).Encode(map[string]bool{"success": true})
+		return json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
 }
 
-func sendGroupMessageHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func sendGroupMessageController(messageService service.IMessageService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.SendGroupMessageDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		senderID, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := messageService.SendGroupMessage(r.Context(), senderID, req.GroupID, req.ChannelID, req.Content, req.Hash); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusAccepted)
-		json.NewEncoder(w).Encode(map[string]bool{"success": true})
+		return json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
 }
 
-func getMessagesHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getMessagesController(messageService service.IMessageService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid receiver id"})
-			return
+			return &domain.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -96,8 +91,7 @@ func getMessagesHandler(messageService service.IMessageService) http.HandlerFunc
 
 		messages, err := messageService.GetMessages(r.Context(), senderID, receiverID, limit, offset)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		messageResponses := make([]dto.MessageResponseDTO, len(messages))
@@ -113,39 +107,36 @@ func getMessagesHandler(messageService service.IMessageService) http.HandlerFunc
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(messageResponses)
+		return json.NewEncoder(w).Encode(messageResponses)
 	}
 }
 
-func handleDeliveredHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func handleDeliveredController(messageService service.IMessageService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.HandleDeliveredDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		receiverID, _ := strconv.ParseInt(userID, 10, 64)
 
 		if err := messageService.MarkMessageAsDelivered(r.Context(), req.MessageID, receiverID, req.SenderID); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]bool{"success": true})
+		return json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
 }
 
-func handleReadHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func handleReadController(messageService service.IMessageService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		var req dto.HandleReadMultipleDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid request body"})
-			return
+			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -162,22 +153,20 @@ func handleReadHandler(messageService service.IMessageService) http.HandlerFunc 
 		}
 
 		if err := messageService.MarkMessageAsRead(r.Context(), readPayloads); err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]bool{"success": true})
+		return json.NewEncoder(w).Encode(map[string]bool{"success": true})
 	}
 }
 
-func getChannelMessagesHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func getChannelMessagesController(messageService service.IMessageService) ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
 		vars := mux.Vars(r)
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
 		if err != nil {
-			middleware.WriteError(w, &domain.ValidationError{Message: "invalid channel id"})
-			return
+			return &domain.ValidationError{Message: "invalid channel id"}
 		}
 
 		limit := 50
@@ -195,8 +184,7 @@ func getChannelMessagesHandler(messageService service.IMessageService) http.Hand
 
 		messages, err := messageService.GetChannelMessages(r.Context(), channelID, limit, offset)
 		if err != nil {
-			middleware.WriteError(w, err)
-			return
+			return err
 		}
 
 		messageResponses := make([]dto.MessageResponseDTO, len(messages))
@@ -211,13 +199,6 @@ func getChannelMessagesHandler(messageService service.IMessageService) http.Hand
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(messageResponses)
-	}
-}
-
-func markMessageReadHandler(messageService service.IMessageService) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// This handler is no longer used - status is sent via /api/messages/status/read
-		middleware.WriteError(w, &domain.ValidationError{Message: "invalid endpoint - use /api/messages/status/read"})
+		return json.NewEncoder(w).Encode(messageResponses)
 	}
 }
