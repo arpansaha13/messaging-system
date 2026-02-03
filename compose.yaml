@@ -1,0 +1,260 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    ports:
+      - "7000:443"
+    volumes:
+      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./data/certs-local:/etc/nginx/certs:ro
+    depends_on:
+      - backend
+      - socket
+      - frontend
+    networks:
+      - messaging-network
+
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db
+    environment:
+      POSTGRES_USER: ${AUTH_DB_USERNAME}
+      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+    ports:
+      - "7010:5432"
+    volumes:
+      - ./data/auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "7020:5432"
+    volumes:
+      - ./data/default:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: backend
+    environment:
+      ENVIRONMENT: development
+      API_PORT: 4000
+      DATABASE_URL: ${DATABASE_URL}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: "true"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
+      OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
+      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST:-auth:50051}
+    ports:
+      - "7030:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/backend/cmd
+        - action: rebuild
+          path: ./apps/backend/internal
+        - action: rebuild
+          path: ./apps/backend/pb
+        - action: rebuild
+          path: ./apps/backend/go.mod
+        - action: rebuild
+          path: ./apps/backend/go.sum
+
+  socket:
+    build:
+      context: .
+      dockerfile: apps/socket/Dockerfile.dev
+    container_name: socket
+    environment:
+      ENVIRONMENT: development
+      PORT: 4000
+      SERVER_ID: ${SOCKET_SERVER_ID:-server-1}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
+      CLIENT_DOMAIN: ${CLIENT_DOMAIN}
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/socket/src
+          target: /app/apps/socket/src
+        - action: rebuild
+          path: ./apps/socket/tsconfig.json
+
+  rabbitmq:
+    image: rabbitmq:4.2.2-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "7050:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  auth:
+    build:
+      context: ../auth-system
+      dockerfile: Dockerfile
+    container_name: auth-system
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+      GRPC_HOST: ${GRPC_HOST}
+      GRPC_PORT: ${GRPC_PORT}
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
+      SESSION_CLEANUP_INTERVAL_MINUTES: ${SESSION_CLEANUP_INTERVAL_MINUTES}
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      LOG_LEVEL: ${LOG_LEVEL}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES}
+      OTP_LENGTH: ${OTP_LENGTH}
+      EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
+      EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+    # ports:
+    #   - '7060:${GRPC_PORT:-50051}'
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - messaging-network
+    expose:
+      - "50051"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile.dev
+    container_name: frontend
+    environment:
+      ENVIRONMENT: development
+      API_BASE_URL: ${API_BASE_URL}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
+      NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+    depends_on:
+      backend:
+        condition: service_started
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/frontend/src
+          target: /app/apps/frontend/src
+        - action: sync
+          path: ./apps/frontend/public
+          target: /app/apps/frontend/public
+        - action: sync
+          path: ./apps/frontend/nuxt.config.ts
+          target: /app/apps/frontend/nuxt.config.ts
+        - action: sync
+          path: ./apps/frontend/tsconfig.json
+          target: /app/apps/frontend/tsconfig.json
+
+  memcached:
+    image: memcached:1.6.40-alpine
+    container_name: memcached
+    networks:
+      - messaging-network
+
+  chat-worker:
+    build:
+      context: .
+      dockerfile: apps/chat-worker/Dockerfile.dev
+    container_name: chat-worker
+    environment:
+      ENVIRONMENT: development
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS:-guest}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: "true"
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: sync
+          path: ./apps/chat-worker/src
+          target: /app/apps/chat-worker/src
+        - action: rebuild
+          path: ./apps/chat-worker/tsconfig.json
+
+networks:
+  messaging-network:
+    driver: bridge

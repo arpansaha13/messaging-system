@@ -1,3 +1,15 @@
 packages:
   - apps/*
   - packages/*
+  - scripts/*
+
+onlyBuiltDependencies:
+  - '@arpansaha13/utils'
+  - '@parcel/watcher'
+  - cpu-features
+  - esbuild
+  - protobufjs
+  - sharp
+  - ssh2
+  - unrs-resolver
+  - vue-demi

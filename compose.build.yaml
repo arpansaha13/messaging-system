@@ -1,0 +1,32 @@
+services:
+  auth:
+    build:
+      context: ../auth-system
+      dockerfile: Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
+
+  socket:
+    build:
+      context: .
+      dockerfile: apps/socket/Dockerfile.prod
+    image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile.prod
+      args:
+        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+    image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
+
+  chat-worker:
+    build:
+      context: .
+      dockerfile: apps/chat-worker/Dockerfile.prod
+    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0

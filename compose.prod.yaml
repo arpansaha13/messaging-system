@@ -1,0 +1,184 @@
+version: "3.8"
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_prod
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NGINX_DOMAIN_NAME=${NGINX_DOMAIN_NAME}
+      - NGINX_ENVSUBST_FILTER=NGINX_DOMAIN_NAME
+    volumes:
+      - ./nginx.prod.conf.template:/etc/nginx/templates/nginx.conf.template:ro
+      - ./data/certs/certbot-etc:/etc/letsencrypt:ro
+      - ./data/certs/certbot-var:/var/lib/letsencrypt:ro
+    depends_on:
+      - backend
+      - socket
+      - frontend
+    networks:
+      - messaging-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot_prod
+    volumes:
+      - ./data/certs/certbot-etc:/etc/letsencrypt
+      - ./data/certs/certbot-var:/var/lib/letsencrypt
+    command: >
+      certonly --standalone
+      --preferred-challenges http
+      --http-01-port 8080
+      -d ${CERTBOT_DOMAIN}
+      --email ${CERTBOT_EMAIL}
+      --agree-tos
+      --no-eff-email
+      --non-interactive
+    depends_on:
+      - nginx
+    networks:
+      - messaging-network
+
+  auth:
+    image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
+    container_name: auth_system_prod
+    expose:
+      - "50051"
+    environment:
+      ENVIRONMENT: production
+      DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@${AUTH_DB_HOST}:5432/${AUTH_DB_NAME}
+      GRPC_HOST: ${GRPC_HOST}
+      GRPC_PORT: ${GRPC_PORT}
+      SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
+      SESSION_CLEANUP_INTERVAL_MINUTES: ${SESSION_CLEANUP_INTERVAL_MINUTES}
+      SECRET_KEY: ${SECRET_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      LOG_LEVEL: ${LOG_LEVEL}
+      OTP_EXPIRY_MINUTES: ${OTP_EXPIRY_MINUTES}
+      OTP_LENGTH: ${OTP_LENGTH}
+      EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
+      EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+    networks:
+      - messaging-network
+
+  backend:
+    image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
+    container_name: backend_prod
+    environment:
+      ENVIRONMENT: production
+      API_PORT: 4000
+      DATABASE_URL: postgres://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:5432/${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: "false"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      SESSION_SECRET: ${SESSION_SECRET}
+      JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
+      OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
+      AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
+    ports:
+      - "7030:4000"
+    depends_on:
+      - rabbitmq
+      - auth
+    networks:
+      - messaging-network
+
+  socket:
+    image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
+    container_name: socket_prod
+    environment:
+      ENVIRONMENT: production
+      PORT: 4000
+      SERVER_ID: ${SOCKET_SERVER_ID}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS}
+      CLIENT_DOMAIN: ${CLIENT_DOMAIN}
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      - rabbitmq
+      - memcached
+    networks:
+      - messaging-network
+
+  frontend:
+    image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
+    container_name: frontend_prod
+    environment:
+      ENVIRONMENT: production
+      API_BASE_URL: ${API_BASE_URL}
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME}
+      NUXT_PUBLIC_API_BASE_URL: ${API_BASE_URL}
+      NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME}
+    depends_on:
+      - backend
+    networks:
+      - messaging-network
+
+  memcached:
+    image: memcached:1.6.40-alpine
+    container_name: memcached
+    networks:
+      - messaging-network
+
+  rabbitmq:
+    image: rabbitmq:4.2.2-management-alpine
+    container_name: rabbitmq_prod
+    ports:
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-network
+
+  chat-worker:
+    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
+    container_name: chat_worker_prod
+    environment:
+      ENVIRONMENT: production
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER}
+      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_LOGGING: "false"
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      - rabbitmq
+    networks:
+      - messaging-network
+
+networks:
+  messaging-network:
+    driver: bridge

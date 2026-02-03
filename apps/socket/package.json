@@ -1,0 +1,24 @@
+{
+  "name": "socket",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@shared/constants": "workspace:*",
+    "amqplib": "^0.10.4",
+    "memjs": "^1.3.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@shared/types": "workspace:*",
+    "@types/amqplib": "^0.10.4",
+    "@types/node": "^25.0.2",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -3,12 +3,16 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "files.associations": {
-    "*.css": "postcss"
-  },
-  "task.allowAutomaticTasks": "on",
   "prettier.endOfLine": "lf",
   "editor.formatOnSave": true,
   "editor.formatOnPaste": false,
-  "git.inputValidation": true
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "chat.agent.maxRequests": 100,
+  "chat.agent.thinking.generateTitles": false,
+  "github.copilot.chat.anthropic.tools.websearch.maxUses": 20
 }

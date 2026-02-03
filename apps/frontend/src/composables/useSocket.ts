@@ -1,0 +1,41 @@
+import type { Ref } from 'vue'
+import { io, type Socket } from 'socket.io-client'
+
+export interface SocketWrapper {
+  socket: Ref<Socket | null>
+  closeSocket: () => void
+}
+
+export async function useSocket(): Promise<SocketWrapper> {
+  const socket = useState<Socket | null>('socket:instance', () => null)
+
+  if (import.meta.client) {
+    const { data: authUser } = await useFetchAuthUser()
+
+    watchEffect(() => {
+      const user = authUser.value
+      if (socket.value || !user) {
+        return
+      }
+
+      socket.value = io({
+        withCredentials: true,
+        query: {
+          userId: user.id,
+        },
+      })
+    })
+  }
+
+  function closeSocket() {
+    if (socket.value) {
+      socket.value.close()
+      socket.value = null
+    }
+  }
+
+  return {
+    socket,
+    closeSocket,
+  }
+}

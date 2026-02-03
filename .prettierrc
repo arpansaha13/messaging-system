@@ -9,6 +9,8 @@
   "jsxSingleQuote": false,
   "trailingComma": "all",
   "printWidth": 120,
+  "endOfLine": "lf",
+  "singleAttributePerLine": false,
   "plugins": [
     "prettier-plugin-tailwindcss"
   ],
