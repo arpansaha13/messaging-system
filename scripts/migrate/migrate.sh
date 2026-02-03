@@ -14,7 +14,7 @@ if [ $# -eq 0 ]; then
 fi
 
 COMMAND=$1
-MIGRATIONS_DIR="apps/backend-go/migrations"
+MIGRATIONS_DIR="apps/backend/migrations"
 
 # Check if migrations directory exists
 if [ ! -d "$MIGRATIONS_DIR" ]; then

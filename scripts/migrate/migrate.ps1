@@ -8,7 +8,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-$MigrationsDir = "apps/backend-go/migrations"
+$MigrationsDir = "apps/backend/migrations"
 
 # Check if migrations directory exists
 if (-not (Test-Path -Path $MigrationsDir)) {

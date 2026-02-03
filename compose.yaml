@@ -55,7 +55,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: apps/backend-go/Dockerfile
+      dockerfile: apps/backend/Dockerfile
     container_name: backend
     environment:
       ENVIRONMENT: development
@@ -91,15 +91,15 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/backend-go/cmd
+          path: ./apps/backend/cmd
         - action: rebuild
-          path: ./apps/backend-go/internal
+          path: ./apps/backend/internal
         - action: rebuild
-          path: ./apps/backend-go/pb
+          path: ./apps/backend/pb
         - action: rebuild
-          path: ./apps/backend-go/go.mod
+          path: ./apps/backend/go.mod
         - action: rebuild
-          path: ./apps/backend-go/go.sum
+          path: ./apps/backend/go.sum
 
   socket:
     build:
