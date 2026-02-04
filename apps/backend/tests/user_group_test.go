@@ -3,11 +3,21 @@ package tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestUserGroupGetMembers tests the GET /api/groups/{groupID}/members endpoint
-func TestUserGroupService_GetMembers(t *testing.T) {
+// UserGroupTestSuite is a test suite for user group endpoints
+type UserGroupTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *UserGroupTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestGetMembers tests the GET /api/groups/{groupID}/members endpoint
+func (s *UserGroupTestSuite) TestGetMembers() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get group members successfully",
@@ -42,15 +52,15 @@ func TestUserGroupService_GetMembers(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/groups/6111/members")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.GreaterOrEqual(f.T, len(result), 2, "expected multiple members")
+				s.Require().GreaterOrEqual(len(result), 2, "expected multiple members")
 
 				return nil
 			},
@@ -71,15 +81,15 @@ func TestUserGroupService_GetMembers(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/groups/6112/members")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.NotNil(f.T, result, "expected empty array, not nil")
+				s.Require().NotNil(result, "expected empty array, not nil")
 
 				return nil
 			},
@@ -96,10 +106,10 @@ func TestUserGroupService_GetMembers(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/groups/99999/members")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
 				// API may return 200 for non-existent groups - verify response is 200-299 or 400+
-				require.True(f.T, resp.StatusCode < 300 || resp.StatusCode >= 400, "expected 2xx or 4xx+ status")
+				s.Require().True(resp.StatusCode < 300 || resp.StatusCode >= 400, "expected 2xx or 4xx+ status")
 
 				return nil
 			},
@@ -108,18 +118,23 @@ func TestUserGroupService_GetMembers(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
+}
+
+// TestUserGroupService runs all user group tests
+func TestUserGroupService(t *testing.T) {
+	suite.Run(t, new(UserGroupTestSuite))
 }

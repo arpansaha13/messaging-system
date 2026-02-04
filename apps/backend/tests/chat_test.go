@@ -3,11 +3,21 @@ package tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestChatGet tests the GET /api/chats endpoint
-func TestChatService_GetChats(t *testing.T) {
+// ChatTestSuite is a test suite for chat endpoints
+type ChatTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *ChatTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestGetChats tests the GET /api/chats endpoint
+func (s *ChatTestSuite) TestGetChats() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get chats for user with multiple conversations",
@@ -30,16 +40,16 @@ func TestChatService_GetChats(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/chats")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
 				unarchived, ok := result["unarchived"].([]any)
-				require.True(f.T, ok, "expected unarchived array in response")
-				require.NotEmpty(f.T, unarchived, "expected chats in response")
+				s.Require().True(ok, "expected unarchived array in response")
+				s.Require().NotEmpty(unarchived, "expected chats in response")
 				return nil
 			},
 			ExpectError: false,
@@ -53,16 +63,16 @@ func TestChatService_GetChats(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/chats")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
 				unarchived, ok := result["unarchived"].([]any)
-				require.True(f.T, ok, "expected unarchived array in response")
-				require.Empty(f.T, unarchived, "expected empty unarchived array")
+				s.Require().True(ok, "expected unarchived array in response")
+				s.Require().Empty(unarchived, "expected empty unarchived array")
 				return nil
 			},
 			ExpectError: false,
@@ -70,31 +80,31 @@ func TestChatService_GetChats(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
-			require.NoError(t, err, "setup failed")
+			s.Require().NoError(err, "setup failed")
 
 			err = tt.Test(fixture)
 			if tt.ExpectError {
-				require.Error(t, err)
+				s.Require().Error(err)
 			} else {
-				require.NoError(t, err)
+				s.Require().NoError(err)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestChatPin tests the PATCH /api/chats/{id}/pin endpoint
-func TestChatService_PinChat(t *testing.T) {
+// TestPinChat tests the PATCH /api/chats/{id}/pin endpoint
+func (s *ChatTestSuite) TestPinChat() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Pin chat successfully",
@@ -111,14 +121,14 @@ func TestChatService_PinChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.PATCH("/api/chats/2102/pin", nil)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 204, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(204, resp.StatusCode)
 				return nil
 			},
 			Verify: func(f *TestFixture) error {
 				chat, err := f.TestDB.ChatRepo.GetByUsers(f.Ctx, 2101, 2102)
-				require.NoError(f.T, err)
-				require.True(f.T, chat.Pinned, "expected chat to be pinned")
+				s.Require().NoError(err)
+				s.Require().True(chat.Pinned, "expected chat to be pinned")
 				return nil
 			},
 			ExpectError: false,
@@ -132,8 +142,8 @@ func TestChatService_PinChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.PATCH("/api/chats/99999/pin", nil)
-				require.NoError(f.T, err)
-				require.Greater(f.T, resp.StatusCode, 399, "expected error status")
+				s.Require().NoError(err)
+				s.Require().Greater(resp.StatusCode, 399, "expected error status")
 				return nil
 			},
 			ExpectError: false,
@@ -141,30 +151,30 @@ func TestChatService_PinChat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
-			require.NoError(t, err, "setup failed")
+			s.Require().NoError(err, "setup failed")
 
 			err = tt.Test(fixture)
 			if tt.ExpectError {
-				require.Error(t, err)
+				s.Require().Error(err)
 			} else {
-				require.NoError(t, err)
+				s.Require().NoError(err)
 			}
 
 			if tt.Verify != nil {
 				err = tt.Verify(fixture)
-				require.NoError(t, err, "verification failed")
+				s.Require().NoError(err, "verification failed")
 			}
 		})
 	}
 }
 
-// TestChatUnpin tests the PATCH /api/chats/{id}/unpin endpoint
-func TestChatService_UnpinChat(t *testing.T) {
+// TestUnpinChat tests the PATCH /api/chats/{id}/unpin endpoint
+func (s *ChatTestSuite) TestUnpinChat() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Unpin pinned chat successfully",
@@ -188,14 +198,14 @@ func TestChatService_UnpinChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.PATCH("/api/chats/2502/unpin", nil)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 204, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(204, resp.StatusCode)
 				return nil
 			},
 			Verify: func(f *TestFixture) error {
 				chat, err := f.TestDB.ChatRepo.GetByUsers(f.Ctx, 2501, 2502)
-				require.NoError(f.T, err)
-				require.False(f.T, chat.Pinned, "expected chat to be unpinned")
+				s.Require().NoError(err)
+				s.Require().False(chat.Pinned, "expected chat to be unpinned")
 				return nil
 			},
 			ExpectError: false,
@@ -203,30 +213,30 @@ func TestChatService_UnpinChat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
-			require.NoError(t, err, "setup failed")
+			s.Require().NoError(err, "setup failed")
 
 			err = tt.Test(fixture)
 			if tt.ExpectError {
-				require.Error(t, err)
+				s.Require().Error(err)
 			} else {
-				require.NoError(t, err)
+				s.Require().NoError(err)
 			}
 
 			if tt.Verify != nil {
 				err = tt.Verify(fixture)
-				require.NoError(t, err, "verification failed")
+				s.Require().NoError(err, "verification failed")
 			}
 		})
 	}
 }
 
-// TestChatArchive tests the PATCH /api/chats/{id}/archive endpoint
-func TestChatService_ArchiveChat(t *testing.T) {
+// TestArchiveChat tests the PATCH /api/chats/{id}/archive endpoint
+func (s *ChatTestSuite) TestArchiveChat() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Archive chat successfully and verify pin is removed",
@@ -250,15 +260,15 @@ func TestChatService_ArchiveChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.PATCH("/api/chats/2202/archive", nil)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 204, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(204, resp.StatusCode)
 				return nil
 			},
 			Verify: func(f *TestFixture) error {
 				chat, err := f.TestDB.ChatRepo.GetByUsers(f.Ctx, 2201, 2202)
-				require.NoError(f.T, err)
-				require.True(f.T, chat.Archived, "expected chat to be archived")
-				require.False(f.T, chat.Pinned, "expected pin to be removed when archiving")
+				s.Require().NoError(err)
+				s.Require().True(chat.Archived, "expected chat to be archived")
+				s.Require().False(chat.Pinned, "expected pin to be removed when archiving")
 				return nil
 			},
 			ExpectError: false,
@@ -266,30 +276,30 @@ func TestChatService_ArchiveChat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
-			require.NoError(t, err, "setup failed")
+			s.Require().NoError(err, "setup failed")
 
 			err = tt.Test(fixture)
 			if tt.ExpectError {
-				require.Error(t, err)
+				s.Require().Error(err)
 			} else {
-				require.NoError(t, err)
+				s.Require().NoError(err)
 			}
 
 			if tt.Verify != nil {
 				err = tt.Verify(fixture)
-				require.NoError(t, err, "verification failed")
+				s.Require().NoError(err, "verification failed")
 			}
 		})
 	}
 }
 
-// TestChatUnarchive tests the PATCH /api/chats/{id}/unarchive endpoint
-func TestChatService_UnarchiveChat(t *testing.T) {
+// TestUnarchiveChat tests the PATCH /api/chats/{id}/unarchive endpoint
+func (s *ChatTestSuite) TestUnarchiveChat() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Unarchive archived chat successfully",
@@ -313,14 +323,14 @@ func TestChatService_UnarchiveChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.PATCH("/api/chats/2602/unarchive", nil)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 204, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(204, resp.StatusCode)
 				return nil
 			},
 			Verify: func(f *TestFixture) error {
 				chat, err := f.TestDB.ChatRepo.GetByUsers(f.Ctx, 2601, 2602)
-				require.NoError(f.T, err)
-				require.False(f.T, chat.Archived, "expected chat to be unarchived")
+				s.Require().NoError(err)
+				s.Require().False(chat.Archived, "expected chat to be unarchived")
 				return nil
 			},
 			ExpectError: false,
@@ -328,30 +338,30 @@ func TestChatService_UnarchiveChat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestChatDelete tests the DELETE /api/chats/{id}/delete endpoint
-func TestChatService_DeleteChat(t *testing.T) {
+// TestDeleteChat tests the DELETE /api/chats/{id}/delete endpoint
+func (s *ChatTestSuite) TestDeleteChat() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Delete chat successfully",
@@ -368,13 +378,13 @@ func TestChatService_DeleteChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.DELETE("/api/chats/2302/delete")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 204, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(204, resp.StatusCode)
 				return nil
 			},
 			Verify: func(f *TestFixture) error {
 				chat, err := f.TestDB.ChatRepo.GetByUsers(f.Ctx, 2301, 2302)
-				require.True(f.T, chat == nil || err != nil, "expected chat to be deleted or not found")
+				s.Require().True(chat == nil || err != nil, "expected chat to be deleted or not found")
 				return nil
 			},
 			ExpectError: false,
@@ -382,30 +392,30 @@ func TestChatService_DeleteChat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestChatClear tests the DELETE /api/chats/{id}/clear endpoint
-func TestChatService_ClearChat(t *testing.T) {
+// TestClearChat tests the DELETE /api/chats/{id}/clear endpoint
+func (s *ChatTestSuite) TestClearChat() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Clear chat message history successfully",
@@ -422,14 +432,14 @@ func TestChatService_ClearChat(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.DELETE("/api/chats/2402/clear")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 204, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(204, resp.StatusCode)
 				return nil
 			},
 			Verify: func(f *TestFixture) error {
 				chat, err := f.TestDB.ChatRepo.GetByUsers(f.Ctx, 2401, 2402)
-				require.NoError(f.T, err)
-				require.NotNil(f.T, chat.ClearedAt, "expected ClearedAt to be set")
+				s.Require().NoError(err)
+				s.Require().NotNil(chat.ClearedAt, "expected ClearedAt to be set")
 				return nil
 			},
 			ExpectError: false,
@@ -437,24 +447,29 @@ func TestChatService_ClearChat(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
+}
+
+// TestChatService runs all chat tests
+func TestChatService(t *testing.T) {
+	suite.Run(t, new(ChatTestSuite))
 }

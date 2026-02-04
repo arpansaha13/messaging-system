@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
-	"testing"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"gorm.io/driver/postgres"
@@ -23,19 +22,21 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 )
 
-var (
-	globalContainer       testcontainers.Container
-	globalDB              *gorm.DB
-	globalCtx             context.Context
-	globalHTTPServer      *http.Server
-	globalHTTPServerAddr  string
-	globalAuthServiceMock *mocks.MockAuthService
-)
+// BaseTestSuite provides common test setup and teardown for all test suites
+type BaseTestSuite struct {
+	suite.Suite
+	Container       testcontainers.Container
+	DB              *gorm.DB
+	Ctx             context.Context
+	HTTPServerAddr  string
+	HTTPServer      *http.Server
+	AuthServiceMock *mocks.MockAuthService
+}
 
-// TestMain sets up shared database for all tests
-func TestMain(m *testing.M) {
+// SetupSuite initializes the test environment (runs once before all tests)
+func (s *BaseTestSuite) SetupSuite() {
 	ctx := context.Background()
-	globalCtx = ctx
+	s.Ctx = ctx
 
 	// Start PostgreSQL container
 	req := testcontainers.ContainerRequest{
@@ -55,27 +56,15 @@ func TestMain(m *testing.M) {
 		ContainerRequest: req,
 		Started:          true,
 	})
-	if err != nil {
-		fmt.Printf("Failed to start container: %v\n", err)
-		os.Exit(1)
-	}
-
-	globalContainer = container
+	s.Require().NoError(err, "Failed to start PostgreSQL container")
+	s.Container = container
 
 	// Get container host and port
 	host, err := container.Host(ctx)
-	if err != nil {
-		fmt.Printf("Failed to get host: %v\n", err)
-		globalContainer.Terminate(ctx)
-		os.Exit(1)
-	}
+	s.Require().NoError(err, "Failed to get container host")
 
 	port, err := container.MappedPort(ctx, "5432")
-	if err != nil {
-		fmt.Printf("Failed to get port: %v\n", err)
-		globalContainer.Terminate(ctx)
-		os.Exit(1)
-	}
+	s.Require().NoError(err, "Failed to get container port")
 
 	// Connect to database
 	dsn := fmt.Sprintf(
@@ -84,35 +73,46 @@ func TestMain(m *testing.M) {
 	)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		fmt.Printf("Failed to connect to database: %v\n", err)
-		globalContainer.Terminate(ctx)
-		os.Exit(1)
-	}
-
-	globalDB = db
+	s.Require().NoError(err, "Failed to connect to database")
+	s.DB = db
 
 	// Run migrations
-	if err := migrateDatabase(db); err != nil {
-		fmt.Printf("Failed to run migrations: %v\n", err)
-		globalContainer.Terminate(ctx)
-		os.Exit(1)
-	}
+	err = migrateDatabase(db)
+	s.Require().NoError(err, "Failed to run migrations")
 
 	// Setup HTTP server with mocked auth service
-	if err := setupHTTPServer(ctx, db); err != nil {
-		fmt.Printf("Failed to setup HTTP server: %v\n", err)
-		globalContainer.Terminate(ctx)
-		os.Exit(1)
+	err = s.setupHTTPServer(ctx, db)
+	s.Require().NoError(err, "Failed to setup HTTP server")
+}
+
+// TearDownSuite cleans up the test environment (runs once after all tests)
+func (s *BaseTestSuite) TearDownSuite() {
+	if s.HTTPServer != nil {
+		s.HTTPServer.Shutdown(s.Ctx)
+	}
+	if s.Container != nil {
+		s.Container.Terminate(s.Ctx)
+	}
+}
+
+// CleanupTablesForSuite truncates all tables for test isolation (called by SetupTest in child suites)
+func (s *BaseTestSuite) CleanupTablesForSuite() {
+	tables := []string{
+		"user_profiles",
+		"chats",
+		"messages",
+		"message_recipients",
+		"channels",
+		"groups",
+		"user_groups",
+		"contacts",
+		"invites",
 	}
 
-	// Run tests
-	code := m.Run()
-
-	// Cleanup
-	globalHTTPServer.Shutdown(ctx)
-	globalContainer.Terminate(ctx)
-	os.Exit(code)
+	for _, table := range tables {
+		err := s.DB.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error
+		s.Require().NoError(err, "Failed to truncate table %s", table)
+	}
 }
 
 // migrateDatabase runs all database migrations
@@ -130,51 +130,10 @@ func migrateDatabase(db *gorm.DB) error {
 	)
 }
 
-// CleanupTables truncates all tables to ensure test isolation
-func CleanupTables(t *testing.T) {
-	tables := []string{
-		"user_profiles",
-		"chats",
-		"messages",
-		"message_recipients",
-		"channels",
-		"groups",
-		"user_groups",
-		"contacts",
-		"invites",
-	}
-
-	for _, table := range tables {
-		if err := globalDB.Exec(fmt.Sprintf("TRUNCATE TABLE %s CASCADE", table)).Error; err != nil {
-			t.Fatalf("Failed to truncate table %s: %v", table, err)
-		}
-	}
-}
-
-// GetTestDB returns a new test database wrapper
-func GetTestDB(t *testing.T) *TestDB {
-	return NewTestDB(globalCtx, globalDB)
-}
-
-// GetGlobalContext returns the global context
-func GetGlobalContext() context.Context {
-	return globalCtx
-}
-
-// GetHTTPServerAddr returns the HTTP server address for making requests
-func GetHTTPServerAddr() string {
-	return globalHTTPServerAddr
-}
-
-// GetAuthServiceMock returns the mock auth service
-func GetAuthServiceMock() *mocks.MockAuthService {
-	return globalAuthServiceMock
-}
-
 // setupHTTPServer sets up the HTTP server with mocked auth service
-func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
+func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	// Create mock auth service
-	globalAuthServiceMock = mocks.NewMockAuthService()
+	s.AuthServiceMock = mocks.NewMockAuthService()
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
@@ -211,7 +170,7 @@ func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	router.Use(middleware.ErrorMiddleware)
 
 	// Create mock auth service client and auth middleware
-	mockAuthClient := mocks.NewMockAuthServiceClient(globalAuthServiceMock)
+	mockAuthClient := mocks.NewMockAuthServiceClient(s.AuthServiceMock)
 	authMiddlewareFunc := middleware.AuthMiddleware(mockAuthClient)
 
 	// Protected router with auth middleware
@@ -239,13 +198,13 @@ func setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 
-	globalHTTPServerAddr = "http://" + listener.Addr().String()
-	globalHTTPServer = &http.Server{
+	s.HTTPServerAddr = "http://" + listener.Addr().String()
+	s.HTTPServer = &http.Server{
 		Handler: router,
 	}
 
 	go func() {
-		if err := globalHTTPServer.Serve(listener); err != nil && err != http.ErrServerClosed {
+		if err := s.HTTPServer.Serve(listener); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("HTTP server error: %v\n", err)
 		}
 	}()

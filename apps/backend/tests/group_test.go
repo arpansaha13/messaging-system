@@ -3,11 +3,21 @@ package tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestGroupCreate tests the POST /api/groups endpoint
-func TestGroupService_CreateGroup(t *testing.T) {
+// GroupTestSuite is a test suite for group endpoints
+type GroupTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *GroupTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestCreateGroup tests the POST /api/groups endpoint
+func (s *GroupTestSuite) TestCreateGroup() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Create group successfully",
@@ -24,13 +34,13 @@ func TestGroupService_CreateGroup(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/groups", req)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 201, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(201, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.Equal(f.T, "Test Group", result["name"], "group name mismatch")
+				s.Require().NoError(err)
+				s.Require().Equal("Test Group", result["name"], "group name mismatch")
 
 				return nil
 			},
@@ -51,14 +61,14 @@ func TestGroupService_CreateGroup(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/groups", req)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 				// Handler may accept empty names - adjust expectation if it does
 				// Just verify we get a response
-				require.True(f.T, resp.StatusCode >= 200 && resp.StatusCode < 600, "expected valid HTTP response")
+				s.Require().True(resp.StatusCode >= 200 && resp.StatusCode < 600, "expected valid HTTP response")
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
 				return nil
 			},
@@ -67,30 +77,30 @@ func TestGroupService_CreateGroup(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestGroupGet tests the GET /api/groups endpoint
-func TestGroupService_GetGroups(t *testing.T) {
+// TestGetGroups tests the GET /api/groups endpoint
+func (s *GroupTestSuite) TestGetGroups() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get all groups",
@@ -111,13 +121,13 @@ func TestGroupService_GetGroups(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/groups")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, result, "expected groups in response")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(result, "expected groups in response")
 
 				return nil
 			},
@@ -134,13 +144,13 @@ func TestGroupService_GetGroups(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/groups")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotNil(f.T, result, "expected array, not nil")
+				s.Require().NoError(err)
+				s.Require().NotNil(result, "expected array, not nil")
 
 				return nil
 			},
@@ -149,24 +159,29 @@ func TestGroupService_GetGroups(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
+}
+
+// TestGroupService runs all group tests
+func TestGroupService(t *testing.T) {
+	suite.Run(t, new(GroupTestSuite))
 }

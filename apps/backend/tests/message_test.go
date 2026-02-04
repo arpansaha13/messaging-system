@@ -5,11 +5,21 @@ import (
 	"testing"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestMessageGet tests the GET /api/messages/{id} endpoint
-func TestMessageService_GetMessages(t *testing.T) {
+// MessageTestSuite is a test suite for message endpoints
+type MessageTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *MessageTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestGetMessages tests the GET /api/messages/{id} endpoint
+func (s *MessageTestSuite) TestGetMessages() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get personal messages between users",
@@ -42,13 +52,13 @@ func TestMessageService_GetMessages(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/messages/" + strconv.FormatInt(1202, 10))
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, result, "expected messages in response")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(result, "expected messages in response")
 				return nil
 			},
 			ExpectError: false,
@@ -68,13 +78,13 @@ func TestMessageService_GetMessages(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/messages/" + strconv.FormatInt(1212, 10))
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotNil(f.T, result, "expected empty array, not nil")
+				s.Require().NoError(err)
+				s.Require().NotNil(result, "expected empty array, not nil")
 
 				return nil
 			},
@@ -83,30 +93,30 @@ func TestMessageService_GetMessages(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestMessageMarkDelivered tests the POST /api/messages/status/delivered endpoint
-func TestMessageService_MarkDelivered(t *testing.T) {
+// TestMarkDelivered tests the POST /api/messages/status/delivered endpoint
+func (s *MessageTestSuite) TestMarkDelivered() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Mark message as delivered (RabbitMQ unavailable returns 500)",
@@ -136,8 +146,8 @@ func TestMessageService_MarkDelivered(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/messages/status/delivered", req)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 500, resp.StatusCode, "expected status 500 when RabbitMQ unavailable")
+				s.Require().NoError(err)
+				s.Require().Equal(500, resp.StatusCode, "expected status 500 when RabbitMQ unavailable")
 				return nil
 			},
 			ExpectError: false,
@@ -145,30 +155,30 @@ func TestMessageService_MarkDelivered(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
 }
 
-// TestMessageMarkRead tests the POST /api/messages/status/read endpoint
-func TestMessageService_MarkRead(t *testing.T) {
+// TestMarkRead tests the POST /api/messages/status/read endpoint
+func (s *MessageTestSuite) TestMarkRead() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Mark message as read (RabbitMQ unavailable returns 500)",
@@ -198,8 +208,8 @@ func TestMessageService_MarkRead(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/messages/status/read", req)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 500, resp.StatusCode, "expected status 500 when RabbitMQ unavailable")
+				s.Require().NoError(err)
+				s.Require().Equal(500, resp.StatusCode, "expected status 500 when RabbitMQ unavailable")
 				return nil
 			},
 			ExpectError: false,
@@ -207,24 +217,29 @@ func TestMessageService_MarkRead(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 
 			if tt.Verify != nil {
 				if err := tt.Verify(fixture); err != nil {
-					t.Errorf("verification failed: %v", err)
+					s.T().Errorf("verification failed: %v", err)
 				}
 			}
 		})
 	}
+}
+
+// TestMessageService runs all message tests
+func TestMessageService(t *testing.T) {
+	suite.Run(t, new(MessageTestSuite))
 }

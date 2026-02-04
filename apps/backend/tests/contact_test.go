@@ -3,11 +3,21 @@ package tests
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestContactAdd tests the POST /api/contacts endpoint
-func TestContactService_AddContact(t *testing.T) {
+// ContactTestSuite is a test suite for contact endpoints
+type ContactTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *ContactTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestAddContact tests the POST /api/contacts endpoint
+func (s *ContactTestSuite) TestAddContact() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Add contact successfully",
@@ -28,13 +38,13 @@ func TestContactService_AddContact(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/contacts", req)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 201, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(201, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotNil(f.T, result["id"], "expected contact in response")
+				s.Require().NoError(err)
+				s.Require().NotNil(result["id"], "expected contact in response")
 
 				return nil
 			},
@@ -55,8 +65,8 @@ func TestContactService_AddContact(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/contacts", req)
-				require.NoError(f.T, err)
-				require.GreaterOrEqual(f.T, resp.StatusCode, 400, "expected error status")
+				s.Require().NoError(err)
+				s.Require().GreaterOrEqual(resp.StatusCode, 400, "expected error status")
 
 				return nil
 			},
@@ -65,24 +75,24 @@ func TestContactService_AddContact(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
 }
 
-// TestContactGet tests the GET /api/contacts endpoint
-func TestContactService_GetContacts(t *testing.T) {
+// TestGetContacts tests the GET /api/contacts endpoint
+func (s *ContactTestSuite) TestGetContacts() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get contacts for user with contacts",
@@ -102,13 +112,13 @@ func TestContactService_GetContacts(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/contacts")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, result, "expected contacts in response")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(result, "expected contacts in response")
 
 				return nil
 			},
@@ -125,13 +135,13 @@ func TestContactService_GetContacts(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/contacts")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotNil(f.T, result, "expected empty array, not nil")
+				s.Require().NoError(err)
+				s.Require().NotNil(result, "expected empty array, not nil")
 
 				return nil
 			},
@@ -140,18 +150,23 @@ func TestContactService_GetContacts(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
+}
+
+// TestContactService runs all contact tests
+func TestContactService(t *testing.T) {
+	suite.Run(t, new(ContactTestSuite))
 }

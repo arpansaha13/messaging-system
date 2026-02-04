@@ -4,11 +4,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestInviteFindByHash tests the GET /api/invites/:hash endpoint
-func TestInviteService_FindByHash(t *testing.T) {
+// InviteTestSuite is a test suite for invite endpoints
+type InviteTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *InviteTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestFindByHash tests the GET /api/invites/:hash endpoint
+func (s *InviteTestSuite) TestFindByHash() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Find invite by hash successfully",
@@ -29,13 +39,13 @@ func TestInviteService_FindByHash(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/invites/abc123")
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.Equal(f.T, "abc123", result["hash"], "expected hash to match")
+				s.Require().NoError(err)
+				s.Require().Equal("abc123", result["hash"], "expected hash to match")
 
 				return nil
 			},
@@ -51,8 +61,8 @@ func TestInviteService_FindByHash(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/invites/invaldhash")
-				require.NoError(f.T, err)
-				require.GreaterOrEqual(f.T, resp.StatusCode, 400, "expected error status")
+				s.Require().NoError(err)
+				s.Require().GreaterOrEqual(resp.StatusCode, 400, "expected error status")
 
 				return nil
 			},
@@ -61,24 +71,24 @@ func TestInviteService_FindByHash(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
 }
 
-// TestInviteAccept tests the POST /api/invites/:hash/accept endpoint
-func TestInviteService_AcceptInvite(t *testing.T) {
+// TestAcceptInvite tests the POST /api/invites/:hash/accept endpoint
+func (s *InviteTestSuite) TestAcceptInvite() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Accept invite successfully",
@@ -102,13 +112,13 @@ func TestInviteService_AcceptInvite(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.POST("/api/invites/hashaccept/accept", nil)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, result["groupId"], "expected group ID in response")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(result["groupId"], "expected group ID in response")
 
 				return nil
 			},
@@ -124,8 +134,8 @@ func TestInviteService_AcceptInvite(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.POST("/api/invites/invalidhash/accept", nil)
-				require.NoError(f.T, err)
-				require.GreaterOrEqual(f.T, resp.StatusCode, 400, "expected error status")
+				s.Require().NoError(err)
+				s.Require().GreaterOrEqual(resp.StatusCode, 400, "expected error status")
 
 				return nil
 			},
@@ -134,24 +144,24 @@ func TestInviteService_AcceptInvite(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
 }
 
 // TestCreateInvite tests the POST /api/groups/:groupId/invites endpoint
-func TestInviteService_CreateInvite(t *testing.T) {
+func (s *InviteTestSuite) TestCreateInvite() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Create invite successfully",
@@ -168,24 +178,24 @@ func TestInviteService_CreateInvite(t *testing.T) {
 			Test: func(f *TestFixture) error {
 				// Get group ID from database
 				resp, err := f.HTTPClient.GET("/api/groups")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
 				var groups []map[string]any
 				err = ReadResponseBody(resp, &groups)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, groups, "no groups found")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(groups, "no groups found")
 
 				groupID := int64(groups[0]["id"].(float64))
 				groupIDStr := fmt.Sprintf("%d", groupID)
 
 				inviteResp, err := f.HTTPClient.POST("/api/groups/"+groupIDStr+"/invites", nil)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 201, inviteResp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(201, inviteResp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(inviteResp, &result)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, result["hash"], "expected hash in response")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(result["hash"], "expected hash in response")
 
 				return nil
 			},
@@ -194,24 +204,24 @@ func TestInviteService_CreateInvite(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
 }
 
 // TestJoinGroup tests the POST /api/groups/join endpoint
-func TestInviteService_JoinGroup(t *testing.T) {
+func (s *InviteTestSuite) TestJoinGroup() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Join group successfully with invite hash",
@@ -239,13 +249,13 @@ func TestInviteService_JoinGroup(t *testing.T) {
 				}
 
 				resp, err := f.HTTPClient.POST("/api/groups/join", req)
-				require.NoError(f.T, err)
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotEmpty(f.T, result["groupId"], "expected group ID in response")
+				s.Require().NoError(err)
+				s.Require().NotEmpty(result["groupId"], "expected group ID in response")
 
 				return nil
 			},
@@ -254,18 +264,23 @@ func TestInviteService_JoinGroup(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
+}
+
+// TestInviteService runs all invite tests
+func TestInviteService(t *testing.T) {
+	suite.Run(t, new(InviteTestSuite))
 }

@@ -26,20 +26,23 @@ type TestFixture struct {
 	TestDB     *TestDB
 }
 
-// NewTestFixture creates a new test fixture for a test
-func NewTestFixture(t *testing.T) *TestFixture {
+// NewTestFixture creates a new test fixture for a test (for use with new suite pattern)
+func NewTestFixture(t *testing.T, db *gorm.DB, httpServerAddr string, authServiceMock *mocks.MockAuthService) *TestFixture {
+	httpHelper := NewHTTPTestHelper(httpServerAddr)
+	httpHelper.SetAuthMock(authServiceMock)
 	return &TestFixture{
 		T:          t,
-		Ctx:        GetGlobalContext(),
-		DB:         globalDB,
-		HTTPClient: NewHTTPTestHelper(GetHTTPServerAddr()),
-		TestDB:     GetTestDB(t),
+		Ctx:        context.Background(),
+		DB:         db,
+		HTTPClient: httpHelper,
+		TestDB:     NewTestDB(context.Background(), db),
 	}
 }
 
 // Setup prepares the fixture for a test (cleans tables)
 func (f *TestFixture) Setup() {
-	CleanupTables(f.T)
+	// Setup is now called after SetupTest which handles cleanup via s.CleanupTablesForSuite()
+	// This method is kept for compatibility but does not need to do anything
 }
 
 // SetUserID sets the authenticated user ID for HTTP requests
@@ -231,6 +234,7 @@ type HTTPTestHelper struct {
 	BaseURL    string
 	Token      string
 	HTTPClient *http.Client
+	AuthMock   *mocks.MockAuthService
 }
 
 // NewHTTPTestHelper creates a new HTTP test helper
@@ -239,6 +243,7 @@ func NewHTTPTestHelper(baseURL string) *HTTPTestHelper {
 		BaseURL:    baseURL,
 		Token:      "test-token",
 		HTTPClient: &http.Client{},
+		AuthMock:   nil,
 	}
 }
 
@@ -247,9 +252,22 @@ func (h *HTTPTestHelper) SetToken(token string) {
 	h.Token = token
 }
 
+// SetAuthMock sets the auth mock service for use with suite pattern
+func (h *HTTPTestHelper) SetAuthMock(authMock *mocks.MockAuthService) {
+	h.AuthMock = authMock
+}
+
 // SetUserID sets the user ID in the mock auth service
 func (h *HTTPTestHelper) SetUserID(userID int64) {
-	authMock := GetAuthServiceMock()
+	var authMock *mocks.MockAuthService
+
+	// Use the AuthMock if set (which is required with new suite pattern)
+	if h.AuthMock != nil {
+		authMock = h.AuthMock
+	} else {
+		return // No auth mock available - required when using suite pattern
+	}
+
 	authMock.SetValidateSessionResponse(h.Token, &mocks.ValidateSessionResponse{
 		Valid:  true,
 		UserID: userID,

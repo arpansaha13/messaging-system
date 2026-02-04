@@ -4,11 +4,21 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
-// TestUserGetMe tests the GET /api/users/me endpoint
-func TestUserService_GetMe(t *testing.T) {
+// UserTestSuite is a test suite for user endpoints
+type UserTestSuite struct {
+	BaseTestSuite
+}
+
+// SetupTest prepares each test (cleans tables)
+func (s *UserTestSuite) SetupTest() {
+	s.CleanupTablesForSuite()
+}
+
+// TestGetMe tests the GET /api/users/me endpoint
+func (s *UserTestSuite) TestGetMe() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get authenticated user profile",
@@ -21,15 +31,15 @@ func TestUserService_GetMe(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/users/me")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, "Test User Me", result["globalName"])
+				s.Require().Equal("Test User Me", result["globalName"])
 
 				return nil
 			},
@@ -38,24 +48,24 @@ func TestUserService_GetMe(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
 }
 
-// TestUserSearch tests the GET /api/users/search endpoint
-func TestUserService_SearchUsers(t *testing.T) {
+// TestSearchUsers tests the GET /api/users/search endpoint
+func (s *UserTestSuite) TestSearchUsers() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Search user profiles successfully",
@@ -71,15 +81,15 @@ func TestUserService_SearchUsers(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/users/search?q=Search")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.NotEmpty(f.T, result, "expected users in search results")
+				s.Require().NotEmpty(result, "expected users in search results")
 
 				return nil
 			},
@@ -96,14 +106,14 @@ func TestUserService_SearchUsers(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/users/search?q=")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
-				require.NotNil(f.T, result, "expected array response")
+				s.Require().NoError(err)
+				s.Require().NotNil(result, "expected array response")
 
 				return nil
 			},
@@ -120,16 +130,16 @@ func TestUserService_SearchUsers(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/users/search?q=NonexistentUser123")
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result []any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
 				// Empty array is acceptable
-				require.NotNil(f.T, result, "expected empty array, not nil")
+				s.Require().NotNil(result, "expected empty array, not nil")
 
 				return nil
 			},
@@ -138,24 +148,24 @@ func TestUserService_SearchUsers(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
 }
 
-// TestUserGetProfile tests the GET /api/users/{id} endpoint
-func TestUserService_GetProfile(t *testing.T) {
+// TestGetProfile tests the GET /api/users/{id} endpoint
+func (s *UserTestSuite) TestGetProfile() {
 	tests := []TableDrivenTestCase{
 		{
 			Name: "Get user profile by ID successfully",
@@ -172,15 +182,15 @@ func TestUserService_GetProfile(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/users/" + strconv.FormatInt(5022, 10))
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, 200, resp.StatusCode)
+				s.Require().Equal(200, resp.StatusCode)
 
 				var result map[string]any
 				err = ReadResponseBody(resp, &result)
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.Equal(f.T, "Profile User", result["globalName"])
+				s.Require().Equal("Profile User", result["globalName"])
 
 				return nil
 			},
@@ -197,9 +207,9 @@ func TestUserService_GetProfile(t *testing.T) {
 			},
 			Test: func(f *TestFixture) error {
 				resp, err := f.HTTPClient.GET("/api/users/" + strconv.FormatInt(99999, 10))
-				require.NoError(f.T, err)
+				s.Require().NoError(err)
 
-				require.GreaterOrEqual(f.T, resp.StatusCode, 400, "expected error status for non-existent user")
+				s.Require().GreaterOrEqual(resp.StatusCode, 400, "expected error status for non-existent user")
 
 				return nil
 			},
@@ -208,18 +218,23 @@ func TestUserService_GetProfile(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.Name, func(t *testing.T) {
-			fixture := NewTestFixture(t)
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
-				t.Fatalf("setup failed: %v", err)
+				s.T().Fatalf("setup failed: %v", err)
 			}
 
 			err := tt.Test(fixture)
 			if (err != nil) != tt.ExpectError {
-				t.Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
+				s.T().Errorf("test failed: got error %v, want error %v", err, tt.ExpectError)
 			}
 		})
 	}
+}
+
+// TestUserService runs all user tests
+func TestUserService(t *testing.T) {
+	suite.Run(t, new(UserTestSuite))
 }
