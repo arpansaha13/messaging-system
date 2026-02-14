@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestErrorMiddleware_ValidationError(t *testing.T) {

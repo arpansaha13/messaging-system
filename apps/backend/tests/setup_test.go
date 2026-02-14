@@ -14,12 +14,12 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // BaseTestSuite provides common test setup and teardown for all test suites

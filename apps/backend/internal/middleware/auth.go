@@ -7,9 +7,9 @@ import (
 	"strconv"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 const (

@@ -7,9 +7,9 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupUserGroupRoutes sets up user group routes

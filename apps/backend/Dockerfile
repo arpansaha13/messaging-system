@@ -3,7 +3,11 @@ FROM golang:1.25-alpine AS builder
 # Add required build dependencies
 RUN apk add --no-cache gcc musl-dev
 
-WORKDIR /app
+WORKDIR /app/common
+
+COPY apps/common ./
+
+WORKDIR /app/backend
 
 # https://medium.com/@marcin.niemira/optimise-docker-build-for-go-c03d6eb8b4b
 
@@ -28,7 +32,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy binary from builder
-COPY --from=builder /app/server .
+COPY --from=builder /app/backend/server .
 
 EXPOSE 4000
 

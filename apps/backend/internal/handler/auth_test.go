@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestAuthHandler_Signup(t *testing.T) {

@@ -1,8 +1,10 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -39,19 +41,26 @@ func (s *UserGroupTestSuite) TestGetMembers() {
 				}
 
 				// Create group
-				if _, err := f.TestDB.CreateTestGroup("Group with Members", ownerID); err != nil {
+				group, err := f.TestDB.CreateTestGroup("Group with Members", ownerID)
+				if err != nil {
 					return err
 				}
 
-				// Add members to group
-				if _, err := f.TestDB.CreateTestUserGroup(member1ID, int64(6111), "member"); err != nil {
+				// Add members to group using actual group ID
+				if _, err := f.TestDB.CreateTestUserGroup(member1ID, group.ID, "member"); err != nil {
 					return err
 				}
-				_, err := f.TestDB.CreateTestUserGroup(member2ID, int64(6111), "member")
+				_, err = f.TestDB.CreateTestUserGroup(member2ID, group.ID, "member")
 				return err
 			},
 			Test: func(f *TestFixture) error {
-				resp, err := f.HTTPClient.GET("/api/groups/6111/members")
+				// Retrieve the auto-generated group ID from the database
+				var group domain.Group
+				if err := f.DB.Where("name = ?", "Group with Members").First(&group).Error; err != nil {
+					return err
+				}
+
+				resp, err := f.HTTPClient.GET(fmt.Sprintf("/api/groups/%d/members", group.ID))
 				s.Require().NoError(err)
 
 				s.Require().Equal(200, resp.StatusCode)
@@ -80,7 +89,13 @@ func (s *UserGroupTestSuite) TestGetMembers() {
 				return err
 			},
 			Test: func(f *TestFixture) error {
-				resp, err := f.HTTPClient.GET("/api/groups/6112/members")
+				// Retrieve the group ID from the database
+				var group domain.Group
+				if err := f.DB.Where("name = ?", "Empty Group").First(&group).Error; err != nil {
+					return err
+				}
+
+				resp, err := f.HTTPClient.GET(fmt.Sprintf("/api/groups/%d/members", group.ID))
 				s.Require().NoError(err)
 
 				s.Require().Equal(200, resp.StatusCode)

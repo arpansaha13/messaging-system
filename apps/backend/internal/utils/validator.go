@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // Validator provides validation utilities

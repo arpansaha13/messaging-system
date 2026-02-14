@@ -3,6 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/backend
 go 1.25
 
 require (
+	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/gorilla/mux v1.8.1
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/streadway/amqp v1.1.0
@@ -79,3 +80,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260202165425-ce8ad4cf556b // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/arpansaha13/messaging-system/apps/common => ../common

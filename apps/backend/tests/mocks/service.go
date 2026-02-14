@@ -3,9 +3,9 @@ package mocks
 import (
 	"context"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // MockContactService is a mock implementation of IContactService

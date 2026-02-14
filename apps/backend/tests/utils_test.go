@@ -11,10 +11,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // TestFixture represents a common test fixture for all test cases

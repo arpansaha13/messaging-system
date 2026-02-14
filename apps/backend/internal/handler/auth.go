@@ -9,9 +9,9 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)

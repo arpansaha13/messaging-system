@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestInviteService_CreateInvite(t *testing.T) {

@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // ChatWithReceiverInfo holds chat data with receiver user profile info

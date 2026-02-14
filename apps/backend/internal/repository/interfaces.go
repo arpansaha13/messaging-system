@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
+	domain "github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // UserRepository defines the interface for user repository operations

@@ -3,12 +3,12 @@ package domain
 import "time"
 
 // MessageStatus represents the status of a message delivery
-type MessageStatus int
+type MessageStatus int8
 
 const (
-	MessageStatusSent      MessageStatus = 1
-	MessageStatusDelivered MessageStatus = 2
-	MessageStatusRead      MessageStatus = 3
+	MessageStatusSent MessageStatus = iota + 1
+	MessageStatusDelivered
+	MessageStatusRead
 )
 
 // Now returns the current time in UTC
@@ -25,43 +25,44 @@ type AuthUser struct {
 	Verified bool   `json:"verified"`
 }
 
-// UserProfile represents a user in the system
+// UserProfile represents a user profile in the system
+// The actual user data (email, username, etc.) is managed by the auth microservice
 type UserProfile struct {
-	ID         int64   `gorm:"primaryKey"`
-	GlobalName string  `gorm:"not null"`
-	DP         *string // Display picture URL
-	Bio        string  `gorm:"default:'Hey there!'"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	DeletedAt  *time.Time `gorm:"index"`
+	ID         int64      `gorm:"primaryKey" json:"id"`
+	GlobalName string     `gorm:"not null" json:"global_name"`
+	DP         *string    `json:"dp"`
+	Bio        string     `gorm:"default:'Hey there!'" json:"bio"`
+	CreatedAt  time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt  time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt  *time.Time `json:"deleted_at,omitempty"`
 }
 
-// Message represents a message sent by a user
+// Message represents a message in a chat or group
 type Message struct {
 	ID        int64 `gorm:"primaryKey"`
 	SenderID  int64 `gorm:"index"`
 	Sender    *UserProfile
 	ChannelID *int64 `gorm:"index"` // Null for personal messages
 	Channel   *Channel
-	Content   string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
+	Content   string    `gorm:"type:text"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	DeletedAt *time.Time
 }
 
 // MessageRecipient tracks delivery status of a message to a recipient
 type MessageRecipient struct {
-	ID         int64 `gorm:"primaryKey"`
-	MessageID  int64 `gorm:"index"`
+	ID         int64 `gorm:"primaryKey" json:"id"`
+	MessageID  int64 `gorm:"index" json:"message_id"`
 	Message    *Message
-	ReceiverID int64 `gorm:"index"`
+	ReceiverID int64 `gorm:"index" json:"receiver_id"`
 	Receiver   *UserProfile
-	Status     MessageStatus `gorm:"type:smallint"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	Status     MessageStatus `gorm:"type:smallint;default:1" json:"status"`
+	CreatedAt  time.Time     `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt  time.Time     `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
-// Chat represents a 1-to-1 direct chat between two users
+// Chat represents a 1-to-1 chat between two users
 type Chat struct {
 	ID         int64 `gorm:"primaryKey"`
 	SenderID   int64 `gorm:"index"`
@@ -72,44 +73,20 @@ type Chat struct {
 	Pinned     bool `gorm:"default:false"`
 	Archived   bool `gorm:"default:false"`
 	ClearedAt  *time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	DeletedAt  *time.Time `gorm:"index"`
+	CreatedAt  time.Time `gorm:"autoCreateTime"`
+	UpdatedAt  time.Time `gorm:"autoUpdateTime"`
+	DeletedAt  *time.Time
 }
 
-// Group represents a group chat
-type Group struct {
-	ID        int64  `gorm:"primaryKey"`
-	Name      string `gorm:"not null"`
-	FounderID int64
-	Founder   *UserProfile
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
-}
-
-// Channel represents a channel within a group
+// Channel represents a channel in a group
 type Channel struct {
-	ID        int64  `gorm:"primaryKey"`
-	Name      string `gorm:"not null"`
-	GroupID   int64  `gorm:"index"`
+	ID        int64  `gorm:"primaryKey" json:"id"`
+	Name      string `gorm:"not null" json:"name"`
+	GroupID   int64  `gorm:"not null;index" json:"group_id"`
 	Group     *Group
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
-}
-
-// UserGroup represents membership of a user in a group
-type UserGroup struct {
-	ID        int64 `gorm:"primaryKey"`
-	UserID    int64 `gorm:"index"`
-	User      *UserProfile
-	GroupID   int64 `gorm:"index"`
-	Group     *Group
-	Role      string `gorm:"default:'member'"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time `gorm:"index"`
+	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
 // Contact represents a contact relationship between users
@@ -120,21 +97,51 @@ type Contact struct {
 	UserIDInContact int64        `gorm:"index"`
 	ContactUser     *UserProfile `gorm:"foreignKey:UserIDInContact"`
 	Alias           string       `gorm:"default:''"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	DeletedAt       *time.Time `gorm:"index"`
+	CreatedAt       time.Time    `gorm:"autoCreateTime"`
+	UpdatedAt       time.Time    `gorm:"autoUpdateTime"`
+	DeletedAt       *time.Time
 }
 
-// Invite represents a group invitation
+// Group represents a group chat
+type Group struct {
+	ID        int64  `gorm:"primaryKey"`
+	Name      string `gorm:"not null"`
+	FounderID int64  `gorm:"not null"`
+	Founder   *UserProfile
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	DeletedAt *time.Time
+}
+
+// UserGroup represents membership in a group
+type UserGroup struct {
+	ID        int64        `gorm:"primaryKey"`
+	UserID    int64        `gorm:"index"`
+	User      *UserProfile `gorm:"foreignKey:UserID;references:ID"`
+	GroupID   int64        `gorm:"index"`
+	Group     *Group
+	Role      string    `gorm:"default:'member'"`
+	CreatedAt time.Time `gorm:"autoCreateTime"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	DeletedAt *time.Time
+}
+
+// Invite represents an invitation to join a group
 type Invite struct {
-	Hash      string `gorm:"primaryKey"`
+	Hash      string `gorm:"primaryKey" json:"hash"`
 	InviterID int64  `gorm:"index"`
 	Inviter   *UserProfile
-	GroupID   *int64 `gorm:"index"`
-	Group     *Group
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	ExpiresAt *time.Time
+	GroupID   *int64     `gorm:"index"`
+	Group     *Group     `gorm:"foreignKey:GroupID;references:ID"`
+	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	ExpiresAt *time.Time `json:"expires_at"`
+}
+
+// RequestContext holds request context with authenticated user info
+type RequestContext struct {
+	UserID   int64
+	AuthUser *AuthUser
 }
 
 // TableName specifies the table name for each model

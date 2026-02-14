@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // AuthServiceClient defines the interface for auth service client operations

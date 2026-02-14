@@ -7,7 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // MessageWithStatus holds message data with delivery status from message_recipient

@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // AcceptInviteResponseDTO represents the response when accepting an invite

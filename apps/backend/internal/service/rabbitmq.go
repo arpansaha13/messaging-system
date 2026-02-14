@@ -6,7 +6,7 @@ import (
 
 	amqp "github.com/rabbitmq/amqp091-go"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 const (

@@ -5,9 +5,9 @@ import (
 	"log"
 	"sort"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // ChatItemDTO represents a chat with its latest message and receiver info
