@@ -158,22 +158,20 @@ services:
       - messaging-network
 
   chat-worker:
-    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
-    container_name: chat_worker_prod
+    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker-go/app:0.1.0
+    container_name: chat_worker_go_prod
     environment:
       ENVIRONMENT: production
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER}
-      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS}
-      DB_HOST: ${DB_HOST}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_LOGGING: "false"
-      MEMCACHED_HOST: memcached
-      MEMCACHED_PORT: 11211
     depends_on:
       - rabbitmq
     networks:

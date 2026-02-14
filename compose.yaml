@@ -224,22 +224,20 @@ services:
   chat-worker:
     build:
       context: .
-      dockerfile: apps/chat-worker/Dockerfile.dev
+      dockerfile: apps/chat-worker-go/Dockerfile
     container_name: chat-worker
     environment:
       ENVIRONMENT: development
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS:-guest}
-      DB_HOST: ${DB_HOST}
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASS: ${RABBITMQ_PASS:-guest}
+      DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
       DB_LOGGING: "true"
-      MEMCACHED_HOST: memcached
-      MEMCACHED_PORT: 11211
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -249,11 +247,12 @@ services:
       - messaging-network
     develop:
       watch:
-        - action: sync
-          path: ./apps/chat-worker/src
-          target: /app/apps/chat-worker/src
         - action: rebuild
-          path: ./apps/chat-worker/tsconfig.json
+          path: ./apps/chat-worker-go/cmd
+        - action: rebuild
+          path: ./apps/chat-worker-go/internal
+        - action: rebuild
+          path: ./apps/chat-worker-go/go.mod
 
 networks:
   messaging-network:

@@ -28,5 +28,5 @@ services:
   chat-worker:
     build:
       context: .
-      dockerfile: apps/chat-worker/Dockerfile.prod
-    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
+      dockerfile: apps/chat-worker-go/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker-go/app:0.1.0
