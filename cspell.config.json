@@ -25,6 +25,7 @@
     "gomod",
     "gomodcache",
     "gorm",
+    "gotoolkit",
     "healthcheck",
     "heroicons",
     "iconify",

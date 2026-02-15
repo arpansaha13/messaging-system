@@ -14,6 +14,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
@@ -164,9 +165,9 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	// Setup HTTP router
 	router := mux.NewRouter()
 
-	// Apply middleware in order: Recovery (outermost) -> Logging -> Error
+	// Apply middleware
 	router.Use(middleware.RecoveryMiddleware)
-	router.Use(middleware.LoggingMiddleware)
+	router.Use(logger.Middleware)
 	router.Use(middleware.ErrorMiddleware)
 
 	// Create mock auth service client and auth middleware

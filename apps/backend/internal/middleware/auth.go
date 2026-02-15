@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"go.uber.org/zap"
+
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
@@ -24,34 +27,37 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			// Get token from Authorization header or cookie
 			token := getToken(r)
 			if token == "" {
-				WriteError(w, &domain.UnauthorizedError{Message: "missing authorization token"})
+				WriteErrorWithContext(w, r.Context(), &domain.UnauthorizedError{Message: "missing authorization token"})
 				return
 			}
+
+			// Get logger from context
+			lgr := logger.FromContext(r.Context())
 
 			// Validate token with auth service
 			resp, err := authClient.ValidateSession(r.Context(), token)
 			if err != nil {
-				log.Printf("failed to validate session with auth service: %v", err)
-				WriteError(w, &domain.UnauthorizedError{Message: "invalid or expired token"})
+				lgr.Error("failed to validate session with auth service", zap.Error(err))
+				WriteErrorWithContext(w, r.Context(), &domain.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
 			if !resp.Valid {
-				WriteError(w, &domain.UnauthorizedError{Message: "invalid or expired token"})
+				WriteErrorWithContext(w, r.Context(), &domain.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
 			// Fetch user details from auth service
 			userResp, err := authClient.GetUser(r.Context(), resp.UserId, token)
 			if err != nil {
-				log.Printf("failed to fetch user details from auth service: %v", err)
-				WriteError(w, &domain.UnauthorizedError{Message: "failed to fetch user details"})
+				lgr.Error("failed to fetch user details from auth service", zap.Error(err))
+				WriteErrorWithContext(w, r.Context(), &domain.UnauthorizedError{Message: "failed to fetch user details"})
 				return
 			}
 
 			if userResp.User == nil {
-				log.Printf("user details not found in auth service response")
-				WriteError(w, &domain.UnauthorizedError{Message: "user not found"})
+				lgr.Error("user details not found in auth service response")
+				WriteErrorWithContext(w, r.Context(), &domain.UnauthorizedError{Message: "user not found"})
 				return
 			}
 
@@ -68,6 +74,10 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			ctx := context.WithValue(r.Context(), UserIDContextKey, userIDStr)
 			ctx = context.WithValue(ctx, AuthUserContextKey, authUser)
 			ctx = utils.SetTokenInContext(ctx, token)
+
+			// Add user_id to logger context
+			ctx = logger.WithFields(ctx, zap.String("user_id", userIDStr))
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

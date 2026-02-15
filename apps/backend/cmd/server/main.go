@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -21,6 +23,14 @@ import (
 )
 
 func main() {
+	// Initialize zap logger
+	zapLogger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("failed to initialize zap logger: %v", err)
+	}
+	defer zapLogger.Sync()
+	zap.ReplaceGlobals(zapLogger)
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
@@ -80,9 +90,9 @@ func main() {
 	// Setup HTTP router
 	router := mux.NewRouter()
 
-	// Apply middlewares in order: Recovery (outermost) -> Logging -> Error
+	// Apply middlewares
 	router.Use(middleware.RecoveryMiddleware)
-	router.Use(middleware.LoggingMiddleware)
+	router.Use(logger.Middleware)
 	router.Use(middleware.ErrorMiddleware)
 
 	// Authentication middleware for protected routes

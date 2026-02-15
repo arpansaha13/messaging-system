@@ -1,11 +1,15 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 
+	"go.uber.org/zap"
+
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -26,7 +30,10 @@ func ErrorMiddleware(next http.Handler) http.Handler {
 				err, ok := rec.(error)
 				if !ok {
 					// Non-error panic - treat as internal server error
-					log.Printf("panic recovered (non-error): %v, type: %T", rec, rec)
+					lgr := logger.FromContext(r.Context())
+					lgr.Error("panic recovered (non-error)",
+						zap.Any("panic_value", rec),
+					)
 					writeErrorResponse(w, http.StatusInternalServerError, "Something went wrong!", "INTERNAL_ERROR")
 					return
 				}
@@ -38,7 +45,11 @@ func ErrorMiddleware(next http.Handler) http.Handler {
 				}
 
 				// Log the full error details for debugging
-				log.Printf("error recovered: %v, type: %T, unwrapped: %v", err, err, unwrappedErr)
+				lgr := logger.FromContext(r.Context())
+				lgr.Error("error recovered",
+					zap.Error(err),
+					zap.Error(unwrappedErr),
+				)
 
 				// Map error to HTTP response
 				statusCode, message, code := errorToHTTP(unwrappedErr)
@@ -50,10 +61,11 @@ func ErrorMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// WriteError writes an error response to the client
-// This is kept for use by non-controller code (e.g., AuthMiddleware)
-func WriteError(w http.ResponseWriter, err error) {
+// WriteErrorWithContext writes an error response with logging to the client
+func WriteErrorWithContext(w http.ResponseWriter, ctx context.Context, err error) {
+	lgr := logger.FromContext(ctx)
 	statusCode, message, code := errorToHTTP(err)
+	lgr.Info("error response", zap.String("code", code), zap.Int("status", statusCode), zap.Error(err))
 	writeErrorResponse(w, statusCode, message, code)
 }
 
