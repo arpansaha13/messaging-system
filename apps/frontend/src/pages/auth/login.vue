@@ -1,21 +1,19 @@
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
-    <UPageCard class="w-full max-w-md">
-      <UAuthForm
-        ref="authForm"
-        :schema="loginSchema"
-        :fields="loginFields"
-        title="Login"
-        icon="i-lucide-lock"
-        :loading="isLoading"
-        @submit="onLogin"
-      >
-        <template #description>
-          Don't have an account? <ULink to="/auth/signup" class="font-medium">Sign up</ULink>.
-        </template>
-      </UAuthForm>
-    </UPageCard>
-  </div>
+  <UPageCard class="w-full max-w-md">
+    <UAuthForm
+      ref="authForm"
+      :schema="loginSchema"
+      :fields="loginFields"
+      title="Welcome Back"
+      icon="i-lucide-lock"
+      :loading="isLoading"
+      @submit="onLogin"
+    >
+      <template #description>
+        Don't have an account? <ULink to="/auth/signup" class="font-medium">Sign up</ULink>.
+      </template>
+    </UAuthForm>
+  </UPageCard>
 </template>
 
 <script setup lang="ts">

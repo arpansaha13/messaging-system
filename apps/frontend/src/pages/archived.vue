@@ -1,7 +1,11 @@
 <template>
   <NuxtLayout name="window">
     <template #left>
-      <UCard :ui="{ root: 'h-full', body: 'p-1.5 sm:p-1.5' }">
+      <UCard :ui="{ root: 'h-full', body: 'p-1.5 sm:p-1.5 overflow-y-auto' }">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Archived</h2>
+        </template>
+
         <div v-if="!archivedChats || archivedChats.length === 0" class="flex h-full items-center justify-center">
           <UEmpty
             icon="i-heroicons-archive-box"
@@ -11,10 +15,8 @@
         </div>
 
         <ul v-else class="space-y-1">
-          <li>
+          <li v-for="chatListItem in archivedChats" :key="chatListItem.receiver.id">
             <ChatListItem
-              v-for="chatListItem in archivedChats"
-              :key="chatListItem.receiver.id"
               :chat-list-item="chatListItem"
               :is-archived="true"
               @delete="handleDelete"

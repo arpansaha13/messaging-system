@@ -53,14 +53,14 @@ const verificationStatus = ref<VerificationStatus>('verifying')
 const errorMessage = ref('')
 
 const verificationSchema = z.object({
-  otp: z.string().min(1, 'OTP is required'),
+  code: z.string().min(1, 'OTP is required'),
 })
 
 type VerificationSchema = z.output<typeof verificationSchema>
 
 const verificationFields = [
   {
-    name: 'otp',
+    name: 'code',
     type: 'text',
     label: 'OTP',
     placeholder: 'Enter the OTP',
@@ -74,7 +74,7 @@ async function onVerify(event: FormSubmitEvent<VerificationSchema>) {
   try {
     await verifySignup({
       hash: route.params.hash as string,
-      otp: event.data.otp,
+      code: event.data.code,
     })
     verificationStatus.value = 'verified'
     toast.add({
