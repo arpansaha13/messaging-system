@@ -3,20 +3,22 @@
     <template #left>
       <UCard v-if="contacts" :ui="{ root: 'h-full flex flex-col', body: 'grow p-0 sm:p-0 overflow-y-auto' }">
         <template #header>
-          <h1 class="text-xl font-bold">Contacts</h1>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Contacts</h2>
         </template>
 
-        <!-- Contacts List -->
+        <!-- Empty State -->
         <div v-if="Object.keys(contacts).length === 0" class="flex h-full items-center justify-center">
-          <p class="text-sm text-gray-500">No contacts yet</p>
+          <UEmpty icon="i-heroicons-user-group" title="No contacts" description="Add contacts to start messaging" />
         </div>
+
+        <!-- Contacts List -->
         <template v-else>
           <div v-for="letter in Object.keys(contacts)" :key="letter">
             <!-- Letter Header -->
             <div class="sticky top-0 z-10 bg-gray-50 px-4 py-2 shadow-sm dark:bg-gray-800/50">
-              <h2 class="text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
+              <h3 class="text-sm font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
                 {{ letter }}
-              </h2>
+              </h3>
             </div>
 
             <!-- Contacts in Group -->
@@ -36,13 +38,12 @@
                           position: 'bottom-right',
                         }
                       "
-                      class="shadow-md"
+                      class="flex-shrink-0 shadow-md"
                     />
                     <div class="flex min-w-0 flex-col">
                       <p class="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                         {{ contact.alias }}
                       </p>
-                      <!-- <p class="truncate text-xs text-gray-500 dark:text-gray-400">@{{ contact.username }}</p> -->
                     </div>
                   </div>
 
@@ -60,7 +61,7 @@
                       size="sm"
                       variant="ghost"
                       icon="i-lucide-trash-2"
-                      color="error"
+                      color="red"
                       @click.stop.prevent="handleDeleteContact(contact)"
                     />
                   </div>
