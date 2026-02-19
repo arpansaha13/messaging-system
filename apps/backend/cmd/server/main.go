@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
 
 	"github.com/arpansaha13/gotoolkit/logger"
@@ -23,24 +25,38 @@ import (
 )
 
 func main() {
-	// Initialize zap logger
-	zapLogger, err := zap.NewProduction()
+	// Initialize log channel for Kafka
+	logChan := make(chan []byte, getLogChannelSize())
+
+	// Initialize logger with channel writer
+	zapLogger, err := logger.InitLoggerWithChannel(logChan)
 	if err != nil {
 		log.Fatalf("failed to initialize zap logger: %v", err)
 	}
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 
+	// Initialize Kafka writer
+	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:      []string{getKafkaBrokers()},
+		Topic:        getKafkaTopic(),
+		RequiredAcks: int(kafka.RequireAll),
+	})
+
+	// Start Kafka producer goroutine
+	kafkaCtx, kafkaCancel := context.WithCancel(context.Background())
+	go logger.KafkaLogProducer(kafkaCtx, logChan, kafkaWriter)
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		zapLogger.Fatal("failed to load config", zap.Error(err))
 	}
 
 	// Initialize database
 	db, err := utils.InitDB(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("failed to initialize database: %v", err)
+		zapLogger.Fatal("failed to initialize database", zap.Error(err))
 	}
 
 	// Initialize repositories
@@ -123,9 +139,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		log.Printf("Server started on %s", addr)
+		zapLogger.Info("Server started", zap.String("address", addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server error: %v", err)
+			zapLogger.Fatal("server error", zap.Error(err))
 		}
 	}()
 
@@ -134,20 +150,29 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	log.Println("Shutting down server...")
+	zapLogger.Info("Shutting down server...")
 
 	// Graceful shutdown with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := httpServer.Shutdown(ctx); err != nil {
-		log.Printf("server shutdown error: %v", err)
+		zapLogger.Error("server shutdown error", zap.Error(err))
 	}
+
+	// Cancel Kafka producer context
+	kafkaCancel()
+
+	// Close log channel to signal Kafka producer to stop
+	close(logChan)
+
+	// Wait a bit for Kafka producer to finish
+	time.Sleep(1 * time.Second)
 
 	// Close RabbitMQ connection
 	if rabbitmqService != nil {
 		if err := rabbitmqService.Close(); err != nil {
-			log.Printf("RabbitMQ close error: %v", err)
+			zapLogger.Error("RabbitMQ close error", zap.Error(err))
 		}
 	}
 
@@ -157,5 +182,33 @@ func main() {
 		sqlDB.Close()
 	}
 
-	log.Println("Server stopped")
+	zapLogger.Info("Server stopped")
+}
+
+func getLogChannelSize() int {
+	size := os.Getenv("KAFKA_LOG_CHANNEL_SIZE")
+	if size == "" {
+		return 1000 // Default size
+	}
+	val, err := strconv.Atoi(size)
+	if err != nil {
+		return 1000 // Default on parse error
+	}
+	return val
+}
+
+func getKafkaBrokers() string {
+	brokers := os.Getenv("KAFKA_BROKERS")
+	if brokers == "" {
+		return "kafka:9092" // Default for Docker Compose
+	}
+	return brokers
+}
+
+func getKafkaTopic() string {
+	topic := os.Getenv("KAFKA_TOPIC")
+	if topic == "" {
+		return "application-logs" // Default topic
+	}
+	return topic
 }
