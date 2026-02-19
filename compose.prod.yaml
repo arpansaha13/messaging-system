@@ -158,7 +158,7 @@ services:
       - messaging-network
 
   chat-worker:
-    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker-go/app:0.1.0
+    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
     container_name: chat_worker_go_prod
     environment:
       ENVIRONMENT: production

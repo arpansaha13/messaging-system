@@ -227,7 +227,7 @@ services:
   chat-worker:
     build:
       context: .
-      dockerfile: apps/chat-worker-go/Dockerfile
+      dockerfile: apps/chat-worker/Dockerfile
     container_name: chat-worker
     environment:
       ENVIRONMENT: development
@@ -251,11 +251,11 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/chat-worker-go/cmd
+          path: ./apps/chat-worker/cmd
         - action: rebuild
-          path: ./apps/chat-worker-go/internal
+          path: ./apps/chat-worker/internal
         - action: rebuild
-          path: ./apps/chat-worker-go/go.mod
+          path: ./apps/chat-worker/go.mod
 
   kafka:
     image: apache/kafka:3.7.0

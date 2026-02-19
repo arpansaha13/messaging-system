@@ -1,4 +1,4 @@
-module github.com/arpansaha13/messaging-system/apps/chat-worker-go
+module github.com/arpansaha13/messaging-system/apps/chat-worker
 
 go 1.25
 

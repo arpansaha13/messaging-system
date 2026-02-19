@@ -11,7 +11,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"github.com/arpansaha13/messaging-system/apps/chat-worker-go/internal/mocks"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 

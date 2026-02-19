@@ -4,4 +4,4 @@ use .\apps\common
 
 use .\apps\backend
 
-use .\apps\chat-worker-go
+use .\apps\chat-worker

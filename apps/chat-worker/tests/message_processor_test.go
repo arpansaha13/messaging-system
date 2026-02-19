@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/arpansaha13/messaging-system/apps/chat-worker-go/internal/processor"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )

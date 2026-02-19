@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	internalbr "github.com/arpansaha13/messaging-system/apps/chat-worker-go/internal/broker"
-	"github.com/arpansaha13/messaging-system/apps/chat-worker-go/internal/processor"
+	internalbr "github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/db"
 )

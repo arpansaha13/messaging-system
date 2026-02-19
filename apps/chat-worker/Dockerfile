@@ -15,9 +15,9 @@ ENV CGO_ENABLED=1
 ENV GOCACHE=/go-cache
 ENV GOMODCACHE=/gomod-cache
 
-COPY apps/chat-worker-go/go.mod apps/chat-worker-go/go.sum ./
-COPY apps/chat-worker-go/cmd/ ./cmd/
-COPY apps/chat-worker-go/internal/ ./internal/
+COPY apps/chat-worker/go.mod apps/chat-worker/go.sum ./
+COPY apps/chat-worker/cmd/ ./cmd/
+COPY apps/chat-worker/internal/ ./internal/
 
 RUN --mount=type=cache,target=/gomod-cache \
   --mount=type=cache,target=/go-cache \
