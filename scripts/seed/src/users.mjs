@@ -90,7 +90,7 @@ const users = [
 ]
 
 export async function insertUsers(messagingClient, authClient) {
-  // Insert into auth-system: only email and username (from email prefix)
+  // Insert into auth service: only email and username (from email prefix)
   const authValues = []
   const authPlaceholders = users
     .map((user, i) => {

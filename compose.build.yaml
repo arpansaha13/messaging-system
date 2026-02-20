@@ -1,8 +1,8 @@
 services:
   auth:
     build:
-      context: ../auth-system
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/auth/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
 
   backend:

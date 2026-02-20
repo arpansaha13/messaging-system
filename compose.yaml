@@ -153,9 +153,9 @@ services:
 
   auth:
     build:
-      context: ../auth-system
-      dockerfile: Dockerfile
-    container_name: auth-system
+      context: .
+      dockerfile: apps/auth/Dockerfile
+    container_name: auth
     environment:
       ENVIRONMENT: development
       DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
