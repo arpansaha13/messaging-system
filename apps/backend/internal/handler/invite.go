@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
@@ -22,17 +24,34 @@ func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteSe
 
 func findInviteController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log := logger.FromContext(r.Context())
+		log.Debug("find invite handler called")
+
 		vars := mux.Vars(r)
 		hash := vars["hash"]
 
 		if hash == "" {
+			log.Warn("hash parameter is empty in find invite request")
 			return &domain.ValidationError{Message: "hash parameter is required"}
 		}
 
+		hashDisplay := hash
+		if len(hash) > 8 {
+			hashDisplay = hash[:8]
+		}
+		log.Debug("finding invite", zap.String("hash", hashDisplay)) // Log only first 8 chars for privacy
+
 		invite, err := inviteService.FindByHash(r.Context(), hash)
 		if err != nil {
+			log.Warn("invite not found", zap.String("hash", hashDisplay), zap.Error(err))
 			return err
 		}
+
+		groupID := int64(0)
+		if invite.GroupID != nil {
+			groupID = *invite.GroupID
+		}
+		log.Debug("invite found successfully", zap.Int64("group_id", groupID), zap.Int64("inviter_id", invite.InviterID))
 
 		w.Header().Set("Content-Type", "application/json")
 		return json.NewEncoder(w).Encode(dto.InviteResponseDTO{
@@ -48,22 +67,37 @@ func findInviteController(inviteService service.IInviteService) ControllerFunc {
 
 func acceptInviteController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log := logger.FromContext(r.Context())
+		log.Debug("accept invite handler called")
+
 		vars := mux.Vars(r)
 		hash := vars["hash"]
 
 		if hash == "" {
+			log.Warn("hash parameter is empty in accept invite request")
 			return &domain.ValidationError{Message: "hash parameter is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
+			log.Warn("user not authenticated in accept invite request")
 			return &domain.ValidationError{Message: "user not authenticated"}
 		}
 
-		result, err := inviteService.AcceptInvite(r.Context(), parseUserID(userID), hash)
+		parsedUserID := parseUserID(userID)
+		hashDisplay := hash
+		if len(hash) > 8 {
+			hashDisplay = hash[:8]
+		}
+		log.Debug("accepting invite", zap.Int64("user_id", parsedUserID), zap.String("hash", hashDisplay))
+
+		result, err := inviteService.AcceptInvite(r.Context(), parsedUserID, hash)
 		if err != nil {
+			log.Error("failed to accept invite", zap.Int64("user_id", parsedUserID), zap.Error(err))
 			return err
 		}
+
+		log.Info("invite accepted successfully", zap.Int64("user_id", parsedUserID), zap.Int64("group_id", result.GroupID))
 
 		w.Header().Set("Content-Type", "application/json")
 		return json.NewEncoder(w).Encode(result)
@@ -72,22 +106,37 @@ func acceptInviteController(inviteService service.IInviteService) ControllerFunc
 
 func createInviteController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log := logger.FromContext(r.Context())
+		log.Debug("create invite handler called")
+
 		vars := mux.Vars(r)
 		groupID := parseGroupID(vars["groupId"])
 
 		if groupID == 0 {
+			log.Warn("group_id parameter is empty or invalid in create invite request", zap.String("group_id_str", vars["groupId"]))
 			return &domain.ValidationError{Message: "group_id parameter is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
+			log.Warn("user not authenticated in create invite request")
 			return &domain.ValidationError{Message: "user not authenticated"}
 		}
 
-		invite, err := inviteService.CreateInvite(r.Context(), parseUserID(userID), groupID)
+		parsedUserID := parseUserID(userID)
+		log.Debug("creating invite", zap.Int64("inviter_id", parsedUserID), zap.Int64("group_id", groupID))
+
+		invite, err := inviteService.CreateInvite(r.Context(), parsedUserID, groupID)
 		if err != nil {
+			log.Error("failed to create invite", zap.Int64("inviter_id", parsedUserID), zap.Int64("group_id", groupID), zap.Error(err))
 			return err
 		}
+
+		inviteHashDisplay := invite.Hash
+		if len(invite.Hash) > 8 {
+			inviteHashDisplay = invite.Hash[:8]
+		}
+		log.Info("invite created successfully", zap.Int64("inviter_id", parsedUserID), zap.Int64("group_id", groupID), zap.String("invite_hash", inviteHashDisplay))
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -104,24 +153,40 @@ func createInviteController(inviteService service.IInviteService) ControllerFunc
 
 func joinGroupController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log := logger.FromContext(r.Context())
+		log.Debug("join group handler called")
+
 		var req dto.JoinGroupDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Warn("invalid request body in join group", zap.Error(err))
 			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		if req.InviteHash == "" {
+			log.Warn("inviteHash is empty in join group request")
 			return &domain.ValidationError{Message: "inviteHash is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
+			log.Warn("user not authenticated in join group request")
 			return &domain.ValidationError{Message: "user not authenticated"}
 		}
 
-		result, err := inviteService.AcceptInvite(r.Context(), parseUserID(userID), req.InviteHash)
+		parsedUserID := parseUserID(userID)
+		hashDisplay := req.InviteHash
+		if len(req.InviteHash) > 8 {
+			hashDisplay = req.InviteHash[:8]
+		}
+		log.Debug("joining group", zap.Int64("user_id", parsedUserID), zap.String("invite_hash", hashDisplay))
+
+		result, err := inviteService.AcceptInvite(r.Context(), parsedUserID, req.InviteHash)
 		if err != nil {
+			log.Error("failed to join group", zap.Int64("user_id", parsedUserID), zap.Error(err))
 			return err
 		}
+
+		log.Info("user joined group successfully", zap.Int64("user_id", parsedUserID), zap.Int64("group_id", result.GroupID))
 
 		w.Header().Set("Content-Type", "application/json")
 		return json.NewEncoder(w).Encode(result)

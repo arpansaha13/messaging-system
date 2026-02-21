@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
-	"log"
 	"sort"
 
+	"go.uber.org/zap"
+
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -51,14 +53,18 @@ func NewChatService(chatRepo repository.IChatRepository, messageRepo repository.
 
 // CreateChat creates a new chat between two users
 func (s *ChatService) CreateChat(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error) {
+	log := logger.FromContext(ctx)
+	log.Debug("creating chat", zap.Int64("user_1_id", user1ID), zap.Int64("user_2_id", user2ID))
+
 	// Check if chat already exists
 	existing, err := s.chatRepo.GetByUsers(ctx, user1ID, user2ID)
 	if err != nil {
-		log.Printf("failed to check existing chat: %v", err)
+		log.Error("failed to check existing chat", zap.Int64("user_1_id", user1ID), zap.Int64("user_2_id", user2ID), zap.Error(err))
 		return nil, err
 	}
 
 	if existing != nil {
+		log.Debug("chat already exists", zap.Int64("chat_id", existing.ID))
 		return existing, nil
 	}
 
@@ -68,18 +74,22 @@ func (s *ChatService) CreateChat(ctx context.Context, user1ID, user2ID int64) (*
 	}
 
 	if err := s.chatRepo.Create(ctx, chat); err != nil {
-		log.Printf("failed to create chat: %v", err)
+		log.Error("failed to create chat in repository", zap.Int64("user_1_id", user1ID), zap.Int64("user_2_id", user2ID), zap.Error(err))
 		return nil, err
 	}
 
+	log.Info("chat created successfully", zap.Int64("chat_id", chat.ID))
 	return chat, nil
 }
 
 // GetUserChats retrieves all chats for a user split into archived and unarchived
 func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsResponseDTO, error) {
+	log := logger.FromContext(ctx)
+	log.Debug("retrieving user chats", zap.Int64("user_id", userID))
+
 	chats, err := s.chatRepo.GetUserChats(ctx, userID)
 	if err != nil {
-		log.Printf("failed to get user chats: %v", err)
+		log.Error("failed to retrieve user chats", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
 	}
 
@@ -111,7 +121,12 @@ func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsRes
 	for _, chat := range chats {
 		latestMsg, err := s.messageRepo.GetLatestMessageByUsersInChat(ctx, userID, chat.ReceiverID, chat.ClearedAt)
 		if err != nil {
-			log.Printf("failed to get latest message: %v", err)
+			// Only log at Debug if it's a not-found error; otherwise warn
+			if _, isNotFound := err.(*domain.NotFoundError); isNotFound {
+				log.Debug("no latest message found for chat", zap.Int64("chat_id", chat.ID))
+			} else {
+				log.Warn("failed to get latest message for chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
+			}
 			// Continue with nil message
 		}
 
@@ -144,6 +159,7 @@ func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsRes
 	sortChats(response.Unarchived)
 	sortChats(response.Archived)
 
+	log.Debug("user chats retrieved successfully", zap.Int64("user_id", userID), zap.Int("total_chats", len(chats)), zap.Int("unarchived_count", len(response.Unarchived)), zap.Int("archived_count", len(response.Archived)))
 	return response, nil
 }
 
@@ -178,13 +194,17 @@ func sortChats(items []*ChatItemDTO) {
 
 // Pin pins a chat for a user
 func (s *ChatService) PinChat(ctx context.Context, userID, receiverID int64) error {
+	log := logger.FromContext(ctx)
+	log.Debug("pinning chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
 	if err != nil {
-		log.Printf("failed to get chat: %v", err)
+		log.Error("failed to get chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
 	if chat == nil {
+		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 		return &domain.NotFoundError{Message: "chat not found"}
 	}
 
@@ -192,44 +212,54 @@ func (s *ChatService) PinChat(ctx context.Context, userID, receiverID int64) err
 	chat.Archived = false // Unarchive when pinning
 
 	if err := s.chatRepo.Update(ctx, chat); err != nil {
-		log.Printf("failed to pin chat: %v", err)
+		log.Error("failed to pin chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
 		return err
 	}
 
+	log.Info("chat pinned successfully", zap.Int64("chat_id", chat.ID))
 	return nil
 }
 
 // Unpin unpins a chat for a user
 func (s *ChatService) UnpinChat(ctx context.Context, userID, receiverID int64) error {
+	log := logger.FromContext(ctx)
+	log.Debug("unpinning chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
 	if err != nil {
-		log.Printf("failed to get chat: %v", err)
+		log.Error("failed to get chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
 	if chat == nil {
+		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 		return &domain.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Pinned = false
 
 	if err := s.chatRepo.Update(ctx, chat); err != nil {
-		log.Printf("failed to unpin chat: %v", err)
+		log.Error("failed to unpin chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
 		return err
 	}
 
+	log.Info("chat unpinned successfully", zap.Int64("chat_id", chat.ID))
 	return nil
 }
 
 // Archive archives a chat for a user
 func (s *ChatService) ArchiveChat(ctx context.Context, userID, receiverID int64) error {
+	log := logger.FromContext(ctx)
+	log.Debug("archiving chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
 	if err != nil {
-		log.Printf("failed to get chat: %v", err)
+		log.Error("failed to get chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
 	if chat == nil {
+		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 		return &domain.NotFoundError{Message: "chat not found"}
 	}
 
@@ -237,44 +267,54 @@ func (s *ChatService) ArchiveChat(ctx context.Context, userID, receiverID int64)
 	chat.Pinned = false // Unpin when archiving
 
 	if err := s.chatRepo.Update(ctx, chat); err != nil {
-		log.Printf("failed to archive chat: %v", err)
+		log.Error("failed to archive chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
 		return err
 	}
 
+	log.Info("chat archived successfully", zap.Int64("chat_id", chat.ID))
 	return nil
 }
 
 // Unarchive unarchives a chat for a user
 func (s *ChatService) UnarchiveChat(ctx context.Context, userID, receiverID int64) error {
+	log := logger.FromContext(ctx)
+	log.Debug("unarchiving chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
 	if err != nil {
-		log.Printf("failed to get chat: %v", err)
+		log.Error("failed to get chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
 	if chat == nil {
+		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 		return &domain.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Archived = false
 
 	if err := s.chatRepo.Update(ctx, chat); err != nil {
-		log.Printf("failed to unarchive chat: %v", err)
+		log.Error("failed to unarchive chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
 		return err
 	}
 
+	log.Info("chat unarchived successfully", zap.Int64("chat_id", chat.ID))
 	return nil
 }
 
 // ClearChat clears message history for a chat
 func (s *ChatService) ClearChat(ctx context.Context, userID, receiverID int64) error {
+	log := logger.FromContext(ctx)
+	log.Debug("clearing chat history", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
 	if err != nil {
-		log.Printf("failed to get chat: %v", err)
+		log.Error("failed to get chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
 	if chat == nil {
+		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 		return &domain.NotFoundError{Message: "chat not found"}
 	}
 
@@ -282,30 +322,36 @@ func (s *ChatService) ClearChat(ctx context.Context, userID, receiverID int64) e
 	chat.ClearedAt = &now
 
 	if err := s.chatRepo.Update(ctx, chat); err != nil {
-		log.Printf("failed to clear chat: %v", err)
+		log.Error("failed to clear chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
 		return err
 	}
 
+	log.Info("chat cleared successfully", zap.Int64("chat_id", chat.ID))
 	return nil
 }
 
 // DeleteChat deletes a chat
 func (s *ChatService) DeleteChat(ctx context.Context, userID, receiverID int64) error {
+	log := logger.FromContext(ctx)
+	log.Debug("deleting chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
 	if err != nil {
-		log.Printf("failed to get chat: %v", err)
+		log.Error("failed to get chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
 	if chat == nil {
+		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 		return &domain.NotFoundError{Message: "chat not found"}
 	}
 
 	if err := s.chatRepo.Delete(ctx, chat.ID); err != nil {
-		log.Printf("failed to delete chat: %v", err)
+		log.Error("failed to delete chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
 		return err
 	}
 
+	log.Info("chat deleted successfully", zap.Int64("chat_id", chat.ID))
 	return nil
 }
 

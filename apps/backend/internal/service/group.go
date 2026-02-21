@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
-	"log"
 
+	"go.uber.org/zap"
+
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
@@ -26,13 +28,16 @@ func NewGroupService(groupRepo repository.IGroupRepository, userGroupRepo reposi
 
 // CreateGroup creates a new group
 func (s *GroupService) CreateGroup(ctx context.Context, name string, founderID int64) (*domain.Group, error) {
+	log := logger.FromContext(ctx)
+	log.Debug("creating group", zap.String("group_name", name), zap.Int64("founder_id", founderID))
+
 	group := &domain.Group{
 		Name:      name,
 		FounderID: founderID,
 	}
 
 	if err := s.groupRepo.Create(ctx, group); err != nil {
-		log.Printf("failed to create group: %v", err)
+		log.Error("failed to create group in repository", zap.String("group_name", name), zap.Int64("founder_id", founderID), zap.Error(err))
 		return nil, err
 	}
 
@@ -42,16 +47,22 @@ func (s *GroupService) CreateGroup(ctx context.Context, name string, founderID i
 		GroupID: group.ID,
 		Role:    "admin",
 	}
-	s.userGroupRepo.Create(ctx, userGroup)
+	if err := s.userGroupRepo.Create(ctx, userGroup); err != nil {
+		log.Warn("failed to add creator as group member", zap.Int64("group_id", group.ID), zap.Error(err))
+	}
 
+	log.Info("group created successfully", zap.Int64("group_id", group.ID), zap.String("group_name", name))
 	return group, nil
 }
 
 // GetGroups retrieves all groups the user belongs to
 func (s *GroupService) GetGroups(ctx context.Context, userID int64) ([]*domain.Group, error) {
+	log := logger.FromContext(ctx)
+	log.Debug("retrieving groups for user", zap.Int64("user_id", userID))
+
 	userGroups, err := s.userGroupRepo.GetUserGroups(ctx, userID)
 	if err != nil {
-		log.Printf("failed to get user groups: %v", err)
+		log.Error("failed to retrieve user groups from repository", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
 	}
 
@@ -59,11 +70,13 @@ func (s *GroupService) GetGroups(ctx context.Context, userID int64) ([]*domain.G
 	for i, ug := range userGroups {
 		group, err := s.groupRepo.GetByID(ctx, ug.GroupID)
 		if err != nil {
-			log.Printf("failed to get group: %v", err)
+			log.Error("failed to retrieve group details", zap.Int64("group_id", ug.GroupID), zap.Error(err))
 			return nil, err
 		}
 		groups[i] = group
 	}
+
+	log.Debug("groups retrieved successfully", zap.Int64("user_id", userID), zap.Int("group_count", len(groups)))
 	return groups, nil
 }
 

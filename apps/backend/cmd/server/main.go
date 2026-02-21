@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
@@ -25,11 +26,16 @@ import (
 )
 
 func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
 	// Initialize log channel for Kafka
 	logChan := make(chan []byte, getLogChannelSize())
 
 	// Initialize logger with channel writer
-	zapLogger, err := logger.InitLoggerWithChannel(logChan)
+	zapLogger, err := logger.InitLoggerWithChannel(logChan, parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		log.Fatalf("failed to initialize zap logger: %v", err)
 	}
@@ -46,12 +52,6 @@ func main() {
 	// Start Kafka producer goroutine
 	kafkaCtx, kafkaCancel := context.WithCancel(context.Background())
 	go logger.KafkaLogProducer(kafkaCtx, logChan, kafkaWriter)
-
-	// Load configuration
-	cfg, err := config.Load()
-	if err != nil {
-		zapLogger.Fatal("failed to load config", zap.Error(err))
-	}
 
 	// Initialize database
 	db, err := utils.InitDB(cfg.DatabaseURL)
@@ -183,6 +183,14 @@ func main() {
 	}
 
 	zapLogger.Info("Server stopped")
+}
+
+func parseLogLevel(s string) zapcore.Level {
+	var level zapcore.Level
+	if err := level.UnmarshalText([]byte(s)); err != nil {
+		return zapcore.InfoLevel
+	}
+	return level
 }
 
 func getLogChannelSize() int {

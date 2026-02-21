@@ -6,7 +6,9 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
@@ -21,19 +23,28 @@ func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contact
 
 func addContactController(contactService service.IContactService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log := logger.FromContext(r.Context())
+		log.Debug("add contact handler called")
+
 		var req dto.AddContactRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			log.Warn("invalid request body in add contact", zap.Error(err))
 			return &domain.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
+		log.Debug("adding contact", zap.Int64("user_id", userIDInt), zap.Int64("contact_user_id", req.UserIDInContact))
+
 		contact, err := contactService.AddContact(r.Context(), userIDInt, req.UserIDInContact)
 		if err != nil {
+			log.Error("failed to add contact", zap.Int64("user_id", userIDInt), zap.Int64("contact_user_id", req.UserIDInContact), zap.Error(err))
 			return err
 		}
+
+		log.Info("contact added successfully", zap.Int64("user_id", userIDInt), zap.Int64("contact_id", contact.ID))
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
@@ -49,13 +60,21 @@ func addContactController(contactService service.IContactService) ControllerFunc
 
 func getContactsController(contactService service.IContactService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log := logger.FromContext(r.Context())
+		log.Debug("get contacts handler called")
+
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
+		log.Debug("fetching contacts for user", zap.Int64("user_id", userIDInt))
+
 		contacts, err := contactService.GetContacts(r.Context(), userIDInt)
 		if err != nil {
+			log.Error("failed to get contacts", zap.Int64("user_id", userIDInt), zap.Error(err))
 			return err
 		}
+
+		log.Debug("contacts retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int("contact_count", len(contacts)))
 
 		contactResponses := make([]dto.ContactResponseDTO, len(contacts))
 		for i, contact := range contacts {

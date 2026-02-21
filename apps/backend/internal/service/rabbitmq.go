@@ -2,8 +2,8 @@ package service
 
 import (
 	"encoding/json"
-	"log"
 
+	"go.uber.org/zap"
 	amqp "github.com/rabbitmq/amqp091-go"
 
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -53,19 +53,27 @@ type ReadPayload struct {
 
 // RabbitMQService handles RabbitMQ connection and messaging
 type RabbitMQService struct {
-	conn    *amqp.Connection
+	conn   *amqp.Connection
 	channel *amqp.Channel
+	logger *zap.Logger
 }
 
 // NewRabbitMQService creates a new RabbitMQ service
 func NewRabbitMQService(url string) (*RabbitMQService, error) {
+	logger, err := zap.NewProduction()
+	if err != nil {
+		return nil, err
+	}
+
 	conn, err := amqp.Dial(url)
 	if err != nil {
+		logger.Error("failed to connect to rabbitmq", zap.String("url", url), zap.Error(err))
 		return nil, err
 	}
 
 	channel, err := conn.Channel()
 	if err != nil {
+		logger.Error("failed to create rabbitmq channel", zap.Error(err))
 		conn.Close()
 		return nil, err
 	}
@@ -73,16 +81,18 @@ func NewRabbitMQService(url string) (*RabbitMQService, error) {
 	service := &RabbitMQService{
 		conn:    conn,
 		channel: channel,
+		logger:  logger,
 	}
 
 	// Declare exchanges
 	if err := service.declareExchanges(); err != nil {
+		logger.Error("failed to declare exchanges", zap.Error(err))
 		channel.Close()
 		conn.Close()
 		return nil, err
 	}
 
-	log.Println("RabbitMQ connected from backend")
+	logger.Info("RabbitMQ connected from backend", zap.String("url", url))
 	return service, nil
 }
 
@@ -97,6 +107,7 @@ func (r *RabbitMQService) declareExchanges() error {
 		false,            // noWait
 		nil,              // arguments
 	); err != nil {
+		r.logger.Error("failed to declare incoming exchange", zap.String("exchange", IncomingExchange), zap.Error(err))
 		return err
 	}
 
@@ -109,6 +120,7 @@ func (r *RabbitMQService) declareExchanges() error {
 		false,            // noWait
 		nil,              // arguments
 	); err != nil {
+		r.logger.Error("failed to declare outgoing exchange", zap.String("exchange", OutgoingExchange), zap.Error(err))
 		return err
 	}
 
@@ -123,7 +135,7 @@ func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) erro
 
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
-		log.Printf("failed to marshal message: %v", err)
+		r.logger.Error("failed to marshal message for incoming publish", zap.String("routing_key", routingKey), zap.Error(err))
 		return err
 	}
 
@@ -140,7 +152,7 @@ func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) erro
 	)
 
 	if err != nil {
-		log.Printf("failed to publish message: %v", err)
+		r.logger.Error("failed to publish message to incoming exchange", zap.String("routing_key", routingKey), zap.Error(err))
 		return err
 	}
 
@@ -155,7 +167,7 @@ func (r *RabbitMQService) PublishToOutgoing(routingKey string, message any) erro
 
 	messageBytes, err := json.Marshal(message)
 	if err != nil {
-		log.Printf("failed to marshal message: %v", err)
+		r.logger.Error("failed to marshal message for outgoing publish", zap.String("routing_key", routingKey), zap.Error(err))
 		return err
 	}
 
@@ -172,7 +184,7 @@ func (r *RabbitMQService) PublishToOutgoing(routingKey string, message any) erro
 	)
 
 	if err != nil {
-		log.Printf("failed to publish message: %v", err)
+		r.logger.Error("failed to publish message to outgoing exchange", zap.String("routing_key", routingKey), zap.Error(err))
 		return err
 	}
 
@@ -183,18 +195,18 @@ func (r *RabbitMQService) PublishToOutgoing(routingKey string, message any) erro
 func (r *RabbitMQService) Close() error {
 	if r.channel != nil {
 		if err := r.channel.Close(); err != nil {
-			log.Printf("error closing channel: %v", err)
+			r.logger.Error("error closing rabbitmq channel", zap.Error(err))
 		}
 	}
 
 	if r.conn != nil {
 		if err := r.conn.Close(); err != nil {
-			log.Printf("error closing connection: %v", err)
+			r.logger.Error("error closing rabbitmq connection", zap.Error(err))
 			return err
 		}
 	}
 
-	log.Println("RabbitMQ disconnected from backend")
+	r.logger.Info("RabbitMQ disconnected from backend")
 	return nil
 }
 
