@@ -39,6 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialize zap logger: %v", err)
 	}
+	zapLogger = zapLogger.With(zap.String("service_name", "backend"))
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 

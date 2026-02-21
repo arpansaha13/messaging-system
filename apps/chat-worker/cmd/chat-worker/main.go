@@ -26,6 +26,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	zapLogger = zapLogger.With(zap.String("service_name", "chat-worker"))
 	zap.ReplaceGlobals(zapLogger)
 	defer zapLogger.Sync()
 
