@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"context"
 	"fmt"
-	"log"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
+	"go.uber.org/zap"
 )
 
 // EventController handles incoming events and dispatches them to appropriate processors
@@ -29,27 +31,34 @@ func NewEventController(
 }
 
 // HandleWorkerQueueEvent processes a message from the worker queue
-func (ec *EventController) HandleWorkerQueueEvent(msg *broker.MessagePayload) error {
+func (ec *EventController) HandleWorkerQueueEvent(ctx context.Context, msg *broker.MessagePayload) error {
+	ctx = logger.WithFields(ctx, zap.String("event_type", msg.Type))
+	log := logger.FromContext(ctx)
+	log.Debug("worker queue event received")
+
 	switch msg.Type {
 	case "MESSAGE_SEND":
-		return ec.handleMessageSend(msg)
+		return ec.handleMessageSend(ctx, msg)
 	case "STATUS_DELIVERED":
-		return ec.handleStatusDelivered(msg)
+		return ec.handleStatusDelivered(ctx, msg)
 	case "STATUS_READ":
-		return ec.handleStatusRead(msg)
+		return ec.handleStatusRead(ctx, msg)
 	default:
-		log.Printf("Unknown message type: %s", msg.Type)
+		log.Warn("unknown message type", zap.String("event_type", msg.Type))
 		return nil
 	}
 }
 
 // HandleConnectionQueueEvent processes a connection event from the connection queue
-func (ec *EventController) HandleConnectionQueueEvent(msg *broker.UserConnectionPayload) error {
-	return ec.connectionProcessor.ProcessUserConnection(msg)
+func (ec *EventController) HandleConnectionQueueEvent(ctx context.Context, msg *broker.UserConnectionPayload) error {
+	ctx = logger.WithFields(ctx, zap.String("event_type", "CONNECTION_USER"))
+	log := logger.FromContext(ctx)
+	log.Debug("connection queue event received")
+	return ec.connectionProcessor.ProcessUserConnection(ctx, msg)
 }
 
 // handleMessageSend processes MESSAGE_SEND events (personal and group)
-func (ec *EventController) handleMessageSend(msg *broker.MessagePayload) error {
+func (ec *EventController) handleMessageSend(ctx context.Context, msg *broker.MessagePayload) error {
 	payload, ok := msg.Payload.(map[string]any)
 	if !ok {
 		return fmt.Errorf("invalid payload format for MESSAGE_SEND")
@@ -65,7 +74,7 @@ func (ec *EventController) handleMessageSend(msg *broker.MessagePayload) error {
 			Content:   payload["content"].(string),
 			Hash:      payload["hash"].(string),
 		}
-		if err := ec.messageProcessor.ProcessGroupMessage(groupPayload); err != nil {
+		if err := ec.messageProcessor.ProcessGroupMessage(ctx, groupPayload); err != nil {
 			return fmt.Errorf("error processing group message: %w", err)
 		}
 	} else {
@@ -76,7 +85,7 @@ func (ec *EventController) handleMessageSend(msg *broker.MessagePayload) error {
 			Content:    payload["content"].(string),
 			Hash:       payload["hash"].(string),
 		}
-		if err := ec.messageProcessor.ProcessPersonalMessage(personalPayload); err != nil {
+		if err := ec.messageProcessor.ProcessPersonalMessage(ctx, personalPayload); err != nil {
 			return fmt.Errorf("error processing personal message: %w", err)
 		}
 	}
@@ -85,7 +94,7 @@ func (ec *EventController) handleMessageSend(msg *broker.MessagePayload) error {
 }
 
 // handleStatusDelivered processes STATUS_DELIVERED events
-func (ec *EventController) handleStatusDelivered(msg *broker.MessagePayload) error {
+func (ec *EventController) handleStatusDelivered(ctx context.Context, msg *broker.MessagePayload) error {
 	payload, ok := msg.Payload.(map[string]any)
 	if !ok {
 		return fmt.Errorf("invalid payload format for STATUS_DELIVERED")
@@ -97,7 +106,7 @@ func (ec *EventController) handleStatusDelivered(msg *broker.MessagePayload) err
 		SenderId:   int64(payload["senderId"].(float64)),
 	}
 
-	if err := ec.statusProcessor.ProcessDelivered(deliveredPayload); err != nil {
+	if err := ec.statusProcessor.ProcessDelivered(ctx, deliveredPayload); err != nil {
 		return fmt.Errorf("error processing delivered status: %w", err)
 	}
 
@@ -105,7 +114,7 @@ func (ec *EventController) handleStatusDelivered(msg *broker.MessagePayload) err
 }
 
 // handleStatusRead processes STATUS_READ events
-func (ec *EventController) handleStatusRead(msg *broker.MessagePayload) error {
+func (ec *EventController) handleStatusRead(ctx context.Context, msg *broker.MessagePayload) error {
 	payloadData, ok := msg.Payload.([]any)
 	if !ok {
 		return fmt.Errorf("invalid payload format for STATUS_READ")
@@ -125,7 +134,7 @@ func (ec *EventController) handleStatusRead(msg *broker.MessagePayload) error {
 		}
 	}
 
-	if err := ec.statusProcessor.ProcessRead(readPayloads); err != nil {
+	if err := ec.statusProcessor.ProcessRead(ctx, readPayloads); err != nil {
 		return fmt.Errorf("error processing read status: %w", err)
 	}
 

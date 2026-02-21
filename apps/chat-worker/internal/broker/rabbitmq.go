@@ -3,11 +3,11 @@ package broker
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 )
 
 const (
@@ -73,7 +73,7 @@ func (rb *RabbitMQBroker) Connect() error {
 		return err
 	}
 
-	log.Println("RabbitMQ connected. Worker ready.")
+	zap.L().Info("connected to RabbitMQ")
 	return nil
 }
 
@@ -133,14 +133,14 @@ func (rb *RabbitMQBroker) ConsumeWorkerQueue(onMessage func(msg *broker.MessageP
 		for delivery := range deliveries {
 			var msg broker.MessagePayload
 			if err := json.Unmarshal(delivery.Body, &msg); err != nil {
-				log.Printf("failed to unmarshal message: %v", err)
+				zap.L().Error("failed to unmarshal message", zap.Error(err))
 				rb.channel.Ack(delivery.DeliveryTag, false)
 				continue
 			}
 
 			ackFn := func() { rb.channel.Ack(delivery.DeliveryTag, false) }
 			if err := onMessage(&msg, ackFn); err != nil {
-				log.Printf("error processing message: %v", err)
+				zap.L().Error("error processing message", zap.Error(err))
 			}
 		}
 	}()
@@ -163,14 +163,14 @@ func (rb *RabbitMQBroker) ConsumeConnectionQueue(onMessage func(msg *broker.User
 		for delivery := range deliveries {
 			var msg broker.UserConnectionPayload
 			if err := json.Unmarshal(delivery.Body, &msg); err != nil {
-				log.Printf("failed to unmarshal connection message: %v", err)
+				zap.L().Error("failed to unmarshal connection message", zap.Error(err))
 				rb.channel.Ack(delivery.DeliveryTag, false)
 				continue
 			}
 
 			ackFn := func() { rb.channel.Ack(delivery.DeliveryTag, false) }
 			if err := onMessage(&msg, ackFn); err != nil {
-				log.Printf("error processing connection message: %v", err)
+				zap.L().Error("error processing connection message", zap.Error(err))
 			}
 		}
 	}()
@@ -230,7 +230,7 @@ func (rb *RabbitMQBroker) PublishToSubscription(serverId string, message any) er
 func (rb *RabbitMQBroker) Disconnect() error {
 	if rb.channel != nil {
 		if err := rb.channel.Close(); err != nil {
-			log.Printf("error closing channel: %v", err)
+			zap.L().Error("error closing channel", zap.Error(err))
 		}
 	}
 
@@ -240,7 +240,7 @@ func (rb *RabbitMQBroker) Disconnect() error {
 		}
 	}
 
-	log.Println("RabbitMQ disconnected")
+	zap.L().Info("disconnected from RabbitMQ")
 	return nil
 }
 

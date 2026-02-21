@@ -1,13 +1,15 @@
 package processor
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -26,15 +28,20 @@ func NewMessageProcessor(db *gorm.DB, broker broker.MessageBroker) *MessageProce
 }
 
 // ProcessPersonalMessage handles personal message sends
-func (mp *MessageProcessor) ProcessPersonalMessage(payload *broker.PersonalMessagePayload) error {
+func (mp *MessageProcessor) ProcessPersonalMessage(ctx context.Context, payload *broker.PersonalMessagePayload) error {
+	log := logger.FromContext(ctx)
+	log.Debug("processing personal message", zap.Int64("sender_id", payload.SenderId), zap.Int64("receiver_id", payload.ReceiverId))
+
 	return mp.db.Transaction(func(tx *gorm.DB) error {
 		// Fetch sender and receiver
 		var sender, receiver domain.UserProfile
 		if err := tx.First(&sender, payload.SenderId).Error; err != nil {
+			log.Error("failed to fetch sender", zap.Int64("sender_id", payload.SenderId), zap.Error(err))
 			return fmt.Errorf("sender not found: %w", err)
 		}
 
 		if err := tx.First(&receiver, payload.ReceiverId).Error; err != nil {
+			log.Error("failed to fetch receiver", zap.Int64("receiver_id", payload.ReceiverId), zap.Error(err))
 			return fmt.Errorf("receiver not found: %w", err)
 		}
 
@@ -102,7 +109,7 @@ func (mp *MessageProcessor) ProcessPersonalMessage(payload *broker.PersonalMessa
 				"status":     domain.MessageStatusSent,
 			},
 		}); err != nil {
-			log.Printf("failed to publish SENT event: %v", err)
+			log.Error("failed to publish SENT event", zap.Int64("sender_id", payload.SenderId), zap.Error(err))
 		}
 
 		// Publish message to receiver
@@ -117,24 +124,30 @@ func (mp *MessageProcessor) ProcessPersonalMessage(payload *broker.PersonalMessa
 				"status":    domain.MessageStatusSent,
 			},
 		}); err != nil {
-			log.Printf("failed to publish MESSAGE_RECEIVE event: %v", err)
+			log.Error("failed to publish MESSAGE_RECEIVE event", zap.Int64("receiver_id", payload.ReceiverId), zap.Error(err))
 		}
 
+		log.Info("personal message processed", zap.Int64("sender_id", payload.SenderId), zap.Int64("receiver_id", payload.ReceiverId), zap.Int64("message_id", message.ID))
 		return nil
 	})
 }
 
 // ProcessGroupMessage handles group message sends
-func (mp *MessageProcessor) ProcessGroupMessage(payload *broker.GroupMessagePayload) error {
+func (mp *MessageProcessor) ProcessGroupMessage(ctx context.Context, payload *broker.GroupMessagePayload) error {
+	log := logger.FromContext(ctx)
+	log.Debug("processing group message", zap.Int64("sender_id", payload.SenderId), zap.Int64("group_id", payload.GroupId), zap.Int64("channel_id", payload.ChannelId))
+
 	return mp.db.Transaction(func(tx *gorm.DB) error {
 		// Fetch sender and channel
 		var sender domain.UserProfile
 		if err := tx.First(&sender, payload.SenderId).Error; err != nil {
+			log.Error("failed to fetch sender", zap.Int64("sender_id", payload.SenderId), zap.Error(err))
 			return fmt.Errorf("sender not found: %w", err)
 		}
 
 		var channel domain.Channel
 		if err := tx.First(&channel, payload.ChannelId).Error; err != nil {
+			log.Error("failed to fetch channel", zap.Int64("channel_id", payload.ChannelId), zap.Error(err))
 			return fmt.Errorf("channel not found: %w", err)
 		}
 
@@ -173,7 +186,7 @@ func (mp *MessageProcessor) ProcessGroupMessage(payload *broker.GroupMessagePayl
 				UpdatedAt:  now,
 			}
 			if err := tx.Create(messageRecipient).Error; err != nil {
-				log.Printf("failed to create message recipient for user %d: %v", ug.UserID, err)
+				log.Error("failed to create message recipient", zap.Int64("user_id", ug.UserID), zap.Error(err))
 			}
 		}
 
@@ -194,9 +207,10 @@ func (mp *MessageProcessor) ProcessGroupMessage(payload *broker.GroupMessagePayl
 				"status":    domain.MessageStatusSent,
 			},
 		}); err != nil {
-			log.Printf("failed to publish message to channel %d: %v", payload.ChannelId, err)
+			log.Error("failed to publish message to channel", zap.Int64("channel_id", payload.ChannelId), zap.Error(err))
 		}
 
+		log.Info("group message processed", zap.Int64("sender_id", payload.SenderId), zap.Int64("group_id", payload.GroupId), zap.Int64("channel_id", payload.ChannelId), zap.Int64("message_id", message.ID), zap.Int("recipient_count", len(userGroups)))
 		return nil
 	})
 }

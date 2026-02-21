@@ -1,12 +1,14 @@
 package processor
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strconv"
 
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
@@ -25,17 +27,22 @@ func NewStatusProcessor(db *gorm.DB, broker broker.MessageBroker) *StatusProcess
 }
 
 // ProcessDelivered handles message delivered status updates
-func (sp *StatusProcessor) ProcessDelivered(payload *broker.DeliveredPayload) error {
+func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker.DeliveredPayload) error {
+	log := logger.FromContext(ctx)
+	log.Debug("processing delivered status", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId), zap.Int64("sender_id", payload.SenderId))
+
 	// Update message recipient status
 	result := sp.db.Model(&domain.MessageRecipient{}).
 		Where("message_id = ? AND receiver_id = ?", payload.MessageId, payload.ReceiverId).
 		Update("status", domain.MessageStatusDelivered)
 	if result.Error != nil {
+		log.Error("failed to update message status", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId), zap.Error(result.Error))
 		return fmt.Errorf("failed to update message status: %w", result.Error)
 	}
 
 	// Only publish if a row was actually updated
 	if result.RowsAffected == 0 {
+		log.Debug("no recipient found, skipping", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId))
 		return nil
 	}
 
@@ -49,14 +56,18 @@ func (sp *StatusProcessor) ProcessDelivered(payload *broker.DeliveredPayload) er
 			"status":     domain.MessageStatusDelivered,
 		},
 	}); err != nil {
-		log.Printf("failed to publish DELIVERED event: %v", err)
+		log.Error("failed to publish DELIVERED event", zap.Int64("sender_id", payload.SenderId), zap.Error(err))
 	}
 
+	log.Info("status updated", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId))
 	return nil
 }
 
 // ProcessRead handles message read status updates
-func (sp *StatusProcessor) ProcessRead(payloads []broker.ReadPayload) error {
+func (sp *StatusProcessor) ProcessRead(ctx context.Context, payloads []broker.ReadPayload) error {
+	log := logger.FromContext(ctx)
+	log.Debug("processing read status", zap.Int("payload_count", len(payloads)))
+
 	if len(payloads) == 0 {
 		return nil
 	}
@@ -73,7 +84,7 @@ func (sp *StatusProcessor) ProcessRead(payloads []broker.ReadPayload) error {
 
 	// Execute single bulk update for all message recipients
 	if err := query.Update("status", domain.MessageStatusRead).Error; err != nil {
-		log.Printf("failed to bulk update message status: %v", err)
+		log.Error("failed to bulk update message status", zap.Int("payload_count", len(payloads)), zap.Error(err))
 	}
 
 	// Group payloads by sender ID for bulk emit
@@ -94,9 +105,10 @@ func (sp *StatusProcessor) ProcessRead(payloads []broker.ReadPayload) error {
 			"userId": senderId,
 			"data":   readPayloads,
 		}); err != nil {
-			log.Printf("failed to publish READ event: %v", err)
+			log.Error("failed to publish READ event", zap.Int64("sender_id", senderId), zap.Error(err))
 		}
 	}
 
+	log.Info("read status processed", zap.Int("total_messages", len(payloads)))
 	return nil
 }
