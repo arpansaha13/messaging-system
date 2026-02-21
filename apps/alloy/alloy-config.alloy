@@ -33,10 +33,7 @@ loki.process "json_parse" {
   stage.labels {
     values = {
       level = "level",
-      trace_id = "trace_id",
-      span_id = "span_id",
-      user_id = "user_id",
-      logger = "logger",
+      method = "method",
     }
   }
 

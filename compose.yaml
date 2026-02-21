@@ -1,11 +1,14 @@
 services:
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: apps/nginx/Dockerfile
     container_name: nginx
+    environment:
+      ENVIRONMENT: development
     ports:
       - "7000:443"
     volumes:
-      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs-local:/etc/nginx/certs:ro
     depends_on:
       - backend
@@ -87,6 +90,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
+      init-kafka:
+        condition: service_completed_successfully
       auth:
         condition: service_started
     networks:
@@ -258,7 +265,7 @@ services:
           path: ./apps/chat-worker/go.mod
 
   kafka:
-    image: apache/kafka:3.7.0
+    image: apache/kafka:3.9.2
     container_name: kafka
     # ports:
     #   - "7070:9092"
@@ -287,14 +294,32 @@ services:
     networks:
       - messaging-network
 
+  init-kafka:
+    image: apache/kafka:3.9.2
+    container_name: init-kafka
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      # Block until Kafka is reachable
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+
+      echo 'Creating topics...'
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic application-logs --replication-factor 1 --partitions 3
+      "
+    networks:
+      - messaging-network
+
   loki:
-    image: grafana/loki:3.6
+    build:
+      context: .
+      dockerfile: apps/loki/Dockerfile
     container_name: loki
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
-      - ./apps/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
-      - ./data/loki:/loki
+      - ./data/loki:/tmp/loki
     # ports:
     #   - "7080:3100"
     healthcheck:
@@ -305,28 +330,36 @@ services:
       retries: 5
     networks:
       - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/loki/loki-config.yml
 
   alloy:
-    image: grafana/alloy:latest
+    build:
+      context: .
+      dockerfile: apps/alloy/Dockerfile
     container_name: alloy
-    command:
-      - run
-      - /etc/alloy/alloy-config.alloy
-      - --server.http.listen-addr=0.0.0.0:12345
-    volumes:
-      - ./apps/alloy/alloy-config.alloy:/etc/alloy/alloy-config.alloy:ro
     depends_on:
       kafka:
         condition: service_healthy
+      init-kafka:
+        condition: service_completed_successfully
       loki:
         condition: service_healthy
     # ports:
     #   - "7085:12345"
     networks:
       - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/alloy/alloy-config.alloy
 
   grafana:
-    image: grafana/grafana-oss:10.2.0
+    build:
+      context: .
+      dockerfile: apps/grafana/Dockerfile
     container_name: grafana
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
@@ -335,8 +368,6 @@ services:
       GF_LOG_LEVEL: info
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./apps/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./apps/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./data/grafana:/var/lib/grafana
     depends_on:
       loki:
@@ -350,6 +381,12 @@ services:
       retries: 5
     networks:
       - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/grafana/provisioning/datasources
+        - action: rebuild
+          path: ./apps/grafana/provisioning/dashboards
 
 networks:
   messaging-network:

@@ -1,11 +1,14 @@
 services:
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: apps/nginx/Dockerfile
     container_name: nginx_prod
+    environment:
+      ENVIRONMENT: development
     ports:
       - "7000:443"
     volumes:
-      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/certs:/etc/nginx/certs:ro
     depends_on:
       backend:
@@ -205,7 +208,7 @@ services:
       - messaging-network
 
   kafka:
-    image: apache/kafka:3.7.0
+    image: apache/kafka:3.9.2
     container_name: kafka
     # ports:
     #   - "7070:9092"
@@ -234,20 +237,34 @@ services:
     networks:
       - messaging-network
 
+  init-kafka:
+    image: apache/kafka:3.9.2
+    container_name: init-kafka
+    depends_on:
+      - kafka
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      # Block until Kafka is reachable
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+
+      echo 'Creating topics...'
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic application-logs --replication-factor 1 --partitions 3
+      "
+    networks:
+      - messaging-network
+
   loki:
-    image: grafana/loki:3.0.0-alpine
+    build:
+      context: .
+      dockerfile: apps/loki/Dockerfile
     container_name: loki_prod
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
-      - ./apps/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
-      - ./data/loki:/loki
+      - ./data/loki:/tmp/loki
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --quiet --tries=1 --spider http://localhost:3100/loki/api/v1/status || exit 1",
-        ]
+      test: ["CMD", "/usr/bin/loki", "-health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -255,14 +272,10 @@ services:
       - messaging-network
 
   alloy:
-    image: grafana/alloy:latest
+    build:
+      context: .
+      dockerfile: apps/alloy/Dockerfile
     container_name: alloy_prod
-    command:
-      - run
-      - /etc/alloy/alloy-config.alloy
-      - --server.http.listen-addr=0.0.0.0:12345
-    volumes:
-      - ./apps/alloy/alloy-config.alloy:/etc/alloy/alloy-config.alloy:ro
     depends_on:
       kafka:
         condition: service_healthy
@@ -272,7 +285,9 @@ services:
       - messaging-network
 
   grafana:
-    image: grafana/grafana-oss:10.2.0
+    build:
+      context: .
+      dockerfile: apps/grafana/Dockerfile
     container_name: grafana_prod
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
@@ -283,8 +298,6 @@ services:
       GF_SERVER_ROOT_URL: https://${NGINX_DOMAIN_NAME}/grafana
       GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     volumes:
-      - ./apps/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./apps/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./data/grafana:/var/lib/grafana
     depends_on:
       loki:

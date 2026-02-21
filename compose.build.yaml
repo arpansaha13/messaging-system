@@ -1,4 +1,10 @@
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: apps/nginx/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/nginx/server:0.1.0
+
   auth:
     build:
       context: .
@@ -30,3 +36,21 @@ services:
       context: .
       dockerfile: apps/chat-worker/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
+
+  loki:
+    build:
+      context: .
+      dockerfile: apps/loki/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/loki/server:0.1.0
+
+  alloy:
+    build:
+      context: .
+      dockerfile: apps/alloy/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/alloy/server:0.1.0
+
+  grafana:
+    build:
+      context: .
+      dockerfile: apps/grafana/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/grafana/server:0.1.0
