@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/controller"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
@@ -20,9 +21,14 @@ import (
 )
 
 func main() {
+	cfg, err := config.Load()
+	if err != nil {
+		panic(fmt.Sprintf("failed to load config: %v", err))
+	}
+
 	// Initialize logger
-	logChan := make(chan []byte, getLogChannelSize())
-	zapLogger, err := logger.InitLoggerWithChannel(logChan, getLogLevel())
+	logChan := make(chan []byte, cfg.KafkaLogChanSize)
+	zapLogger, err := logger.InitLoggerWithChannel(logChan, parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		panic(err)
 	}
@@ -34,8 +40,8 @@ func main() {
 
 	// Initialize Kafka writer
 	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      []string{getKafkaBrokers()},
-		Topic:        getKafkaTopic(),
+		Brokers:      []string{cfg.KafkaBrokers},
+		Topic:        cfg.KafkaTopic,
 		RequiredAcks: int(kafka.RequireAll),
 	})
 	defer kafkaWriter.Close()
@@ -54,7 +60,8 @@ func main() {
 	}
 
 	// Initialize RabbitMQ broker
-	messageBroker := broker.NewRabbitMQBroker()
+	amqpURL := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPass, cfg.RabbitMQHost, cfg.RabbitMQPort)
+	messageBroker := broker.NewRabbitMQBroker(amqpURL)
 	if err := messageBroker.Connect(); err != nil {
 		log.Fatal("failed to connect to RabbitMQ", zap.Error(err))
 	}
@@ -113,49 +120,11 @@ func main() {
 	log.Info("chat worker stopped")
 }
 
-// getLogLevel reads LOG_LEVEL env var and returns zapcore.Level
-func getLogLevel() zapcore.Level {
-	level := os.Getenv("LOG_LEVEL")
-	switch level {
-	case "debug":
-		return zapcore.DebugLevel
-	case "info":
-		return zapcore.InfoLevel
-	case "warn":
-		return zapcore.WarnLevel
-	case "error":
-		return zapcore.ErrorLevel
-	default:
+// parseLogLevel parses a string into zapcore.Level using zap's unmarshaling
+func parseLogLevel(s string) zapcore.Level {
+	var level zapcore.Level
+	if err := level.UnmarshalText([]byte(s)); err != nil {
 		return zapcore.InfoLevel
 	}
-}
-
-// getLogChannelSize reads KAFKA_LOG_CHANNEL_SIZE env var and returns channel size
-func getLogChannelSize() int {
-	size := os.Getenv("KAFKA_LOG_CHANNEL_SIZE")
-	if size == "" {
-		return 1000
-	}
-	if parsed, err := strconv.Atoi(size); err == nil {
-		return parsed
-	}
-	return 1000
-}
-
-// getKafkaBrokers reads KAFKA_BROKERS env var and returns broker address
-func getKafkaBrokers() string {
-	brokers := os.Getenv("KAFKA_BROKERS")
-	if brokers == "" {
-		return "kafka:9092"
-	}
-	return brokers
-}
-
-// getKafkaTopic reads KAFKA_TOPIC env var and returns topic name
-func getKafkaTopic() string {
-	topic := os.Getenv("KAFKA_TOPIC")
-	if topic == "" {
-		return "application-logs"
-	}
-	return topic
+	return level
 }

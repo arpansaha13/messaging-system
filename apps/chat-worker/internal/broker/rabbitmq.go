@@ -3,7 +3,6 @@ package broker
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/rabbitmq/amqp091-go"
@@ -20,40 +19,19 @@ const (
 
 // RabbitMQBroker implements the broker.MessageBroker interface using RabbitMQ
 type RabbitMQBroker struct {
+	amqpURL string
 	conn    *amqp091.Connection
 	channel *amqp091.Channel
 }
 
 // NewRabbitMQBroker creates a new RabbitMQ broker instance
-func NewRabbitMQBroker() *RabbitMQBroker {
-	return &RabbitMQBroker{}
+func NewRabbitMQBroker(amqpURL string) *RabbitMQBroker {
+	return &RabbitMQBroker{amqpURL: amqpURL}
 }
 
 // Connect establishes connection to RabbitMQ and sets up exchanges and queues
 func (rb *RabbitMQBroker) Connect() error {
-	hostname := os.Getenv("RABBITMQ_HOST")
-	if hostname == "" {
-		hostname = "localhost"
-	}
-
-	port := os.Getenv("RABBITMQ_PORT")
-	if port == "" {
-		port = "5672"
-	}
-
-	username := os.Getenv("RABBITMQ_USER")
-	if username == "" {
-		username = "guest"
-	}
-
-	password := os.Getenv("RABBITMQ_PASS")
-	if password == "" {
-		password = "guest"
-	}
-
-	url := fmt.Sprintf("amqp://%s:%s@%s:%s/", username, password, hostname, port)
-
-	conn, err := amqp091.Dial(url)
+	conn, err := amqp091.Dial(rb.amqpURL)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
