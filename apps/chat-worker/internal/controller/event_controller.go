@@ -1,0 +1,133 @@
+package controller
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
+	"github.com/arpansaha13/messaging-system/apps/common/broker"
+)
+
+// EventController handles incoming events and dispatches them to appropriate processors
+type EventController struct {
+	messageProcessor    *processor.MessageProcessor
+	statusProcessor     *processor.StatusProcessor
+	connectionProcessor *processor.ConnectionProcessor
+}
+
+// NewEventController creates a new event controller with injected dependencies
+func NewEventController(
+	messageProcessor *processor.MessageProcessor,
+	statusProcessor *processor.StatusProcessor,
+	connectionProcessor *processor.ConnectionProcessor,
+) *EventController {
+	return &EventController{
+		messageProcessor:    messageProcessor,
+		statusProcessor:     statusProcessor,
+		connectionProcessor: connectionProcessor,
+	}
+}
+
+// HandleWorkerQueueEvent processes a message from the worker queue
+func (ec *EventController) HandleWorkerQueueEvent(msg *broker.MessagePayload) error {
+	switch msg.Type {
+	case "MESSAGE_SEND":
+		return ec.handleMessageSend(msg)
+	case "STATUS_DELIVERED":
+		return ec.handleStatusDelivered(msg)
+	case "STATUS_READ":
+		return ec.handleStatusRead(msg)
+	default:
+		log.Printf("Unknown message type: %s", msg.Type)
+		return nil
+	}
+}
+
+// HandleConnectionQueueEvent processes a connection event from the connection queue
+func (ec *EventController) HandleConnectionQueueEvent(msg *broker.UserConnectionPayload) error {
+	return ec.connectionProcessor.ProcessUserConnection(msg)
+}
+
+// handleMessageSend processes MESSAGE_SEND events (personal and group)
+func (ec *EventController) handleMessageSend(msg *broker.MessagePayload) error {
+	payload, ok := msg.Payload.(map[string]any)
+	if !ok {
+		return fmt.Errorf("invalid payload format for MESSAGE_SEND")
+	}
+
+	// Check if it's a group or personal message
+	if groupId, hasGroup := payload["groupId"]; hasGroup && groupId != nil {
+		// Group message
+		groupPayload := &broker.GroupMessagePayload{
+			SenderId:  int64(payload["senderId"].(float64)),
+			GroupId:   int64(groupId.(float64)),
+			ChannelId: int64(payload["channelId"].(float64)),
+			Content:   payload["content"].(string),
+			Hash:      payload["hash"].(string),
+		}
+		if err := ec.messageProcessor.ProcessGroupMessage(groupPayload); err != nil {
+			return fmt.Errorf("error processing group message: %w", err)
+		}
+	} else {
+		// Personal message
+		personalPayload := &broker.PersonalMessagePayload{
+			SenderId:   int64(payload["senderId"].(float64)),
+			ReceiverId: int64(payload["receiverId"].(float64)),
+			Content:    payload["content"].(string),
+			Hash:       payload["hash"].(string),
+		}
+		if err := ec.messageProcessor.ProcessPersonalMessage(personalPayload); err != nil {
+			return fmt.Errorf("error processing personal message: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// handleStatusDelivered processes STATUS_DELIVERED events
+func (ec *EventController) handleStatusDelivered(msg *broker.MessagePayload) error {
+	payload, ok := msg.Payload.(map[string]any)
+	if !ok {
+		return fmt.Errorf("invalid payload format for STATUS_DELIVERED")
+	}
+
+	deliveredPayload := &broker.DeliveredPayload{
+		MessageId:  int64(payload["messageId"].(float64)),
+		ReceiverId: int64(payload["receiverId"].(float64)),
+		SenderId:   int64(payload["senderId"].(float64)),
+	}
+
+	if err := ec.statusProcessor.ProcessDelivered(deliveredPayload); err != nil {
+		return fmt.Errorf("error processing delivered status: %w", err)
+	}
+
+	return nil
+}
+
+// handleStatusRead processes STATUS_READ events
+func (ec *EventController) handleStatusRead(msg *broker.MessagePayload) error {
+	payloadData, ok := msg.Payload.([]any)
+	if !ok {
+		return fmt.Errorf("invalid payload format for STATUS_READ")
+	}
+
+	// Convert payload array to ReadPayload slice
+	readPayloads := make([]broker.ReadPayload, len(payloadData))
+	for i, p := range payloadData {
+		p, ok := p.(map[string]any)
+		if !ok {
+			continue
+		}
+		readPayloads[i] = broker.ReadPayload{
+			MessageId:  int64(p["messageId"].(float64)),
+			SenderId:   int64(p["senderId"].(float64)),
+			ReceiverId: int64(p["receiverId"].(float64)),
+		}
+	}
+
+	if err := ec.statusProcessor.ProcessRead(readPayloads); err != nil {
+		return fmt.Errorf("error processing read status: %w", err)
+	}
+
+	return nil
+}
