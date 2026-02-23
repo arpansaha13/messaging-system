@@ -26,7 +26,7 @@ func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userServic
 // getUserMeController returns the authenticated user's auth details
 func getUserMeController(userService service.IUserService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("get user me handler called")
 
 		authUser := middleware.GetAuthUserFromContext(r)
@@ -60,7 +60,7 @@ func getUserMeController(userService service.IUserService) ControllerFunc {
 // updateUserMeController updates the authenticated user's profile
 func updateUserMeController(userService service.IUserService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("update user me handler called")
 
 		authUser := middleware.GetAuthUserFromContext(r)
@@ -102,7 +102,7 @@ func updateUserMeController(userService service.IUserService) ControllerFunc {
 // searchUserProfilesController searches for user profiles
 func searchUserProfilesController(userService service.IUserService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("search user profiles handler called")
 
 		query := r.URL.Query().Get("q")
@@ -141,7 +141,7 @@ func searchUserProfilesController(userService service.IUserService) ControllerFu
 // getUserProfileByIDController retrieves a user profile by ID
 func getUserProfileByIDController(userService service.IUserService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("get user profile by id handler called")
 
 		vars := mux.Vars(r)

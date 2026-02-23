@@ -27,7 +27,7 @@ func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, message
 
 func sendPersonalMessageController(messageService service.IMessageService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("send personal message handler called")
 
 		var req dto.SendPersonalMessageDTO
@@ -57,7 +57,7 @@ func sendPersonalMessageController(messageService service.IMessageService) Contr
 
 func sendGroupMessageController(messageService service.IMessageService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("send group message handler called")
 
 		var req dto.SendGroupMessageDTO
@@ -87,7 +87,7 @@ func sendGroupMessageController(messageService service.IMessageService) Controll
 
 func getMessagesController(messageService service.IMessageService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("get messages handler called")
 
 		vars := mux.Vars(r)
@@ -142,7 +142,7 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 
 func handleDeliveredController(messageService service.IMessageService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("handle delivered handler called")
 
 		var req dto.HandleDeliveredDTO
@@ -171,7 +171,7 @@ func handleDeliveredController(messageService service.IMessageService) Controlle
 
 func handleReadController(messageService service.IMessageService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("handle read handler called")
 
 		var req dto.HandleReadMultipleDTO
@@ -210,7 +210,7 @@ func handleReadController(messageService service.IMessageService) ControllerFunc
 
 func getChannelMessagesController(messageService service.IMessageService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("get channel messages handler called")
 
 		vars := mux.Vars(r)

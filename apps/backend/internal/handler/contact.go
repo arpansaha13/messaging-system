@@ -23,7 +23,7 @@ func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contact
 
 func addContactController(contactService service.IContactService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("add contact handler called")
 
 		var req dto.AddContactRequestDTO
@@ -60,7 +60,7 @@ func addContactController(contactService service.IContactService) ControllerFunc
 
 func getContactsController(contactService service.IContactService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("get contacts handler called")
 
 		userID := middleware.GetUserIDFromContext(r)

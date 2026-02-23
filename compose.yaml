@@ -83,7 +83,6 @@ services:
       AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST:-auth:50051}
       KAFKA_BROKERS: ${KAFKA_BROKERS}
       KAFKA_TOPIC: ${KAFKA_TOPIC}
-      KAFKA_LOG_CHANNEL_SIZE: ${KAFKA_LOG_CHANNEL_SIZE}
     ports:
       - "7030:4000"
     depends_on:

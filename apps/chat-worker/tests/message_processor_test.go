@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -36,7 +37,7 @@ func (s *MessageProcessorTestSuite) TestProcessPersonalMessage_Success() {
 		Hash:       "hash123",
 	}
 
-	err := s.processor.ProcessPersonalMessage(payload)
+	err := s.processor.ProcessPersonalMessage(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify Chat rows created
@@ -100,7 +101,7 @@ func (s *MessageProcessorTestSuite) TestProcessPersonalMessage_SenderNotFound() 
 		Hash:       "hash123",
 	}
 
-	err := s.processor.ProcessPersonalMessage(payload)
+	err := s.processor.ProcessPersonalMessage(context.TODO(), payload)
 	s.Require().Error(err)
 }
 
@@ -114,7 +115,7 @@ func (s *MessageProcessorTestSuite) TestProcessPersonalMessage_ReceiverNotFound(
 		Hash:       "hash123",
 	}
 
-	err := s.processor.ProcessPersonalMessage(payload)
+	err := s.processor.ProcessPersonalMessage(context.TODO(), payload)
 	s.Require().Error(err)
 }
 
@@ -140,7 +141,7 @@ func (s *MessageProcessorTestSuite) TestProcessGroupMessage_Success() {
 		Hash:      "hash123",
 	}
 
-	err := s.processor.ProcessGroupMessage(payload)
+	err := s.processor.ProcessGroupMessage(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify Message created
@@ -189,7 +190,7 @@ func (s *MessageProcessorTestSuite) TestProcessGroupMessage_SenderNotFound() {
 		Hash:      "hash123",
 	}
 
-	err := s.processor.ProcessGroupMessage(payload)
+	err := s.processor.ProcessGroupMessage(context.TODO(), payload)
 	s.Require().Error(err)
 }
 
@@ -206,7 +207,7 @@ func (s *MessageProcessorTestSuite) TestProcessGroupMessage_ChannelNotFound() {
 		Hash:      "hash123",
 	}
 
-	err := s.processor.ProcessGroupMessage(payload)
+	err := s.processor.ProcessGroupMessage(context.TODO(), payload)
 	s.Require().Error(err)
 }
 
@@ -225,7 +226,7 @@ func (s *MessageProcessorTestSuite) TestProcessGroupMessage_NoOtherMembers() {
 		Hash:      "hash123",
 	}
 
-	err := s.processor.ProcessGroupMessage(payload)
+	err := s.processor.ProcessGroupMessage(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Message should still be created

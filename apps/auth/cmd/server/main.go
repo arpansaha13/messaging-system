@@ -1,15 +1,21 @@
 package main
 
 import (
-	"flag"
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
+	"github.com/segmentio/kafka-go"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 
 	"github.com/arpansaha13/goauthkit/pb"
@@ -20,39 +26,56 @@ import (
 	"github.com/arpansaha13/goauthkit/pkg/service"
 	"github.com/arpansaha13/goauthkit/pkg/utils"
 	"github.com/arpansaha13/goauthkit/pkg/worker"
-)
-
-var (
-	environment = flag.String("env", "development", "Environment: development, staging, production")
+	"github.com/arpansaha13/gotoolkit/logger"
 )
 
 func main() {
-	flag.Parse()
-
-	// Initialize zap logger
-	zapLogger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("failed to initialize zap logger: %v", err)
-	}
-	defer zapLogger.Sync()
-	zap.ReplaceGlobals(zapLogger)
-
-	// Load configuration from environment variables
+	// Load configuration from environment variables first
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
+		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	log.Printf("Starting auth service in %s environment", cfg.Environment)
+	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
+	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:      []string{getKafkaBrokers()},
+		Topic:        getKafkaTopic(),
+		RequiredAcks: int(kafka.RequireAll),
+	})
+
+	// Create resource with service identity
+	res, err := resource.New(context.Background(),
+		resource.WithAttributes(semconv.ServiceName("auth")),
+	)
+	if err != nil {
+		log.Fatalf("failed to create resource: %v", err)
+	}
+
+	// Initialize OTel logger provider with Kafka exporter
+	loggerProvider, err := logger.NewKafkaLoggerProvider(kafkaWriter, res)
+	if err != nil {
+		log.Fatalf("failed to initialize logger provider: %v", err)
+	}
+
+	// Initialize logger
+	otelLogger, err := logger.InitLogger(loggerProvider, parseLogLevel(cfg.LogLevel))
+	if err != nil {
+		log.Fatalf("failed to initialize logger: %v", err)
+	}
+	otelLogger = otelLogger.WithOptions(zap.Fields(zap.String("service_name", "auth")))
+	defer otelLogger.Sync()
+	otelzap.ReplaceGlobals(otelLogger)
+
+	otelLogger.Info("starting auth service", zap.String("environment", cfg.Environment))
 
 	// Initialize database
 	db, err := utils.InitDB(cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+		otelLogger.Fatal("failed to initialize database", zap.Error(err))
 	}
 	defer func() {
 		if err := utils.CloseDB(db); err != nil {
-			log.Printf("Error closing database: %v", err)
+			otelLogger.Error("error closing database", zap.Error(err))
 		}
 	}()
 
@@ -102,9 +125,13 @@ func main() {
 		},
 	)
 
-	// Create gRPC server with error interceptor
+	// Create gRPC server with interceptor chain
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(grpcmiddleware.ErrorInterceptor()),
+		grpc.ChainUnaryInterceptor(
+			grpcmiddleware.RecoveryInterceptor(),
+			logger.UnaryServerInterceptor(),
+			grpcmiddleware.ErrorInterceptor(),
+		),
 	}
 	grpcServer := grpc.NewServer(opts...)
 
@@ -117,14 +144,14 @@ func main() {
 	grpcAddr := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
 	listener, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		log.Fatalf("Failed to listen on %s: %v", grpcAddr, err)
+		otelLogger.Fatal("failed to listen", zap.String("address", grpcAddr), zap.Error(err))
 	}
 
 	// Start server in goroutine
 	go func() {
-		log.Printf("Starting auth gRPC server on %s", grpcAddr)
+		otelLogger.Info("starting auth gRPC server", zap.String("address", grpcAddr))
 		if err := grpcServer.Serve(listener); err != nil {
-			log.Fatalf("gRPC server error: %v", err)
+			otelLogger.Fatal("gRPC server error", zap.Error(err))
 		}
 	}()
 
@@ -133,7 +160,42 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	log.Println("Shutting down auth gRPC server...")
+	otelLogger.Info("shutting down auth gRPC server")
+
+	// Graceful shutdown with timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+
 	grpcServer.GracefulStop()
-	log.Println("Auth gRPC server stopped")
+
+	// Flush and close the OTel log pipeline (drains BatchProcessor, closes Kafka writer)
+	if err := loggerProvider.Shutdown(shutdownCtx); err != nil {
+		zap.L().Error("logger provider shutdown error", zap.Error(err))
+	}
+
+	zap.L().Info("auth gRPC server stopped")
+}
+
+func parseLogLevel(s string) zapcore.Level {
+	var level zapcore.Level
+	if err := level.UnmarshalText([]byte(s)); err != nil {
+		return zapcore.InfoLevel
+	}
+	return level
+}
+
+func getKafkaBrokers() string {
+	brokers := os.Getenv("KAFKA_BROKERS")
+	if brokers == "" {
+		return "kafka:9092" // Default for Docker Compose
+	}
+	return brokers
+}
+
+func getKafkaTopic() string {
+	topic := os.Getenv("KAFKA_TOPIC")
+	if topic == "" {
+		return "application-logs" // Default topic
+	}
+	return topic
 }

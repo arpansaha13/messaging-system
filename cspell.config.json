@@ -27,6 +27,7 @@
     "gomodcache",
     "gorm",
     "gotoolkit",
+    "grpcmiddleware",
     "healthcheck",
     "heroicons",
     "iconify",
@@ -34,6 +35,7 @@
     "memjs",
     "nuxt",
     "nuxtjs",
+    "otelzap",
     "pnpx",
     "preinstall",
     "protobufjs",
@@ -49,6 +51,7 @@
     "tstamp",
     "typeorm",
     "unarchived",
+    "uptrace",
     "vueuse",
     "websockets"
   ],

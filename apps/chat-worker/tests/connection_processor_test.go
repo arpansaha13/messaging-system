@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -39,7 +40,7 @@ func (s *ConnectionProcessorTestSuite) TestProcessUserConnection_WithGroups() {
 		ServerId: "server-1",
 	}
 
-	err := s.processor.ProcessUserConnection(payload)
+	err := s.processor.ProcessUserConnection(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify subscription event published to server routing key
@@ -81,7 +82,7 @@ func (s *ConnectionProcessorTestSuite) TestProcessUserConnection_NoGroups() {
 		ServerId: "server-1",
 	}
 
-	err := s.processor.ProcessUserConnection(payload)
+	err := s.processor.ProcessUserConnection(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify subscription event published with empty arrays
@@ -128,7 +129,7 @@ func (s *ConnectionProcessorTestSuite) TestProcessUserConnection_MultipleGroups(
 		ServerId: "server-42",
 	}
 
-	err := s.processor.ProcessUserConnection(payload)
+	err := s.processor.ProcessUserConnection(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify event
@@ -176,10 +177,10 @@ func (s *ConnectionProcessorTestSuite) TestProcessUserConnection_DifferentServer
 		ServerId: "server-2",
 	}
 
-	err := s.processor.ProcessUserConnection(payload1)
+	err := s.processor.ProcessUserConnection(context.TODO(), payload1)
 	s.Require().NoError(err)
 
-	err = s.processor.ProcessUserConnection(payload2)
+	err = s.processor.ProcessUserConnection(context.TODO(), payload2)
 	s.Require().NoError(err)
 
 	// Verify events published to both servers

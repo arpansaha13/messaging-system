@@ -8,22 +8,20 @@ import (
 
 // Config holds all application configuration
 type Config struct {
-	LogLevel          string
-	KafkaLogChanSize  int
-	KafkaBrokers      string
-	KafkaTopic        string
-	RabbitMQHost      string
-	RabbitMQPort      int
-	RabbitMQUser      string
-	RabbitMQPass      string
+	LogLevel     string
+	KafkaBrokers string
+	KafkaTopic   string
+	RabbitMQHost string
+	RabbitMQPort int
+	RabbitMQUser string
+	RabbitMQPass string
 }
 
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
 	cfg := &Config{
-		LogLevel:         getEnv("LOG_LEVEL", "info"),
-		KafkaLogChanSize: getEnvInt("KAFKA_LOG_CHANNEL_SIZE", 1000),
-		KafkaBrokers:     getEnv("KAFKA_BROKERS", "kafka:9092"),
+		LogLevel:     getEnv("LOG_LEVEL", "info"),
+		KafkaBrokers: getEnv("KAFKA_BROKERS", "kafka:9092"),
 		KafkaTopic:       getEnv("KAFKA_TOPIC", "application-logs"),
 		RabbitMQHost:     getEnv("RABBITMQ_HOST", "localhost"),
 		RabbitMQPort:     getEnvInt("RABBITMQ_PORT", 5672),

@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -52,7 +53,7 @@ func (s *StatusProcessorTestSuite) TestProcessDelivered_Success() {
 		SenderId:   sender.ID,
 	}
 
-	err := s.processor.ProcessDelivered(payload)
+	err := s.processor.ProcessDelivered(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify status updated
@@ -88,7 +89,7 @@ func (s *StatusProcessorTestSuite) TestProcessDelivered_NoRecipient() {
 	}
 
 	// Should not error - just silently do nothing
-	err := s.processor.ProcessDelivered(payload)
+	err := s.processor.ProcessDelivered(context.TODO(), payload)
 	s.Require().NoError(err)
 
 	// Verify no event published
@@ -129,7 +130,7 @@ func (s *StatusProcessorTestSuite) TestProcessRead_Single() {
 		},
 	}
 
-	err := s.processor.ProcessRead(payloads)
+	err := s.processor.ProcessRead(context.TODO(), payloads)
 	s.Require().NoError(err)
 
 	// Verify status updated to READ
@@ -207,7 +208,7 @@ func (s *StatusProcessorTestSuite) TestProcessRead_Multiple() {
 		},
 	}
 
-	err := s.processor.ProcessRead(payloads)
+	err := s.processor.ProcessRead(context.TODO(), payloads)
 	s.Require().NoError(err)
 
 	// Verify both updated to READ
@@ -237,7 +238,7 @@ func (s *StatusProcessorTestSuite) TestProcessRead_Multiple() {
 
 func (s *StatusProcessorTestSuite) TestProcessRead_EmptyList() {
 	// Process empty list should not error
-	err := s.processor.ProcessRead([]broker.ReadPayload{})
+	err := s.processor.ProcessRead(context.TODO(), []broker.ReadPayload{})
 	s.Require().NoError(err)
 
 	// Verify no events published

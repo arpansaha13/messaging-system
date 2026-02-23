@@ -27,7 +27,7 @@ func NewConnectionProcessor(db *gorm.DB, broker broker.MessageBroker) *Connectio
 
 // ProcessUserConnection handles user connection events
 func (cp *ConnectionProcessor) ProcessUserConnection(ctx context.Context, payload *broker.UserConnectionPayload) error {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("processing user connection", zap.Int64("user_id", payload.UserId), zap.String("server_id", payload.ServerId))
 
 	// Fetch group IDs for the user

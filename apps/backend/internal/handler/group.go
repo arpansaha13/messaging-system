@@ -23,7 +23,7 @@ func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupServ
 
 func createGroupController(groupService service.IGroupService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("create group handler called")
 
 		var req dto.CreateGroupRequestDTO
@@ -60,7 +60,7 @@ func createGroupController(groupService service.IGroupService) ControllerFunc {
 
 func getGroupsController(groupService service.IGroupService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("get groups handler called")
 
 		userID := middleware.GetUserIDFromContext(r)

@@ -29,7 +29,7 @@ func NewMessageProcessor(db *gorm.DB, broker broker.MessageBroker) *MessageProce
 
 // ProcessPersonalMessage handles personal message sends
 func (mp *MessageProcessor) ProcessPersonalMessage(ctx context.Context, payload *broker.PersonalMessagePayload) error {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("processing personal message", zap.Int64("sender_id", payload.SenderId), zap.Int64("receiver_id", payload.ReceiverId))
 
 	return mp.db.Transaction(func(tx *gorm.DB) error {
@@ -134,7 +134,7 @@ func (mp *MessageProcessor) ProcessPersonalMessage(ctx context.Context, payload 
 
 // ProcessGroupMessage handles group message sends
 func (mp *MessageProcessor) ProcessGroupMessage(ctx context.Context, payload *broker.GroupMessagePayload) error {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("processing group message", zap.Int64("sender_id", payload.SenderId), zap.Int64("group_id", payload.GroupId), zap.Int64("channel_id", payload.ChannelId))
 
 	return mp.db.Transaction(func(tx *gorm.DB) error {

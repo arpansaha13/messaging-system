@@ -28,7 +28,7 @@ func NewGroupService(groupRepo repository.IGroupRepository, userGroupRepo reposi
 
 // CreateGroup creates a new group
 func (s *GroupService) CreateGroup(ctx context.Context, name string, founderID int64) (*domain.Group, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("creating group", zap.String("group_name", name), zap.Int64("founder_id", founderID))
 
 	group := &domain.Group{
@@ -57,7 +57,7 @@ func (s *GroupService) CreateGroup(ctx context.Context, name string, founderID i
 
 // GetGroups retrieves all groups the user belongs to
 func (s *GroupService) GetGroups(ctx context.Context, userID int64) ([]*domain.Group, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("retrieving groups for user", zap.Int64("user_id", userID))
 
 	userGroups, err := s.userGroupRepo.GetUserGroups(ctx, userID)

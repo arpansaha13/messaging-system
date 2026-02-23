@@ -7,16 +7,22 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/segmentio/kafka-go"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit/logger"
+	tracermw "github.com/arpansaha13/gotoolkit/tracer"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -25,39 +31,53 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 )
 
+const serviceName string = "backend"
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	// Initialize log channel for Kafka
-	logChan := make(chan []byte, getLogChannelSize())
-
-	// Initialize logger with channel writer
-	zapLogger, err := logger.InitLoggerWithChannel(logChan, parseLogLevel(cfg.LogLevel))
-	if err != nil {
-		log.Fatalf("failed to initialize zap logger: %v", err)
-	}
-	zapLogger = zapLogger.With(zap.String("service_name", "backend"))
-	defer zapLogger.Sync()
-	zap.ReplaceGlobals(zapLogger)
-
-	// Initialize Kafka writer
+	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
 	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:      []string{getKafkaBrokers()},
 		Topic:        getKafkaTopic(),
 		RequiredAcks: int(kafka.RequireAll),
 	})
 
-	// Start Kafka producer goroutine
-	kafkaCtx, kafkaCancel := context.WithCancel(context.Background())
-	go logger.KafkaLogProducer(kafkaCtx, logChan, kafkaWriter)
+	// Create resource with service identity
+	res, err := resource.New(context.Background(),
+		resource.WithAttributes(semconv.ServiceName(serviceName)),
+	)
+	if err != nil {
+		log.Fatalf("failed to create resource: %v", err)
+	}
+
+	// Initialize OTel logger provider with Kafka exporter
+	loggerProvider, err := logger.NewKafkaLoggerProvider(kafkaWriter, res)
+	if err != nil {
+		log.Fatalf("failed to initialize logger provider: %v", err)
+	}
+
+	// Initialize logger (uptrace otelzap wrapping stdout JSON output)
+	otelLogger, err := logger.InitLogger(loggerProvider, parseLogLevel(cfg.LogLevel))
+	if err != nil {
+		log.Fatalf("failed to initialize logger: %v", err)
+	}
+	otelLogger = otelLogger.WithOptions(zap.Fields(zap.String("service_name", serviceName)))
+	defer otelLogger.Sync()
+	otelzap.ReplaceGlobals(otelLogger)
+
+	// Initialize TracerProvider (no exporter — trace IDs generated, spans not shipped yet)
+	tp := sdktrace.NewTracerProvider(sdktrace.WithResource(res))
+	otel.SetTracerProvider(tp)
+	tracer := otel.Tracer(serviceName)
 
 	// Initialize database
 	db, err := utils.InitDB(cfg.DatabaseURL)
 	if err != nil {
-		zapLogger.Fatal("failed to initialize database", zap.Error(err))
+		otelLogger.Fatal("failed to initialize database", zap.Error(err))
 	}
 
 	// Initialize repositories
@@ -110,6 +130,7 @@ func main() {
 	// Apply middlewares
 	router.Use(middleware.RecoveryMiddleware)
 	router.Use(logger.Middleware)
+	router.Use(tracermw.Middleware(tracer))
 	router.Use(middleware.ErrorMiddleware)
 
 	// Authentication middleware for protected routes
@@ -130,9 +151,12 @@ func main() {
 
 	// Create HTTP server
 	addr := fmt.Sprintf(":%d", cfg.APIPort)
+	httpHandler := otelhttp.NewHandler(router, serviceName,
+		otelhttp.WithTracerProvider(tp),
+	)
 	httpServer := &http.Server{
 		Addr:         addr,
-		Handler:      router,
+		Handler:      httpHandler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
@@ -140,9 +164,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		zapLogger.Info("Server started", zap.String("address", addr))
+		otelLogger.Info("Server started", zap.String("address", addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			zapLogger.Fatal("server error", zap.Error(err))
+			otelLogger.Fatal("server error", zap.Error(err))
 		}
 	}()
 
@@ -151,29 +175,30 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	zapLogger.Info("Shutting down server...")
+	otelLogger.Info("Shutting down server...")
 
 	// Graceful shutdown with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := httpServer.Shutdown(ctx); err != nil {
-		zapLogger.Error("server shutdown error", zap.Error(err))
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		otelLogger.Error("server shutdown error", zap.Error(err))
 	}
 
-	// Cancel Kafka producer context
-	kafkaCancel()
+	// Shutdown TracerProvider
+	if err := tp.Shutdown(shutdownCtx); err != nil {
+		otelLogger.Error("tracer provider shutdown error", zap.Error(err))
+	}
 
-	// Close log channel to signal Kafka producer to stop
-	close(logChan)
-
-	// Wait a bit for Kafka producer to finish
-	time.Sleep(1 * time.Second)
+	// Flush and close the OTel log pipeline (drains BatchProcessor, closes Kafka writer)
+	if err := loggerProvider.Shutdown(shutdownCtx); err != nil {
+		zap.L().Error("logger provider shutdown error", zap.Error(err))
+	}
 
 	// Close RabbitMQ connection
 	if rabbitmqService != nil {
 		if err := rabbitmqService.Close(); err != nil {
-			zapLogger.Error("RabbitMQ close error", zap.Error(err))
+			zap.L().Error("RabbitMQ close error", zap.Error(err))
 		}
 	}
 
@@ -183,7 +208,7 @@ func main() {
 		sqlDB.Close()
 	}
 
-	zapLogger.Info("Server stopped")
+	otelLogger.Info("Server stopped")
 }
 
 func parseLogLevel(s string) zapcore.Level {
@@ -192,18 +217,6 @@ func parseLogLevel(s string) zapcore.Level {
 		return zapcore.InfoLevel
 	}
 	return level
-}
-
-func getLogChannelSize() int {
-	size := os.Getenv("KAFKA_LOG_CHANNEL_SIZE")
-	if size == "" {
-		return 1000 // Default size
-	}
-	val, err := strconv.Atoi(size)
-	if err != nil {
-		return 1000 // Default on parse error
-	}
-	return val
 }
 
 func getKafkaBrokers() string {

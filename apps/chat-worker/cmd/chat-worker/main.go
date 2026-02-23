@@ -16,6 +16,9 @@ import (
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/db"
 	"github.com/segmentio/kafka-go"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.opentelemetry.io/otel/sdk/resource"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -26,32 +29,40 @@ func main() {
 		panic(fmt.Sprintf("failed to load config: %v", err))
 	}
 
-	// Initialize logger
-	logChan := make(chan []byte, cfg.KafkaLogChanSize)
-	zapLogger, err := logger.InitLoggerWithChannel(logChan, parseLogLevel(cfg.LogLevel))
-	if err != nil {
-		panic(err)
-	}
-	zapLogger = zapLogger.With(zap.String("service_name", "chat-worker"))
-	zap.ReplaceGlobals(zapLogger)
-	defer zapLogger.Sync()
-
-	log := zap.L()
-
-	// Initialize Kafka writer
+	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
 	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:      []string{cfg.KafkaBrokers},
 		Topic:        cfg.KafkaTopic,
 		RequiredAcks: int(kafka.RequireAll),
 	})
-	defer kafkaWriter.Close()
 
-	// Start Kafka producer goroutine
-	kafkaCtx, kafkaCancel := context.WithCancel(context.Background())
-	go logger.KafkaLogProducer(kafkaCtx, logChan, kafkaWriter)
+	// Create resource with service identity
+	res, err := resource.New(context.Background(),
+		resource.WithAttributes(semconv.ServiceName("chat-worker")),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create resource: %v", err))
+	}
+
+	// Initialize OTel logger provider with Kafka exporter
+	loggerProvider, err := logger.NewKafkaLoggerProvider(kafkaWriter, res)
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialize logger provider: %v", err))
+	}
+
+	// Initialize logger (uptrace otelzap wrapping stdout JSON output)
+	otelLogger, err := logger.InitLogger(loggerProvider, parseLogLevel(cfg.LogLevel))
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialize logger: %v", err))
+	}
+	otelLogger = otelLogger.WithOptions(zap.Fields(zap.String("service_name", "chat-worker")))
+	otelzap.ReplaceGlobals(otelLogger)
+	defer otelLogger.Sync()
+
+	log := zap.L()
 
 	// Root context with logger injected
-	rootCtx := logger.WithContext(context.Background(), zapLogger)
+	rootCtx := logger.WithContext(context.Background(), otelLogger)
 
 	// Initialize database
 	database, err := db.InitDB()
@@ -106,10 +117,12 @@ func main() {
 	<-sigChan
 	log.Info("SIGTERM received, shutting down gracefully")
 
-	// Shutdown Kafka producer
-	kafkaCancel()
-	close(logChan)
-	time.Sleep(1 * time.Second)
+	// Flush and close the OTel log pipeline (drains BatchProcessor, closes Kafka writer)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+	if err := loggerProvider.Shutdown(shutdownCtx); err != nil {
+		log.Error("logger provider shutdown error", zap.Error(err))
+	}
 
 	// Close database
 	sqlDB, err := database.DB()

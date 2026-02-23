@@ -26,7 +26,7 @@ func NewChannelService(channelRepo repository.IChannelRepository, groupRepo repo
 
 // CreateChannel creates a new channel within a group
 func (s *ChannelService) CreateChannel(ctx context.Context, name string, groupID int64) (*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("creating channel", zap.String("channel_name", name), zap.Int64("group_id", groupID))
 
 	// Verify group exists
@@ -52,7 +52,7 @@ func (s *ChannelService) CreateChannel(ctx context.Context, name string, groupID
 
 // GetChannels retrieves all channels
 func (s *ChannelService) GetChannels(ctx context.Context) ([]*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("retrieving all channels")
 
 	channels, err := s.channelRepo.GetAll(ctx)
@@ -67,7 +67,7 @@ func (s *ChannelService) GetChannels(ctx context.Context) ([]*domain.Channel, er
 
 // GetChannelsByGroupID retrieves channels in a specific group
 func (s *ChannelService) GetChannelsByGroupID(ctx context.Context, groupID int64) ([]*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("retrieving channels for group", zap.Int64("group_id", groupID))
 
 	channels, err := s.channelRepo.GetByGroupID(ctx, groupID)
@@ -82,7 +82,7 @@ func (s *ChannelService) GetChannelsByGroupID(ctx context.Context, groupID int64
 
 // GetChannelByID retrieves a channel by its ID
 func (s *ChannelService) GetChannelByID(ctx context.Context, channelID int64) (*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("retrieving channel by id", zap.Int64("channel_id", channelID))
 
 	channel, err := s.channelRepo.GetByID(ctx, channelID)

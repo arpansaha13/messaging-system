@@ -53,7 +53,7 @@ func (s *InviteService) generateHash() (string, error) {
 
 // CreateInvite creates a new invite for a group
 func (s *InviteService) CreateInvite(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("creating invite", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", groupID))
 
 	// Verify group exists
@@ -95,7 +95,7 @@ func (s *InviteService) CreateInvite(ctx context.Context, inviterID, groupID int
 
 // FindByHash finds an invite by its hash
 func (s *InviteService) FindByHash(ctx context.Context, hash string) (*domain.Invite, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("finding invite by hash")
 
 	invite, err := s.inviteRepo.GetByHash(ctx, hash)
@@ -110,7 +110,7 @@ func (s *InviteService) FindByHash(ctx context.Context, hash string) (*domain.In
 
 // AcceptInvite accepts an invite and adds the user to the group
 func (s *InviteService) AcceptInvite(ctx context.Context, userID int64, inviteHash string) (*AcceptInviteResponseDTO, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("accepting invite", zap.Int64("user_id", userID))
 
 	// Get invite with group info

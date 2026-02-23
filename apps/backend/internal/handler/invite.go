@@ -24,7 +24,7 @@ func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteSe
 
 func findInviteController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("find invite handler called")
 
 		vars := mux.Vars(r)
@@ -67,7 +67,7 @@ func findInviteController(inviteService service.IInviteService) ControllerFunc {
 
 func acceptInviteController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("accept invite handler called")
 
 		vars := mux.Vars(r)
@@ -106,7 +106,7 @@ func acceptInviteController(inviteService service.IInviteService) ControllerFunc
 
 func createInviteController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("create invite handler called")
 
 		vars := mux.Vars(r)
@@ -153,7 +153,7 @@ func createInviteController(inviteService service.IInviteService) ControllerFunc
 
 func joinGroupController(inviteService service.IInviteService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context())
+		log := logger.FromContext(r.Context()).Ctx(r.Context())
 		log.Debug("join group handler called")
 
 		var req dto.JoinGroupDTO

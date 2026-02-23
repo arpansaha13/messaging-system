@@ -28,7 +28,7 @@ func NewUserGroupService(userGroupRepo repository.IUserGroupRepository, userRepo
 
 // GetGroupMembers retrieves all members of a group
 func (s *UserGroupService) GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error) {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("retrieving group members", zap.Int64("group_id", groupID))
 
 	members, err := s.userGroupRepo.GetGroupMembers(ctx, groupID)

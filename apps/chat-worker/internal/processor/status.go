@@ -28,7 +28,7 @@ func NewStatusProcessor(db *gorm.DB, broker broker.MessageBroker) *StatusProcess
 
 // ProcessDelivered handles message delivered status updates
 func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker.DeliveredPayload) error {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("processing delivered status", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId), zap.Int64("sender_id", payload.SenderId))
 
 	// Update message recipient status
@@ -65,7 +65,7 @@ func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker
 
 // ProcessRead handles message read status updates
 func (sp *StatusProcessor) ProcessRead(ctx context.Context, payloads []broker.ReadPayload) error {
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).Ctx(ctx)
 	log.Debug("processing read status", zap.Int("payload_count", len(payloads)))
 
 	if len(payloads) == 0 {
