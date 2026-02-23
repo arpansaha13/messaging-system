@@ -1,7 +1,7 @@
 type KeyFactory<T extends string | number> = (id: T) => string
 
 function buildKey(namespace: string, id?: string | number) {
-  return id !== undefined ? `${namespace}:${id}` : namespace
+  return id === undefined ? namespace : `${namespace}:${id}`
 }
 
 export const asyncKeys = {

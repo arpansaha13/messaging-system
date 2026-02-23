@@ -40,11 +40,11 @@ type IChatRepository interface {
 type IMessageRepository interface {
 	Create(ctx context.Context, message *domain.Message) error
 	GetByID(ctx context.Context, messageID int64) (*domain.Message, error)
-	GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, limit int, offset int) ([]*MessageWithStatus, error)
+	GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, before, after *int64) (*MessagePage, error)
 	Delete(ctx context.Context, messageID int64) error
 	Update(ctx context.Context, message *domain.Message) error
 	GetLatestMessageByUsersInChat(ctx context.Context, userID, receiverID int64, clearedAt *time.Time) (*MessageWithStatus, error)
-	GetMessagesByChannelID(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error)
+	GetMessagesByChannelID(ctx context.Context, channelID int64, before, after *int64) (*ChannelMessagePage, error)
 }
 
 // MessageRecipientRepository defines the interface for message recipient repository operations

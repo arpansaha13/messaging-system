@@ -93,19 +93,19 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 	return nil
 }
 
-// GetMessages retrieves messages between two users
-func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int64, limit, offset int) ([]*repository.MessageWithStatus, error) {
+// GetMessages retrieves messages between two users using cursor-based pagination
+func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error) {
 	log := logger.FromContext(ctx).Ctx(ctx)
-	log.Debug("retrieving messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Int("limit", limit), zap.Int("offset", offset))
+	log.Debug("retrieving messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
-	messages, err := s.messageRepo.GetMessagesByUserId(ctx, userID, receiverID, nil, limit, offset)
+	page, err := s.messageRepo.GetMessagesByUserId(ctx, userID, receiverID, nil, before, after)
 	if err != nil {
 		log.Error("failed to get messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return nil, err
 	}
 
-	log.Debug("messages retrieved successfully", zap.Int64("user_id", userID), zap.Int("message_count", len(messages)))
-	return messages, nil
+	log.Debug("messages retrieved successfully", zap.Int64("user_id", userID), zap.Int("message_count", len(page.Messages)))
+	return page, nil
 }
 
 // MarkMessageAsDelivered publishes a delivered status update to RabbitMQ
@@ -164,19 +164,19 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, messages []ReadP
 	return nil
 }
 
-// GetChannelMessages retrieves messages for a channel
-func (s *MessageService) GetChannelMessages(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error) {
+// GetChannelMessages retrieves messages for a channel using cursor-based pagination
+func (s *MessageService) GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error) {
 	log := logger.FromContext(ctx).Ctx(ctx)
-	log.Debug("retrieving channel messages", zap.Int64("channel_id", channelID), zap.Int("limit", limit), zap.Int("offset", offset))
+	log.Debug("retrieving channel messages", zap.Int64("channel_id", channelID))
 
-	messages, err := s.messageRepo.GetMessagesByChannelID(ctx, channelID, limit, offset)
+	page, err := s.messageRepo.GetMessagesByChannelID(ctx, channelID, before, after)
 	if err != nil {
 		log.Error("failed to retrieve channel messages", zap.Int64("channel_id", channelID), zap.Error(err))
 		return nil, err
 	}
 
-	log.Debug("channel messages retrieved successfully", zap.Int64("channel_id", channelID), zap.Int("message_count", len(messages)))
-	return messages, nil
+	log.Debug("channel messages retrieved successfully", zap.Int64("channel_id", channelID), zap.Int("message_count", len(page.Messages)))
+	return page, nil
 }
 
 var _ IMessageService = (*MessageService)(nil)

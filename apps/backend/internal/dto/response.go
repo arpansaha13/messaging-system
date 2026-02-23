@@ -78,6 +78,13 @@ type MessageStatusResponseDTO struct {
 	Status string `json:"status"`
 }
 
+// PaginatedMessagesResponseDTO represents paginated messages response
+type PaginatedMessagesResponseDTO struct {
+	Messages  []MessageResponseDTO `json:"messages"`
+	HasBefore bool                 `json:"hasBefore"`
+	HasAfter  bool                 `json:"hasAfter"`
+}
+
 // Chat Response DTOs
 
 // ChatResponseDTO represents a chat in responses

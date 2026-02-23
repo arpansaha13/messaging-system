@@ -49,10 +49,10 @@ type IChatService interface {
 type IMessageService interface {
 	SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) error
 	SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) error
-	GetMessages(ctx context.Context, userID, receiverID int64, limit, offset int) ([]*repository.MessageWithStatus, error)
+	GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error)
 	MarkMessageAsDelivered(ctx context.Context, messageID, receiverID, senderID int64) error
 	MarkMessageAsRead(ctx context.Context, messages []ReadPayload) error
-	GetChannelMessages(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error)
+	GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error)
 }
 
 // ChannelService defines the interface for channel service operations

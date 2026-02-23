@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+const DefaultMessagesPageSize = 50
+
 // Config holds all application configuration
 type Config struct {
 	// Database

@@ -392,9 +392,9 @@ func (m *MockMessageRecipientRepository) Delete(ctx context.Context, recipientID
 type MockMessageRepository struct {
 	CreateFunc                        func(ctx context.Context, message *domain.Message) error
 	GetByIDFunc                       func(ctx context.Context, messageID int64) (*domain.Message, error)
-	GetMessagesByUserIdFunc           func(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, limit int, offset int) ([]*repository.MessageWithStatus, error)
+	GetMessagesByUserIdFunc           func(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, before, after *int64) (*repository.MessagePage, error)
 	GetLatestMessageByUsersInChatFunc func(ctx context.Context, userID, receiverID int64, clearedAt *time.Time) (*repository.MessageWithStatus, error)
-	GetMessagesByChannelIDFunc        func(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error)
+	GetMessagesByChannelIDFunc        func(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error)
 	UpdateFunc                        func(ctx context.Context, message *domain.Message) error
 	DeleteFunc                        func(ctx context.Context, messageID int64) error
 }
@@ -413,9 +413,9 @@ func (m *MockMessageRepository) GetByID(ctx context.Context, messageID int64) (*
 	return nil, nil
 }
 
-func (m *MockMessageRepository) GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, limit int, offset int) ([]*repository.MessageWithStatus, error) {
+func (m *MockMessageRepository) GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, before, after *int64) (*repository.MessagePage, error) {
 	if m.GetMessagesByUserIdFunc != nil {
-		return m.GetMessagesByUserIdFunc(ctx, senderID, receiverID, clearedAt, limit, offset)
+		return m.GetMessagesByUserIdFunc(ctx, senderID, receiverID, clearedAt, before, after)
 	}
 	return nil, nil
 }
@@ -427,9 +427,9 @@ func (m *MockMessageRepository) GetLatestMessageByUsersInChat(ctx context.Contex
 	return nil, nil
 }
 
-func (m *MockMessageRepository) GetMessagesByChannelID(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error) {
+func (m *MockMessageRepository) GetMessagesByChannelID(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error) {
 	if m.GetMessagesByChannelIDFunc != nil {
-		return m.GetMessagesByChannelIDFunc(ctx, channelID, limit, offset)
+		return m.GetMessagesByChannelIDFunc(ctx, channelID, before, after)
 	}
 	return nil, nil
 }

@@ -20,6 +20,20 @@ type MessageWithStatus struct {
 	UpdatedAt time.Time
 }
 
+// MessagePage holds paginated personal messages with pagination info
+type MessagePage struct {
+	Messages  []*MessageWithStatus
+	HasBefore bool
+	HasAfter  bool
+}
+
+// ChannelMessagePage holds paginated channel messages with pagination info
+type ChannelMessagePage struct {
+	Messages  []*domain.Message
+	HasBefore bool
+	HasAfter  bool
+}
+
 // MessageRepository handles message-related database operations
 type MessageRepository struct {
 	db *gorm.DB
@@ -53,8 +67,12 @@ func (r *MessageRepository) GetByID(ctx context.Context, messageID int64) (*doma
 	return &message, nil
 }
 
-// GetMessagesByUserId retrieves messages between two users using message_recipients join
-func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, limit int, offset int) ([]*MessageWithStatus, error) {
+// GetMessagesByUserId retrieves messages between two users using cursor-based pagination.
+// `before` and `after` are optional message IDs for pagination; if neither is provided, returns latest messages
+func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, before, after *int64) (*MessagePage, error) {
+	pageSize := 50
+	fetchSize := pageSize + 1 // N+1 trick to detect if more messages exist
+
 	var messages []*MessageWithStatus
 	query := r.db.WithContext(ctx).
 		Model(domain.Message{}).
@@ -68,17 +86,86 @@ func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, r
 		query = query.Where("messages.created_at >= ?", clearedAt)
 	}
 
-	err := query.
-		Order("messages.created_at ASC").
-		// Limit(limit).
-		// Offset(offset).
-		Find(&messages).Error
+	var hasBeforeMore, hasAfterMore bool
 
-	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+	// Apply cursor-based filtering
+	if before != nil {
+		// Load older messages (before this message)
+		err := query.
+			Where("messages.id < ?", *before).
+			Order("messages.id DESC").
+			Limit(fetchSize).
+			Find(&messages).Error
+
+		if err != nil {
+			return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+		}
+
+		// Check if there are more messages before
+		hasBeforeMore = len(messages) > pageSize
+		if hasBeforeMore {
+			messages = messages[:pageSize]
+		}
+		// Reverse to get chronological order
+		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+			messages[i], messages[j] = messages[j], messages[i]
+		}
+
+		return &MessagePage{
+			Messages:  messages,
+			HasBefore: hasBeforeMore,
+			HasAfter:  true, // Cursor message exists upstream
+		}, nil
+	} else if after != nil {
+		// Load newer messages (after this message)
+		err := query.
+			Where("messages.id > ?", *after).
+			Order("messages.id ASC").
+			Limit(fetchSize).
+			Find(&messages).Error
+
+		if err != nil {
+			return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+		}
+
+		// Check if there are more messages after
+		hasAfterMore = len(messages) > pageSize
+		if hasAfterMore {
+			messages = messages[:pageSize]
+		}
+
+		return &MessagePage{
+			Messages:  messages,
+			HasBefore: true, // Cursor message exists downstream
+			HasAfter:  hasAfterMore,
+		}, nil
+	} else {
+		// Return latest messages (no cursor)
+		err := query.
+			Order("messages.id DESC").
+			Limit(fetchSize).
+			Find(&messages).Error
+
+		if err != nil {
+			return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+		}
+
+		// Check if there are more messages before latest
+		hasBeforeMore = len(messages) > pageSize
+		if hasBeforeMore {
+			messages = messages[:pageSize]
+		}
+		// Reverse to get chronological order
+		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+			messages[i], messages[j] = messages[j], messages[i]
+		}
+
+		return &MessagePage{
+			Messages:  messages,
+			HasBefore: hasBeforeMore,
+			HasAfter:  false, // Latest fetch has no newer messages
+		}, nil
 	}
-
-	return messages, nil
 }
 
 // Delete deletes a message
@@ -126,21 +213,96 @@ func (r *MessageRepository) GetLatestMessageByUsersInChat(ctx context.Context, u
 	return message, nil
 }
 
-// GetMessagesByChannelID retrieves all messages in a channel
-func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelID int64, limit int, offset int) ([]*domain.Message, error) {
+// GetMessagesByChannelID retrieves channel messages using cursor-based pagination
+// before and after are optional message IDs for pagination; if neither is provided, returns latest messages
+func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelID int64, before, after *int64) (*ChannelMessagePage, error) {
+	pageSize := 50
+	fetchSize := pageSize + 1 // N+1 trick to detect if more messages exist
+
 	var messages []*domain.Message
-	err := r.db.WithContext(ctx).
-		Where("channel_id = ?", channelID).
-		Order("created_at ASC").
-		// Limit(limit).
-		// Offset(offset).
-		Find(&messages).Error
 
-	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+	query := r.db.WithContext(ctx).Where("channel_id = ?", channelID)
+
+	var hasBeforeMore, hasAfterMore bool
+
+	// Apply cursor-based filtering
+	if before != nil {
+		// Load older messages (before this message)
+		err := query.
+			Where("id < ?", *before).
+			Order("id DESC").
+			Limit(fetchSize).
+			Find(&messages).Error
+
+		if err != nil {
+			return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+		}
+
+		// Check if there are more messages before
+		hasBeforeMore = len(messages) > pageSize
+		if hasBeforeMore {
+			messages = messages[:pageSize]
+		}
+		// Reverse to get chronological order
+		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+			messages[i], messages[j] = messages[j], messages[i]
+		}
+
+		return &ChannelMessagePage{
+			Messages:  messages,
+			HasBefore: hasBeforeMore,
+			HasAfter:  true, // Cursor message exists upstream
+		}, nil
+	} else if after != nil {
+		// Load newer messages (after this message)
+		err := query.
+			Where("id > ?", *after).
+			Order("id ASC").
+			Limit(fetchSize).
+			Find(&messages).Error
+
+		if err != nil {
+			return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+		}
+
+		// Check if there are more messages after
+		hasAfterMore = len(messages) > pageSize
+		if hasAfterMore {
+			messages = messages[:pageSize]
+		}
+
+		return &ChannelMessagePage{
+			Messages:  messages,
+			HasBefore: true, // Cursor message exists downstream
+			HasAfter:  hasAfterMore,
+		}, nil
+	} else {
+		// Initial fetch: return latest messages (no cursor)
+		err := query.
+			Order("id DESC").
+			Limit(fetchSize).
+			Find(&messages).Error
+
+		if err != nil {
+			return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+		}
+
+		// Check if there are more messages before latest
+		hasBeforeMore = len(messages) > pageSize
+		if hasBeforeMore {
+			messages = messages[:pageSize]
+		}
+		// Reverse to get chronological order
+		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+			messages[i], messages[j] = messages[j], messages[i]
+		}
+
+		return &ChannelMessagePage{
+			Messages:  messages,
+			HasBefore: hasBeforeMore,
+			HasAfter:  false, // Latest fetch has no newer messages
+		}, nil
 	}
-
-	return messages, nil
 }
 
 var _ IMessageRepository = (*MessageRepository)(nil)

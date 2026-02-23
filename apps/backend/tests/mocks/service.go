@@ -156,10 +156,10 @@ func (m *MockChatService) DeleteChat(ctx context.Context, userID, receiverID int
 type MockMessageService struct {
 	SendPersonalMessageFunc    func(ctx context.Context, senderID, receiverID int64, content, hash string) error
 	SendGroupMessageFunc       func(ctx context.Context, senderID, groupID, channelID int64, content, hash string) error
-	GetMessagesFunc            func(ctx context.Context, userID, receiverID int64, limit, offset int) ([]*repository.MessageWithStatus, error)
+	GetMessagesFunc            func(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error)
 	MarkMessageAsDeliveredFunc func(ctx context.Context, messageID, receiverID, senderID int64) error
 	MarkMessageAsReadFunc      func(ctx context.Context, messages []service.ReadPayload) error
-	GetChannelMessagesFunc     func(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error)
+	GetChannelMessagesFunc     func(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error)
 }
 
 func (m *MockMessageService) SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) error {
@@ -176,9 +176,9 @@ func (m *MockMessageService) SendGroupMessage(ctx context.Context, senderID, gro
 	return nil
 }
 
-func (m *MockMessageService) GetMessages(ctx context.Context, userID, receiverID int64, limit, offset int) ([]*repository.MessageWithStatus, error) {
+func (m *MockMessageService) GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error) {
 	if m.GetMessagesFunc != nil {
-		return m.GetMessagesFunc(ctx, userID, receiverID, limit, offset)
+		return m.GetMessagesFunc(ctx, userID, receiverID, before, after)
 	}
 	return nil, nil
 }
@@ -197,9 +197,9 @@ func (m *MockMessageService) MarkMessageAsRead(ctx context.Context, messages []s
 	return nil
 }
 
-func (m *MockMessageService) GetChannelMessages(ctx context.Context, channelID int64, limit, offset int) ([]*domain.Message, error) {
+func (m *MockMessageService) GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error) {
 	if m.GetChannelMessagesFunc != nil {
-		return m.GetChannelMessagesFunc(ctx, channelID, limit, offset)
+		return m.GetChannelMessagesFunc(ctx, channelID, before, after)
 	}
 	return nil, nil
 }

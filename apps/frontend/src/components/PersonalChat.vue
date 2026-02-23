@@ -1,5 +1,5 @@
 <template>
-  <ChatWindow v-if="receiver">
+  <ChatWindow v-if="receiver" ref="chatWindowRef">
     <template #header>
       <ChatHeader
         :title="receiver.contact?.alias ?? receiver.globalName"
@@ -45,8 +45,16 @@ const receiverId = computed(() => {
 // Fetch receiver user data using useAsyncData with computed key
 const { data: receiver } = await useFetchUser(receiverId)
 
-// Fetch messages using useAsyncData
-const { data: messagesData, pending: messagesLoading } = await useFetchPersonalMessages(receiverId)
+// Setup scroll element ref and computed
+const chatWindowRef = useTemplateRef('chatWindowRef')
+const scrollEl = computed(() => {
+  if (!chatWindowRef.value) return null
+
+  const el = chatWindowRef.value.$el as HTMLDivElement
+  return el.children[1] as HTMLDivElement // UCard body
+})
+
+const { data: messagesData, pending: messagesLoading } = useFetchPersonalMessages(receiverId, scrollEl)
 
 // Convert fetched messages array to Map for ChatBody component
 const messagesAsMap = computed(() => {

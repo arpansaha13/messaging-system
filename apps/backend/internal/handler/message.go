@@ -100,31 +100,37 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 		userID := middleware.GetUserIDFromContext(r)
 		senderID, _ := strconv.ParseInt(userID, 10, 64)
 
-		limit := 50
-		offset := 0
-		if l := r.URL.Query().Get("limit"); l != "" {
-			if parsed, err := strconv.Atoi(l); err == nil {
-				limit = parsed
+		// Parse cursor parameters
+		var before, after *int64
+		if b := r.URL.Query().Get("before"); b != "" {
+			if parsed, err := strconv.ParseInt(b, 10, 64); err == nil {
+				before = &parsed
 			}
 		}
-		if o := r.URL.Query().Get("offset"); o != "" {
-			if parsed, err := strconv.Atoi(o); err == nil {
-				offset = parsed
+		if a := r.URL.Query().Get("after"); a != "" {
+			if parsed, err := strconv.ParseInt(a, 10, 64); err == nil {
+				after = &parsed
 			}
 		}
 
-		log.Debug("fetching messages", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int("limit", limit), zap.Int("offset", offset))
+		// Validate that both cursors are not provided
+		if before != nil && after != nil {
+			log.Warn("both before and after cursors provided", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
+			return &domain.ValidationError{Message: "cannot specify both 'before' and 'after'"}
+		}
 
-		messages, err := messageService.GetMessages(r.Context(), senderID, receiverID, limit, offset)
+		log.Debug("fetching messages", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
+
+		page, err := messageService.GetMessages(r.Context(), senderID, receiverID, before, after)
 		if err != nil {
 			log.Error("failed to get messages", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 			return err
 		}
 
-		log.Debug("messages retrieved successfully", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(messages)))
+		log.Debug("messages retrieved successfully", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(page.Messages)))
 
-		messageResponses := make([]dto.MessageResponseDTO, len(messages))
-		for i, msg := range messages {
+		messageResponses := make([]dto.MessageResponseDTO, len(page.Messages))
+		for i, msg := range page.Messages {
 			messageResponses[i] = dto.MessageResponseDTO{
 				ID:        msg.ID,
 				SenderID:  msg.SenderID,
@@ -135,8 +141,14 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 			}
 		}
 
+		response := dto.PaginatedMessagesResponseDTO{
+			Messages:  messageResponses,
+			HasBefore: page.HasBefore,
+			HasAfter:  page.HasAfter,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(messageResponses)
+		return json.NewEncoder(w).Encode(response)
 	}
 }
 
@@ -220,29 +232,35 @@ func getChannelMessagesController(messageService service.IMessageService) Contro
 			return &domain.ValidationError{Message: "invalid channel id"}
 		}
 
-		limit := 50
-		offset := 0
-		if l := r.URL.Query().Get("limit"); l != "" {
-			if parsed, err := strconv.Atoi(l); err == nil {
-				limit = parsed
+		// Parse cursor parameters
+		var before, after *int64
+		if b := r.URL.Query().Get("before"); b != "" {
+			if parsed, err := strconv.ParseInt(b, 10, 64); err == nil {
+				before = &parsed
 			}
 		}
-		if o := r.URL.Query().Get("offset"); o != "" {
-			if parsed, err := strconv.Atoi(o); err == nil {
-				offset = parsed
+		if a := r.URL.Query().Get("after"); a != "" {
+			if parsed, err := strconv.ParseInt(a, 10, 64); err == nil {
+				after = &parsed
 			}
 		}
 
-		log.Debug("fetching channel messages", zap.Int64("channel_id", channelID), zap.Int("limit", limit), zap.Int("offset", offset))
+		// Validate that both cursors are not provided
+		if before != nil && after != nil {
+			log.Warn("both before and after cursors provided", zap.Int64("channel_id", channelID))
+			return &domain.ValidationError{Message: "cannot specify both 'before' and 'after'"}
+		}
 
-		messages, err := messageService.GetChannelMessages(r.Context(), channelID, limit, offset)
+		log.Debug("fetching channel messages", zap.Int64("channel_id", channelID))
+
+		page, err := messageService.GetChannelMessages(r.Context(), channelID, before, after)
 		if err != nil {
 			log.Error("failed to get channel messages", zap.Int64("channel_id", channelID), zap.Error(err))
 			return err
 		}
 
-		messageResponses := make([]dto.MessageResponseDTO, len(messages))
-		for i, msg := range messages {
+		messageResponses := make([]dto.MessageResponseDTO, len(page.Messages))
+		for i, msg := range page.Messages {
 			messageResponses[i] = dto.MessageResponseDTO{
 				ID:        msg.ID,
 				SenderID:  msg.SenderID,
@@ -252,7 +270,13 @@ func getChannelMessagesController(messageService service.IMessageService) Contro
 			}
 		}
 
+		response := dto.PaginatedMessagesResponseDTO{
+			Messages:  messageResponses,
+			HasBefore: page.HasBefore,
+			HasAfter:  page.HasAfter,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(messageResponses)
+		return json.NewEncoder(w).Encode(response)
 	}
 }
