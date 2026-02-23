@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/arpansaha13/goauthkit/pb"
-	"github.com/arpansaha13/goauthkit/pkg/config"
+	"github.com/arpansaha13/messaging-system/apps/auth/internal/config"
 	grpccontroller "github.com/arpansaha13/goauthkit/pkg/controller/grpc"
 	grpcmiddleware "github.com/arpansaha13/goauthkit/pkg/middleware/grpc"
 	"github.com/arpansaha13/goauthkit/pkg/repository"
@@ -38,8 +38,8 @@ func main() {
 
 	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
 	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      []string{getKafkaBrokers()},
-		Topic:        getKafkaTopic(),
+		Brokers:      []string{cfg.KafkaBrokers},
+		Topic:        cfg.KafkaTopic,
 		RequiredAcks: int(kafka.RequireAll),
 	})
 
@@ -184,18 +184,3 @@ func parseLogLevel(s string) zapcore.Level {
 	return level
 }
 
-func getKafkaBrokers() string {
-	brokers := os.Getenv("KAFKA_BROKERS")
-	if brokers == "" {
-		return "kafka:9092" // Default for Docker Compose
-	}
-	return brokers
-}
-
-func getKafkaTopic() string {
-	topic := os.Getenv("KAFKA_TOPIC")
-	if topic == "" {
-		return "application-logs" // Default topic
-	}
-	return topic
-}
