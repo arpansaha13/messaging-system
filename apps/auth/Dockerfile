@@ -7,7 +7,7 @@ WORKDIR /app/common
 
 COPY apps/common ./
 
-WORKDIR /app/backend
+WORKDIR /app/auth
 
 # https://medium.com/@marcin.niemira/optimise-docker-build-for-go-c03d6eb8b4b
 
@@ -17,8 +17,6 @@ ENV GOMODCACHE=/gomod-cache
 
 COPY apps/auth/go.mod apps/auth/go.sum ./
 COPY apps/auth/cmd/ ./cmd/
-COPY apps/auth/internal/ ./internal/
-COPY apps/auth/pb/ ./pb/
 
 RUN --mount=type=cache,target=/gomod-cache \
   --mount=type=cache,target=/go-cache \
