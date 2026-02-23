@@ -129,7 +129,7 @@ func main() {
 	opts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			grpcmiddleware.RecoveryInterceptor(),
-			logger.UnaryServerInterceptor(),
+			logger.GrpcInterceptor(),
 			grpcmiddleware.ErrorInterceptor(),
 		),
 	}

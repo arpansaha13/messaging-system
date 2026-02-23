@@ -4,7 +4,7 @@ go 1.25.6
 
 require (
 	github.com/arpansaha13/goauthkit v0.2.1
-	github.com/arpansaha13/gotoolkit v0.4.1
+	github.com/arpansaha13/gotoolkit v0.4.2
 	github.com/segmentio/kafka-go v0.4.50
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.3.2
 	go.opentelemetry.io/otel v1.40.0
@@ -15,7 +15,7 @@ require (
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.13 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect

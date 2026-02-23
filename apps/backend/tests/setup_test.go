@@ -167,7 +167,7 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 
 	// Apply middleware
 	router.Use(middleware.RecoveryMiddleware)
-	router.Use(logger.Middleware)
+	router.Use(logger.HttpMiddleware)
 	router.Use(middleware.ErrorMiddleware)
 
 	// Create mock auth service client and auth middleware

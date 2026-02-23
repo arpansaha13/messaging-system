@@ -129,7 +129,7 @@ func main() {
 
 	// Apply middlewares
 	router.Use(middleware.RecoveryMiddleware)
-	router.Use(logger.Middleware)
+	router.Use(logger.HttpMiddleware)
 	router.Use(tracermw.Middleware(tracer))
 	router.Use(middleware.ErrorMiddleware)
 

@@ -3,7 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/backend
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.4.1
+	github.com/arpansaha13/gotoolkit v0.4.2
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/gorilla/mux v1.8.1
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.3.2
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/sdk v1.40.0
 	go.uber.org/zap v1.27.1
