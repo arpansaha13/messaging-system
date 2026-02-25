@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -22,7 +23,7 @@ func NewMessageRecipientRepository(db *gorm.DB) *MessageRecipientRepository {
 // Create creates a new message recipient record
 func (r *MessageRecipientRepository) Create(ctx context.Context, recipient *domain.MessageRecipient) error {
 	if err := r.db.WithContext(ctx).Create(recipient).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create message recipient", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create message recipient", Err: err}
 	}
 	return nil
 }
@@ -34,9 +35,9 @@ func (r *MessageRecipientRepository) GetByID(ctx context.Context, recipientID in
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "message recipient not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "message recipient not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get message recipient", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get message recipient", Err: err}
 	}
 
 	return &recipient, nil
@@ -51,9 +52,9 @@ func (r *MessageRecipientRepository) GetByMessageAndReceiver(ctx context.Context
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "message recipient not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "message recipient not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get message recipient", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get message recipient", Err: err}
 	}
 
 	return &recipient, nil
@@ -67,7 +68,7 @@ func (r *MessageRecipientRepository) GetByMessageID(ctx context.Context, message
 		Find(&recipients).Error
 
 	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get message recipients", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get message recipients", Err: err}
 	}
 
 	return recipients, nil
@@ -79,7 +80,7 @@ func (r *MessageRecipientRepository) UpdateStatus(ctx context.Context, recipient
 		Model(&domain.MessageRecipient{}).
 		Where("id = ?", recipientID).
 		Update("status", status).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update message recipient status", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update message recipient status", Err: err}
 	}
 	return nil
 }
@@ -90,7 +91,7 @@ func (r *MessageRecipientRepository) UpdateStatusByMessageAndReceiver(ctx contex
 		Model(&domain.MessageRecipient{}).
 		Where("message_id = ? AND receiver_id = ?", messageID, receiverID).
 		Update("status", status).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update message recipient status", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update message recipient status", Err: err}
 	}
 	return nil
 }
@@ -98,7 +99,7 @@ func (r *MessageRecipientRepository) UpdateStatusByMessageAndReceiver(ctx contex
 // Delete deletes a message recipient record
 func (r *MessageRecipientRepository) Delete(ctx context.Context, recipientID int64) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.MessageRecipient{}, recipientID).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete message recipient", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete message recipient", Err: err}
 	}
 	return nil
 }

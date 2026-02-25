@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -230,7 +230,7 @@ func (s *ChannelTestSuite) TestGetChannels() {
 				}
 
 				if len(groups) == 0 {
-					return &domain.ValidationError{Message: "no groups found"}
+					return &gotoolkit.ValidationError{Message: "no groups found"}
 				}
 
 				groupID := int64(groups[0]["id"].(float64))
@@ -241,7 +241,7 @@ func (s *ChannelTestSuite) TestGetChannels() {
 				}
 
 				if channelResp.StatusCode != 200 {
-					return &domain.ValidationError{Message: "expected status 200"}
+					return &gotoolkit.ValidationError{Message: "expected status 200"}
 				}
 
 				var channels []any
@@ -250,7 +250,7 @@ func (s *ChannelTestSuite) TestGetChannels() {
 				}
 
 				if channels == nil {
-					return &domain.ValidationError{Message: "expected empty array, not nil"}
+					return &gotoolkit.ValidationError{Message: "expected empty array, not nil"}
 				}
 
 				return nil

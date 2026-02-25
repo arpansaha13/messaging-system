@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -40,7 +41,7 @@ func NewChatRepository(db *gorm.DB) *ChatRepository {
 // Create creates a new chat
 func (r *ChatRepository) Create(ctx context.Context, chat *domain.Chat) error {
 	if err := r.db.WithContext(ctx).Create(chat).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create chat", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create chat", Err: err}
 	}
 	return nil
 }
@@ -52,9 +53,9 @@ func (r *ChatRepository) GetByID(ctx context.Context, chatID int64) (*domain.Cha
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "chat not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "chat not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get chat", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get chat", Err: err}
 	}
 
 	return &chat, nil
@@ -72,7 +73,7 @@ func (r *ChatRepository) GetByUsers(ctx context.Context, user1ID, user2ID int64)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Chat doesn't exist
 		}
-		return nil, &domain.InternalError{Message: "failed to get chat", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get chat", Err: err}
 	}
 
 	return &chat, nil
@@ -90,7 +91,7 @@ func (r *ChatRepository) GetUserChats(ctx context.Context, userID int64) ([]*Cha
 		Find(&chats).Error
 
 	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get chats", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get chats", Err: err}
 	}
 
 	return chats, nil
@@ -99,7 +100,7 @@ func (r *ChatRepository) GetUserChats(ctx context.Context, userID int64) ([]*Cha
 // Delete deletes a chat
 func (r *ChatRepository) Delete(ctx context.Context, chatID int64) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.Chat{}, chatID).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete chat", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete chat", Err: err}
 	}
 	return nil
 }
@@ -107,7 +108,7 @@ func (r *ChatRepository) Delete(ctx context.Context, chatID int64) error {
 // Update updates a chat
 func (r *ChatRepository) Update(ctx context.Context, chat *domain.Chat) error {
 	if err := r.db.WithContext(ctx).Save(chat).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update chat", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update chat", Err: err}
 	}
 	return nil
 }

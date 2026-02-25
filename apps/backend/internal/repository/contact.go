@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -36,7 +37,7 @@ func NewContactRepository(db *gorm.DB) *ContactRepository {
 // Create creates a new contact
 func (r *ContactRepository) Create(ctx context.Context, contact *domain.Contact) error {
 	if err := r.db.WithContext(ctx).Create(contact).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create contact", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create contact", Err: err}
 	}
 	return nil
 }
@@ -48,9 +49,9 @@ func (r *ContactRepository) GetByID(ctx context.Context, contactID int64) (*doma
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "contact not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "contact not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get contact", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get contact", Err: err}
 	}
 
 	return &contact, nil
@@ -67,7 +68,7 @@ func (r *ContactRepository) GetUserContacts(ctx context.Context, userID int64) (
 		Find(&contacts).Error
 
 	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get contacts", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get contacts", Err: err}
 	}
 
 	return contacts, nil
@@ -82,7 +83,7 @@ func (r *ContactRepository) Exists(ctx context.Context, userID, contactID int64)
 		Count(&count).Error
 
 	if err != nil {
-		return false, &domain.InternalError{Message: "failed to check contact", Err: err}
+		return false, &gotoolkit.InternalError{Message: "failed to check contact", Err: err}
 	}
 
 	return count > 0, nil
@@ -91,7 +92,7 @@ func (r *ContactRepository) Exists(ctx context.Context, userID, contactID int64)
 // Delete deletes a contact
 func (r *ContactRepository) Delete(ctx context.Context, contactID int64) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.Contact{}, contactID).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete contact", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete contact", Err: err}
 	}
 	return nil
 }
@@ -107,7 +108,7 @@ func (r *ContactRepository) GetContactByUserIds(ctx context.Context, userID, con
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Contact doesn't exist
 		}
-		return nil, &domain.InternalError{Message: "failed to get contact", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get contact", Err: err}
 	}
 
 	return &contact, nil

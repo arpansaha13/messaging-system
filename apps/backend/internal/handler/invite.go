@@ -7,11 +7,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupInviteRoutes sets up invite routes
@@ -32,7 +32,7 @@ func findInviteController(inviteService service.IInviteService) ControllerFunc {
 
 		if hash == "" {
 			log.Warn("hash parameter is empty in find invite request")
-			return &domain.ValidationError{Message: "hash parameter is required"}
+			return &gotoolkit.ValidationError{Message: "hash parameter is required"}
 		}
 
 		hashDisplay := hash
@@ -75,13 +75,13 @@ func acceptInviteController(inviteService service.IInviteService) ControllerFunc
 
 		if hash == "" {
 			log.Warn("hash parameter is empty in accept invite request")
-			return &domain.ValidationError{Message: "hash parameter is required"}
+			return &gotoolkit.ValidationError{Message: "hash parameter is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
 			log.Warn("user not authenticated in accept invite request")
-			return &domain.ValidationError{Message: "user not authenticated"}
+			return &gotoolkit.ValidationError{Message: "user not authenticated"}
 		}
 
 		parsedUserID := parseUserID(userID)
@@ -114,13 +114,13 @@ func createInviteController(inviteService service.IInviteService) ControllerFunc
 
 		if groupID == 0 {
 			log.Warn("group_id parameter is empty or invalid in create invite request", zap.String("group_id_str", vars["groupId"]))
-			return &domain.ValidationError{Message: "group_id parameter is required"}
+			return &gotoolkit.ValidationError{Message: "group_id parameter is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
 			log.Warn("user not authenticated in create invite request")
-			return &domain.ValidationError{Message: "user not authenticated"}
+			return &gotoolkit.ValidationError{Message: "user not authenticated"}
 		}
 
 		parsedUserID := parseUserID(userID)
@@ -159,18 +159,18 @@ func joinGroupController(inviteService service.IInviteService) ControllerFunc {
 		var req dto.JoinGroupDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in join group", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		if req.InviteHash == "" {
 			log.Warn("inviteHash is empty in join group request")
-			return &domain.ValidationError{Message: "inviteHash is required"}
+			return &gotoolkit.ValidationError{Message: "inviteHash is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
 			log.Warn("user not authenticated in join group request")
-			return &domain.ValidationError{Message: "user not authenticated"}
+			return &gotoolkit.ValidationError{Message: "user not authenticated"}
 		}
 
 		parsedUserID := parseUserID(userID)

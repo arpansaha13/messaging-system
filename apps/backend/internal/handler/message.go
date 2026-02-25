@@ -8,11 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupMessageRoutes sets up message routes
@@ -34,7 +34,7 @@ func sendPersonalMessageController(messageService service.IMessageService) Contr
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for send message", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -64,7 +64,7 @@ func sendGroupMessageController(messageService service.IMessageService) Controll
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for send group message", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -94,7 +94,7 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in get messages request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -116,7 +116,7 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 		// Validate that both cursors are not provided
 		if before != nil && after != nil {
 			log.Warn("both before and after cursors provided", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
-			return &domain.ValidationError{Message: "cannot specify both 'before' and 'after'"}
+			return &gotoolkit.ValidationError{Message: "cannot specify both 'before' and 'after'"}
 		}
 
 		log.Debug("fetching messages", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
@@ -161,7 +161,7 @@ func handleDeliveredController(messageService service.IMessageService) Controlle
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in handle delivered", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -190,7 +190,7 @@ func handleReadController(messageService service.IMessageService) ControllerFunc
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in handle read", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -229,7 +229,7 @@ func getChannelMessagesController(messageService service.IMessageService) Contro
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid channel id in get channel messages request", zap.String("channel_id_str", vars["channelID"]))
-			return &domain.ValidationError{Message: "invalid channel id"}
+			return &gotoolkit.ValidationError{Message: "invalid channel id"}
 		}
 
 		// Parse cursor parameters
@@ -248,7 +248,7 @@ func getChannelMessagesController(messageService service.IMessageService) Contro
 		// Validate that both cursors are not provided
 		if before != nil && after != nil {
 			log.Warn("both before and after cursors provided", zap.Int64("channel_id", channelID))
-			return &domain.ValidationError{Message: "cannot specify both 'before' and 'after'"}
+			return &gotoolkit.ValidationError{Message: "cannot specify both 'before' and 'after'"}
 		}
 
 		log.Debug("fetching channel messages", zap.Int64("channel_id", channelID))

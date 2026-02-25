@@ -3,8 +3,8 @@ module github.com/arpansaha13/messaging-system/apps/auth
 go 1.25.6
 
 require (
-	github.com/arpansaha13/goauthkit v0.2.2
-	github.com/arpansaha13/gotoolkit v0.4.3
+	github.com/arpansaha13/goauthkit v0.2.3
+	github.com/arpansaha13/gotoolkit v0.5.0
 	github.com/segmentio/kafka-go v0.4.50
 	github.com/uptrace/opentelemetry-go-extra/otelzap v0.3.2
 	go.opentelemetry.io/otel v1.40.0

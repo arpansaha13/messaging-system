@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -47,7 +48,7 @@ func NewMessageRepository(db *gorm.DB) *MessageRepository {
 // Create creates a new message
 func (r *MessageRepository) Create(ctx context.Context, message *domain.Message) error {
 	if err := r.db.WithContext(ctx).Create(message).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create message", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create message", Err: err}
 	}
 	return nil
 }
@@ -59,9 +60,9 @@ func (r *MessageRepository) GetByID(ctx context.Context, messageID int64) (*doma
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "message not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "message not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get message", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get message", Err: err}
 	}
 
 	return &message, nil
@@ -98,7 +99,7 @@ func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, r
 			Find(&messages).Error
 
 		if err != nil {
-			return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+			return nil, &gotoolkit.InternalError{Message: "failed to get messages", Err: err}
 		}
 
 		// Check if there are more messages before
@@ -125,7 +126,7 @@ func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, r
 			Find(&messages).Error
 
 		if err != nil {
-			return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+			return nil, &gotoolkit.InternalError{Message: "failed to get messages", Err: err}
 		}
 
 		// Check if there are more messages after
@@ -147,7 +148,7 @@ func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, r
 			Find(&messages).Error
 
 		if err != nil {
-			return nil, &domain.InternalError{Message: "failed to get messages", Err: err}
+			return nil, &gotoolkit.InternalError{Message: "failed to get messages", Err: err}
 		}
 
 		// Check if there are more messages before latest
@@ -171,7 +172,7 @@ func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, r
 // Delete deletes a message
 func (r *MessageRepository) Delete(ctx context.Context, messageID int64) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.Message{}, messageID).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete message", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete message", Err: err}
 	}
 	return nil
 }
@@ -179,7 +180,7 @@ func (r *MessageRepository) Delete(ctx context.Context, messageID int64) error {
 // Update updates a message
 func (r *MessageRepository) Update(ctx context.Context, message *domain.Message) error {
 	if err := r.db.WithContext(ctx).Save(message).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update message", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update message", Err: err}
 	}
 	return nil
 }
@@ -207,7 +208,7 @@ func (r *MessageRepository) GetLatestMessageByUsersInChat(ctx context.Context, u
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // No message found
 		}
-		return nil, &domain.InternalError{Message: "failed to get latest message", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get latest message", Err: err}
 	}
 
 	return message, nil
@@ -235,7 +236,7 @@ func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelI
 			Find(&messages).Error
 
 		if err != nil {
-			return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+			return nil, &gotoolkit.InternalError{Message: "failed to get channel messages", Err: err}
 		}
 
 		// Check if there are more messages before
@@ -262,7 +263,7 @@ func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelI
 			Find(&messages).Error
 
 		if err != nil {
-			return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+			return nil, &gotoolkit.InternalError{Message: "failed to get channel messages", Err: err}
 		}
 
 		// Check if there are more messages after
@@ -284,7 +285,7 @@ func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelI
 			Find(&messages).Error
 
 		if err != nil {
-			return nil, &domain.InternalError{Message: "failed to get channel messages", Err: err}
+			return nil, &gotoolkit.InternalError{Message: "failed to get channel messages", Err: err}
 		}
 
 		// Check if there are more messages before latest

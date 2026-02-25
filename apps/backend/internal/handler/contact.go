@@ -8,11 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupContactRoutes sets up contact routes
@@ -30,7 +30,7 @@ func addContactController(contactService service.IContactService) ControllerFunc
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in add contact", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)

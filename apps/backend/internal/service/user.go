@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -68,7 +69,7 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, authUserID,
 	contact, err := s.contactRepo.GetContactByUserIds(ctx, authUserID, userID)
 	if err != nil {
 		// Only log at Debug if it's a not-found error; otherwise warn
-		if _, isNotFound := err.(*domain.NotFoundError); isNotFound {
+		if _, isNotFound := err.(*gotoolkit.NotFoundError); isNotFound {
 			log.Debug("contact not found between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", userID))
 		} else {
 			log.Warn("failed to check contact status between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", userID), zap.Error(err))

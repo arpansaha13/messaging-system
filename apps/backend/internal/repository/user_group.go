@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -22,7 +23,7 @@ func NewUserGroupRepository(db *gorm.DB) *UserGroupRepository {
 // Create creates a new user group membership
 func (r *UserGroupRepository) Create(ctx context.Context, userGroup *domain.UserGroup) error {
 	if err := r.db.WithContext(ctx).Create(userGroup).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create user group", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create user group", Err: err}
 	}
 	return nil
 }
@@ -34,9 +35,9 @@ func (r *UserGroupRepository) GetByID(ctx context.Context, userGroupID int64) (*
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "user group not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "user group not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get user group", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get user group", Err: err}
 	}
 
 	return &userGroup, nil
@@ -48,7 +49,7 @@ func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, groupID int64
 	err := r.db.WithContext(ctx).Preload("User").Where("group_id = ?", groupID).Find(&members).Error
 
 	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get group members", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get group members", Err: err}
 	}
 
 	return members, nil
@@ -60,7 +61,7 @@ func (r *UserGroupRepository) GetUserGroups(ctx context.Context, userID int64) (
 	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&groups).Error
 
 	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to get user groups", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get user groups", Err: err}
 	}
 
 	return groups, nil
@@ -75,7 +76,7 @@ func (r *UserGroupRepository) Exists(ctx context.Context, userID, groupID int64)
 		Count(&count).Error
 
 	if err != nil {
-		return false, &domain.InternalError{Message: "failed to check user group", Err: err}
+		return false, &gotoolkit.InternalError{Message: "failed to check user group", Err: err}
 	}
 
 	return count > 0, nil
@@ -84,7 +85,7 @@ func (r *UserGroupRepository) Exists(ctx context.Context, userID, groupID int64)
 // Delete deletes a user group membership
 func (r *UserGroupRepository) Delete(ctx context.Context, userGroupID int64) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.UserGroup{}, userGroupID).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete user group", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete user group", Err: err}
 	}
 	return nil
 }
@@ -92,7 +93,7 @@ func (r *UserGroupRepository) Delete(ctx context.Context, userGroupID int64) err
 // Update updates a user group membership
 func (r *UserGroupRepository) Update(ctx context.Context, userGroup *domain.UserGroup) error {
 	if err := r.db.WithContext(ctx).Save(userGroup).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update user group", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update user group", Err: err}
 	}
 	return nil
 }

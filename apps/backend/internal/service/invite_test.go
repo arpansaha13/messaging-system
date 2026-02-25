@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -72,7 +73,7 @@ func TestInviteService_CreateInvite(t *testing.T) {
 			mockGroupRepo: func() *mocks.MockGroupRepository {
 				return &mocks.MockGroupRepository{
 					GetByIDFunc: func(ctx context.Context, id int64) (*domain.Group, error) {
-						return nil, &domain.NotFoundError{Message: "group not found"}
+						return nil, &gotoolkit.NotFoundError{Message: "group not found"}
 					},
 				}
 			},
@@ -146,7 +147,7 @@ func TestInviteService_FindByHash(t *testing.T) {
 			mockInviteRepo: func() *mocks.MockInviteRepository {
 				return &mocks.MockInviteRepository{
 					GetByHashFunc: func(ctx context.Context, hash string) (*domain.Invite, error) {
-						return nil, &domain.NotFoundError{Message: "invite not found"}
+						return nil, &gotoolkit.NotFoundError{Message: "invite not found"}
 					},
 				}
 			},

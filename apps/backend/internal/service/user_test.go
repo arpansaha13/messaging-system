@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -48,7 +49,7 @@ func TestUserServiceGetUserProfile(t *testing.T) {
 			mockFunc: func() *mocks.MockUserRepository {
 				return &mocks.MockUserRepository{
 					GetByIDFunc: func(ctx context.Context, id int64) (*domain.UserProfile, error) {
-						return nil, &domain.NotFoundError{Message: "user not found"}
+						return nil, &gotoolkit.NotFoundError{Message: "user not found"}
 					},
 				}
 			},

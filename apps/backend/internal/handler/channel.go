@@ -8,11 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupChannelRoutes sets up channel routes
@@ -34,19 +34,19 @@ func createChannelController(channelService service.IChannelService) ControllerF
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in create channel request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &domain.ValidationError{Message: "invalid group id"}
+			return &gotoolkit.ValidationError{Message: "invalid group id"}
 		}
 
 		var req dto.CreateChannelRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in create channel", zap.Int64("user_id", userIDInt), zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		if req.Name == "" {
 			log.Warn("channel name is empty in create channel request", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
-			return &domain.ValidationError{Message: "channel name is required"}
+			return &gotoolkit.ValidationError{Message: "channel name is required"}
 		}
 
 		log.Debug("creating channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name))
@@ -83,7 +83,7 @@ func getGroupChannelsController(channelService service.IChannelService) Controll
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in get channels request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &domain.ValidationError{Message: "invalid group id"}
+			return &gotoolkit.ValidationError{Message: "invalid group id"}
 		}
 
 		log.Debug("fetching channels for group", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
@@ -124,7 +124,7 @@ func getChannelInfoController(channelService service.IChannelService) Controller
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid channel id in get channel info request", zap.String("channel_id_str", vars["channelID"]), zap.Int64("user_id", userIDInt))
-			return &domain.ValidationError{Message: "invalid channel id"}
+			return &gotoolkit.ValidationError{Message: "invalid channel id"}
 		}
 
 		log.Debug("fetching channel info", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID))

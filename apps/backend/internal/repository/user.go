@@ -6,6 +6,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -26,9 +27,9 @@ func (r *UserRepository) GetByID(ctx context.Context, userID int64) (*domain.Use
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "user profile not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "user profile not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get user profile", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get user profile", Err: err}
 	}
 
 	return &userProfile, nil
@@ -37,7 +38,7 @@ func (r *UserRepository) GetByID(ctx context.Context, userID int64) (*domain.Use
 // Create creates a new user profile
 func (r *UserRepository) Create(ctx context.Context, userProfile *domain.UserProfile) error {
 	if err := r.db.WithContext(ctx).Create(userProfile).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create user profile", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create user profile", Err: err}
 	}
 	return nil
 }
@@ -45,7 +46,7 @@ func (r *UserRepository) Create(ctx context.Context, userProfile *domain.UserPro
 // Update updates a user profile
 func (r *UserRepository) Update(ctx context.Context, userProfile *domain.UserProfile) error {
 	if err := r.db.WithContext(ctx).Save(userProfile).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update user profile", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update user profile", Err: err}
 	}
 	return nil
 }
@@ -53,7 +54,7 @@ func (r *UserRepository) Update(ctx context.Context, userProfile *domain.UserPro
 // Delete deletes a user profile (soft delete)
 func (r *UserRepository) Delete(ctx context.Context, userID int64) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.UserProfile{}, userID).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete user profile", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete user profile", Err: err}
 	}
 	return nil
 }
@@ -67,7 +68,7 @@ func (r *UserRepository) Search(ctx context.Context, query string, limit int) ([
 		Find(&userProfiles).Error
 
 	if err != nil {
-		return nil, &domain.InternalError{Message: "failed to search user profiles", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to search user profiles", Err: err}
 	}
 
 	return userProfiles, nil

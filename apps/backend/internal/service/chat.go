@@ -6,6 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
@@ -122,7 +123,7 @@ func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsRes
 		latestMsg, err := s.messageRepo.GetLatestMessageByUsersInChat(ctx, userID, chat.ReceiverID, chat.ClearedAt)
 		if err != nil {
 			// Only log at Debug if it's a not-found error; otherwise warn
-			if _, isNotFound := err.(*domain.NotFoundError); isNotFound {
+			if _, isNotFound := err.(*gotoolkit.NotFoundError); isNotFound {
 				log.Debug("no latest message found for chat", zap.Int64("chat_id", chat.ID))
 			} else {
 				log.Warn("failed to get latest message for chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
@@ -205,7 +206,7 @@ func (s *ChatService) PinChat(ctx context.Context, userID, receiverID int64) err
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
-		return &domain.NotFoundError{Message: "chat not found"}
+		return &gotoolkit.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Pinned = true
@@ -233,7 +234,7 @@ func (s *ChatService) UnpinChat(ctx context.Context, userID, receiverID int64) e
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
-		return &domain.NotFoundError{Message: "chat not found"}
+		return &gotoolkit.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Pinned = false
@@ -260,7 +261,7 @@ func (s *ChatService) ArchiveChat(ctx context.Context, userID, receiverID int64)
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
-		return &domain.NotFoundError{Message: "chat not found"}
+		return &gotoolkit.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Archived = true
@@ -288,7 +289,7 @@ func (s *ChatService) UnarchiveChat(ctx context.Context, userID, receiverID int6
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
-		return &domain.NotFoundError{Message: "chat not found"}
+		return &gotoolkit.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Archived = false
@@ -315,7 +316,7 @@ func (s *ChatService) ClearChat(ctx context.Context, userID, receiverID int64) e
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
-		return &domain.NotFoundError{Message: "chat not found"}
+		return &gotoolkit.NotFoundError{Message: "chat not found"}
 	}
 
 	now := domain.Now()
@@ -343,7 +344,7 @@ func (s *ChatService) DeleteChat(ctx context.Context, userID, receiverID int64) 
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
-		return &domain.NotFoundError{Message: "chat not found"}
+		return &gotoolkit.NotFoundError{Message: "chat not found"}
 	}
 
 	if err := s.chatRepo.Delete(ctx, chat.ID); err != nil {

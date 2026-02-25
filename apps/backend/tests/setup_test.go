@@ -11,9 +11,12 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"github.com/uptrace/opentelemetry-go-extra/otelzap"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -165,10 +168,13 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	// Setup HTTP router
 	router := mux.NewRouter()
 
+	// Create a no-op logger for tests
+	testLogger := otelzap.New(zap.NewNop())
+
 	// Apply middleware
-	router.Use(middleware.RecoveryMiddleware)
-	router.Use(logger.HttpMiddleware)
-	router.Use(middleware.ErrorMiddleware)
+	router.Use(gotoolkit.HttpRecoveryMiddleware)
+	router.Use(logger.HttpMiddleware(testLogger))
+	router.Use(gotoolkit.HttpErrorMiddleware)
 
 	// Create mock auth service client and auth middleware
 	mockAuthClient := mocks.NewMockAuthServiceClient(s.AuthServiceMock)

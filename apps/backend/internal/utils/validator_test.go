@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,8 +28,8 @@ func TestValidator_ValidateEmail(t *testing.T) {
 			err := v.ValidateEmail(tt.email)
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.IsType(t, &domain.ValidationError{}, err)
-				assert.Equal(t, "email", err.(*domain.ValidationError).Field)
+				assert.IsType(t, &gotoolkit.ValidationError{}, err)
+				assert.Equal(t, "email", err.(*gotoolkit.ValidationError).Field)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -58,7 +58,7 @@ func TestValidator_ValidateUsername(t *testing.T) {
 			err := v.ValidateUsername(tt.username)
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.Equal(t, "username", err.(*domain.ValidationError).Field)
+				assert.Equal(t, "username", err.(*gotoolkit.ValidationError).Field)
 			} else {
 				assert.NoError(t, err)
 			}
@@ -85,7 +85,7 @@ func TestValidator_ValidatePassword(t *testing.T) {
 			err := v.ValidatePassword(tt.password)
 			if tt.wantErr {
 				assert.Error(t, err)
-				assert.Equal(t, "password", err.(*domain.ValidationError).Field)
+				assert.Equal(t, "password", err.(*gotoolkit.ValidationError).Field)
 			} else {
 				assert.NoError(t, err)
 			}

@@ -8,11 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupUserRoutes sets up user routes
@@ -32,7 +32,7 @@ func getUserMeController(userService service.IUserService) ControllerFunc {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in get user me request")
-			return &domain.UnauthorizedError{Message: "unauthorized"}
+			return &gotoolkit.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		log.Debug("fetching user profile", zap.Int64("user_id", authUser.UserID), zap.String("email", authUser.Email))
@@ -66,13 +66,13 @@ func updateUserMeController(userService service.IUserService) ControllerFunc {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in update user me request")
-			return &domain.UnauthorizedError{Message: "unauthorized"}
+			return &gotoolkit.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		var req dto.UpdateUserRequestDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in update user me", zap.Error(err))
-			return &domain.ValidationError{Message: "invalid request body"}
+			return &gotoolkit.ValidationError{Message: "invalid request body"}
 		}
 
 		log.Debug("updating user profile", zap.Int64("user_id", authUser.UserID))
@@ -148,13 +148,13 @@ func getUserProfileByIDController(userService service.IUserService) ControllerFu
 		id, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
 			log.Warn("invalid user id in get profile request", zap.String("id_str", vars["id"]))
-			return &domain.ValidationError{Message: "invalid user id"}
+			return &gotoolkit.ValidationError{Message: "invalid user id"}
 		}
 
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in get user profile request")
-			return &domain.UnauthorizedError{Message: "unauthorized"}
+			return &gotoolkit.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		log.Debug("fetching user profile", zap.Int64("requested_user_id", id), zap.Int64("auth_user_id", authUser.UserID))

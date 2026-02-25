@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestAuthHandler_Signup(t *testing.T) {
@@ -58,11 +58,11 @@ func TestAuthHandler_Signup(t *testing.T) {
 			mockFunc: func() service.IAuthServiceClient {
 				return &mocks.MockAuthServiceClient{
 					SignupFunc: func(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
-						return nil, &domain.ConflictError{Message: "email already exists"}
+						return nil, &gotoolkit.ConflictError{Message: "email already exists"}
 					},
 				}
 			},
-			expectedError: &domain.ConflictError{Message: "email already registered"},
+			expectedError: &gotoolkit.ConflictError{Message: "email already registered"},
 		},
 		{
 			name: "invalid email and password",
@@ -73,11 +73,11 @@ func TestAuthHandler_Signup(t *testing.T) {
 			mockFunc: func() service.IAuthServiceClient {
 				return &mocks.MockAuthServiceClient{
 					SignupFunc: func(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
-						return nil, &domain.ValidationError{Message: "invalid request"}
+						return nil, &gotoolkit.ValidationError{Message: "invalid request"}
 					},
 				}
 			},
-			expectedError: &domain.ValidationError{Message: "email and password are required"},
+			expectedError: &gotoolkit.ValidationError{Message: "email and password are required"},
 		},
 	}
 
@@ -148,11 +148,11 @@ func TestAuthHandler_Login(t *testing.T) {
 			mockFunc: func() service.IAuthServiceClient {
 				return &mocks.MockAuthServiceClient{
 					LoginFunc: func(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
-						return nil, &domain.UnauthorizedError{Message: "invalid email or password"}
+						return nil, &gotoolkit.UnauthorizedError{Message: "invalid email or password"}
 					},
 				}
 			},
-			expectedError: &domain.UnauthorizedError{Message: "invalid email or password"},
+			expectedError: &gotoolkit.UnauthorizedError{Message: "invalid email or password"},
 		},
 		{
 			name: "missing email and password",
@@ -163,11 +163,11 @@ func TestAuthHandler_Login(t *testing.T) {
 			mockFunc: func() service.IAuthServiceClient {
 				return &mocks.MockAuthServiceClient{
 					LoginFunc: func(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
-						return nil, &domain.ValidationError{Message: "invalid request"}
+						return nil, &gotoolkit.ValidationError{Message: "invalid request"}
 					},
 				}
 			},
-			expectedError: &domain.ValidationError{Message: "email and password are required"},
+			expectedError: &gotoolkit.ValidationError{Message: "email and password are required"},
 		},
 	}
 

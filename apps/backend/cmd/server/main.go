@@ -21,6 +21,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	tracermw "github.com/arpansaha13/gotoolkit/tracer"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
@@ -128,10 +129,10 @@ func main() {
 	router := mux.NewRouter()
 
 	// Apply middlewares
-	router.Use(middleware.RecoveryMiddleware)
-	router.Use(logger.HttpMiddleware)
+	router.Use(gotoolkit.HttpRecoveryMiddleware)
+	router.Use(logger.HttpMiddleware(otelLogger))
 	router.Use(tracermw.Middleware(tracer))
-	router.Use(middleware.ErrorMiddleware)
+	router.Use(gotoolkit.HttpErrorMiddleware)
 
 	// Authentication middleware for protected routes
 	protectedRouter := router.PathPrefix("").Subrouter()

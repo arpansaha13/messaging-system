@@ -7,6 +7,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -23,7 +24,7 @@ func NewInviteRepository(db *gorm.DB) *InviteRepository {
 // Create creates a new invite
 func (r *InviteRepository) Create(ctx context.Context, invite *domain.Invite) error {
 	if err := r.db.WithContext(ctx).Create(invite).Error; err != nil {
-		return &domain.InternalError{Message: "failed to create invite", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to create invite", Err: err}
 	}
 	return nil
 }
@@ -37,9 +38,9 @@ func (r *InviteRepository) GetByHash(ctx context.Context, hash string) (*domain.
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "invite not found or expired"}
+			return nil, &gotoolkit.NotFoundError{Message: "invite not found or expired"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get invite", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get invite", Err: err}
 	}
 
 	return &invite, nil
@@ -55,9 +56,9 @@ func (r *InviteRepository) GetByHashWithGroup(ctx context.Context, hash string) 
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &domain.NotFoundError{Message: "invite not found"}
+			return nil, &gotoolkit.NotFoundError{Message: "invite not found"}
 		}
-		return nil, &domain.InternalError{Message: "failed to get invite", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to get invite", Err: err}
 	}
 
 	return &invite, nil
@@ -66,7 +67,7 @@ func (r *InviteRepository) GetByHashWithGroup(ctx context.Context, hash string) 
 // Delete deletes an invite
 func (r *InviteRepository) Delete(ctx context.Context, hash string) error {
 	if err := r.db.WithContext(ctx).Delete(&domain.Invite{}, hash).Error; err != nil {
-		return &domain.InternalError{Message: "failed to delete invite", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to delete invite", Err: err}
 	}
 	return nil
 }
@@ -74,7 +75,7 @@ func (r *InviteRepository) Delete(ctx context.Context, hash string) error {
 // Update updates an invite
 func (r *InviteRepository) Update(ctx context.Context, invite *domain.Invite) error {
 	if err := r.db.WithContext(ctx).Save(invite).Error; err != nil {
-		return &domain.InternalError{Message: "failed to update invite", Err: err}
+		return &gotoolkit.InternalError{Message: "failed to update invite", Err: err}
 	}
 	return nil
 }

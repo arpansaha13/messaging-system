@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
@@ -67,7 +68,7 @@ func (s *InviteService) CreateInvite(ctx context.Context, inviterID, groupID int
 	hash, err := s.generateHash()
 	if err != nil {
 		log.Error("failed to generate invite hash", zap.Int64("group_id", groupID), zap.Error(err))
-		return nil, &domain.InternalError{Message: "failed to generate invite", Err: err}
+		return nil, &gotoolkit.InternalError{Message: "failed to generate invite", Err: err}
 	}
 
 	// Set expiration to 24 hours from now
@@ -123,13 +124,13 @@ func (s *InviteService) AcceptInvite(ctx context.Context, userID int64, inviteHa
 	// Check if invite is expired
 	if invite.ExpiresAt != nil && time.Now().After(*invite.ExpiresAt) {
 		log.Warn("invite expired for user", zap.Int64("user_id", userID))
-		return nil, &domain.ValidationError{Message: "This invite link is either invalid or expired."}
+		return nil, &gotoolkit.ValidationError{Message: "This invite link is either invalid or expired."}
 	}
 
 	// Check if group exists
 	if invite.GroupID == nil {
 		log.Warn("invite does not have associated group")
-		return nil, &domain.ValidationError{Message: "invite does not have an associated group"}
+		return nil, &gotoolkit.ValidationError{Message: "invite does not have an associated group"}
 	}
 
 	// Check if user already in group
@@ -140,7 +141,7 @@ func (s *InviteService) AcceptInvite(ctx context.Context, userID int64, inviteHa
 	}
 	if exists {
 		log.Warn("user already in group", zap.Int64("user_id", userID), zap.Int64("group_id", *invite.GroupID))
-		return nil, &domain.ValidationError{Message: "User has already joined group"}
+		return nil, &gotoolkit.ValidationError{Message: "User has already joined group"}
 	}
 
 	// Add user to group

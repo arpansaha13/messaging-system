@@ -8,11 +8,11 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupUserGroupRoutes sets up user group routes
@@ -32,7 +32,7 @@ func getGroupMembersController(userGroupService service.IUserGroupService) Contr
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in get members request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &domain.ValidationError{Message: "invalid group id"}
+			return &gotoolkit.ValidationError{Message: "invalid group id"}
 		}
 
 		log.Debug("fetching group members", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))

@@ -3,10 +3,9 @@ package service
 import (
 	"encoding/json"
 
-	"go.uber.org/zap"
+	"github.com/arpansaha13/gotoolkit"
 	amqp "github.com/rabbitmq/amqp091-go"
-
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 const (
@@ -53,9 +52,9 @@ type ReadPayload struct {
 
 // RabbitMQService handles RabbitMQ connection and messaging
 type RabbitMQService struct {
-	conn   *amqp.Connection
+	conn    *amqp.Connection
 	channel *amqp.Channel
-	logger *zap.Logger
+	logger  *zap.Logger
 }
 
 // NewRabbitMQService creates a new RabbitMQ service
@@ -130,7 +129,7 @@ func (r *RabbitMQService) declareExchanges() error {
 // PublishToIncoming publishes a message to the incoming exchange
 func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) error {
 	if r.channel == nil {
-		return &domain.InternalError{Message: "RabbitMQ channel not initialized"}
+		return &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
 	}
 
 	messageBytes, err := json.Marshal(message)
@@ -162,7 +161,7 @@ func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) erro
 // PublishToOutgoing publishes a message to the outgoing exchange
 func (r *RabbitMQService) PublishToOutgoing(routingKey string, message any) error {
 	if r.channel == nil {
-		return &domain.InternalError{Message: "RabbitMQ channel not initialized"}
+		return &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
 	}
 
 	messageBytes, err := json.Marshal(message)

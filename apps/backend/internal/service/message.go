@@ -5,9 +5,9 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // MessageService handles message business logic
@@ -35,7 +35,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for personal message send", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
-		return &domain.InternalError{Message: "RabbitMQ not connected"}
+		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	payload := PersonalMessagePayload{
@@ -67,7 +67,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID))
-		return &domain.InternalError{Message: "RabbitMQ not connected"}
+		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	payload := GroupMessagePayload{
@@ -115,7 +115,7 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, 
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for delivered status", zap.Int64("message_id", messageID))
-		return &domain.InternalError{Message: "RabbitMQ not connected"}
+		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	payload := DeliveredPayload{
@@ -146,7 +146,7 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, messages []ReadP
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for read status")
-		return &domain.InternalError{Message: "RabbitMQ not connected"}
+		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	message := RabbitMQMessage{

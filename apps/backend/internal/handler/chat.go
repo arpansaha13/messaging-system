@@ -8,10 +8,10 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupChatRoutes sets up chat routes
@@ -57,7 +57,7 @@ func pinChatController(chatService service.IChatService) ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in pin chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -87,7 +87,7 @@ func unpinChatController(chatService service.IChatService) ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in unpin chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -117,7 +117,7 @@ func archiveChatController(chatService service.IChatService) ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in archive chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -147,7 +147,7 @@ func unarchiveChatController(chatService service.IChatService) ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in unarchive chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -177,7 +177,7 @@ func clearChatController(chatService service.IChatService) ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in clear chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -207,7 +207,7 @@ func deleteChatController(chatService service.IChatService) ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in delete chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &domain.ValidationError{Message: "invalid receiver id"}
+			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)

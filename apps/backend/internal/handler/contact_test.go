@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
@@ -62,11 +63,11 @@ func TestContactHandler_AddContact(t *testing.T) {
 			mockFunc: func() *mocks.MockContactService {
 				return &mocks.MockContactService{
 					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64) (*domain.Contact, error) {
-						return nil, &domain.NotFoundError{Message: "user not found"}
+						return nil, &gotoolkit.NotFoundError{Message: "user not found"}
 					},
 				}
 			},
-			expectedError: &domain.NotFoundError{Message: "user not found"},
+			expectedError: &gotoolkit.NotFoundError{Message: "user not found"},
 		},
 	}
 
@@ -91,7 +92,7 @@ func TestContactHandler_AddContact(t *testing.T) {
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
-				assert.Equal(t, utils.Ptr(domain.NotFoundError{Message: "user not found"}).Error(), err.Error())
+				assert.Equal(t, utils.Ptr(gotoolkit.NotFoundError{Message: "user not found"}).Error(), err.Error())
 			} else {
 				require.NoError(t, err)
 				var resp dto.ContactResponseDTO

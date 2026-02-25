@@ -19,14 +19,14 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/arpansaha13/goauthkit/pb"
-	"github.com/arpansaha13/messaging-system/apps/auth/internal/config"
 	grpccontroller "github.com/arpansaha13/goauthkit/pkg/controller/grpc"
-	grpcmiddleware "github.com/arpansaha13/goauthkit/pkg/middleware/grpc"
 	"github.com/arpansaha13/goauthkit/pkg/repository"
 	"github.com/arpansaha13/goauthkit/pkg/service"
 	"github.com/arpansaha13/goauthkit/pkg/utils"
 	"github.com/arpansaha13/goauthkit/pkg/worker"
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/auth/internal/config"
 )
 
 func main() {
@@ -128,9 +128,9 @@ func main() {
 	// Create gRPC server with interceptor chain
 	opts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
-			grpcmiddleware.RecoveryInterceptor(),
-			logger.GrpcInterceptor(),
-			grpcmiddleware.ErrorInterceptor(),
+			gotoolkit.GrpcRecoveryInterceptor(),
+			logger.GrpcInterceptor(otelLogger),
+			gotoolkit.GrpcErrorInterceptor(),
 		),
 	}
 	grpcServer := grpc.NewServer(opts...)
@@ -183,4 +183,3 @@ func parseLogLevel(s string) zapcore.Level {
 	}
 	return level
 }
-
