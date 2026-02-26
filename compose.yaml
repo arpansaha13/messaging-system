@@ -192,6 +192,16 @@ services:
       - messaging-network
     expose:
       - "50051"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/auth/cmd
+        - action: rebuild
+          path: ./apps/auth/internal
+        - action: rebuild
+          path: ./apps/auth/go.mod
+        - action: rebuild
+          path: ./apps/auth/go.sum
 
   frontend:
     build:

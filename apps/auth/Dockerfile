@@ -17,6 +17,7 @@ ENV GOMODCACHE=/gomod-cache
 
 COPY apps/auth/go.mod apps/auth/go.sum ./
 COPY apps/auth/cmd/ ./cmd/
+COPY apps/auth/internal/ ./internal/
 
 RUN --mount=type=cache,target=/gomod-cache \
   --mount=type=cache,target=/go-cache \
