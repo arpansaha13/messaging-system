@@ -1,5 +1,11 @@
 package broker
 
+import (
+	"context"
+
+	"github.com/arpansaha13/gotoolkit"
+)
+
 // MessagePayload represents the base structure for messages in RabbitMQ
 type MessagePayload struct {
 	Type    string `json:"type"`
@@ -54,7 +60,7 @@ type MessageBroker interface {
 	PublishToSubscription(serverId string, message any) error
 
 	// Lifecycle
-	Connect() error
+	Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error
 	Disconnect() error
 	IsConnected() bool
 }

@@ -37,11 +37,19 @@ func main() {
 	}
 
 	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
-	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      []string{cfg.KafkaBrokers},
-		Topic:        cfg.KafkaTopic,
-		RequiredAcks: int(kafka.RequireAll),
-	})
+	// Note: Kafka connect is before logger ready; use ErrorLevel for permanent to avoid silent Fatal
+	kafkaWriter, err := gotoolkit.ConnectKafkaWithBackoff(
+		context.Background(),
+		kafka.WriterConfig{
+			Brokers:      []string{cfg.KafkaBrokers},
+			Topic:        cfg.KafkaTopic,
+			RequiredAcks: int(kafka.RequireAll),
+		},
+		gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+	)
+	if err != nil {
+		log.Fatalf("failed to connect to kafka: %v", err)
+	}
 
 	// Create resource with service identity
 	res, err := resource.New(context.Background(),
@@ -69,13 +77,15 @@ func main() {
 	otelLogger.Info("starting auth service", zap.String("environment", cfg.Environment))
 
 	// Initialize database
-	db, err := utils.InitDB(cfg.DatabaseURL)
+	svcCtx := logger.WithContext(context.Background(), otelLogger)
+	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL)
 	if err != nil {
-		otelLogger.Fatal("failed to initialize database", zap.Error(err))
+		otelLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 	defer func() {
-		if err := utils.CloseDB(db); err != nil {
-			otelLogger.Error("error closing database", zap.Error(err))
+		sqlDB, err := db.DB()
+		if err == nil {
+			sqlDB.Close()
 		}
 	}()
 

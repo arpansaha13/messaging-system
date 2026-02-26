@@ -3,7 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/chat-worker
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.4.1
+	github.com/arpansaha13/gotoolkit v0.6.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/segmentio/kafka-go v0.4.50
@@ -22,6 +22,7 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect

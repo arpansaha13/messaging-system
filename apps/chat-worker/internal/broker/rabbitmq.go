@@ -1,9 +1,11 @@
 package broker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
@@ -30,8 +32,8 @@ func NewRabbitMQBroker(amqpURL string) *RabbitMQBroker {
 }
 
 // Connect establishes connection to RabbitMQ and sets up exchanges and queues
-func (rb *RabbitMQBroker) Connect() error {
-	conn, err := amqp091.Dial(rb.amqpURL)
+func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error {
+	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL, opts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}

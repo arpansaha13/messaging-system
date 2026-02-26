@@ -1,7 +1,9 @@
-github.com/arpansaha13/goauthkit v0.2.3 h1:miXhRoz0Z31/ja1Hy7JpQQKlNW9Gs4ch/B+WZ0uo7sQ=
-github.com/arpansaha13/goauthkit v0.2.3/go.mod h1:Ic7vZ/3ElKgkEFwBWBgL+zD+qr6YtYebQmOtJyCRoN0=
-github.com/arpansaha13/gotoolkit v0.5.0 h1:zDdo8HbwFFVcJ80MS+IrrOiso/ofyTzGBiwLsE6lXh0=
-github.com/arpansaha13/gotoolkit v0.5.0/go.mod h1:sL4BH1ufsBWNLLYtCpfUZpIGKXBiHMFYBLjaWVzr5dQ=
+github.com/arpansaha13/goauthkit v0.2.4 h1:jgUICqfHKd82IAKr6Yl0TImaHvJK5NaEqxA6qhEg8RA=
+github.com/arpansaha13/goauthkit v0.2.4/go.mod h1:EjcJ3gDs4iT2Nrfe2Djx9E4bI1sEmjsLLWXF2w1Eumc=
+github.com/arpansaha13/gotoolkit v0.6.0 h1:dJgFu4zEGUWoiBoLeCVjZS4wVawXdnavBA4VijeEEzg=
+github.com/arpansaha13/gotoolkit v0.6.0/go.mod h1:UGJ8B5gIicIx/Q5eumASChcOLhfU8bwhIcyDOp7EYWU=
+github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
+github.com/cenkalti/backoff/v5 v5.0.3/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -48,6 +50,8 @@ github.com/pierrec/lz4/v4 v4.1.25 h1:kocOqRffaIbU5djlIBr7Wh+cx82C0vtFb0fOurZHqD0
 github.com/pierrec/lz4/v4 v4.1.25/go.mod h1:EoQMVJgeeEOMsCqCzqFm2O0cJvljX2nGZjcRIPL34O4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/rabbitmq/amqp091-go v1.10.0 h1:STpn5XsHlHGcecLmMFCtg7mqq0RnD+zFr4uzukfVhBw=
+github.com/rabbitmq/amqp091-go v1.10.0/go.mod h1:Hy4jKW5kQART1u+JkDTF9YYOQUHXqMuhrgxOEeS7G4o=
 github.com/segmentio/kafka-go v0.4.50 h1:mcyC3tT5WeyWzrFbd6O374t+hmcu1NKt2Pu1L3QaXmc=
 github.com/segmentio/kafka-go v0.4.50/go.mod h1:Y1gn60kzLEEaW28YshXyk2+VCUKbJ3Qr6DrnT3i4+9E=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=

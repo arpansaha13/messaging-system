@@ -4,10 +4,12 @@ cloud.google.com/go/compute/metadata v0.9.0/go.mod h1:E0bWwX5wTnLPedCKqk3pJmVgCB
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0/go.mod h1:P4WPRUkOhJC13W//jWpyfJNDAIpvRbAUIYLX/4jtlE0=
 github.com/arpansaha13/goauthkit v0.1.0 h1:rM/WIcW7IZoa2CvO8k0mllsCf34bSy9FPsKpULao6D0=
 github.com/arpansaha13/goauthkit v0.1.0/go.mod h1:i3odxnNE2i+QI/Avup6vwcjNatvlt8La+zsavSg8k6k=
-github.com/arpansaha13/goauthkit v0.2.3 h1:miXhRoz0Z31/ja1Hy7JpQQKlNW9Gs4ch/B+WZ0uo7sQ=
-github.com/arpansaha13/goauthkit v0.2.3/go.mod h1:Ic7vZ/3ElKgkEFwBWBgL+zD+qr6YtYebQmOtJyCRoN0=
-github.com/arpansaha13/gotoolkit v0.5.0 h1:zDdo8HbwFFVcJ80MS+IrrOiso/ofyTzGBiwLsE6lXh0=
-github.com/arpansaha13/gotoolkit v0.5.0/go.mod h1:sL4BH1ufsBWNLLYtCpfUZpIGKXBiHMFYBLjaWVzr5dQ=
+github.com/arpansaha13/goauthkit v0.2.4 h1:jgUICqfHKd82IAKr6Yl0TImaHvJK5NaEqxA6qhEg8RA=
+github.com/arpansaha13/goauthkit v0.2.4/go.mod h1:EjcJ3gDs4iT2Nrfe2Djx9E4bI1sEmjsLLWXF2w1Eumc=
+github.com/arpansaha13/gotoolkit v0.6.0 h1:dJgFu4zEGUWoiBoLeCVjZS4wVawXdnavBA4VijeEEzg=
+github.com/arpansaha13/gotoolkit v0.6.0/go.mod h1:UGJ8B5gIicIx/Q5eumASChcOLhfU8bwhIcyDOp7EYWU=
+github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
+github.com/cenkalti/backoff/v5 v5.0.3/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/cncf/xds/go v0.0.0-20251022180443-0feb69152e9f/go.mod h1:HlzOvOjVBOfTGSRXRyY0OiCS/3J1akRGQQpRO/7zyF4=
 github.com/cncf/xds/go v0.0.0-20251210132809-ee656c7534f5/go.mod h1:KdCmV+x/BuvyMxRnYBlmVaq4OLiKW6iRQfvC62cvdkI=
 github.com/containerd/typeurl/v2 v2.2.0/go.mod h1:8XOOxnyatxSWuG8OfsZXVnAF4iZfedjS/8UHSPJnX4g=

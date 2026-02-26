@@ -82,7 +82,7 @@ func (s *BaseTestSuite) SetupSuite() {
 
 	// Create mock broker
 	s.Broker = mocks.NewMockBroker()
-	err = s.Broker.Connect()
+	err = s.Broker.Connect(s.Ctx)
 	s.Require().NoError(err)
 }
 

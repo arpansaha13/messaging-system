@@ -8,13 +8,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/controller"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
-	"github.com/arpansaha13/messaging-system/apps/common/db"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/segmentio/kafka-go"
 	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -30,11 +31,19 @@ func main() {
 	}
 
 	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
-	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      []string{cfg.KafkaBrokers},
-		Topic:        cfg.KafkaTopic,
-		RequiredAcks: int(kafka.RequireAll),
-	})
+	// Note: Kafka connect is before logger ready; use ErrorLevel for permanent to avoid silent Fatal
+	kafkaWriter, err := gotoolkit.ConnectKafkaWithBackoff(
+		context.Background(),
+		kafka.WriterConfig{
+			Brokers:      []string{cfg.KafkaBrokers},
+			Topic:        cfg.KafkaTopic,
+			RequiredAcks: int(kafka.RequireAll),
+		},
+		gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to kafka: %v", err))
+	}
 
 	// Create resource with service identity
 	res, err := resource.New(context.Background(),
@@ -65,15 +74,36 @@ func main() {
 	rootCtx := logger.WithContext(context.Background(), otelLogger)
 
 	// Initialize database
-	database, err := db.InitDB()
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USERNAME"),
+		os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
+	if os.Getenv("DB_HOST") == "" {
+		dsn = fmt.Sprintf("host=localhost port=5432 user=postgres password=postgres dbname=messaging_db sslmode=disable")
+	}
+	database, err := gotoolkit.ConnectPostgresWithBackoff(rootCtx, dsn)
 	if err != nil {
-		log.Fatal("failed to initialize database", zap.Error(err))
+		log.Fatal("failed to connect to postgres", zap.Error(err))
+	}
+
+	// Run migrations
+	if err := database.AutoMigrate(
+		&domain.UserProfile{},
+		&domain.Message{},
+		&domain.MessageRecipient{},
+		&domain.Chat{},
+		&domain.Channel{},
+		&domain.Contact{},
+		&domain.Group{},
+		&domain.UserGroup{},
+		&domain.Invite{},
+	); err != nil {
+		log.Fatal("failed to run migrations", zap.Error(err))
 	}
 
 	// Initialize RabbitMQ broker
 	amqpURL := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPass, cfg.RabbitMQHost, cfg.RabbitMQPort)
 	messageBroker := broker.NewRabbitMQBroker(amqpURL)
-	if err := messageBroker.Connect(); err != nil {
+	if err := messageBroker.Connect(rootCtx); err != nil {
 		log.Fatal("failed to connect to RabbitMQ", zap.Error(err))
 	}
 	defer messageBroker.Disconnect()

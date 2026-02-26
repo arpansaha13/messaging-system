@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/arpansaha13/gotoolkit"
@@ -58,21 +59,15 @@ type RabbitMQService struct {
 }
 
 // NewRabbitMQService creates a new RabbitMQ service
-func NewRabbitMQService(url string) (*RabbitMQService, error) {
-	logger, err := zap.NewProduction()
+func NewRabbitMQService(ctx context.Context, url string, opts ...gotoolkit.BackoffOption) (*RabbitMQService, error) {
+	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, url, opts...)
 	if err != nil {
-		return nil, err
-	}
-
-	conn, err := amqp.Dial(url)
-	if err != nil {
-		logger.Error("failed to connect to rabbitmq", zap.String("url", url), zap.Error(err))
 		return nil, err
 	}
 
 	channel, err := conn.Channel()
 	if err != nil {
-		logger.Error("failed to create rabbitmq channel", zap.Error(err))
+		zap.L().Error("failed to create rabbitmq channel", zap.Error(err))
 		conn.Close()
 		return nil, err
 	}
@@ -80,18 +75,18 @@ func NewRabbitMQService(url string) (*RabbitMQService, error) {
 	service := &RabbitMQService{
 		conn:    conn,
 		channel: channel,
-		logger:  logger,
+		logger:  zap.L(),
 	}
 
 	// Declare exchanges
 	if err := service.declareExchanges(); err != nil {
-		logger.Error("failed to declare exchanges", zap.Error(err))
+		zap.L().Error("failed to declare exchanges", zap.Error(err))
 		channel.Close()
 		conn.Close()
 		return nil, err
 	}
 
-	logger.Info("RabbitMQ connected from backend", zap.String("url", url))
+	zap.L().Info("RabbitMQ connected from backend")
 	return service, nil
 }
 

@@ -29,7 +29,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 const serviceName string = "backend"
@@ -41,11 +41,19 @@ func main() {
 	}
 
 	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
-	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
-		Brokers:      []string{getKafkaBrokers()},
-		Topic:        getKafkaTopic(),
-		RequiredAcks: int(kafka.RequireAll),
-	})
+	// Note: Kafka connect is before logger ready; use ErrorLevel for permanent to avoid silent Fatal
+	kafkaWriter, err := gotoolkit.ConnectKafkaWithBackoff(
+		context.Background(),
+		kafka.WriterConfig{
+			Brokers:      []string{getKafkaBrokers()},
+			Topic:        getKafkaTopic(),
+			RequiredAcks: int(kafka.RequireAll),
+		},
+		gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+	)
+	if err != nil {
+		log.Fatalf("failed to connect to kafka: %v", err)
+	}
 
 	// Create resource with service identity
 	res, err := resource.New(context.Background(),
@@ -76,9 +84,25 @@ func main() {
 	tracer := otel.Tracer(serviceName)
 
 	// Initialize database
-	db, err := utils.InitDB(cfg.DatabaseURL)
+	svcCtx := logger.WithContext(context.Background(), otelLogger)
+	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL)
 	if err != nil {
-		otelLogger.Fatal("failed to initialize database", zap.Error(err))
+		otelLogger.Fatal("failed to connect to postgres", zap.Error(err))
+	}
+
+	// Run migrations
+	if err := db.AutoMigrate(
+		&domain.UserProfile{},
+		&domain.Message{},
+		&domain.MessageRecipient{},
+		&domain.Chat{},
+		&domain.Channel{},
+		&domain.Contact{},
+		&domain.Group{},
+		&domain.UserGroup{},
+		&domain.Invite{},
+	); err != nil {
+		otelLogger.Fatal("failed to run migrations", zap.Error(err))
 	}
 
 	// Initialize repositories
@@ -109,9 +133,9 @@ func main() {
 	rabbitmqPass := os.Getenv("RABBITMQ_PASS")
 	rabbitmqURL := fmt.Sprintf("amqp://%s:%s@rabbitmq:5672/", rabbitmqUser, rabbitmqPass)
 
-	rabbitmqService, err := service.NewRabbitMQService(rabbitmqURL)
+	rabbitmqService, err := service.NewRabbitMQService(svcCtx, rabbitmqURL)
 	if err != nil {
-		log.Printf("Warning: Failed to connect to RabbitMQ: %v - continuing without message publishing", err)
+		otelLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
 		rabbitmqService = nil
 	}
 
