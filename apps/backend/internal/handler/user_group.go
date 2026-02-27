@@ -22,7 +22,7 @@ func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userG
 
 func getGroupMembersController(userGroupService service.IUserGroupService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("get group members handler called")
 
 		userID := middleware.GetUserIDFromContext(r)

@@ -24,7 +24,7 @@ func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channel
 
 func createChannelController(channelService service.IChannelService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("create channel handler called")
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -73,7 +73,7 @@ func createChannelController(channelService service.IChannelService) ControllerF
 
 func getGroupChannelsController(channelService service.IChannelService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("get group channels handler called")
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -114,7 +114,7 @@ func getGroupChannelsController(channelService service.IChannelService) Controll
 
 func getChannelInfoController(channelService service.IChannelService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("get channel info handler called")
 
 		userID := middleware.GetUserIDFromContext(r)

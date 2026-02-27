@@ -30,7 +30,7 @@ func NewMessageService(messageRepo repository.IMessageRepository, messageRecipie
 
 // SendPersonalMessage publishes a personal message to RabbitMQ for processing
 func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("sending personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int("content_length", len(content)))
 
 	if !s.rabbitmqService.IsConnected() {
@@ -62,7 +62,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 
 // SendGroupMessage publishes a group message to RabbitMQ for processing
 func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("sending group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID), zap.Int("content_length", len(content)))
 
 	if !s.rabbitmqService.IsConnected() {
@@ -95,7 +95,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 
 // GetMessages retrieves messages between two users using cursor-based pagination
 func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("retrieving messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	page, err := s.messageRepo.GetMessagesByUserId(ctx, userID, receiverID, nil, before, after)
@@ -110,7 +110,7 @@ func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int
 
 // MarkMessageAsDelivered publishes a delivered status update to RabbitMQ
 func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, receiverID, senderID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("marking message as delivered", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID))
 
 	if !s.rabbitmqService.IsConnected() {
@@ -141,7 +141,7 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, 
 
 // MarkMessageAsRead publishes read status updates to RabbitMQ
 func (s *MessageService) MarkMessageAsRead(ctx context.Context, messages []ReadPayload) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("marking messages as read", zap.Int("message_count", len(messages)))
 
 	if !s.rabbitmqService.IsConnected() {
@@ -166,7 +166,7 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, messages []ReadP
 
 // GetChannelMessages retrieves messages for a channel using cursor-based pagination
 func (s *MessageService) GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("retrieving channel messages", zap.Int64("channel_id", channelID))
 
 	page, err := s.messageRepo.GetMessagesByChannelID(ctx, channelID, before, after)

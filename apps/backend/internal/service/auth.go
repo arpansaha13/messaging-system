@@ -43,7 +43,7 @@ func NewAuthServiceClient(authServiceHost string) (*AuthServiceClient, error) {
 
 // ValidateSession validates a session token with the auth service
 func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 
 	if token == "" {
 		log.Warn("validate session called with empty token")
@@ -72,7 +72,7 @@ func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (
 
 // Signup registers a new user with the auth service
 func (a *AuthServiceClient) Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("signup request received", zap.String("email", email))
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
@@ -95,7 +95,7 @@ func (a *AuthServiceClient) Signup(ctx context.Context, email, password string) 
 
 // Login authenticates a user with the auth service
 func (a *AuthServiceClient) Login(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("login request received", zap.String("email", email))
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
@@ -118,7 +118,7 @@ func (a *AuthServiceClient) Login(ctx context.Context, email, password string) (
 
 // VerifyOTP verifies an OTP code with the auth service
 func (a *AuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("verify OTP request received")
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
@@ -141,7 +141,7 @@ func (a *AuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string)
 
 // Logout logs out a user session with the auth service
 func (a *AuthServiceClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 
 	if token == "" {
 		log.Warn("logout called with empty token")
@@ -170,7 +170,7 @@ func (a *AuthServiceClient) Logout(ctx context.Context, token string) (*pb.Logou
 
 // GetUser retrieves user information from the auth service
 func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("get user request received", zap.Int64("user_id", userID))
 
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)

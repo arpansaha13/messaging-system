@@ -33,7 +33,7 @@ func NewEventController(
 // HandleWorkerQueueEvent processes a message from the worker queue
 func (ec *EventController) HandleWorkerQueueEvent(ctx context.Context, msg *broker.MessagePayload) error {
 	ctx = logger.WithFields(ctx, zap.String("event_type", msg.Type))
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("worker queue event received")
 
 	switch msg.Type {
@@ -52,7 +52,7 @@ func (ec *EventController) HandleWorkerQueueEvent(ctx context.Context, msg *brok
 // HandleConnectionQueueEvent processes a connection event from the connection queue
 func (ec *EventController) HandleConnectionQueueEvent(ctx context.Context, msg *broker.UserConnectionPayload) error {
 	ctx = logger.WithFields(ctx, zap.String("event_type", "CONNECTION_USER"))
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("connection queue event received")
 	return ec.connectionProcessor.ProcessUserConnection(ctx, msg)
 }

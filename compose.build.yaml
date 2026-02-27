@@ -54,3 +54,9 @@ services:
       context: .
       dockerfile: apps/grafana/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/grafana/server:0.1.0
+
+  fluent-bit:
+    build:
+      context: .
+      dockerfile: apps/fluent-bit/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/fluent-bit/server:0.1.0

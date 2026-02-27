@@ -60,6 +60,12 @@ services:
       context: .
       dockerfile: apps/backend/Dockerfile
     container_name: backend
+    labels:
+      service_name: "backend"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: development
       API_PORT: 4000
@@ -90,10 +96,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      kafka:
-        condition: service_healthy
-      init-kafka:
-        condition: service_completed_successfully
       auth:
         condition: service_started
     networks:
@@ -164,6 +166,12 @@ services:
       context: .
       dockerfile: apps/auth/Dockerfile
     container_name: auth
+    labels:
+      service_name: "auth"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: development
       DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
@@ -247,6 +255,12 @@ services:
       context: .
       dockerfile: apps/chat-worker/Dockerfile
     container_name: chat-worker
+    labels:
+      service_name: "chat-worker"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: development
       LOG_LEVEL: ${LOG_LEVEL}
@@ -399,6 +413,27 @@ services:
           path: ./apps/grafana/provisioning/datasources
         - action: rebuild
           path: ./apps/grafana/provisioning/dashboards
+
+  fluent-bit:
+    build:
+      context: .
+      dockerfile: apps/fluent-bit/Dockerfile
+    container_name: fluent-bit
+    volumes:
+      - //var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      kafka:
+        condition: service_healthy
+      init-kafka:
+        condition: service_completed_successfully
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/fluent-bit/fluent-bit.yaml
+        - action: rebuild
+          path: ./apps/fluent-bit/parsers.conf
 
 networks:
   messaging-network:

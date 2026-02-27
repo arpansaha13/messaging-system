@@ -11,12 +11,9 @@ services:
     volumes:
       - ./data/certs:/etc/nginx/certs:ro
     depends_on:
-      backend:
-        condition: service_started
-      socket:
-        condition: service_started
-      frontend:
-        condition: service_started
+      - backend
+      - socket
+      - frontend
     networks:
       - messaging-network
 
@@ -42,6 +39,12 @@ services:
   auth:
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
     container_name: auth_system_prod
+    labels:
+      service_name: "auth"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     expose:
       - "50051"
     environment:
@@ -64,8 +67,7 @@ services:
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
     depends_on:
-      auth-db:
-        condition: service_healthy
+      - auth-db
     networks:
       - messaging-network
 
@@ -91,6 +93,12 @@ services:
   backend:
     image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
     container_name: backend_prod
+    labels:
+      service_name: "backend"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: production
       API_PORT: 4000
@@ -115,12 +123,9 @@ services:
     ports:
       - "7030:4000"
     depends_on:
-      postgres:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      auth:
-        condition: service_started
+      - postgres
+      - rabbitmq
+      - auth
     networks:
       - messaging-network
 
@@ -140,10 +145,8 @@ services:
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      memcached:
-        condition: service_started
+      - rabbitmq
+      - memcached
     networks:
       - messaging-network
 
@@ -159,8 +162,7 @@ services:
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
     depends_on:
-      backend:
-        condition: service_started
+      - backend
     networks:
       - messaging-network
 
@@ -189,6 +191,12 @@ services:
   chat-worker:
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
     container_name: chat_worker_go_prod
+    labels:
+      service_name: "chat-worker"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: production
       LOG_LEVEL: ${LOG_LEVEL}
@@ -203,10 +211,8 @@ services:
       DB_NAME: ${DB_NAME}
       DB_LOGGING: "false"
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
+      - rabbitmq
+      - postgres
     networks:
       - messaging-network
 
@@ -280,10 +286,8 @@ services:
       dockerfile: apps/alloy/Dockerfile
     container_name: alloy_prod
     depends_on:
-      kafka:
-        condition: service_healthy
-      loki:
-        condition: service_healthy
+      - kafka
+      - loki
     networks:
       - messaging-network
 
@@ -303,13 +307,24 @@ services:
     volumes:
       - ./data/grafana:/var/lib/grafana
     depends_on:
-      loki:
-        condition: service_healthy
+      - loki
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - messaging-network
+
+  fluent-bit:
+    build:
+      context: .
+      dockerfile: apps/fluent-bit/Dockerfile
+    container_name: fluent-bit_prod
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - kafka
     networks:
       - messaging-network
 

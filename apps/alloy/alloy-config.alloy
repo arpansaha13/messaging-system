@@ -13,23 +13,6 @@ loki.source.kafka "application_logs" {
 loki.process "json_parse" {
   forward_to = [loki.write.default.receiver]
 
-  stage.json {
-    expressions = {
-      trace_id = "trace_id",
-      span_id = "span_id",
-      caller_ip = "caller_ip",
-      content_length = "content_length",
-      method = "method",
-      path = "path",
-      timestamp = "timestamp",
-      level = "level",
-      message = "message",
-      user_id = "user_id",
-      caller = "caller",
-      service_name = "service_name",
-    }
-  }
-
   // Extract fields as labels for querying
   stage.labels {
     values = {
@@ -37,12 +20,6 @@ loki.process "json_parse" {
       method = "method",
       service_name = "service_name",
     }
-  }
-
-  // Parse timestamp
-  stage.timestamp {
-    source = "timestamp"
-    format = "RFC3339Nano"
   }
 }
 
@@ -53,7 +30,7 @@ loki.write "default" {
   }
 
   external_labels = {
-    environment = "application",
+    environment = "development",
     cluster = "default",
   }
 }

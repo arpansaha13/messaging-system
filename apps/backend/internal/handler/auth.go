@@ -29,7 +29,7 @@ func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient ser
 
 func signupController(authServiceClient service.IAuthServiceClient) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("signup request handler called")
 
 		var req dto.SignupRequestDTO
@@ -77,7 +77,7 @@ func signupController(authServiceClient service.IAuthServiceClient) ControllerFu
 
 func loginController(authServiceClient service.IAuthServiceClient) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("login request handler called")
 
 		var req dto.LoginRequestDTO
@@ -147,7 +147,7 @@ func loginController(authServiceClient service.IAuthServiceClient) ControllerFun
 
 func verifyOTPController(authServiceClient service.IAuthServiceClient) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("verify otp handler called")
 
 		vars := mux.Vars(r)
@@ -213,7 +213,7 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) Controlle
 
 func logoutController(authServiceClient service.IAuthServiceClient) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("logout handler called")
 
 		// Get the session token from the cookie

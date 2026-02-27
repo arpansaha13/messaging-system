@@ -54,7 +54,7 @@ func NewChatService(chatRepo repository.IChatRepository, messageRepo repository.
 
 // CreateChat creates a new chat between two users
 func (s *ChatService) CreateChat(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("creating chat", zap.Int64("user_1_id", user1ID), zap.Int64("user_2_id", user2ID))
 
 	// Check if chat already exists
@@ -85,7 +85,7 @@ func (s *ChatService) CreateChat(ctx context.Context, user1ID, user2ID int64) (*
 
 // GetUserChats retrieves all chats for a user split into archived and unarchived
 func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsResponseDTO, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("retrieving user chats", zap.Int64("user_id", userID))
 
 	chats, err := s.chatRepo.GetUserChats(ctx, userID)
@@ -195,7 +195,7 @@ func sortChats(items []*ChatItemDTO) {
 
 // Pin pins a chat for a user
 func (s *ChatService) PinChat(ctx context.Context, userID, receiverID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("pinning chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
@@ -223,7 +223,7 @@ func (s *ChatService) PinChat(ctx context.Context, userID, receiverID int64) err
 
 // Unpin unpins a chat for a user
 func (s *ChatService) UnpinChat(ctx context.Context, userID, receiverID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("unpinning chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
@@ -250,7 +250,7 @@ func (s *ChatService) UnpinChat(ctx context.Context, userID, receiverID int64) e
 
 // Archive archives a chat for a user
 func (s *ChatService) ArchiveChat(ctx context.Context, userID, receiverID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("archiving chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
@@ -278,7 +278,7 @@ func (s *ChatService) ArchiveChat(ctx context.Context, userID, receiverID int64)
 
 // Unarchive unarchives a chat for a user
 func (s *ChatService) UnarchiveChat(ctx context.Context, userID, receiverID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("unarchiving chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
@@ -305,7 +305,7 @@ func (s *ChatService) UnarchiveChat(ctx context.Context, userID, receiverID int6
 
 // ClearChat clears message history for a chat
 func (s *ChatService) ClearChat(ctx context.Context, userID, receiverID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("clearing chat history", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)
@@ -333,7 +333,7 @@ func (s *ChatService) ClearChat(ctx context.Context, userID, receiverID int64) e
 
 // DeleteChat deletes a chat
 func (s *ChatService) DeleteChat(ctx context.Context, userID, receiverID int64) error {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("deleting chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
 
 	chat, err := s.chatRepo.GetByUsers(ctx, userID, receiverID)

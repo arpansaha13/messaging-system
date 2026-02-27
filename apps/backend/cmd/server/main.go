@@ -11,19 +11,12 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/segmentio/kafka-go"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/sdk/resource"
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
-	tracermw "github.com/arpansaha13/gotoolkit/tracer"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -40,54 +33,19 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
-	// Note: Kafka connect is before logger ready; use ErrorLevel for permanent to avoid silent Fatal
-	kafkaWriter, err := gotoolkit.ConnectKafkaWithBackoff(
-		context.Background(),
-		kafka.WriterConfig{
-			Brokers:      []string{getKafkaBrokers()},
-			Topic:        getKafkaTopic(),
-			RequiredAcks: int(kafka.RequireAll),
-		},
-		gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
-	)
-	if err != nil {
-		log.Fatalf("failed to connect to kafka: %v", err)
-	}
-
-	// Create resource with service identity
-	res, err := resource.New(context.Background(),
-		resource.WithAttributes(semconv.ServiceName(serviceName)),
-	)
-	if err != nil {
-		log.Fatalf("failed to create resource: %v", err)
-	}
-
-	// Initialize OTel logger provider with Kafka exporter
-	loggerProvider, err := logger.NewKafkaLoggerProvider(kafkaWriter, res)
-	if err != nil {
-		log.Fatalf("failed to initialize logger provider: %v", err)
-	}
-
 	// Initialize logger (uptrace otelzap wrapping stdout JSON output)
-	otelLogger, err := logger.InitLogger(loggerProvider, parseLogLevel(cfg.LogLevel))
+	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
-	otelLogger = otelLogger.WithOptions(zap.Fields(zap.String("service_name", serviceName)))
-	defer otelLogger.Sync()
-	otelzap.ReplaceGlobals(otelLogger)
-
-	// Initialize TracerProvider (no exporter — trace IDs generated, spans not shipped yet)
-	tp := sdktrace.NewTracerProvider(sdktrace.WithResource(res))
-	otel.SetTracerProvider(tp)
-	tracer := otel.Tracer(serviceName)
+	defer zapLogger.Sync()
+	zap.ReplaceGlobals(zapLogger)
 
 	// Initialize database
-	svcCtx := logger.WithContext(context.Background(), otelLogger)
+	svcCtx := logger.WithContext(context.Background(), zapLogger)
 	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL)
 	if err != nil {
-		otelLogger.Fatal("failed to connect to postgres", zap.Error(err))
+		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
 	// Run migrations
@@ -102,7 +60,7 @@ func main() {
 		&domain.UserGroup{},
 		&domain.Invite{},
 	); err != nil {
-		otelLogger.Fatal("failed to run migrations", zap.Error(err))
+		zapLogger.Fatal("failed to run migrations", zap.Error(err))
 	}
 
 	// Initialize repositories
@@ -135,7 +93,7 @@ func main() {
 
 	rabbitmqService, err := service.NewRabbitMQService(svcCtx, rabbitmqURL)
 	if err != nil {
-		otelLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
+		zapLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
 		rabbitmqService = nil
 	}
 
@@ -154,8 +112,7 @@ func main() {
 
 	// Apply middlewares
 	router.Use(gotoolkit.HttpRecoveryMiddleware)
-	router.Use(logger.HttpMiddleware(otelLogger))
-	router.Use(tracermw.Middleware(tracer))
+	router.Use(logger.HttpMiddleware(zapLogger))
 	router.Use(gotoolkit.HttpErrorMiddleware)
 
 	// Authentication middleware for protected routes
@@ -176,9 +133,7 @@ func main() {
 
 	// Create HTTP server
 	addr := fmt.Sprintf(":%d", cfg.APIPort)
-	httpHandler := otelhttp.NewHandler(router, serviceName,
-		otelhttp.WithTracerProvider(tp),
-	)
+	httpHandler := otelhttp.NewHandler(router, serviceName)
 	httpServer := &http.Server{
 		Addr:         addr,
 		Handler:      httpHandler,
@@ -189,9 +144,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		otelLogger.Info("Server started", zap.String("address", addr))
+		zapLogger.Info("Server started", zap.String("address", addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			otelLogger.Fatal("server error", zap.Error(err))
+			zapLogger.Fatal("server error", zap.Error(err))
 		}
 	}()
 
@@ -200,24 +155,14 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	otelLogger.Info("Shutting down server...")
+	zapLogger.Info("Shutting down server...")
 
 	// Graceful shutdown with timeout
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		otelLogger.Error("server shutdown error", zap.Error(err))
-	}
-
-	// Shutdown TracerProvider
-	if err := tp.Shutdown(shutdownCtx); err != nil {
-		otelLogger.Error("tracer provider shutdown error", zap.Error(err))
-	}
-
-	// Flush and close the OTel log pipeline (drains BatchProcessor, closes Kafka writer)
-	if err := loggerProvider.Shutdown(shutdownCtx); err != nil {
-		zap.L().Error("logger provider shutdown error", zap.Error(err))
+		zapLogger.Error("server shutdown error", zap.Error(err))
 	}
 
 	// Close RabbitMQ connection
@@ -233,7 +178,7 @@ func main() {
 		sqlDB.Close()
 	}
 
-	otelLogger.Info("Server stopped")
+	zapLogger.Info("Server stopped")
 }
 
 func parseLogLevel(s string) zapcore.Level {

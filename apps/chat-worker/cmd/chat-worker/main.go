@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
@@ -16,10 +15,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	"github.com/segmentio/kafka-go"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -30,48 +25,18 @@ func main() {
 		panic(fmt.Sprintf("failed to load config: %v", err))
 	}
 
-	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
-	// Note: Kafka connect is before logger ready; use ErrorLevel for permanent to avoid silent Fatal
-	kafkaWriter, err := gotoolkit.ConnectKafkaWithBackoff(
-		context.Background(),
-		kafka.WriterConfig{
-			Brokers:      []string{cfg.KafkaBrokers},
-			Topic:        cfg.KafkaTopic,
-			RequiredAcks: int(kafka.RequireAll),
-		},
-		gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
-	)
-	if err != nil {
-		panic(fmt.Sprintf("failed to connect to kafka: %v", err))
-	}
-
-	// Create resource with service identity
-	res, err := resource.New(context.Background(),
-		resource.WithAttributes(semconv.ServiceName("chat-worker")),
-	)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create resource: %v", err))
-	}
-
-	// Initialize OTel logger provider with Kafka exporter
-	loggerProvider, err := logger.NewKafkaLoggerProvider(kafkaWriter, res)
-	if err != nil {
-		panic(fmt.Sprintf("failed to initialize logger provider: %v", err))
-	}
-
 	// Initialize logger (uptrace otelzap wrapping stdout JSON output)
-	otelLogger, err := logger.InitLogger(loggerProvider, parseLogLevel(cfg.LogLevel))
+	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize logger: %v", err))
 	}
-	otelLogger = otelLogger.WithOptions(zap.Fields(zap.String("service_name", "chat-worker")))
-	otelzap.ReplaceGlobals(otelLogger)
-	defer otelLogger.Sync()
+	zap.ReplaceGlobals(zapLogger)
+	defer zapLogger.Sync()
 
 	log := zap.L()
 
 	// Root context with logger injected
-	rootCtx := logger.WithContext(context.Background(), otelLogger)
+	rootCtx := logger.WithContext(context.Background(), zapLogger)
 
 	// Initialize database
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
@@ -146,13 +111,6 @@ func main() {
 
 	<-sigChan
 	log.Info("SIGTERM received, shutting down gracefully")
-
-	// Flush and close the OTel log pipeline (drains BatchProcessor, closes Kafka writer)
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer shutdownCancel()
-	if err := loggerProvider.Shutdown(shutdownCtx); err != nil {
-		log.Error("logger provider shutdown error", zap.Error(err))
-	}
 
 	// Close database
 	sqlDB, err := database.DB()

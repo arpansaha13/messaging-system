@@ -27,7 +27,7 @@ func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatServic
 
 func getUserChatsController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("get user chats handler called")
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -50,7 +50,7 @@ func getUserChatsController(chatService service.IChatService) ControllerFunc {
 
 func pinChatController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("pin chat handler called")
 
 		vars := mux.Vars(r)
@@ -80,7 +80,7 @@ func pinChatController(chatService service.IChatService) ControllerFunc {
 
 func unpinChatController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("unpin chat handler called")
 
 		vars := mux.Vars(r)
@@ -110,7 +110,7 @@ func unpinChatController(chatService service.IChatService) ControllerFunc {
 
 func archiveChatController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("archive chat handler called")
 
 		vars := mux.Vars(r)
@@ -140,7 +140,7 @@ func archiveChatController(chatService service.IChatService) ControllerFunc {
 
 func unarchiveChatController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("unarchive chat handler called")
 
 		vars := mux.Vars(r)
@@ -170,7 +170,7 @@ func unarchiveChatController(chatService service.IChatService) ControllerFunc {
 
 func clearChatController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("clear chat handler called")
 
 		vars := mux.Vars(r)
@@ -200,7 +200,7 @@ func clearChatController(chatService service.IChatService) ControllerFunc {
 
 func deleteChatController(chatService service.IChatService) ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
-		log := logger.FromContext(r.Context()).Ctx(r.Context())
+		log := logger.FromContext(r.Context())
 		log.Debug("delete chat handler called")
 
 		vars := mux.Vars(r)

@@ -8,22 +8,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/segmentio/kafka-go"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
-	"go.opentelemetry.io/otel/sdk/resource"
-	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 
 	"github.com/arpansaha13/goauthkit/pb"
-	grpccontroller "github.com/arpansaha13/goauthkit/pkg/controller/grpc"
-	"github.com/arpansaha13/goauthkit/pkg/repository"
-	"github.com/arpansaha13/goauthkit/pkg/service"
-	"github.com/arpansaha13/goauthkit/pkg/utils"
-	"github.com/arpansaha13/goauthkit/pkg/worker"
+	goauthkit "github.com/arpansaha13/goauthkit/pkg"
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/auth/internal/config"
@@ -36,51 +27,21 @@ func main() {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	// Initialize Kafka writer (owned by loggerProvider after this point — do not close separately)
-	// Note: Kafka connect is before logger ready; use ErrorLevel for permanent to avoid silent Fatal
-	kafkaWriter, err := gotoolkit.ConnectKafkaWithBackoff(
-		context.Background(),
-		kafka.WriterConfig{
-			Brokers:      []string{cfg.KafkaBrokers},
-			Topic:        cfg.KafkaTopic,
-			RequiredAcks: int(kafka.RequireAll),
-		},
-		gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
-	)
-	if err != nil {
-		log.Fatalf("failed to connect to kafka: %v", err)
-	}
-
-	// Create resource with service identity
-	res, err := resource.New(context.Background(),
-		resource.WithAttributes(semconv.ServiceName("auth")),
-	)
-	if err != nil {
-		log.Fatalf("failed to create resource: %v", err)
-	}
-
-	// Initialize OTel logger provider with Kafka exporter
-	loggerProvider, err := logger.NewKafkaLoggerProvider(kafkaWriter, res)
-	if err != nil {
-		log.Fatalf("failed to initialize logger provider: %v", err)
-	}
-
 	// Initialize logger
-	otelLogger, err := logger.InitLogger(loggerProvider, parseLogLevel(cfg.LogLevel))
+	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
-	otelLogger = otelLogger.WithOptions(zap.Fields(zap.String("service_name", "auth")))
-	defer otelLogger.Sync()
-	otelzap.ReplaceGlobals(otelLogger)
+	defer zapLogger.Sync()
+	zap.ReplaceGlobals(zapLogger)
 
-	otelLogger.Info("starting auth service", zap.String("environment", cfg.Environment))
+	zapLogger.Info("starting auth service", zap.String("environment", cfg.Environment))
 
 	// Initialize database
-	svcCtx := logger.WithContext(context.Background(), otelLogger)
+	svcCtx := logger.WithContext(context.Background(), zapLogger)
 	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL)
 	if err != nil {
-		otelLogger.Fatal("failed to connect to postgres", zap.Error(err))
+		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 	defer func() {
 		sqlDB, err := db.DB()
@@ -90,14 +51,14 @@ func main() {
 	}()
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	otpRepo := repository.NewOTPRepository(db)
-	sessionRepo := repository.NewSessionRepository(db)
+	userRepo := goauthkit.NewUserRepository(db)
+	otpRepo := goauthkit.NewOTPRepository(db)
+	sessionRepo := goauthkit.NewSessionRepository(db)
 
 	// Initialize email provider based on environment
-	var emailProvider worker.EmailProvider
+	var emailProvider goauthkit.EmailProvider
 	if cfg.Environment == "production" {
-		emailProvider = worker.NewSMTPEmailProvider(
+		emailProvider = goauthkit.NewSMTPEmailProvider(
 			cfg.SMTPHost,
 			cfg.SMTPPort,
 			cfg.SMTPUser,
@@ -105,15 +66,15 @@ func main() {
 			cfg.EmailFrom,
 		)
 	} else {
-		emailProvider = worker.NewMockEmailProvider()
+		emailProvider = goauthkit.NewMockEmailProvider()
 	}
 
 	// Initialize password hasher and validator
-	hasher := utils.NewPasswordHasher()
-	validator := utils.NewValidator()
+	hasher := goauthkit.NewPasswordHasher()
+	validator := goauthkit.NewValidator()
 
 	// Initialize email worker pool
-	emailPool := worker.NewEmailWorkerPool(
+	emailPool := goauthkit.NewEmailWorkerPool(
 		cfg.EmailWorkerPoolSize,
 		cfg.EmailTaskQueueSize,
 		emailProvider,
@@ -121,12 +82,12 @@ func main() {
 	defer emailPool.Stop()
 
 	// Initialize auth service
-	authService := service.NewAuthService(
+	authService := goauthkit.NewAuthService(
 		userRepo,
 		otpRepo,
 		sessionRepo,
 		hasher,
-		service.AuthServiceConfig{
+		goauthkit.AuthServiceConfig{
 			OTPExpiry:  cfg.OTPExpiry,
 			OTPLength:  cfg.OTPLength,
 			SessionTTL: cfg.SessionTTL,
@@ -139,14 +100,15 @@ func main() {
 	opts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			gotoolkit.GrpcRecoveryInterceptor(),
-			logger.GrpcInterceptor(otelLogger),
+			logger.GrpcInterceptor(zapLogger),
 			gotoolkit.GrpcErrorInterceptor(),
+			goauthkit.AuthorizationInterceptor(),
 		),
 	}
 	grpcServer := grpc.NewServer(opts...)
 
 	// Register gRPC services
-	authController := grpccontroller.NewAuthServiceImpl(authService, validator)
+	authController := goauthkit.NewAuthServiceImpl(authService, validator)
 
 	pb.RegisterAuthServiceServer(grpcServer, authController)
 
@@ -154,14 +116,14 @@ func main() {
 	grpcAddr := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
 	listener, err := net.Listen("tcp", grpcAddr)
 	if err != nil {
-		otelLogger.Fatal("failed to listen", zap.String("address", grpcAddr), zap.Error(err))
+		zapLogger.Fatal("failed to listen", zap.String("address", grpcAddr), zap.Error(err))
 	}
 
 	// Start server in goroutine
 	go func() {
-		otelLogger.Info("starting auth gRPC server", zap.String("address", grpcAddr))
+		zapLogger.Info("starting auth gRPC server", zap.String("address", grpcAddr))
 		if err := grpcServer.Serve(listener); err != nil {
-			otelLogger.Fatal("gRPC server error", zap.Error(err))
+			zapLogger.Fatal("gRPC server error", zap.Error(err))
 		}
 	}()
 
@@ -170,18 +132,9 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	otelLogger.Info("shutting down auth gRPC server")
-
-	// Graceful shutdown with timeout
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
+	zapLogger.Info("shutting down auth gRPC server")
 
 	grpcServer.GracefulStop()
-
-	// Flush and close the OTel log pipeline (drains BatchProcessor, closes Kafka writer)
-	if err := loggerProvider.Shutdown(shutdownCtx); err != nil {
-		zap.L().Error("logger provider shutdown error", zap.Error(err))
-	}
 
 	zap.L().Info("auth gRPC server stopped")
 }

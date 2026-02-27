@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
-	"github.com/uptrace/opentelemetry-go-extra/otelzap"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -169,7 +168,7 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	router := mux.NewRouter()
 
 	// Create a no-op logger for tests
-	testLogger := otelzap.New(zap.NewNop())
+	testLogger := zap.NewNop()
 
 	// Apply middleware
 	router.Use(gotoolkit.HttpRecoveryMiddleware)

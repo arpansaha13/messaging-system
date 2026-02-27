@@ -1,0 +1,47 @@
+service:
+  flush: 5
+  daemon: off
+  log_level: info
+  parsers_file: parsers.conf
+
+pipeline:
+  inputs:
+    - name: tail
+      tag: docker.*
+      path: /var/lib/docker/containers/*/*.log
+      parser: docker
+      docker_mode: on
+      mem_buf_limit: 50MB
+
+  filters:
+    # Parse the log payload
+    - name: parser
+      match: docker.*
+      key_name: log
+      parser: json_parser
+      reserve_data: on
+
+    # Parse the log payload
+    - name: parser
+      match: docker.*
+      key_name: log
+      parser: json_parser
+      reserve_data: on
+
+    - name: nest
+      match: docker.*
+      operation: lift
+      nested_under: attrs
+
+    - name: grep
+      match: docker.*
+      regex: service_name ^(backend|auth|chat-worker)$
+
+  outputs:
+    - name: kafka
+      match: docker.*
+      brokers: kafka:9092
+      topics: application-logs
+      retry_limit: 5
+      rdkafka.queue.buffering.max.ms: "50"
+      rdkafka.batch.num.messages: "1000"

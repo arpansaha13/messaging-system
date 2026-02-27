@@ -45,6 +45,12 @@ services:
   auth:
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
     container_name: auth_system_prod
+    labels:
+      service_name: "auth"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     expose:
       - "50051"
     environment:
@@ -72,6 +78,12 @@ services:
   backend:
     image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
     container_name: backend_prod
+    labels:
+      service_name: "backend"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: production
       API_PORT: 4000
@@ -163,6 +175,12 @@ services:
   chat-worker:
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
     container_name: chat_worker_go_prod
+    labels:
+      service_name: "chat-worker"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
     environment:
       ENVIRONMENT: production
       LOG_LEVEL: ${LOG_LEVEL}
@@ -251,8 +269,7 @@ services:
       dockerfile: apps/alloy/Dockerfile
     container_name: alloy
     depends_on:
-      kafka:
-        condition: service_started
+      - kafka
     networks:
       - messaging-network
 
@@ -276,6 +293,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - messaging-network
+
+  fluent-bit:
+    image: europe-north1-docker.pkg.dev/chat-application-13/fluent-bit/server:0.1.0
+    container_name: fluent-bit
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    depends_on:
+      - kafka
     networks:
       - messaging-network
 

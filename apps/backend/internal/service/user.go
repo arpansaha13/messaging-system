@@ -27,7 +27,7 @@ func NewUserService(userRepo repository.IUserRepository, contactRepo repository.
 
 // GetUserProfile retrieves a user profile by ID
 func (s *UserService) GetUserProfile(ctx context.Context, userID int64) (*domain.UserProfile, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("retrieving user profile", zap.Int64("user_id", userID))
 
 	userProfile, err := s.userRepo.GetByID(ctx, userID)
@@ -42,7 +42,7 @@ func (s *UserService) GetUserProfile(ctx context.Context, userID int64) (*domain
 
 // SearchUserProfiles searches for user profiles
 func (s *UserService) SearchUserProfiles(ctx context.Context, query string) ([]*domain.UserProfile, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("searching user profiles", zap.String("query", query))
 
 	userProfiles, err := s.userRepo.Search(ctx, query, 20)
@@ -57,7 +57,7 @@ func (s *UserService) SearchUserProfiles(ctx context.Context, query string) ([]*
 
 // GetUserProfileWithContact retrieves a user profile with contact info
 func (s *UserService) GetUserProfileWithContact(ctx context.Context, authUserID, userID int64) (*domain.UserProfile, *domain.Contact, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("retrieving user profile with contact info", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", userID))
 
 	userProfile, err := s.userRepo.GetByID(ctx, userID)
@@ -83,7 +83,7 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, authUserID,
 
 // UpdateUserProfile updates a user's profile information
 func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, globalName, bio *string, dp *string) (*domain.UserProfile, error) {
-	log := logger.FromContext(ctx).Ctx(ctx)
+	log := logger.FromContext(ctx)
 	log.Debug("updating user profile", zap.Int64("user_id", userID))
 
 	// Get existing profile
