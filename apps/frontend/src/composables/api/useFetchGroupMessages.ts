@@ -11,10 +11,10 @@ export function useFetchGroupMessages(
   channelId: ComputedRef<IChannel['id'] | null>,
   scrollEl: MaybeRefOrGetter<HTMLElement | null>,
 ) {
-  const hasBefore = ref(false)
-  const hasAfter = ref(false)
+  const hasBefore = useState(() => false)
+  const hasAfter = useState(() => false)
 
-  const asyncResult = useLazyAsyncData(
+  const asyncResult = useAsyncData(
     () => asyncKeys.groupMessages(channelId.value ?? 0),
     async () => {
       if (!channelId.value) return []
@@ -52,13 +52,13 @@ export function useFetchGroupMessages(
   const { reset: resetBefore } = useInfiniteScroll(scrollEl, loadBefore, {
     direction: 'top',
     canLoadMore: () => hasBefore.value,
-    distance: 100,
+    distance: 200,
   })
 
   const { reset: resetAfter } = useInfiniteScroll(scrollEl, loadAfter, {
     direction: 'bottom',
     canLoadMore: () => hasAfter.value,
-    distance: 100,
+    distance: 200,
   })
 
   watch(channelId, () => {
@@ -68,5 +68,5 @@ export function useFetchGroupMessages(
     resetAfter()
   })
 
-  return { ...asyncResult, hasBefore, hasAfter }
+  return asyncResult
 }

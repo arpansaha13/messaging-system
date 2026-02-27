@@ -66,13 +66,10 @@ const groupId = computed(() => {
 
 // Fetch channel data
 const { data: channel, pending: channelLoading } = await useAsyncData(
-  `channel:${channelId.value}`,
+  () => `channel:${channelId.value}`,
   () => {
     if (!channelId.value) return Promise.resolve(null)
     return $fetch<IChannel>(`/api/channels/${channelId.value}`)
-  },
-  {
-    watch: [channelId],
   },
 )
 

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-for="(item, index) in renderMessages" :key="`${item.type}-${index}`">
+    <div v-for="item in renderMessages" :key="`${item.type}-${item.id}`">
       <ChatBodyMessage
         v-if="item.type === 'message'"
         :message="item.data"
@@ -25,7 +25,10 @@ const props = defineProps<{
 const renderMessages = computed(() => {
   const messageItr = props.messages.values()
   const tempMessageItr = props.tempMessages.values()
-  const renderMap: Array<{ type: 'message'; data: IMessage } | { type: 'temp'; data: IMessageSending }> = []
+  const renderMap: Array<
+    | { type: 'message'; id: IMessage['id']; data: IMessage }
+    | { type: 'temp'; id: IMessageSending['hash']; data: IMessageSending }
+  > = []
 
   let messageItrResult = messageItr.next()
   let tempMessageItrResult = tempMessageItr.next()
@@ -37,23 +40,23 @@ const renderMessages = computed(() => {
     const tempMessageTime = new Date(tempMessage.createdInClientAt).getTime()
 
     if (messageTime <= tempMessageTime) {
-      renderMap.push({ type: 'message', data: message })
+      renderMap.push({ type: 'message', id: message.id, data: message })
       messageItrResult = messageItr.next()
     } else {
-      renderMap.push({ type: 'temp', data: tempMessage })
+      renderMap.push({ type: 'temp', id: tempMessage.hash, data: tempMessage })
       tempMessageItrResult = tempMessageItr.next()
     }
   }
 
   while (!messageItrResult.done) {
     const message = messageItrResult.value
-    renderMap.push({ type: 'message', data: message })
+    renderMap.push({ type: 'message', id: message.id, data: message })
     messageItrResult = messageItr.next()
   }
 
   while (!tempMessageItrResult.done) {
     const tempMessage = tempMessageItrResult.value
-    renderMap.push({ type: 'temp', data: tempMessage })
+    renderMap.push({ type: 'temp', id: tempMessage.hash, data: tempMessage })
     tempMessageItrResult = tempMessageItr.next()
   }
 
