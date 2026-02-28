@@ -12,6 +12,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 
 	"github.com/arpansaha13/goauthkit/pb"
 	goauthkit "github.com/arpansaha13/goauthkit/pkg"
@@ -39,7 +41,10 @@ func main() {
 
 	// Initialize database
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
-	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL)
+	gormCfg := gorm.Config{
+		Logger: gotoolkit.NewGormLogger(zapLogger, gormlogger.Warn),
+	}
+	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL, &gormCfg)
 	if err != nil {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
