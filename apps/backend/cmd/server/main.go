@@ -87,11 +87,7 @@ func main() {
 	defer authClient.Close()
 
 	// Initialize RabbitMQ service
-	rabbitmqUser := os.Getenv("RABBITMQ_USER")
-	rabbitmqPass := os.Getenv("RABBITMQ_PASS")
-	rabbitmqURL := fmt.Sprintf("amqp://%s:%s@rabbitmq:5672/", rabbitmqUser, rabbitmqPass)
-
-	rabbitmqService, err := service.NewRabbitMQService(svcCtx, rabbitmqURL)
+	rabbitmqService, err := service.NewRabbitMQService(svcCtx, cfg.RabbitMQURL)
 	if err != nil {
 		zapLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
 		rabbitmqService = nil

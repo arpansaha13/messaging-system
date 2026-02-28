@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
@@ -75,7 +76,9 @@ func (s *BaseTestSuite) SetupSuite() {
 		host, port.Port(),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
+	})
 	s.Require().NoError(err, "Failed to connect to database")
 	s.DB = db
 

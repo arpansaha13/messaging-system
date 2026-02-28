@@ -7,6 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
+
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
@@ -15,8 +20,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -39,13 +42,10 @@ func main() {
 	rootCtx := logger.WithContext(context.Background(), zapLogger)
 
 	// Initialize database
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USERNAME"),
-		os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
-	if os.Getenv("DB_HOST") == "" {
-		dsn = fmt.Sprintf("host=localhost port=5432 user=postgres password=postgres dbname=messaging_db sslmode=disable")
+	gormCfg := gorm.Config{
+		Logger: gotoolkit.NewGormLogger(zapLogger, gormlogger.Warn),
 	}
-	database, err := gotoolkit.ConnectPostgresWithBackoff(rootCtx, dsn)
+	database, err := gotoolkit.ConnectPostgresWithBackoff(rootCtx, cfg.DatabaseURL, &gormCfg)
 	if err != nil {
 		log.Fatal("failed to connect to postgres", zap.Error(err))
 	}

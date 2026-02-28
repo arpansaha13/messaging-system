@@ -42,10 +42,6 @@ type Config struct {
 	// Worker Pool
 	EmailWorkerPoolSize int
 	EmailTaskQueueSize  int
-
-	// Kafka
-	KafkaBrokers string
-	KafkaTopic   string
 }
 
 // Load loads configuration from environment variables
@@ -67,8 +63,6 @@ func Load() (*Config, error) {
 		OTPLength:           getEnvInt("OTP_LENGTH", 6),
 		EmailWorkerPoolSize: getEnvInt("EMAIL_WORKER_POOL_SIZE", 5),
 		EmailTaskQueueSize:  getEnvInt("EMAIL_TASK_QUEUE_SIZE", 100),
-		KafkaBrokers:        getEnv("KAFKA_BROKERS", "kafka:9092"),
-		KafkaTopic:          getEnv("KAFKA_TOPIC", "application-logs"),
 	}
 
 	// Parse durations
