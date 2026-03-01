@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -21,10 +22,11 @@ const defaultTimeout = 10 * time.Second
 type AuthServiceClient struct {
 	conn   *grpc.ClientConn
 	client pb.AuthServiceClient
+	cb     *gobreaker.CircuitBreaker[any]
 }
 
 // NewAuthServiceClient creates a new auth service client
-func NewAuthServiceClient(authServiceHost string) (*AuthServiceClient, error) {
+func NewAuthServiceClient(authServiceHost string, cb *gobreaker.CircuitBreaker[any]) (*AuthServiceClient, error) {
 	conn, err := grpc.NewClient(
 		authServiceHost,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -38,6 +40,7 @@ func NewAuthServiceClient(authServiceHost string) (*AuthServiceClient, error) {
 	return &AuthServiceClient{
 		conn:   conn,
 		client: client,
+		cb:     cb,
 	}, nil
 }
 
@@ -60,12 +63,16 @@ func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (
 
 	req := &pb.ValidateSessionRequest{}
 
-	resp, err := a.client.ValidateSession(ctxWithMetadata, req)
+	result, err := a.cb.Execute(func() (any, error) {
+		return a.client.ValidateSession(ctxWithMetadata, req)
+	})
+
 	if err != nil {
 		log.Error("failed to validate session", zap.Error(err))
 		return nil, fmt.Errorf("failed to validate session: %w", err)
 	}
 
+	resp := result.(*pb.ValidateSessionResponse)
 	log.Debug("session validated successfully", zap.Int64("user_id", resp.UserId))
 	return resp, nil
 }
@@ -83,12 +90,16 @@ func (a *AuthServiceClient) Signup(ctx context.Context, email, password string) 
 		Password: password,
 	}
 
-	resp, err := a.client.Signup(ctx, req)
+	result, err := a.cb.Execute(func() (any, error) {
+		return a.client.Signup(ctx, req)
+	})
+
 	if err != nil {
 		log.Error("signup failed", zap.String("email", email), zap.Error(err))
 		return nil, fmt.Errorf("signup failed: %w", err)
 	}
 
+	resp := result.(*pb.SignupResponse)
 	log.Info("user signup successful", zap.String("email", email))
 	return resp, nil
 }
@@ -106,12 +117,16 @@ func (a *AuthServiceClient) Login(ctx context.Context, email, password string) (
 		Password: password,
 	}
 
-	resp, err := a.client.Login(ctx, req)
+	result, err := a.cb.Execute(func() (any, error) {
+		return a.client.Login(ctx, req)
+	})
+
 	if err != nil {
 		log.Warn("login failed", zap.String("email", email), zap.Error(err))
 		return nil, fmt.Errorf("login failed: %w", err)
 	}
 
+	resp := result.(*pb.LoginResponse)
 	log.Info("user login successful", zap.String("email", email))
 	return resp, nil
 }
@@ -129,12 +144,16 @@ func (a *AuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string)
 		Code:    code,
 	}
 
-	resp, err := a.client.VerifyOTP(ctx, req)
+	result, err := a.cb.Execute(func() (any, error) {
+		return a.client.VerifyOTP(ctx, req)
+	})
+
 	if err != nil {
 		log.Warn("OTP verification failed", zap.Error(err))
 		return nil, fmt.Errorf("verify otp failed: %w", err)
 	}
 
+	resp := result.(*pb.VerifyOTPResponse)
 	log.Info("OTP verified successfully")
 	return resp, nil
 }
@@ -158,12 +177,16 @@ func (a *AuthServiceClient) Logout(ctx context.Context, token string) (*pb.Logou
 
 	req := &pb.LogoutRequest{}
 
-	resp, err := a.client.Logout(ctxWithMetadata, req)
+	result, err := a.cb.Execute(func() (any, error) {
+		return a.client.Logout(ctxWithMetadata, req)
+	})
+
 	if err != nil {
 		log.Error("logout failed", zap.Error(err))
 		return nil, fmt.Errorf("failed to logout: %w", err)
 	}
 
+	resp := result.(*pb.LogoutResponse)
 	log.Info("user logout successful")
 	return resp, nil
 }
@@ -180,12 +203,17 @@ func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token str
 
 	// Add token to context as metadata for gRPC request
 	ctxWithMetadata := utils.WithAuthMetadata(ctx, token)
-	resp, err := a.client.GetUser(ctxWithMetadata, req)
+
+	result, err := a.cb.Execute(func() (any, error) {
+		return a.client.GetUser(ctxWithMetadata, req)
+	})
+
 	if err != nil {
 		log.Error("failed to get user", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
+	resp := result.(*pb.GetUserResponse)
 	log.Debug("user info retrieved successfully", zap.Int64("user_id", userID))
 	return resp, nil
 }

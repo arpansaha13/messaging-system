@@ -9,6 +9,7 @@ import (
 // Config holds all application configuration
 type Config struct {
 	LogLevel     string
+	Environment  string
 	DatabaseURL  string
 	RabbitMQHost string
 	RabbitMQPort int
@@ -18,8 +19,14 @@ type Config struct {
 
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" {
+		return nil, fmt.Errorf("ENVIRONMENT is required")
+	}
+
 	cfg := &Config{
-		LogLevel: getEnv("LOG_LEVEL", "info"),
+		LogLevel:    getEnv("LOG_LEVEL", "info"),
+		Environment: environment,
 	}
 
 	// Load database URL - either single DATABASE_URL or build from individual vars

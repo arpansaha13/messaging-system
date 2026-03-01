@@ -46,6 +46,10 @@ type Config struct {
 
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" {
+		return nil, fmt.Errorf("ENVIRONMENT is required")
+	}
 
 	cfg := &Config{
 		DatabaseURL:         getEnv("DATABASE_URL", ""),
@@ -58,7 +62,7 @@ func Load() (*Config, error) {
 		SMTPUser:            getEnv("SMTP_USER", ""),
 		SMTPPassword:        getEnv("SMTP_PASSWORD", ""),
 		EmailFrom:           getEnv("EMAIL_FROM", "noreply@example.com"),
-		Environment:         getEnv("ENVIRONMENT", "development"),
+		Environment:         environment,
 		LogLevel:            getEnv("LOG_LEVEL", "info"),
 		OTPLength:           getEnvInt("OTP_LENGTH", 6),
 		EmailWorkerPoolSize: getEnvInt("EMAIL_WORKER_POOL_SIZE", 5),
@@ -85,7 +89,7 @@ func Load() (*Config, error) {
 
 // Validate validates the configuration
 func (c *Config) Validate() error {
-	if c.DatabaseURL == "" {
+	if c.Environment != "test" && c.DatabaseURL == "" {
 		return fmt.Errorf("DATABASE_URL is required")
 	}
 	if c.SecretKey == "" {

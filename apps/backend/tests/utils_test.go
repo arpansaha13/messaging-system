@@ -9,8 +9,10 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
@@ -63,12 +65,16 @@ type TestDB struct {
 
 // NewTestDB creates a new test database wrapper
 func NewTestDB(ctx context.Context, db *gorm.DB) *TestDB {
+	// Initialize circuit breaker
+	testLogger := zap.NewNop()
+	cbs := circuits.New(testLogger)
+
 	return &TestDB{
 		Ctx:         ctx,
 		DB:          db,
-		ChatRepo:    repository.NewChatRepository(db),
-		MessageRepo: repository.NewMessageRepository(db),
-		UserRepo:    repository.NewUserRepository(db),
+		ChatRepo:    repository.NewChatRepository(db, cbs.Postgres),
+		MessageRepo: repository.NewMessageRepository(db, cbs.Postgres),
+		UserRepo:    repository.NewUserRepository(db, cbs.Postgres),
 	}
 }
 

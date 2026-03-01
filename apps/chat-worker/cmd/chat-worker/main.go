@@ -15,6 +15,7 @@ import (
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/controller"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
@@ -37,6 +38,9 @@ func main() {
 	defer zapLogger.Sync()
 
 	log := zap.L()
+
+	// Initialize circuit breakers
+	cbs := circuits.New(zapLogger)
 
 	// Root context with logger injected
 	rootCtx := logger.WithContext(context.Background(), zapLogger)
@@ -67,16 +71,16 @@ func main() {
 
 	// Initialize RabbitMQ broker
 	amqpURL := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPass, cfg.RabbitMQHost, cfg.RabbitMQPort)
-	messageBroker := broker.NewRabbitMQBroker(amqpURL)
+	messageBroker := broker.NewRabbitMQBroker(amqpURL, cbs.RabbitMQ)
 	if err := messageBroker.Connect(rootCtx); err != nil {
 		log.Fatal("failed to connect to RabbitMQ", zap.Error(err))
 	}
 	defer messageBroker.Disconnect()
 
 	// Initialize processors
-	messageProcessor := processor.NewMessageProcessor(database, messageBroker)
-	statusProcessor := processor.NewStatusProcessor(database, messageBroker)
-	connectionProcessor := processor.NewConnectionProcessor(database, messageBroker)
+	messageProcessor := processor.NewMessageProcessor(database, messageBroker, cbs.Postgres)
+	statusProcessor := processor.NewStatusProcessor(database, messageBroker, cbs.Postgres)
+	connectionProcessor := processor.NewConnectionProcessor(database, messageBroker, cbs.Postgres)
 
 	// Initialize event controller with dependency injection
 	eventController := controller.NewEventController(messageProcessor, statusProcessor, connectionProcessor)

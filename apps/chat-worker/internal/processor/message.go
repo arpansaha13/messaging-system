@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sony/gobreaker/v2"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -17,13 +18,15 @@ import (
 type MessageProcessor struct {
 	db     *gorm.DB
 	broker broker.MessageBroker
+	cb     *gobreaker.CircuitBreaker[any]
 }
 
 // NewMessageProcessor creates a new message processor
-func NewMessageProcessor(db *gorm.DB, broker broker.MessageBroker) *MessageProcessor {
+func NewMessageProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobreaker.CircuitBreaker[any]) *MessageProcessor {
 	return &MessageProcessor{
 		db:     db,
 		broker: broker,
+		cb:     cb,
 	}
 }
 
@@ -32,7 +35,8 @@ func (mp *MessageProcessor) ProcessPersonalMessage(ctx context.Context, payload 
 	log := logger.FromContext(ctx)
 	log.Debug("processing personal message", zap.Int64("sender_id", payload.SenderId), zap.Int64("receiver_id", payload.ReceiverId))
 
-	return mp.db.Transaction(func(tx *gorm.DB) error {
+	_, err := mp.cb.Execute(func() (any, error) {
+		return nil, mp.db.Transaction(func(tx *gorm.DB) error {
 		// Fetch sender and receiver
 		var sender, receiver domain.UserProfile
 		if err := tx.First(&sender, payload.SenderId).Error; err != nil {
@@ -130,6 +134,8 @@ func (mp *MessageProcessor) ProcessPersonalMessage(ctx context.Context, payload 
 		log.Info("personal message processed", zap.Int64("sender_id", payload.SenderId), zap.Int64("receiver_id", payload.ReceiverId), zap.Int64("message_id", message.ID))
 		return nil
 	})
+	})
+	return err
 }
 
 // ProcessGroupMessage handles group message sends
@@ -137,7 +143,8 @@ func (mp *MessageProcessor) ProcessGroupMessage(ctx context.Context, payload *br
 	log := logger.FromContext(ctx)
 	log.Debug("processing group message", zap.Int64("sender_id", payload.SenderId), zap.Int64("group_id", payload.GroupId), zap.Int64("channel_id", payload.ChannelId))
 
-	return mp.db.Transaction(func(tx *gorm.DB) error {
+	_, err := mp.cb.Execute(func() (any, error) {
+		return nil, mp.db.Transaction(func(tx *gorm.DB) error {
 		// Fetch sender and channel
 		var sender domain.UserProfile
 		if err := tx.First(&sender, payload.SenderId).Error; err != nil {
@@ -213,4 +220,6 @@ func (mp *MessageProcessor) ProcessGroupMessage(ctx context.Context, payload *br
 		log.Info("group message processed", zap.Int64("sender_id", payload.SenderId), zap.Int64("group_id", payload.GroupId), zap.Int64("channel_id", payload.ChannelId), zap.Int64("message_id", message.ID), zap.Int("recipient_count", len(userGroups)))
 		return nil
 	})
+	})
+	return err
 }

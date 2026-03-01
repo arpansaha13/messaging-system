@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sony/gobreaker/v2"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
@@ -18,10 +21,11 @@ import (
 // BaseTestSuite provides common test setup for chat-worker integration tests
 type BaseTestSuite struct {
 	suite.Suite
-	Ctx       context.Context
-	DB        *gorm.DB
-	Container testcontainers.Container
-	Broker    *mocks.MockBroker
+	Ctx          context.Context
+	DB           *gorm.DB
+	Container    testcontainers.Container
+	Broker       *mocks.MockBroker
+	CircuitBreak *gobreaker.CircuitBreaker[any]
 }
 
 // SetupSuite sets up the test suite with PostgreSQL testcontainer
@@ -84,6 +88,11 @@ func (s *BaseTestSuite) SetupSuite() {
 	s.Broker = mocks.NewMockBroker()
 	err = s.Broker.Connect(s.Ctx)
 	s.Require().NoError(err)
+
+	// Initialize circuit breaker
+	testLogger := zap.NewNop()
+	cbs := circuits.New(testLogger)
+	s.CircuitBreak = cbs.Postgres
 }
 
 // TearDownSuite tears down the test suite

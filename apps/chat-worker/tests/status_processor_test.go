@@ -19,7 +19,7 @@ type StatusProcessorTestSuite struct {
 
 func (s *StatusProcessorTestSuite) SetupTest() {
 	s.BaseTestSuite.SetupTest()
-	s.processor = processor.NewStatusProcessor(s.DB, s.Broker)
+	s.processor = processor.NewStatusProcessor(s.DB, s.Broker, s.CircuitBreak)
 }
 
 func (s *StatusProcessorTestSuite) TestProcessDelivered_Success() {

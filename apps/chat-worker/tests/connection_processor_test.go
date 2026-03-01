@@ -18,7 +18,7 @@ type ConnectionProcessorTestSuite struct {
 
 func (s *ConnectionProcessorTestSuite) SetupTest() {
 	s.BaseTestSuite.SetupTest()
-	s.processor = processor.NewConnectionProcessor(s.DB, s.Broker)
+	s.processor = processor.NewConnectionProcessor(s.DB, s.Broker, s.CircuitBreak)
 }
 
 func (s *ConnectionProcessorTestSuite) TestProcessUserConnection_WithGroups() {

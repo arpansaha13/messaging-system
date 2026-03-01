@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
 
 	"github.com/arpansaha13/gotoolkit"
@@ -13,17 +14,24 @@ import (
 // UserRepository handles user profile-related database operations
 type UserRepository struct {
 	db *gorm.DB
+	cb *gobreaker.CircuitBreaker[any]
 }
 
 // NewUserRepository creates a new user repository
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{db: db}
+func NewUserRepository(db *gorm.DB, cb *gobreaker.CircuitBreaker[any]) *UserRepository {
+	return &UserRepository{db: db, cb: cb}
 }
 
 // GetByID retrieves a user profile by ID
 func (r *UserRepository) GetByID(ctx context.Context, userID int64) (*domain.UserProfile, error) {
-	var userProfile domain.UserProfile
-	err := r.db.WithContext(ctx).Where("id = ?", userID).First(&userProfile).Error
+	result, err := r.cb.Execute(func() (any, error) {
+		var userProfile domain.UserProfile
+		err := r.db.WithContext(ctx).Where("id = ?", userID).First(&userProfile).Error
+		if err != nil {
+			return nil, err
+		}
+		return &userProfile, nil
+	})
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -32,12 +40,16 @@ func (r *UserRepository) GetByID(ctx context.Context, userID int64) (*domain.Use
 		return nil, &gotoolkit.InternalError{Message: "failed to get user profile", Err: err}
 	}
 
-	return &userProfile, nil
+	return result.(*domain.UserProfile), nil
 }
 
 // Create creates a new user profile
 func (r *UserRepository) Create(ctx context.Context, userProfile *domain.UserProfile) error {
-	if err := r.db.WithContext(ctx).Create(userProfile).Error; err != nil {
+	_, err := r.cb.Execute(func() (any, error) {
+		return nil, r.db.WithContext(ctx).Create(userProfile).Error
+	})
+
+	if err != nil {
 		return &gotoolkit.InternalError{Message: "failed to create user profile", Err: err}
 	}
 	return nil
@@ -45,7 +57,11 @@ func (r *UserRepository) Create(ctx context.Context, userProfile *domain.UserPro
 
 // Update updates a user profile
 func (r *UserRepository) Update(ctx context.Context, userProfile *domain.UserProfile) error {
-	if err := r.db.WithContext(ctx).Save(userProfile).Error; err != nil {
+	_, err := r.cb.Execute(func() (any, error) {
+		return nil, r.db.WithContext(ctx).Save(userProfile).Error
+	})
+
+	if err != nil {
 		return &gotoolkit.InternalError{Message: "failed to update user profile", Err: err}
 	}
 	return nil
@@ -53,7 +69,11 @@ func (r *UserRepository) Update(ctx context.Context, userProfile *domain.UserPro
 
 // Delete deletes a user profile (soft delete)
 func (r *UserRepository) Delete(ctx context.Context, userID int64) error {
-	if err := r.db.WithContext(ctx).Delete(&domain.UserProfile{}, userID).Error; err != nil {
+	_, err := r.cb.Execute(func() (any, error) {
+		return nil, r.db.WithContext(ctx).Delete(&domain.UserProfile{}, userID).Error
+	})
+
+	if err != nil {
 		return &gotoolkit.InternalError{Message: "failed to delete user profile", Err: err}
 	}
 	return nil
@@ -61,17 +81,23 @@ func (r *UserRepository) Delete(ctx context.Context, userID int64) error {
 
 // Search searches for user profiles by global_name
 func (r *UserRepository) Search(ctx context.Context, query string, limit int) ([]*domain.UserProfile, error) {
-	var userProfiles []*domain.UserProfile
-	err := r.db.WithContext(ctx).
-		Where("global_name ILIKE ?", "%"+query+"%").
-		Limit(limit).
-		Find(&userProfiles).Error
+	result, err := r.cb.Execute(func() (any, error) {
+		var userProfiles []*domain.UserProfile
+		err := r.db.WithContext(ctx).
+			Where("global_name ILIKE ?", "%"+query+"%").
+			Limit(limit).
+			Find(&userProfiles).Error
+		if err != nil {
+			return nil, err
+		}
+		return userProfiles, nil
+	})
 
 	if err != nil {
 		return nil, &gotoolkit.InternalError{Message: "failed to search user profiles", Err: err}
 	}
 
-	return userProfiles, nil
+	return result.([]*domain.UserProfile), nil
 }
 
 var _ IUserRepository = (*UserRepository)(nil)

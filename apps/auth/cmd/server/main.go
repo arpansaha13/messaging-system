@@ -19,6 +19,7 @@ import (
 	goauthkit "github.com/arpansaha13/goauthkit/pkg"
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/auth/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/internal/config"
 )
 
@@ -39,6 +40,9 @@ func main() {
 
 	zapLogger.Info("starting auth service", zap.String("environment", cfg.Environment))
 
+	// Initialize circuit breakers
+	cbs := circuits.New(zapLogger)
+
 	// Initialize database
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
 	gormCfg := gorm.Config{
@@ -56,9 +60,9 @@ func main() {
 	}()
 
 	// Initialize repositories
-	userRepo := goauthkit.NewUserRepository(db)
-	otpRepo := goauthkit.NewOTPRepository(db)
-	sessionRepo := goauthkit.NewSessionRepository(db)
+	userRepo := goauthkit.NewUserRepository(db, cbs.Postgres)
+	otpRepo := goauthkit.NewOTPRepository(db, cbs.Postgres)
+	sessionRepo := goauthkit.NewSessionRepository(db, cbs.Postgres)
 
 	// Initialize email provider based on environment
 	var emailProvider goauthkit.EmailProvider

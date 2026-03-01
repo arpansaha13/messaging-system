@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/sony/gobreaker/v2"
 	"github.com/arpansaha13/gotoolkit"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
@@ -56,10 +57,11 @@ type RabbitMQService struct {
 	conn    *amqp.Connection
 	channel *amqp.Channel
 	logger  *zap.Logger
+	cb      *gobreaker.CircuitBreaker[any]
 }
 
 // NewRabbitMQService creates a new RabbitMQ service
-func NewRabbitMQService(ctx context.Context, url string, opts ...gotoolkit.BackoffOption) (*RabbitMQService, error) {
+func NewRabbitMQService(ctx context.Context, url string, cb *gobreaker.CircuitBreaker[any], opts ...gotoolkit.BackoffOption) (*RabbitMQService, error) {
 	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, url, opts...)
 	if err != nil {
 		return nil, err
@@ -76,6 +78,7 @@ func NewRabbitMQService(ctx context.Context, url string, opts ...gotoolkit.Backo
 		conn:    conn,
 		channel: channel,
 		logger:  zap.L(),
+		cb:      cb,
 	}
 
 	// Declare exchanges
@@ -123,66 +126,74 @@ func (r *RabbitMQService) declareExchanges() error {
 
 // PublishToIncoming publishes a message to the incoming exchange
 func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) error {
-	if r.channel == nil {
-		return &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
-	}
+	_, err := r.cb.Execute(func() (any, error) {
+		if r.channel == nil {
+			return nil, &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
+		}
 
-	messageBytes, err := json.Marshal(message)
-	if err != nil {
-		r.logger.Error("failed to marshal message for incoming publish", zap.String("routing_key", routingKey), zap.Error(err))
-		return err
-	}
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			r.logger.Error("failed to marshal message for incoming publish", zap.String("routing_key", routingKey), zap.Error(err))
+			return nil, err
+		}
 
-	err = r.channel.Publish(
-		IncomingExchange, // exchange
-		routingKey,       // routing key
-		false,            // mandatory
-		false,            // immediate
-		amqp.Publishing{
-			ContentType:  "application/json",
-			Body:         messageBytes,
-			DeliveryMode: amqp.Persistent,
-		},
-	)
+		err = r.channel.Publish(
+			IncomingExchange, // exchange
+			routingKey,       // routing key
+			false,            // mandatory
+			false,            // immediate
+			amqp.Publishing{
+				ContentType:  "application/json",
+				Body:         messageBytes,
+				DeliveryMode: amqp.Persistent,
+			},
+		)
 
-	if err != nil {
-		r.logger.Error("failed to publish message to incoming exchange", zap.String("routing_key", routingKey), zap.Error(err))
-		return err
-	}
+		if err != nil {
+			r.logger.Error("failed to publish message to incoming exchange", zap.String("routing_key", routingKey), zap.Error(err))
+			return nil, err
+		}
 
-	return nil
+		return nil, nil
+	})
+
+	return err
 }
 
 // PublishToOutgoing publishes a message to the outgoing exchange
 func (r *RabbitMQService) PublishToOutgoing(routingKey string, message any) error {
-	if r.channel == nil {
-		return &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
-	}
+	_, err := r.cb.Execute(func() (any, error) {
+		if r.channel == nil {
+			return nil, &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
+		}
 
-	messageBytes, err := json.Marshal(message)
-	if err != nil {
-		r.logger.Error("failed to marshal message for outgoing publish", zap.String("routing_key", routingKey), zap.Error(err))
-		return err
-	}
+		messageBytes, err := json.Marshal(message)
+		if err != nil {
+			r.logger.Error("failed to marshal message for outgoing publish", zap.String("routing_key", routingKey), zap.Error(err))
+			return nil, err
+		}
 
-	err = r.channel.Publish(
-		OutgoingExchange, // exchange
-		routingKey,       // routing key
-		false,            // mandatory
-		false,            // immediate
-		amqp.Publishing{
-			ContentType:  "application/json",
-			Body:         messageBytes,
-			DeliveryMode: amqp.Persistent,
-		},
-	)
+		err = r.channel.Publish(
+			OutgoingExchange, // exchange
+			routingKey,       // routing key
+			false,            // mandatory
+			false,            // immediate
+			amqp.Publishing{
+				ContentType:  "application/json",
+				Body:         messageBytes,
+				DeliveryMode: amqp.Persistent,
+			},
+		)
 
-	if err != nil {
-		r.logger.Error("failed to publish message to outgoing exchange", zap.String("routing_key", routingKey), zap.Error(err))
-		return err
-	}
+		if err != nil {
+			r.logger.Error("failed to publish message to outgoing exchange", zap.String("routing_key", routingKey), zap.Error(err))
+			return nil, err
+		}
 
-	return nil
+		return nil, nil
+	})
+
+	return err
 }
 
 // Close closes the RabbitMQ connection

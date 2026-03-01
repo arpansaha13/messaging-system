@@ -22,6 +22,7 @@
     "convo",
     "csrftoken",
     "goauthkit",
+    "gobreaker",
     "gocache",
     "gomod",
     "gomodcache",

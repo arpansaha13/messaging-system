@@ -18,6 +18,7 @@ import (
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
@@ -141,15 +142,19 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	// Create mock auth service
 	s.AuthServiceMock = mocks.NewMockAuthService()
 
+	// Initialize circuit breakers
+	testLogger := zap.NewNop()
+	cbs := circuits.New(testLogger)
+
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	messageRepo := repository.NewMessageRepository(db)
-	chatRepo := repository.NewChatRepository(db)
-	channelRepo := repository.NewChannelRepository(db)
-	contactRepo := repository.NewContactRepository(db)
-	groupRepo := repository.NewGroupRepository(db)
-	inviteRepo := repository.NewInviteRepository(db)
-	userGroupRepo := repository.NewUserGroupRepository(db)
+	userRepo := repository.NewUserRepository(db, cbs.Postgres)
+	messageRepo := repository.NewMessageRepository(db, cbs.Postgres)
+	chatRepo := repository.NewChatRepository(db, cbs.Postgres)
+	channelRepo := repository.NewChannelRepository(db, cbs.Postgres)
+	contactRepo := repository.NewContactRepository(db, cbs.Postgres)
+	groupRepo := repository.NewGroupRepository(db, cbs.Postgres)
+	inviteRepo := repository.NewInviteRepository(db, cbs.Postgres)
+	userGroupRepo := repository.NewUserGroupRepository(db, cbs.Postgres)
 
 	// Create a mock RabbitMQ service that simulates unavailability
 	// This ensures tests get 500 errors when publishing messages
@@ -160,7 +165,7 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	// Initialize services
 	userService := service.NewUserService(userRepo, contactRepo)
 	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, repository.NewMessageRecipientRepository(db), chatRepo, mockRabbitMQ)
+	messageService := service.NewMessageService(messageRepo, repository.NewMessageRecipientRepository(db, cbs.Postgres), chatRepo, mockRabbitMQ)
 	channelService := service.NewChannelService(channelRepo, groupRepo)
 	contactService := service.NewContactService(contactRepo, userRepo)
 	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)
@@ -169,9 +174,6 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 
 	// Setup HTTP router
 	router := mux.NewRouter()
-
-	// Create a no-op logger for tests
-	testLogger := zap.NewNop()
 
 	// Apply middleware
 	router.Use(gotoolkit.HttpRecoveryMiddleware)

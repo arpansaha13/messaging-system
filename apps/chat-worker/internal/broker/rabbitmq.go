@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/sony/gobreaker/v2"
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/rabbitmq/amqp091-go"
@@ -24,11 +25,12 @@ type RabbitMQBroker struct {
 	amqpURL string
 	conn    *amqp091.Connection
 	channel *amqp091.Channel
+	cb      *gobreaker.CircuitBreaker[any]
 }
 
 // NewRabbitMQBroker creates a new RabbitMQ broker instance
-func NewRabbitMQBroker(amqpURL string) *RabbitMQBroker {
-	return &RabbitMQBroker{amqpURL: amqpURL}
+func NewRabbitMQBroker(amqpURL string, cb *gobreaker.CircuitBreaker[any]) *RabbitMQBroker {
+	return &RabbitMQBroker{amqpURL: amqpURL, cb: cb}
 }
 
 // Connect establishes connection to RabbitMQ and sets up exchanges and queues
@@ -164,19 +166,27 @@ func (rb *RabbitMQBroker) PublishToOutgoing(routingKey string, message any) erro
 		return fmt.Errorf("RabbitMQ not connected")
 	}
 
-	body, err := json.Marshal(message)
-	if err != nil {
-		return fmt.Errorf("failed to marshal message: %w", err)
-	}
+	_, err := rb.cb.Execute(func() (any, error) {
+		body, err := json.Marshal(message)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal message: %w", err)
+		}
 
-	err = rb.channel.Publish(outgoingExchange, routingKey, false, false, amqp091.Publishing{
-		ContentType:  "application/json",
-		Body:         body,
-		DeliveryMode: amqp091.Persistent,
+		err = rb.channel.Publish(outgoingExchange, routingKey, false, false, amqp091.Publishing{
+			ContentType:  "application/json",
+			Body:         body,
+			DeliveryMode: amqp091.Persistent,
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to publish message: %w", err)
+		}
+
+		return nil, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to publish message: %w", err)
+		return err
 	}
 
 	return nil
@@ -188,19 +198,27 @@ func (rb *RabbitMQBroker) PublishToSubscription(serverId string, message any) er
 		return fmt.Errorf("RabbitMQ not connected")
 	}
 
-	body, err := json.Marshal(message)
-	if err != nil {
-		return fmt.Errorf("failed to marshal message: %w", err)
-	}
+	_, err := rb.cb.Execute(func() (any, error) {
+		body, err := json.Marshal(message)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal message: %w", err)
+		}
 
-	err = rb.channel.Publish(subscriptionExchange, serverId, false, false, amqp091.Publishing{
-		ContentType:  "application/json",
-		Body:         body,
-		DeliveryMode: amqp091.Persistent,
+		err = rb.channel.Publish(subscriptionExchange, serverId, false, false, amqp091.Publishing{
+			ContentType:  "application/json",
+			Body:         body,
+			DeliveryMode: amqp091.Persistent,
+		})
+
+		if err != nil {
+			return nil, fmt.Errorf("failed to publish subscription message: %w", err)
+		}
+
+		return nil, nil
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to publish subscription message: %w", err)
+		return err
 	}
 
 	return nil

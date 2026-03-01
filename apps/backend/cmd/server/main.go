@@ -19,6 +19,7 @@ import (
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -42,6 +43,9 @@ func main() {
 	}
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
+
+	// Initialize circuit breakers
+	cbs := circuits.New(zapLogger)
 
 	// Initialize database
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
@@ -69,15 +73,15 @@ func main() {
 	}
 
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(db)
-	messageRepo := repository.NewMessageRepository(db)
-	chatRepo := repository.NewChatRepository(db)
-	channelRepo := repository.NewChannelRepository(db)
-	contactRepo := repository.NewContactRepository(db)
-	groupRepo := repository.NewGroupRepository(db)
-	inviteRepo := repository.NewInviteRepository(db)
-	userGroupRepo := repository.NewUserGroupRepository(db)
-	messageRecipientRepo := repository.NewMessageRecipientRepository(db)
+	userRepo := repository.NewUserRepository(db, cbs.Postgres)
+	messageRepo := repository.NewMessageRepository(db, cbs.Postgres)
+	chatRepo := repository.NewChatRepository(db, cbs.Postgres)
+	channelRepo := repository.NewChannelRepository(db, cbs.Postgres)
+	contactRepo := repository.NewContactRepository(db, cbs.Postgres)
+	groupRepo := repository.NewGroupRepository(db, cbs.Postgres)
+	inviteRepo := repository.NewInviteRepository(db, cbs.Postgres)
+	userGroupRepo := repository.NewUserGroupRepository(db, cbs.Postgres)
+	messageRecipientRepo := repository.NewMessageRecipientRepository(db, cbs.Postgres)
 
 	// Initialize auth service client for gRPC communication
 	authServiceHost := os.Getenv("AUTH_SYSTEM_HOST")
@@ -85,14 +89,14 @@ func main() {
 		authServiceHost = "auth:50051" // Default host for Docker
 	}
 
-	authClient, err := service.NewAuthServiceClient(authServiceHost)
+	authClient, err := service.NewAuthServiceClient(authServiceHost, cbs.AuthGRPC)
 	if err != nil {
 		log.Fatalf("failed to initialize auth service client: %v", err)
 	}
 	defer authClient.Close()
 
 	// Initialize RabbitMQ service
-	rabbitmqService, err := service.NewRabbitMQService(svcCtx, cfg.RabbitMQURL)
+	rabbitmqService, err := service.NewRabbitMQService(svcCtx, cfg.RabbitMQURL, cbs.RabbitMQ)
 	if err != nil {
 		zapLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
 		rabbitmqService = nil

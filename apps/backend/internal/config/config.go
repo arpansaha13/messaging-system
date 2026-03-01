@@ -39,10 +39,15 @@ type Config struct {
 
 // Load loads configuration from environment variables
 func Load() (*Config, error) {
+	environment := os.Getenv("ENVIRONMENT")
+	if environment == "" {
+		return nil, fmt.Errorf("ENVIRONMENT is required")
+	}
+
 	cfg := &Config{
 		APIPort:        getEnvInt("API_PORT", 4000),
 		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
-		Environment:    getEnv("ENVIRONMENT", "development"),
+		Environment:    environment,
 		LogLevel:       getEnv("LOG_LEVEL", "info"),
 	}
 

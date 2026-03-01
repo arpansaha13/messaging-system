@@ -21,7 +21,7 @@ type MessageProcessorTestSuite struct {
 
 func (s *MessageProcessorTestSuite) SetupTest() {
 	s.BaseTestSuite.SetupTest()
-	s.processor = processor.NewMessageProcessor(s.DB, s.Broker)
+	s.processor = processor.NewMessageProcessor(s.DB, s.Broker, s.CircuitBreak)
 }
 
 func (s *MessageProcessorTestSuite) TestProcessPersonalMessage_Success() {
