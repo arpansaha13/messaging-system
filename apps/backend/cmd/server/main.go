@@ -10,21 +10,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -72,80 +71,50 @@ func main() {
 		zapLogger.Fatal("failed to run migrations", zap.Error(err))
 	}
 
-	// Initialize repositories
-	userRepo := repository.NewUserRepository(db, cbs.Postgres)
-	messageRepo := repository.NewMessageRepository(db, cbs.Postgres)
-	chatRepo := repository.NewChatRepository(db, cbs.Postgres)
-	channelRepo := repository.NewChannelRepository(db, cbs.Postgres)
-	contactRepo := repository.NewContactRepository(db, cbs.Postgres)
-	groupRepo := repository.NewGroupRepository(db, cbs.Postgres)
-	inviteRepo := repository.NewInviteRepository(db, cbs.Postgres)
-	userGroupRepo := repository.NewUserGroupRepository(db, cbs.Postgres)
-	messageRecipientRepo := repository.NewMessageRecipientRepository(db, cbs.Postgres)
+	// Initialize RabbitMQ connection
+	amqpConn, err := gotoolkit.ConnectRabbitMQWithBackoff(svcCtx, cfg.RabbitMQURL)
+	var rabbitmqService *service.RabbitMQService
+	if err != nil {
+		zapLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
+	} else {
+		ch, err := amqpConn.Channel()
+		if err != nil {
+			zapLogger.Warn("Failed to open RabbitMQ channel", zap.Error(err))
+		} else {
+			rabbitmqService, err = service.NewRabbitMQService(amqpConn, ch, cbs.RabbitMQ)
+			if err != nil {
+				zapLogger.Warn("Failed to initialize RabbitMQ service", zap.Error(err))
+			}
+		}
+	}
 
-	// Initialize auth service client for gRPC communication
+	// Initialize gRPC auth service connection
 	authServiceHost := os.Getenv("AUTH_SYSTEM_HOST")
 	if authServiceHost == "" {
 		authServiceHost = "auth:50051" // Default host for Docker
 	}
 
-	authClient, err := service.NewAuthServiceClient(authServiceHost, cbs.AuthGRPC)
+	conn, err := grpc.NewClient(
+		authServiceHost,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
-		log.Fatalf("failed to initialize auth service client: %v", err)
-	}
-	defer authClient.Close()
-
-	// Initialize RabbitMQ service
-	rabbitmqService, err := service.NewRabbitMQService(svcCtx, cfg.RabbitMQURL, cbs.RabbitMQ)
-	if err != nil {
-		zapLogger.Warn("Failed to connect to RabbitMQ - continuing without message publishing", zap.Error(err))
-		rabbitmqService = nil
+		log.Fatalf("failed to connect to auth service: %v", err)
 	}
 
-	// Initialize services
-	userService := service.NewUserService(userRepo, contactRepo)
-	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, rabbitmqService)
-	channelService := service.NewChannelService(channelRepo, groupRepo)
-	contactService := service.NewContactService(contactRepo, userRepo)
-	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)
-	inviteService := service.NewInviteService(inviteRepo, groupRepo, userGroupRepo, channelRepo)
-	userGroupService := service.NewUserGroupService(userGroupRepo, userRepo, groupRepo)
+	authService := service.NewAuthService(conn, pb.NewAuthServiceClient(conn), cbs.AuthGRPC)
 
-	// Setup HTTP router
-	router := mux.NewRouter()
-
-	// Apply middlewares
-	router.Use(gotoolkit.HttpRecoveryMiddleware)
-	router.Use(logger.HttpMiddleware(zapLogger))
-	router.Use(gotoolkit.HttpErrorMiddleware)
-
-	// Authentication middleware for protected routes
-	protectedRouter := router.PathPrefix("").Subrouter()
-	protectedRouter.Use(middleware.AuthMiddleware(authClient))
-
-	// Setup routes
-	handler.SetupAuthRoutes(router, authClient)
-	handler.SetupAuthProtectedRoutes(protectedRouter, authClient)
-	handler.SetupUserRoutes(router, protectedRouter, userService)
-	handler.SetupMessageRoutes(router, protectedRouter, messageService)
-	handler.SetupChatRoutes(router, protectedRouter, chatService)
-	handler.SetupChannelRoutes(router, protectedRouter, channelService)
-	handler.SetupContactRoutes(router, protectedRouter, contactService)
-	handler.SetupGroupRoutes(router, protectedRouter, groupService)
-	handler.SetupInviteRoutes(router, protectedRouter, inviteService)
-	handler.SetupUserGroupRoutes(router, protectedRouter, userGroupService)
-
-	// Create HTTP server
+	// Assemble HTTP server with all components
 	addr := fmt.Sprintf(":%d", cfg.APIPort)
-	httpHandler := otelhttp.NewHandler(router, serviceName)
-	httpServer := &http.Server{
-		Addr:         addr,
-		Handler:      httpHandler,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
+	httpServer := app.New(app.Deps{
+		DB:          db,
+		RabbitMQ:    rabbitmqService,
+		AuthClient:  authService,
+		Circuits:    cbs,
+		Logger:      zapLogger,
+		ServiceName: serviceName,
+		Addr:        addr,
+	})
 
 	// Start server in a goroutine
 	go func() {
@@ -170,6 +139,11 @@ func main() {
 		zapLogger.Error("server shutdown error", zap.Error(err))
 	}
 
+	// Close auth service connection
+	if err := authService.Close(); err != nil {
+		zap.L().Error("auth service close error", zap.Error(err))
+	}
+
 	// Close RabbitMQ connection
 	if rabbitmqService != nil {
 		if err := rabbitmqService.Close(); err != nil {
@@ -192,20 +166,4 @@ func parseLogLevel(s string) zapcore.Level {
 		return zapcore.InfoLevel
 	}
 	return level
-}
-
-func getKafkaBrokers() string {
-	brokers := os.Getenv("KAFKA_BROKERS")
-	if brokers == "" {
-		return "kafka:9092" // Default for Docker Compose
-	}
-	return brokers
-}
-
-func getKafkaTopic() string {
-	topic := os.Getenv("KAFKA_TOPIC")
-	if topic == "" {
-		return "application-logs" // Default topic
-	}
-	return topic
 }

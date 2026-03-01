@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/suite"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -16,12 +16,8 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/handler"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -40,6 +36,18 @@ type BaseTestSuite struct {
 
 // SetupSuite initializes the test environment (runs once before all tests)
 func (s *BaseTestSuite) SetupSuite() {
+	// Set test environment and required config variables
+	os.Setenv("ENVIRONMENT", "test")
+	os.Setenv("JWT_SECRET", "test-jwt-secret-key-for-testing-purposes-only")
+	os.Setenv("API_PORT", "4000")
+	os.Setenv("AUTH_COOKIE_NAME", "auth_token")
+	os.Setenv("LOG_LEVEL", "info")
+	os.Setenv("RABBITMQ_HOST", "localhost")
+	os.Setenv("RABBITMQ_PORT", "5672")
+	os.Setenv("RABBITMQ_USER", "guest")
+	os.Setenv("RABBITMQ_PASS", "guest")
+	os.Setenv("AUTH_SYSTEM_HOST", "localhost:50051")
+
 	ctx := context.Background()
 	s.Ctx = ctx
 
@@ -70,6 +78,13 @@ func (s *BaseTestSuite) SetupSuite() {
 
 	port, err := container.MappedPort(ctx, "5432")
 	s.Require().NoError(err, "Failed to get container port")
+
+	// Set DATABASE_URL with actual container host/port
+	databaseURL := fmt.Sprintf(
+		"postgres://testuser:testpass@%s:%s/test_messaging?sslmode=disable",
+		host, port.Port(),
+	)
+	os.Setenv("DATABASE_URL", databaseURL)
 
 	// Connect to database
 	dsn := fmt.Sprintf(
@@ -141,79 +156,36 @@ func migrateDatabase(db *gorm.DB) error {
 func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error {
 	// Create mock auth service
 	s.AuthServiceMock = mocks.NewMockAuthService()
+	mockAuthClient := mocks.NewMockAuthServiceClient(s.AuthServiceMock)
 
-	// Initialize circuit breakers
+	// Initialize circuit breakers and logger
 	testLogger := zap.NewNop()
 	cbs := circuits.New(testLogger)
 
-	// Initialize repositories
-	userRepo := repository.NewUserRepository(db, cbs.Postgres)
-	messageRepo := repository.NewMessageRepository(db, cbs.Postgres)
-	chatRepo := repository.NewChatRepository(db, cbs.Postgres)
-	channelRepo := repository.NewChannelRepository(db, cbs.Postgres)
-	contactRepo := repository.NewContactRepository(db, cbs.Postgres)
-	groupRepo := repository.NewGroupRepository(db, cbs.Postgres)
-	inviteRepo := repository.NewInviteRepository(db, cbs.Postgres)
-	userGroupRepo := repository.NewUserGroupRepository(db, cbs.Postgres)
+	// Create test RabbitMQ service with nil connection (simulates unavailability)
+	// This ensures tests get proper error handling when publishing messages
+	testRabbitMQ, _ := service.NewRabbitMQService(nil, nil, cbs.RabbitMQ)
 
-	// Create a mock RabbitMQ service that simulates unavailability
-	// This ensures tests get 500 errors when publishing messages
-	mockRabbitMQ := &service.RabbitMQService{
-		// conn and channel are intentionally nil to simulate unavailable RabbitMQ
-	}
-
-	// Initialize services
-	userService := service.NewUserService(userRepo, contactRepo)
-	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, repository.NewMessageRecipientRepository(db, cbs.Postgres), chatRepo, mockRabbitMQ)
-	channelService := service.NewChannelService(channelRepo, groupRepo)
-	contactService := service.NewContactService(contactRepo, userRepo)
-	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)
-	inviteService := service.NewInviteService(inviteRepo, groupRepo, userGroupRepo, channelRepo)
-	userGroupService := service.NewUserGroupService(userGroupRepo, userRepo, groupRepo)
-
-	// Setup HTTP router
-	router := mux.NewRouter()
-
-	// Apply middleware
-	router.Use(gotoolkit.HttpRecoveryMiddleware)
-	router.Use(logger.HttpMiddleware(testLogger))
-	router.Use(gotoolkit.HttpErrorMiddleware)
-
-	// Create mock auth service client and auth middleware
-	mockAuthClient := mocks.NewMockAuthServiceClient(s.AuthServiceMock)
-	authMiddlewareFunc := middleware.AuthMiddleware(mockAuthClient)
-
-	// Protected router with auth middleware
-	protectedRouter := router.PathPrefix("").Subrouter()
-	protectedRouter.Use(authMiddlewareFunc)
-
-	// Setup public auth routes first
-	handler.SetupAuthRoutes(router, mockAuthClient)
-
-	// Setup routes - user group routes must be registered before user routes
-	// to ensure /api/users/groups matches before /api/users/{id}
-	handler.SetupAuthProtectedRoutes(protectedRouter, mockAuthClient)
-	handler.SetupUserGroupRoutes(router, protectedRouter, userGroupService)
-	handler.SetupUserRoutes(router, protectedRouter, userService)
-	handler.SetupMessageRoutes(router, protectedRouter, messageService)
-	handler.SetupChatRoutes(router, protectedRouter, chatService)
-	handler.SetupChannelRoutes(router, protectedRouter, channelService)
-	handler.SetupContactRoutes(router, protectedRouter, contactService)
-	handler.SetupGroupRoutes(router, protectedRouter, groupService)
-	handler.SetupInviteRoutes(router, protectedRouter, inviteService)
-
-	// Start HTTP server
+	// Create listener for test server
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return fmt.Errorf("failed to create listener: %w", err)
 	}
 
 	s.HTTPServerAddr = "http://" + listener.Addr().String()
-	s.HTTPServer = &http.Server{
-		Handler: router,
-	}
 
+	// Assemble HTTP server with all components
+	s.HTTPServer = app.New(app.Deps{
+		DB:          db,
+		RabbitMQ:    testRabbitMQ,
+		AuthClient:  mockAuthClient,
+		Circuits:    cbs,
+		Logger:      testLogger,
+		ServiceName: "backend-test",
+		Addr:        "",
+	})
+
+	// Start HTTP server
 	go func() {
 		if err := s.HTTPServer.Serve(listener); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("HTTP server error: %v\n", err)

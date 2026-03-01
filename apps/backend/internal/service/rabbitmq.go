@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/sony/gobreaker/v2"
@@ -60,20 +59,8 @@ type RabbitMQService struct {
 	cb      *gobreaker.CircuitBreaker[any]
 }
 
-// NewRabbitMQService creates a new RabbitMQ service
-func NewRabbitMQService(ctx context.Context, url string, cb *gobreaker.CircuitBreaker[any], opts ...gotoolkit.BackoffOption) (*RabbitMQService, error) {
-	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, url, opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	channel, err := conn.Channel()
-	if err != nil {
-		zap.L().Error("failed to create rabbitmq channel", zap.Error(err))
-		conn.Close()
-		return nil, err
-	}
-
+// NewRabbitMQService creates a new RabbitMQ service with injected connection and channel
+func NewRabbitMQService(conn *amqp.Connection, channel *amqp.Channel, cb *gobreaker.CircuitBreaker[any]) (*RabbitMQService, error) {
 	service := &RabbitMQService{
 		conn:    conn,
 		channel: channel,
@@ -81,15 +68,17 @@ func NewRabbitMQService(ctx context.Context, url string, cb *gobreaker.CircuitBr
 		cb:      cb,
 	}
 
+	// Skip exchange declaration if connection is nil (test scenarios)
+	if conn == nil {
+		return service, nil
+	}
+
 	// Declare exchanges
 	if err := service.declareExchanges(); err != nil {
 		zap.L().Error("failed to declare exchanges", zap.Error(err))
-		channel.Close()
-		conn.Close()
 		return nil, err
 	}
 
-	zap.L().Info("RabbitMQ connected from backend")
 	return service, nil
 }
 

@@ -8,7 +8,6 @@ import (
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
@@ -18,34 +17,24 @@ import (
 // defaultTimeout is the default timeout for service operations
 const defaultTimeout = 10 * time.Second
 
-// AuthServiceClient provides gRPC client methods for the auth service
-type AuthServiceClient struct {
+// AuthService provides gRPC client methods for the auth service
+type AuthService struct {
 	conn   *grpc.ClientConn
 	client pb.AuthServiceClient
 	cb     *gobreaker.CircuitBreaker[any]
 }
 
-// NewAuthServiceClient creates a new auth service client
-func NewAuthServiceClient(authServiceHost string, cb *gobreaker.CircuitBreaker[any]) (*AuthServiceClient, error) {
-	conn, err := grpc.NewClient(
-		authServiceHost,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
-	}
-
-	client := pb.NewAuthServiceClient(conn)
-
-	return &AuthServiceClient{
+// NewAuthService creates a new auth service
+func NewAuthService(conn *grpc.ClientConn, client pb.AuthServiceClient, cb *gobreaker.CircuitBreaker[any]) *AuthService {
+	return &AuthService{
 		conn:   conn,
 		client: client,
 		cb:     cb,
-	}, nil
+	}
 }
 
 // ValidateSession validates a session token with the auth service
-func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
+func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
 	log := logger.FromContext(ctx)
 
 	if token == "" {
@@ -78,7 +67,7 @@ func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (
 }
 
 // Signup registers a new user with the auth service
-func (a *AuthServiceClient) Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
+func (a *AuthService) Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("signup request received", zap.String("email", email))
 
@@ -105,7 +94,7 @@ func (a *AuthServiceClient) Signup(ctx context.Context, email, password string) 
 }
 
 // Login authenticates a user with the auth service
-func (a *AuthServiceClient) Login(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
+func (a *AuthService) Login(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("login request received", zap.String("email", email))
 
@@ -132,7 +121,7 @@ func (a *AuthServiceClient) Login(ctx context.Context, email, password string) (
 }
 
 // VerifyOTP verifies an OTP code with the auth service
-func (a *AuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
+func (a *AuthService) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("verify OTP request received")
 
@@ -159,7 +148,7 @@ func (a *AuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string)
 }
 
 // Logout logs out a user session with the auth service
-func (a *AuthServiceClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
+func (a *AuthService) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
 	log := logger.FromContext(ctx)
 
 	if token == "" {
@@ -192,7 +181,7 @@ func (a *AuthServiceClient) Logout(ctx context.Context, token string) (*pb.Logou
 }
 
 // GetUser retrieves user information from the auth service
-func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
+func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("get user request received", zap.Int64("user_id", userID))
 
@@ -219,6 +208,6 @@ func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token str
 }
 
 // Close closes the gRPC connection
-func (a *AuthServiceClient) Close() error {
+func (a *AuthService) Close() error {
 	return a.conn.Close()
 }
