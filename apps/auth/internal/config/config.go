@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
 // Config holds all application configuration
@@ -32,7 +34,7 @@ type Config struct {
 	EmailFrom    string
 
 	// Environment
-	Environment string
+	Environment constants.Environment
 	LogLevel    string
 
 	// OTP
@@ -51,6 +53,11 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("ENVIRONMENT is required")
 	}
 
+	env := constants.Environment(environment)
+	if err := env.Validate(); err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
 		DatabaseURL:         getEnv("DATABASE_URL", ""),
 		GRPCHost:            getEnv("GRPC_HOST", "0.0.0.0"),
@@ -62,7 +69,7 @@ func Load() (*Config, error) {
 		SMTPUser:            getEnv("SMTP_USER", ""),
 		SMTPPassword:        getEnv("SMTP_PASSWORD", ""),
 		EmailFrom:           getEnv("EMAIL_FROM", "noreply@example.com"),
-		Environment:         environment,
+		Environment:         env,
 		LogLevel:            getEnv("LOG_LEVEL", "info"),
 		OTPLength:           getEnvInt("OTP_LENGTH", 6),
 		EmailWorkerPoolSize: getEnvInt("EMAIL_WORKER_POOL_SIZE", 5),
@@ -89,7 +96,7 @@ func Load() (*Config, error) {
 
 // Validate validates the configuration
 func (c *Config) Validate() error {
-	if c.Environment != "test" && c.DatabaseURL == "" {
+	if c.Environment != constants.EnvTest && c.DatabaseURL == "" {
 		return fmt.Errorf("DATABASE_URL is required")
 	}
 	if c.SecretKey == "" {

@@ -3,6 +3,7 @@ package tests
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sony/gobreaker/v2"
@@ -30,6 +31,13 @@ type BaseTestSuite struct {
 
 // SetupSuite sets up the test suite with PostgreSQL testcontainer
 func (s *BaseTestSuite) SetupSuite() {
+	os.Setenv("ENVIRONMENT", "test")
+	os.Setenv("LOG_LEVEL", "info")
+	os.Setenv("RABBITMQ_HOST", "localhost")
+	os.Setenv("RABBITMQ_PORT", "5672")
+	os.Setenv("RABBITMQ_USER", "guest")
+	os.Setenv("RABBITMQ_PASS", "guest")
+
 	s.Ctx = context.Background()
 
 	// Request PostgreSQL container
@@ -58,13 +66,14 @@ func (s *BaseTestSuite) SetupSuite() {
 	port, err := container.MappedPort(s.Ctx, "5432")
 	s.Require().NoError(err)
 
-	// Build DSN
-	dsn := fmt.Sprintf("host=%s port=%s user=test password=test dbname=messaging_test sslmode=disable",
+	// Set DATABASE_URL with actual container host/port
+	databaseURL := fmt.Sprintf("host=%s port=%d user=test password=test dbname=messaging_test sslmode=disable",
 		host, port.Port())
+	os.Setenv("DATABASE_URL", databaseURL)
 
 	// Connect to database
 	db, err := gorm.Open(
-		postgres.Open(dsn),
+		postgres.Open(databaseURL),
 		&gorm.Config{},
 	)
 	s.Require().NoError(err, "Failed to connect to database")

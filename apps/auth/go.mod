@@ -5,6 +5,7 @@ go 1.25.6
 require (
 	github.com/arpansaha13/goauthkit v0.2.9
 	github.com/arpansaha13/gotoolkit v0.8.0
+	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/sony/gobreaker/v2 v2.4.0
 	go.uber.org/zap v1.27.1
 	google.golang.org/grpc v1.79.1
@@ -30,7 +31,6 @@ require (
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/segmentio/kafka-go v0.4.50 // indirect
 	go.opentelemetry.io/otel v1.40.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.40.0 // indirect
 	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
@@ -42,3 +42,5 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 	gorm.io/driver/postgres v1.6.0 // indirect
 )
+
+replace github.com/arpansaha13/messaging-system/apps/common => ../common

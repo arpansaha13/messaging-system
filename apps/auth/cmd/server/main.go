@@ -21,6 +21,7 @@ import (
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/auth/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/internal/config"
+	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 
-	zapLogger.Info("starting auth service", zap.String("environment", cfg.Environment))
+	zapLogger.Info("starting auth service", zap.String("environment", cfg.Environment.String()))
 
 	// Initialize circuit breakers
 	cbs := circuits.New(zapLogger)
@@ -66,7 +67,7 @@ func main() {
 
 	// Initialize email provider based on environment
 	var emailProvider goauthkit.EmailProvider
-	if cfg.Environment == "production" {
+	if cfg.Environment == constants.EnvProduction {
 		emailProvider = goauthkit.NewSMTPEmailProvider(
 			cfg.SMTPHost,
 			cfg.SMTPPort,

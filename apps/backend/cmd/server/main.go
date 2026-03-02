@@ -12,10 +12,10 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
@@ -24,7 +24,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 const serviceName string = "backend"
@@ -56,21 +55,6 @@ func main() {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	// Run migrations
-	if err := db.AutoMigrate(
-		&domain.UserProfile{},
-		&domain.Message{},
-		&domain.MessageRecipient{},
-		&domain.Chat{},
-		&domain.Channel{},
-		&domain.Contact{},
-		&domain.Group{},
-		&domain.UserGroup{},
-		&domain.Invite{},
-	); err != nil {
-		zapLogger.Fatal("failed to run migrations", zap.Error(err))
-	}
-
 	// Initialize RabbitMQ connection
 	amqpConn, err := gotoolkit.ConnectRabbitMQWithBackoff(svcCtx, cfg.RabbitMQURL)
 	var rabbitmqService *service.RabbitMQService
@@ -89,13 +73,8 @@ func main() {
 	}
 
 	// Initialize gRPC auth service connection
-	authServiceHost := os.Getenv("AUTH_SYSTEM_HOST")
-	if authServiceHost == "" {
-		authServiceHost = "auth:50051" // Default host for Docker
-	}
-
 	conn, err := grpc.NewClient(
-		authServiceHost,
+		cfg.AuthSystemHost,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	if err != nil {

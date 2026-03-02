@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
 const DefaultMessagesPageSize = 50
@@ -26,7 +28,7 @@ type Config struct {
 	AuthCookieName string
 
 	// Environment
-	Environment string
+	Environment constants.Environment
 	LogLevel    string
 
 	// RabbitMQ (optional for messaging)
@@ -44,10 +46,15 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("ENVIRONMENT is required")
 	}
 
+	env := constants.Environment(environment)
+	if err := env.Validate(); err != nil {
+		return nil, err
+	}
+
 	cfg := &Config{
 		APIPort:        getEnvInt("API_PORT", 4000),
 		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
-		Environment:    environment,
+		Environment:    env,
 		LogLevel:       getEnv("LOG_LEVEL", "info"),
 	}
 
@@ -116,7 +123,7 @@ func Load() (*Config, error) {
 	// Load and validate required fields
 	authSystemHost := os.Getenv("AUTH_SYSTEM_HOST")
 	if authSystemHost == "" {
-		return nil, fmt.Errorf("AUTH_SYSTEM_HOST is required")
+		authSystemHost = "auth:50051" // Default for Docker
 	}
 	cfg.AuthSystemHost = authSystemHost
 

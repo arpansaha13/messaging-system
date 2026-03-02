@@ -20,6 +20,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
+	"github.com/arpansaha13/messaging-system/apps/common/constants"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -37,7 +38,7 @@ type BaseTestSuite struct {
 // SetupSuite initializes the test environment (runs once before all tests)
 func (s *BaseTestSuite) SetupSuite() {
 	// Set test environment and required config variables
-	os.Setenv("ENVIRONMENT", "test")
+	os.Setenv("ENVIRONMENT", constants.EnvTest.String())
 	os.Setenv("JWT_SECRET", "test-jwt-secret-key-for-testing-purposes-only")
 	os.Setenv("API_PORT", "4000")
 	os.Setenv("AUTH_COOKIE_NAME", "auth_token")

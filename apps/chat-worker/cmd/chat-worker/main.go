@@ -20,7 +20,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/controller"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func main() {
@@ -52,21 +51,6 @@ func main() {
 	database, err := gotoolkit.ConnectPostgresWithBackoff(rootCtx, cfg.DatabaseURL, &gormCfg)
 	if err != nil {
 		log.Fatal("failed to connect to postgres", zap.Error(err))
-	}
-
-	// Run migrations
-	if err := database.AutoMigrate(
-		&domain.UserProfile{},
-		&domain.Message{},
-		&domain.MessageRecipient{},
-		&domain.Chat{},
-		&domain.Channel{},
-		&domain.Contact{},
-		&domain.Group{},
-		&domain.UserGroup{},
-		&domain.Invite{},
-	); err != nil {
-		log.Fatal("failed to run migrations", zap.Error(err))
 	}
 
 	// Initialize RabbitMQ broker
