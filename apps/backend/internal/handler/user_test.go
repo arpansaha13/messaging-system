@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
@@ -52,11 +52,11 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 			mockFunc: func() *mocks.MockUserService {
 				return &mocks.MockUserService{
 					GetUserProfileFunc: func(ctx context.Context, userID int64) (*domain.UserProfile, error) {
-						return nil, &gotoolkit.NotFoundError{Message: "user not found"}
+						return nil, &gtk.NotFoundError{Message: "user not found"}
 					},
 				}
 			},
-			expectedError: &gotoolkit.NotFoundError{Message: "user not found"},
+			expectedError: &gtk.NotFoundError{Message: "user not found"},
 		},
 	}
 

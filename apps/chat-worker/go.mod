@@ -3,7 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/chat-worker
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.8.0
+	github.com/arpansaha13/gotoolkit v0.8.1
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/sony/gobreaker/v2 v2.4.0

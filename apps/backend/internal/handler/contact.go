@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -17,11 +17,11 @@ import (
 
 // SetupContactRoutes sets up contact routes
 func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contactService service.IContactService) {
-	protectedRouter.HandleFunc("/api/contacts", AdaptController(addContactController(contactService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/contacts", AdaptController(getContactsController(contactService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/contacts", gtk.HttpControllerAdaptor(addContactController(contactService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/contacts", gtk.HttpControllerAdaptor(getContactsController(contactService))).Methods("GET")
 }
 
-func addContactController(contactService service.IContactService) ControllerFunc {
+func addContactController(contactService service.IContactService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("add contact handler called")
@@ -30,7 +30,7 @@ func addContactController(contactService service.IContactService) ControllerFunc
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in add contact", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -58,7 +58,7 @@ func addContactController(contactService service.IContactService) ControllerFunc
 	}
 }
 
-func getContactsController(contactService service.IContactService) ControllerFunc {
+func getContactsController(contactService service.IContactService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get contacts handler called")

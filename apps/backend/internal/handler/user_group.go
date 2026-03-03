@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -17,10 +17,10 @@ import (
 
 // SetupUserGroupRoutes sets up user group routes
 func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userGroupService service.IUserGroupService) {
-	protectedRouter.HandleFunc("/api/groups/{groupID}/members", AdaptController(getGroupMembersController(userGroupService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/groups/{groupID}/members", gtk.HttpControllerAdaptor(getGroupMembersController(userGroupService))).Methods("GET")
 }
 
-func getGroupMembersController(userGroupService service.IUserGroupService) ControllerFunc {
+func getGroupMembersController(userGroupService service.IUserGroupService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get group members handler called")
@@ -32,7 +32,7 @@ func getGroupMembersController(userGroupService service.IUserGroupService) Contr
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in get members request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &gotoolkit.ValidationError{Message: "invalid group id"}
+			return &gtk.ValidationError{Message: "invalid group id"}
 		}
 
 		log.Debug("fetching group members", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))

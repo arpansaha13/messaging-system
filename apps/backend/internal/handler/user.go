@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -17,14 +17,14 @@ import (
 
 // SetupUserRoutes sets up user routes
 func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userService service.IUserService) {
-	protectedRouter.HandleFunc("/api/users/me", AdaptController(getUserMeController(userService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/users/me", AdaptController(updateUserMeController(userService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/users/search", AdaptController(searchUserProfilesController(userService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/users/{id}", AdaptController(getUserProfileByIDController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/me", gtk.HttpControllerAdaptor(getUserMeController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/me", gtk.HttpControllerAdaptor(updateUserMeController(userService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/api/users/search", gtk.HttpControllerAdaptor(searchUserProfilesController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/users/{id}", gtk.HttpControllerAdaptor(getUserProfileByIDController(userService))).Methods("GET")
 }
 
 // getUserMeController returns the authenticated user's auth details
-func getUserMeController(userService service.IUserService) ControllerFunc {
+func getUserMeController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get user me handler called")
@@ -32,7 +32,7 @@ func getUserMeController(userService service.IUserService) ControllerFunc {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in get user me request")
-			return &gotoolkit.UnauthorizedError{Message: "unauthorized"}
+			return &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		log.Debug("fetching user profile", zap.Int64("user_id", authUser.UserID), zap.String("email", authUser.Email))
@@ -58,7 +58,7 @@ func getUserMeController(userService service.IUserService) ControllerFunc {
 }
 
 // updateUserMeController updates the authenticated user's profile
-func updateUserMeController(userService service.IUserService) ControllerFunc {
+func updateUserMeController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("update user me handler called")
@@ -66,13 +66,13 @@ func updateUserMeController(userService service.IUserService) ControllerFunc {
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in update user me request")
-			return &gotoolkit.UnauthorizedError{Message: "unauthorized"}
+			return &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		var req dto.UpdateUserRequestDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in update user me", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		log.Debug("updating user profile", zap.Int64("user_id", authUser.UserID))
@@ -100,7 +100,7 @@ func updateUserMeController(userService service.IUserService) ControllerFunc {
 }
 
 // searchUserProfilesController searches for user profiles
-func searchUserProfilesController(userService service.IUserService) ControllerFunc {
+func searchUserProfilesController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("search user profiles handler called")
@@ -139,7 +139,7 @@ func searchUserProfilesController(userService service.IUserService) ControllerFu
 }
 
 // getUserProfileByIDController retrieves a user profile by ID
-func getUserProfileByIDController(userService service.IUserService) ControllerFunc {
+func getUserProfileByIDController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get user profile by id handler called")
@@ -148,13 +148,13 @@ func getUserProfileByIDController(userService service.IUserService) ControllerFu
 		id, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
 			log.Warn("invalid user id in get profile request", zap.String("id_str", vars["id"]))
-			return &gotoolkit.ValidationError{Message: "invalid user id"}
+			return &gtk.ValidationError{Message: "invalid user id"}
 		}
 
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in get user profile request")
-			return &gotoolkit.UnauthorizedError{Message: "unauthorized"}
+			return &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		log.Debug("fetching user profile", zap.Int64("requested_user_id", id), zap.Int64("auth_user_id", authUser.UserID))

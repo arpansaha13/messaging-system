@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -16,13 +16,13 @@ import (
 
 // SetupInviteRoutes sets up invite routes
 func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteService service.IInviteService) {
-	router.HandleFunc("/api/invites/{hash}", AdaptController(findInviteController(inviteService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/invites/{hash}/accept", AdaptController(acceptInviteController(inviteService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups/{groupId}/invites", AdaptController(createInviteController(inviteService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups/join", AdaptController(joinGroupController(inviteService))).Methods("POST")
+	router.HandleFunc("/api/invites/{hash}", gtk.HttpControllerAdaptor(findInviteController(inviteService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/invites/{hash}/accept", gtk.HttpControllerAdaptor(acceptInviteController(inviteService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups/{groupId}/invites", gtk.HttpControllerAdaptor(createInviteController(inviteService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups/join", gtk.HttpControllerAdaptor(joinGroupController(inviteService))).Methods("POST")
 }
 
-func findInviteController(inviteService service.IInviteService) ControllerFunc {
+func findInviteController(inviteService service.IInviteService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("find invite handler called")
@@ -32,7 +32,7 @@ func findInviteController(inviteService service.IInviteService) ControllerFunc {
 
 		if hash == "" {
 			log.Warn("hash parameter is empty in find invite request")
-			return &gotoolkit.ValidationError{Message: "hash parameter is required"}
+			return &gtk.ValidationError{Message: "hash parameter is required"}
 		}
 
 		hashDisplay := hash
@@ -65,7 +65,7 @@ func findInviteController(inviteService service.IInviteService) ControllerFunc {
 	}
 }
 
-func acceptInviteController(inviteService service.IInviteService) ControllerFunc {
+func acceptInviteController(inviteService service.IInviteService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("accept invite handler called")
@@ -75,13 +75,13 @@ func acceptInviteController(inviteService service.IInviteService) ControllerFunc
 
 		if hash == "" {
 			log.Warn("hash parameter is empty in accept invite request")
-			return &gotoolkit.ValidationError{Message: "hash parameter is required"}
+			return &gtk.ValidationError{Message: "hash parameter is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
 			log.Warn("user not authenticated in accept invite request")
-			return &gotoolkit.ValidationError{Message: "user not authenticated"}
+			return &gtk.ValidationError{Message: "user not authenticated"}
 		}
 
 		parsedUserID := parseUserID(userID)
@@ -104,7 +104,7 @@ func acceptInviteController(inviteService service.IInviteService) ControllerFunc
 	}
 }
 
-func createInviteController(inviteService service.IInviteService) ControllerFunc {
+func createInviteController(inviteService service.IInviteService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("create invite handler called")
@@ -114,13 +114,13 @@ func createInviteController(inviteService service.IInviteService) ControllerFunc
 
 		if groupID == 0 {
 			log.Warn("group_id parameter is empty or invalid in create invite request", zap.String("group_id_str", vars["groupId"]))
-			return &gotoolkit.ValidationError{Message: "group_id parameter is required"}
+			return &gtk.ValidationError{Message: "group_id parameter is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
 			log.Warn("user not authenticated in create invite request")
-			return &gotoolkit.ValidationError{Message: "user not authenticated"}
+			return &gtk.ValidationError{Message: "user not authenticated"}
 		}
 
 		parsedUserID := parseUserID(userID)
@@ -151,7 +151,7 @@ func createInviteController(inviteService service.IInviteService) ControllerFunc
 	}
 }
 
-func joinGroupController(inviteService service.IInviteService) ControllerFunc {
+func joinGroupController(inviteService service.IInviteService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("join group handler called")
@@ -159,18 +159,18 @@ func joinGroupController(inviteService service.IInviteService) ControllerFunc {
 		var req dto.JoinGroupDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in join group", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		if req.InviteHash == "" {
 			log.Warn("inviteHash is empty in join group request")
-			return &gotoolkit.ValidationError{Message: "inviteHash is required"}
+			return &gtk.ValidationError{Message: "inviteHash is required"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
 		if userID == "" {
 			log.Warn("user not authenticated in join group request")
-			return &gotoolkit.ValidationError{Message: "user not authenticated"}
+			return &gtk.ValidationError{Message: "user not authenticated"}
 		}
 
 		parsedUserID := parseUserID(userID)

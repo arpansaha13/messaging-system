@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -60,7 +60,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: &gotoolkit.ValidationError{Message: "invalid group id"},
+			expectedError: &gtk.ValidationError{Message: "invalid group id"},
 		},
 		{
 			name:    "empty channel name",
@@ -71,7 +71,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: &gotoolkit.ValidationError{Message: "channel name is required"},
+			expectedError: &gtk.ValidationError{Message: "channel name is required"},
 		},
 	}
 
@@ -148,7 +148,7 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: &gotoolkit.ValidationError{Message: "invalid group id"},
+			expectedError: &gtk.ValidationError{Message: "invalid group id"},
 		},
 	}
 
@@ -214,7 +214,7 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{}
 			},
-			expectedError: &gotoolkit.ValidationError{Message: "invalid channel id"},
+			expectedError: &gtk.ValidationError{Message: "invalid channel id"},
 		},
 	}
 

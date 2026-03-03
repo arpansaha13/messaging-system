@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -17,15 +17,15 @@ import (
 
 // SetupMessageRoutes sets up message routes
 func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, messageService service.IMessageService) {
-	protectedRouter.HandleFunc("/api/messages/send/personal", AdaptController(sendPersonalMessageController(messageService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/send/group", AdaptController(sendGroupMessageController(messageService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/{receiverID}", AdaptController(getMessagesController(messageService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/channels/{channelID}/messages", AdaptController(getChannelMessagesController(messageService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/messages/status/delivered", AdaptController(handleDeliveredController(messageService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/status/read", AdaptController(handleReadController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/send/personal", gtk.HttpControllerAdaptor(sendPersonalMessageController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/send/group", gtk.HttpControllerAdaptor(sendGroupMessageController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/{receiverID}", gtk.HttpControllerAdaptor(getMessagesController(messageService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/channels/{channelID}/messages", gtk.HttpControllerAdaptor(getChannelMessagesController(messageService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/messages/status/delivered", gtk.HttpControllerAdaptor(handleDeliveredController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/messages/status/read", gtk.HttpControllerAdaptor(handleReadController(messageService))).Methods("POST")
 }
 
-func sendPersonalMessageController(messageService service.IMessageService) ControllerFunc {
+func sendPersonalMessageController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("send personal message handler called")
@@ -34,7 +34,7 @@ func sendPersonalMessageController(messageService service.IMessageService) Contr
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for send message", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -55,7 +55,7 @@ func sendPersonalMessageController(messageService service.IMessageService) Contr
 	}
 }
 
-func sendGroupMessageController(messageService service.IMessageService) ControllerFunc {
+func sendGroupMessageController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("send group message handler called")
@@ -64,7 +64,7 @@ func sendGroupMessageController(messageService service.IMessageService) Controll
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for send group message", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -85,7 +85,7 @@ func sendGroupMessageController(messageService service.IMessageService) Controll
 	}
 }
 
-func getMessagesController(messageService service.IMessageService) ControllerFunc {
+func getMessagesController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get messages handler called")
@@ -94,7 +94,7 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in get messages request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gotoolkit.ValidationError{Message: "invalid receiver id"}
+			return &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -116,7 +116,7 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 		// Validate that both cursors are not provided
 		if before != nil && after != nil {
 			log.Warn("both before and after cursors provided", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
-			return &gotoolkit.ValidationError{Message: "cannot specify both 'before' and 'after'"}
+			return &gtk.ValidationError{Message: "cannot specify both 'before' and 'after'"}
 		}
 
 		log.Debug("fetching messages", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
@@ -152,7 +152,7 @@ func getMessagesController(messageService service.IMessageService) ControllerFun
 	}
 }
 
-func handleDeliveredController(messageService service.IMessageService) ControllerFunc {
+func handleDeliveredController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("handle delivered handler called")
@@ -161,7 +161,7 @@ func handleDeliveredController(messageService service.IMessageService) Controlle
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in handle delivered", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -181,7 +181,7 @@ func handleDeliveredController(messageService service.IMessageService) Controlle
 	}
 }
 
-func handleReadController(messageService service.IMessageService) ControllerFunc {
+func handleReadController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("handle read handler called")
@@ -190,7 +190,7 @@ func handleReadController(messageService service.IMessageService) ControllerFunc
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in handle read", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -220,7 +220,7 @@ func handleReadController(messageService service.IMessageService) ControllerFunc
 	}
 }
 
-func getChannelMessagesController(messageService service.IMessageService) ControllerFunc {
+func getChannelMessagesController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get channel messages handler called")
@@ -229,7 +229,7 @@ func getChannelMessagesController(messageService service.IMessageService) Contro
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid channel id in get channel messages request", zap.String("channel_id_str", vars["channelID"]))
-			return &gotoolkit.ValidationError{Message: "invalid channel id"}
+			return &gtk.ValidationError{Message: "invalid channel id"}
 		}
 
 		// Parse cursor parameters
@@ -248,7 +248,7 @@ func getChannelMessagesController(messageService service.IMessageService) Contro
 		// Validate that both cursors are not provided
 		if before != nil && after != nil {
 			log.Warn("both before and after cursors provided", zap.Int64("channel_id", channelID))
-			return &gotoolkit.ValidationError{Message: "cannot specify both 'before' and 'after'"}
+			return &gtk.ValidationError{Message: "cannot specify both 'before' and 'after'"}
 		}
 
 		log.Debug("fetching channel messages", zap.Int64("channel_id", channelID))

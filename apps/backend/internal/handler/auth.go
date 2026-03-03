@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
@@ -17,17 +17,17 @@ import (
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)
 func SetupAuthRoutes(router *mux.Router, authServiceClient service.IAuthServiceClient) {
-	router.HandleFunc("/api/auth/signup", AdaptController(signupController(authServiceClient))).Methods("POST")
-	router.HandleFunc("/api/auth/login", AdaptController(loginController(authServiceClient))).Methods("POST")
-	router.HandleFunc("/api/auth/verify/{otpHash}", AdaptController(verifyOTPController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/api/auth/signup", gtk.HttpControllerAdaptor(signupController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/api/auth/login", gtk.HttpControllerAdaptor(loginController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/api/auth/verify/{otpHash}", gtk.HttpControllerAdaptor(verifyOTPController(authServiceClient))).Methods("POST")
 }
 
 // SetupAuthProtectedRoutes sets up authenticated auth routes
 func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient service.IAuthServiceClient) {
-	protectedRouter.HandleFunc("/api/auth/logout", AdaptController(logoutController(authServiceClient))).Methods("POST")
+	protectedRouter.HandleFunc("/api/auth/logout", gtk.HttpControllerAdaptor(logoutController(authServiceClient))).Methods("POST")
 }
 
-func signupController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+func signupController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("signup request handler called")
@@ -36,13 +36,13 @@ func signupController(authServiceClient service.IAuthServiceClient) ControllerFu
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for signup", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if req.Email == "" || req.Password == "" {
 			log.Warn("signup validation failed", zap.String("email", req.Email))
-			return &gotoolkit.ValidationError{Message: "email and password are required"}
+			return &gtk.ValidationError{Message: "email and password are required"}
 		}
 
 		log.Debug("signup validation passed", zap.String("email", req.Email))
@@ -54,14 +54,14 @@ func signupController(authServiceClient service.IAuthServiceClient) ControllerFu
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "already exists") || strings.Contains(errMsg, "conflict") {
 				log.Warn("signup conflict", zap.String("email", req.Email))
-				return &gotoolkit.ConflictError{Message: "email already registered"}
+				return &gtk.ConflictError{Message: "email already registered"}
 			}
 			if strings.Contains(errMsg, "validation") {
 				log.Warn("signup validation error", zap.String("email", req.Email), zap.Error(err))
-				return &gotoolkit.ValidationError{Message: errMsg}
+				return &gtk.ValidationError{Message: errMsg}
 			}
 			log.Error("signup service failed", zap.String("email", req.Email), zap.Error(err))
-			return &gotoolkit.InternalError{Message: "signup failed", Err: err}
+			return &gtk.InternalError{Message: "signup failed", Err: err}
 		}
 
 		log.Info("signup successful", zap.String("email", req.Email))
@@ -75,7 +75,7 @@ func signupController(authServiceClient service.IAuthServiceClient) ControllerFu
 	}
 }
 
-func loginController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+func loginController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("login request handler called")
@@ -84,13 +84,13 @@ func loginController(authServiceClient service.IAuthServiceClient) ControllerFun
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for login", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if req.Email == "" || req.Password == "" {
 			log.Warn("login validation failed", zap.String("email", req.Email))
-			return &gotoolkit.ValidationError{Message: "email and password are required"}
+			return &gtk.ValidationError{Message: "email and password are required"}
 		}
 
 		log.Debug("login validation passed", zap.String("email", req.Email))
@@ -101,14 +101,14 @@ func loginController(authServiceClient service.IAuthServiceClient) ControllerFun
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "unauthorized") || strings.Contains(errMsg, "not verified") {
 				log.Warn("login unauthorized", zap.String("email", req.Email))
-				return &gotoolkit.UnauthorizedError{Message: "invalid email or password"}
+				return &gtk.UnauthorizedError{Message: "invalid email or password"}
 			}
 			if strings.Contains(errMsg, "validation") {
 				log.Warn("login validation error", zap.String("email", req.Email), zap.Error(err))
-				return &gotoolkit.ValidationError{Message: errMsg}
+				return &gtk.ValidationError{Message: errMsg}
 			}
 			log.Error("login service failed", zap.String("email", req.Email), zap.Error(err))
-			return &gotoolkit.InternalError{Message: "login failed", Err: err}
+			return &gtk.InternalError{Message: "login failed", Err: err}
 		}
 
 		log.Info("login successful", zap.String("email", req.Email))
@@ -124,7 +124,7 @@ func loginController(authServiceClient service.IAuthServiceClient) ControllerFun
 		cfg, err := config.Load()
 		if err != nil {
 			log.Error("failed to load config", zap.Error(err))
-			return &gotoolkit.InternalError{Message: "failed to load config", Err: err}
+			return &gtk.InternalError{Message: "failed to load config", Err: err}
 		}
 
 		// Set session token as HttpOnly Secure cookie
@@ -145,7 +145,7 @@ func loginController(authServiceClient service.IAuthServiceClient) ControllerFun
 	}
 }
 
-func verifyOTPController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("verify otp handler called")
@@ -157,13 +157,13 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) Controlle
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for verify otp", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if otpHash == "" || req.Code == "" {
 			log.Warn("verify otp validation failed", zap.String("otp_hash", otpHash), zap.String("code", req.Code))
-			return &gotoolkit.ValidationError{Message: "otp hash and code are required"}
+			return &gtk.ValidationError{Message: "otp hash and code are required"}
 		}
 
 		log.Debug("verifying otp", zap.String("otp_hash", otpHash))
@@ -174,18 +174,18 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) Controlle
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "invalid") || strings.Contains(errMsg, "expired") {
 				log.Warn("verify otp invalid or expired", zap.String("otp_hash", otpHash))
-				return &gotoolkit.UnauthorizedError{Message: "invalid or expired otp code"}
+				return &gtk.UnauthorizedError{Message: "invalid or expired otp code"}
 			}
 			if strings.Contains(errMsg, "not found") {
 				log.Warn("verify otp not found", zap.String("otp_hash", otpHash))
-				return &gotoolkit.NotFoundError{Message: "otp not found"}
+				return &gtk.NotFoundError{Message: "otp not found"}
 			}
 			if strings.Contains(errMsg, "validation") {
 				log.Warn("verify otp validation error", zap.String("otp_hash", otpHash), zap.Error(err))
-				return &gotoolkit.ValidationError{Message: errMsg}
+				return &gtk.ValidationError{Message: errMsg}
 			}
 			log.Error("verify otp service failed", zap.String("otp_hash", otpHash), zap.Error(err))
-			return &gotoolkit.InternalError{Message: "verification failed", Err: err}
+			return &gtk.InternalError{Message: "verification failed", Err: err}
 		}
 
 		log.Info("otp verified successfully", zap.String("otp_hash", otpHash))
@@ -211,7 +211,7 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) Controlle
 	}
 }
 
-func logoutController(authServiceClient service.IAuthServiceClient) ControllerFunc {
+func logoutController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("logout handler called")
@@ -220,13 +220,13 @@ func logoutController(authServiceClient service.IAuthServiceClient) ControllerFu
 		cfg, err := config.Load()
 		if err != nil {
 			log.Error("failed to load config", zap.Error(err))
-			return &gotoolkit.InternalError{Message: "failed to load config", Err: err}
+			return &gtk.InternalError{Message: "failed to load config", Err: err}
 		}
 
 		cookie, err := r.Cookie(cfg.AuthCookieName)
 		if err != nil {
 			log.Warn("no session cookie found in logout request")
-			return &gotoolkit.UnauthorizedError{Message: "no session token found"}
+			return &gtk.UnauthorizedError{Message: "no session token found"}
 		}
 
 		sessionToken := cookie.Value
@@ -239,10 +239,10 @@ func logoutController(authServiceClient service.IAuthServiceClient) ControllerFu
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "invalid") {
 				log.Warn("logout failed: invalid or expired session")
-				return &gotoolkit.UnauthorizedError{Message: "invalid or expired session"}
+				return &gtk.UnauthorizedError{Message: "invalid or expired session"}
 			}
 			log.Error("logout service failed", zap.Error(err))
-			return &gotoolkit.InternalError{Message: "logout failed", Err: err}
+			return &gtk.InternalError{Message: "logout failed", Err: err}
 		}
 
 		log.Info("user logged out successfully")

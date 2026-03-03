@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit"
+	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
@@ -17,11 +17,11 @@ import (
 
 // SetupGroupRoutes sets up group routes
 func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupService service.IGroupService) {
-	protectedRouter.HandleFunc("/api/groups", AdaptController(createGroupController(groupService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups", AdaptController(getGroupsController(groupService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/groups", gtk.HttpControllerAdaptor(createGroupController(groupService))).Methods("POST")
+	protectedRouter.HandleFunc("/api/groups", gtk.HttpControllerAdaptor(getGroupsController(groupService))).Methods("GET")
 }
 
-func createGroupController(groupService service.IGroupService) ControllerFunc {
+func createGroupController(groupService service.IGroupService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("create group handler called")
@@ -30,7 +30,7 @@ func createGroupController(groupService service.IGroupService) ControllerFunc {
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in create group", zap.Error(err))
-			return &gotoolkit.ValidationError{Message: "invalid request body"}
+			return &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -58,7 +58,7 @@ func createGroupController(groupService service.IGroupService) ControllerFunc {
 	}
 }
 
-func getGroupsController(groupService service.IGroupService) ControllerFunc {
+func getGroupsController(groupService service.IGroupService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) error {
 		log := logger.FromContext(r.Context())
 		log.Debug("get groups handler called")
