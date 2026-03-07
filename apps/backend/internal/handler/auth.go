@@ -28,7 +28,7 @@ func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient ser
 }
 
 func signupController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("signup request handler called")
 
@@ -36,13 +36,13 @@ func signupController(authServiceClient service.IAuthServiceClient) gtk.Controll
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for signup", zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if req.Email == "" || req.Password == "" {
 			log.Warn("signup validation failed", zap.String("email", req.Email))
-			return &gtk.ValidationError{Message: "email and password are required"}
+			return nil, &gtk.ValidationError{Message: "email and password are required"}
 		}
 
 		log.Debug("signup validation passed", zap.String("email", req.Email))
@@ -54,29 +54,30 @@ func signupController(authServiceClient service.IAuthServiceClient) gtk.Controll
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "already exists") || strings.Contains(errMsg, "conflict") {
 				log.Warn("signup conflict", zap.String("email", req.Email))
-				return &gtk.ConflictError{Message: "email already registered"}
+				return nil, &gtk.ConflictError{Message: "email already registered"}
 			}
 			if strings.Contains(errMsg, "validation") {
 				log.Warn("signup validation error", zap.String("email", req.Email), zap.Error(err))
-				return &gtk.ValidationError{Message: errMsg}
+				return nil, &gtk.ValidationError{Message: errMsg}
 			}
 			log.Error("signup service failed", zap.String("email", req.Email), zap.Error(err))
-			return &gtk.InternalError{Message: "signup failed", Err: err}
+			return nil, &gtk.InternalError{Message: "signup failed", Err: err}
 		}
 
 		log.Info("signup successful", zap.String("email", req.Email))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		return json.NewEncoder(w).Encode(dto.SignupResponseDTO{
-			Message: signupResp.Message,
-			OtpHash: signupResp.OtpHash,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusCreated,
+			Body: dto.SignupResponseDTO{
+				Message: signupResp.Message,
+				OtpHash: signupResp.OtpHash,
+			},
+		}, nil
 	}
 }
 
 func loginController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("login request handler called")
 
@@ -84,13 +85,13 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for login", zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if req.Email == "" || req.Password == "" {
 			log.Warn("login validation failed", zap.String("email", req.Email))
-			return &gtk.ValidationError{Message: "email and password are required"}
+			return nil, &gtk.ValidationError{Message: "email and password are required"}
 		}
 
 		log.Debug("login validation passed", zap.String("email", req.Email))
@@ -101,14 +102,14 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "unauthorized") || strings.Contains(errMsg, "not verified") {
 				log.Warn("login unauthorized", zap.String("email", req.Email))
-				return &gtk.UnauthorizedError{Message: "invalid email or password"}
+				return nil, &gtk.UnauthorizedError{Message: "invalid email or password"}
 			}
 			if strings.Contains(errMsg, "validation") {
 				log.Warn("login validation error", zap.String("email", req.Email), zap.Error(err))
-				return &gtk.ValidationError{Message: errMsg}
+				return nil, &gtk.ValidationError{Message: errMsg}
 			}
 			log.Error("login service failed", zap.String("email", req.Email), zap.Error(err))
-			return &gtk.InternalError{Message: "login failed", Err: err}
+			return nil, &gtk.InternalError{Message: "login failed", Err: err}
 		}
 
 		log.Info("login successful", zap.String("email", req.Email))
@@ -124,7 +125,7 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 		cfg, err := config.Load()
 		if err != nil {
 			log.Error("failed to load config", zap.Error(err))
-			return &gtk.InternalError{Message: "failed to load config", Err: err}
+			return nil, &gtk.InternalError{Message: "failed to load config", Err: err}
 		}
 
 		// Set session token as HttpOnly Secure cookie
@@ -138,15 +139,17 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 			SameSite: http.SameSiteLaxMode, // Using Lax instead of Strict for CORS compatibility
 		})
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(dto.LoginResponseDTO{
-			Message: "login successful",
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: dto.LoginResponseDTO{
+				Message: "login successful",
+			},
+		}, nil
 	}
 }
 
 func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("verify otp handler called")
 
@@ -157,13 +160,13 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body for verify otp", zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		// Validate input
 		if otpHash == "" || req.Code == "" {
 			log.Warn("verify otp validation failed", zap.String("otp_hash", otpHash), zap.String("code", req.Code))
-			return &gtk.ValidationError{Message: "otp hash and code are required"}
+			return nil, &gtk.ValidationError{Message: "otp hash and code are required"}
 		}
 
 		log.Debug("verifying otp", zap.String("otp_hash", otpHash))
@@ -174,18 +177,18 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "invalid") || strings.Contains(errMsg, "expired") {
 				log.Warn("verify otp invalid or expired", zap.String("otp_hash", otpHash))
-				return &gtk.UnauthorizedError{Message: "invalid or expired otp code"}
+				return nil, &gtk.UnauthorizedError{Message: "invalid or expired otp code"}
 			}
 			if strings.Contains(errMsg, "not found") {
 				log.Warn("verify otp not found", zap.String("otp_hash", otpHash))
-				return &gtk.NotFoundError{Message: "otp not found"}
+				return nil, &gtk.NotFoundError{Message: "otp not found"}
 			}
 			if strings.Contains(errMsg, "validation") {
 				log.Warn("verify otp validation error", zap.String("otp_hash", otpHash), zap.Error(err))
-				return &gtk.ValidationError{Message: errMsg}
+				return nil, &gtk.ValidationError{Message: errMsg}
 			}
 			log.Error("verify otp service failed", zap.String("otp_hash", otpHash), zap.Error(err))
-			return &gtk.InternalError{Message: "verification failed", Err: err}
+			return nil, &gtk.InternalError{Message: "verification failed", Err: err}
 		}
 
 		log.Info("otp verified successfully", zap.String("otp_hash", otpHash))
@@ -204,15 +207,17 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(dto.VerifyOTPResponseDTO{
-			Message: "verification successful",
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: dto.VerifyOTPResponseDTO{
+				Message: "verification successful",
+			},
+		}, nil
 	}
 }
 
 func logoutController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("logout handler called")
 
@@ -220,13 +225,13 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 		cfg, err := config.Load()
 		if err != nil {
 			log.Error("failed to load config", zap.Error(err))
-			return &gtk.InternalError{Message: "failed to load config", Err: err}
+			return nil, &gtk.InternalError{Message: "failed to load config", Err: err}
 		}
 
 		cookie, err := r.Cookie(cfg.AuthCookieName)
 		if err != nil {
 			log.Warn("no session cookie found in logout request")
-			return &gtk.UnauthorizedError{Message: "no session token found"}
+			return nil, &gtk.UnauthorizedError{Message: "no session token found"}
 		}
 
 		sessionToken := cookie.Value
@@ -239,10 +244,10 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "invalid") {
 				log.Warn("logout failed: invalid or expired session")
-				return &gtk.UnauthorizedError{Message: "invalid or expired session"}
+				return nil, &gtk.UnauthorizedError{Message: "invalid or expired session"}
 			}
 			log.Error("logout service failed", zap.Error(err))
-			return &gtk.InternalError{Message: "logout failed", Err: err}
+			return nil, &gtk.InternalError{Message: "logout failed", Err: err}
 		}
 
 		log.Info("user logged out successfully")
@@ -258,9 +263,11 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(map[string]string{
-			"message": "logout successful",
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: map[string]string{
+				"message": "logout successful",
+			},
+		}, nil
 	}
 }

@@ -39,11 +39,13 @@ func TestInviteHandler_FindByHash(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := findInviteController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
-	var result dto.InviteResponseDTO
-	json.NewDecoder(w.Body).Decode(&result)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	result, ok := resp.Body.(dto.InviteResponseDTO)
+	require.True(t, ok, "response body should be InviteResponseDTO")
 	assert.Equal(t, "abc123", result.Hash)
 }
 
@@ -65,11 +67,13 @@ func TestInviteHandler_AcceptInvite(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := acceptInviteController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
-	var result service.AcceptInviteResponseDTO
-	json.NewDecoder(w.Body).Decode(&result)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	result, ok := resp.Body.(*service.AcceptInviteResponseDTO)
+	require.True(t, ok, "response body should be AcceptInviteResponseDTO")
 	assert.Equal(t, int64(1), result.GroupID)
 	assert.Equal(t, 2, len(result.Channels))
 }
@@ -96,11 +100,13 @@ func TestInviteHandler_CreateInvite(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := createInviteController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
-	var result dto.InviteResponseDTO
-	json.NewDecoder(w.Body).Decode(&result)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
+	result, ok := resp.Body.(dto.InviteResponseDTO)
+	require.True(t, ok, "response body should be InviteResponseDTO")
 	assert.Equal(t, "newhash", result.Hash)
 }
 
@@ -125,10 +131,12 @@ func TestInviteHandler_JoinGroup(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := joinGroupController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
-	var result service.AcceptInviteResponseDTO
-	json.NewDecoder(w.Body).Decode(&result)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	result, ok := resp.Body.(*service.AcceptInviteResponseDTO)
+	require.True(t, ok, "response body should be AcceptInviteResponseDTO")
 	assert.Equal(t, int64(1), result.GroupID)
 }

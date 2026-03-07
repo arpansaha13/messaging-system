@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -26,7 +25,7 @@ func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatServic
 }
 
 func getUserChatsController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get user chats handler called")
 
@@ -38,18 +37,20 @@ func getUserChatsController(chatService service.IChatService) gtk.ControllerFunc
 		chatsResponse, err := chatService.GetUserChats(r.Context(), userIDInt)
 		if err != nil {
 			log.Error("failed to get user chats", zap.Int64("user_id", userIDInt), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("user chats retrieved successfully", zap.Int64("user_id", userIDInt))
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(chatsResponse)
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       chatsResponse,
+		}, nil
 	}
 }
 
 func pinChatController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("pin chat handler called")
 
@@ -57,7 +58,7 @@ func pinChatController(chatService service.IChatService) gtk.ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in pin chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gtk.ValidationError{Message: "invalid receiver id"}
+			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -67,19 +68,20 @@ func pinChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 		if err := chatService.PinChat(r.Context(), userIDInt, receiverID); err != nil {
 			log.Error("failed to pin chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("chat pinned successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusNoContent,
+			Body:       nil,
+		}, nil
 	}
 }
 
 func unpinChatController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("unpin chat handler called")
 
@@ -87,7 +89,7 @@ func unpinChatController(chatService service.IChatService) gtk.ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in unpin chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gtk.ValidationError{Message: "invalid receiver id"}
+			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -97,19 +99,20 @@ func unpinChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 		if err := chatService.UnpinChat(r.Context(), userIDInt, receiverID); err != nil {
 			log.Error("failed to unpin chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("chat unpinned successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusNoContent,
+			Body:       nil,
+		}, nil
 	}
 }
 
 func archiveChatController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("archive chat handler called")
 
@@ -117,7 +120,7 @@ func archiveChatController(chatService service.IChatService) gtk.ControllerFunc 
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in archive chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gtk.ValidationError{Message: "invalid receiver id"}
+			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -127,19 +130,20 @@ func archiveChatController(chatService service.IChatService) gtk.ControllerFunc 
 
 		if err := chatService.ArchiveChat(r.Context(), userIDInt, receiverID); err != nil {
 			log.Error("failed to archive chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("chat archived successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusNoContent,
+			Body:       nil,
+		}, nil
 	}
 }
 
 func unarchiveChatController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("unarchive chat handler called")
 
@@ -147,7 +151,7 @@ func unarchiveChatController(chatService service.IChatService) gtk.ControllerFun
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in unarchive chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gtk.ValidationError{Message: "invalid receiver id"}
+			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -157,19 +161,20 @@ func unarchiveChatController(chatService service.IChatService) gtk.ControllerFun
 
 		if err := chatService.UnarchiveChat(r.Context(), userIDInt, receiverID); err != nil {
 			log.Error("failed to unarchive chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("chat unarchived successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusNoContent,
+			Body:       nil,
+		}, nil
 	}
 }
 
 func clearChatController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("clear chat handler called")
 
@@ -177,7 +182,7 @@ func clearChatController(chatService service.IChatService) gtk.ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in clear chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gtk.ValidationError{Message: "invalid receiver id"}
+			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -187,19 +192,20 @@ func clearChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 		if err := chatService.ClearChat(r.Context(), userIDInt, receiverID); err != nil {
 			log.Error("failed to clear chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("chat cleared successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusNoContent,
+			Body:       nil,
+		}, nil
 	}
 }
 
 func deleteChatController(chatService service.IChatService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("delete chat handler called")
 
@@ -207,7 +213,7 @@ func deleteChatController(chatService service.IChatService) gtk.ControllerFunc {
 		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid receiver id in delete chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return &gtk.ValidationError{Message: "invalid receiver id"}
+			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -217,13 +223,14 @@ func deleteChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 		if err := chatService.DeleteChat(r.Context(), userIDInt, receiverID); err != nil {
 			log.Error("failed to delete chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("chat deleted successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusNoContent)
-		return nil
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusNoContent,
+			Body:       nil,
+		}, nil
 	}
 }

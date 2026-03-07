@@ -1,7 +1,7 @@
 github.com/arpansaha13/goauthkit v0.2.9 h1:5xSZ1/aHAWdeNCmZtO8XkDPByBQakGsP95teSGEGxoU=
 github.com/arpansaha13/goauthkit v0.2.9/go.mod h1:c/OoBwMgBGZZRVuwodAjHCNqrSYA+4z3BSJ2EXEZTIA=
-github.com/arpansaha13/gotoolkit v0.8.1 h1:UT7MScYJdDmZvOlOFZz3QLoCE/aiS/tPq4CfZA30iVQ=
-github.com/arpansaha13/gotoolkit v0.8.1/go.mod h1:wQw6/MAW7NKqO0SklhqTIpTgRYwBnz5EqHYu5D0cUY8=
+github.com/arpansaha13/gotoolkit v0.8.2 h1:r4x2/iK/vCcITzWYp+CHoaCg1sTl882D4cGY0ojWOHU=
+github.com/arpansaha13/gotoolkit v0.8.2/go.mod h1:wQw6/MAW7NKqO0SklhqTIpTgRYwBnz5EqHYu5D0cUY8=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
 github.com/cenkalti/backoff/v5 v5.0.3/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=

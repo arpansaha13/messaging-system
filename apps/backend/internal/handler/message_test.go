@@ -35,9 +35,11 @@ func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := sendPersonalMessageController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusAccepted, resp.StatusCode)
 }
 
 func TestMessageHandler_SendGroupMessage(t *testing.T) {
@@ -61,7 +63,9 @@ func TestMessageHandler_SendGroupMessage(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := sendGroupMessageController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusAccepted, resp.StatusCode)
 }

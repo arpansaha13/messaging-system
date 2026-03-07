@@ -76,17 +76,18 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := getUserMeController(mockService)
-			err := controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				var resp dto.AuthUserResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
-				require.NoError(t, err)
-				tt.validateResp(t, &resp)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
+				profileResp, ok := resp.Body.(dto.AuthUserResponseDTO)
+				require.True(t, ok, "response body should be AuthUserResponseDTO")
+				tt.validateResp(t, &profileResp)
 			}
 		})
 	}
@@ -144,16 +145,17 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := searchUserProfilesController(mockService)
-			err := controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				var profiles []dto.UserProfileResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&profiles)
-				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
+				profiles, ok := resp.Body.([]dto.UserProfileResponseDTO)
+				require.True(t, ok, "response body should be []UserProfileResponseDTO")
 				tt.validateResp(t, profiles)
 			}
 		})
@@ -214,13 +216,15 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := updateUserMeController(mockService)
-			err = controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
 			}
 		})
 	}

@@ -92,18 +92,19 @@ func TestAuthHandler_Signup(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := signupController(mockService)
-			err = controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusCreated, resp.StatusCode)
 				if tt.validateResp != nil {
-					var resp dto.SignupResponseDTO
-					err := json.NewDecoder(w.Body).Decode(&resp)
-					require.NoError(t, err)
-					tt.validateResp(t, &resp)
+					signupResp, ok := resp.Body.(dto.SignupResponseDTO)
+					require.True(t, ok, "response body should be SignupResponseDTO")
+					tt.validateResp(t, &signupResp)
 				}
 			}
 		})
@@ -173,6 +174,13 @@ func TestAuthHandler_Login(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Setenv("ENVIRONMENT", "test")
+			t.Setenv("DATABASE_URL", "postgres://user:pass@localhost:5432/testdb")
+			t.Setenv("RABBITMQ_HOST", "localhost")
+			t.Setenv("RABBITMQ_PORT", "5672")
+			t.Setenv("RABBITMQ_USER", "guest")
+			t.Setenv("RABBITMQ_PASS", "guest")
+			t.Setenv("JWT_SECRET", "test-secret-key-for-testing-only")
 			mockService := tt.mockFunc()
 
 			body, err := json.Marshal(tt.requestBody)
@@ -182,18 +190,19 @@ func TestAuthHandler_Login(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := loginController(mockService)
-			err = controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
 				if tt.validateResp != nil {
-					var resp dto.LoginResponseDTO
-					err := json.NewDecoder(w.Body).Decode(&resp)
-					require.NoError(t, err)
-					tt.validateResp(t, &resp)
+					loginResp, ok := resp.Body.(dto.LoginResponseDTO)
+					require.True(t, ok, "response body should be LoginResponseDTO")
+					tt.validateResp(t, &loginResp)
 				}
 			}
 		})

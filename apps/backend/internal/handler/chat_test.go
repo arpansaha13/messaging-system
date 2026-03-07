@@ -31,9 +31,11 @@ func TestChatHandler_GetUserChats(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := getUserChatsController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
 
 func TestChatHandler_PinChat(t *testing.T) {
@@ -51,9 +53,11 @@ func TestChatHandler_PinChat(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := pinChatController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func TestChatHandler_UnpinChat(t *testing.T) {
@@ -71,9 +75,11 @@ func TestChatHandler_UnpinChat(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := unpinChatController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func TestChatHandler_ArchiveChat(t *testing.T) {
@@ -91,9 +97,11 @@ func TestChatHandler_ArchiveChat(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := archiveChatController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func TestChatHandler_UnarchiveChat(t *testing.T) {
@@ -111,9 +119,11 @@ func TestChatHandler_UnarchiveChat(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := unarchiveChatController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func TestChatHandler_ClearChat(t *testing.T) {
@@ -131,9 +141,11 @@ func TestChatHandler_ClearChat(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := clearChatController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }
 
 func TestChatHandler_DeleteChat(t *testing.T) {
@@ -151,7 +163,9 @@ func TestChatHandler_DeleteChat(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := deleteChatController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusNoContent, resp.StatusCode)
 }

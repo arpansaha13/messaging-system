@@ -90,17 +90,18 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := createChannelController(mockService)
-			err = controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				var resp dto.ChannelResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
-				require.NoError(t, err)
-				tt.validateResp(t, &resp)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusCreated, resp.StatusCode)
+				chanResp, ok := resp.Body.(dto.ChannelResponseDTO)
+				require.True(t, ok, "response body should be ChannelResponseDTO")
+				tt.validateResp(t, &chanResp)
 			}
 		})
 	}
@@ -164,17 +165,18 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := getGroupChannelsController(mockService)
-			err := controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				var resp []dto.ChannelResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
-				require.NoError(t, err)
-				tt.validateResp(t, resp)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
+				channels, ok := resp.Body.([]dto.ChannelResponseDTO)
+				require.True(t, ok, "response body should be []ChannelResponseDTO")
+				tt.validateResp(t, channels)
 			}
 		})
 	}
@@ -230,17 +232,18 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := getChannelInfoController(mockService)
-			err := controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				var resp dto.ChannelResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
-				require.NoError(t, err)
-				tt.validateResp(t, &resp)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
+				chanResp, ok := resp.Body.(dto.ChannelResponseDTO)
+				require.True(t, ok, "response body should be ChannelResponseDTO")
+				tt.validateResp(t, &chanResp)
 			}
 		})
 	}

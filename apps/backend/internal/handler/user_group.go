@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -21,7 +20,7 @@ func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userG
 }
 
 func getGroupMembersController(userGroupService service.IUserGroupService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get group members handler called")
 
@@ -32,7 +31,7 @@ func getGroupMembersController(userGroupService service.IUserGroupService) gtk.C
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in get members request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &gtk.ValidationError{Message: "invalid group id"}
+			return nil, &gtk.ValidationError{Message: "invalid group id"}
 		}
 
 		log.Debug("fetching group members", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
@@ -40,7 +39,7 @@ func getGroupMembersController(userGroupService service.IUserGroupService) gtk.C
 		members, err := userGroupService.GetGroupMembers(r.Context(), groupID)
 		if err != nil {
 			log.Error("failed to get group members", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("group members retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Int("member_count", len(members)))
@@ -63,7 +62,9 @@ func getGroupMembersController(userGroupService service.IUserGroupService) gtk.C
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(memberResponses)
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       memberResponses,
+		}, nil
 	}
 }

@@ -23,7 +23,7 @@ func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channel
 }
 
 func createChannelController(channelService service.IChannelService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("create channel handler called")
 
@@ -34,19 +34,19 @@ func createChannelController(channelService service.IChannelService) gtk.Control
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in create channel request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &gtk.ValidationError{Message: "invalid group id"}
+			return nil, &gtk.ValidationError{Message: "invalid group id"}
 		}
 
 		var req dto.CreateChannelRequestDTO
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in create channel", zap.Int64("user_id", userIDInt), zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		if req.Name == "" {
 			log.Warn("channel name is empty in create channel request", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
-			return &gtk.ValidationError{Message: "channel name is required"}
+			return nil, &gtk.ValidationError{Message: "channel name is required"}
 		}
 
 		log.Debug("creating channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name))
@@ -54,25 +54,26 @@ func createChannelController(channelService service.IChannelService) gtk.Control
 		channel, err := channelService.CreateChannel(r.Context(), req.Name, groupID)
 		if err != nil {
 			log.Error("failed to create channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("channel created successfully", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channel.ID), zap.String("channel_name", channel.Name), zap.Int64("group_id", groupID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		return json.NewEncoder(w).Encode(dto.ChannelResponseDTO{
-			ID:        channel.ID,
-			Name:      channel.Name,
-			GroupID:   channel.GroupID,
-			CreatedAt: channel.CreatedAt,
-			UpdatedAt: channel.UpdatedAt,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusCreated,
+			Body: dto.ChannelResponseDTO{
+				ID:        channel.ID,
+				Name:      channel.Name,
+				GroupID:   channel.GroupID,
+				CreatedAt: channel.CreatedAt,
+				UpdatedAt: channel.UpdatedAt,
+			},
+		}, nil
 	}
 }
 
 func getGroupChannelsController(channelService service.IChannelService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get group channels handler called")
 
@@ -83,7 +84,7 @@ func getGroupChannelsController(channelService service.IChannelService) gtk.Cont
 		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid group id in get channels request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return &gtk.ValidationError{Message: "invalid group id"}
+			return nil, &gtk.ValidationError{Message: "invalid group id"}
 		}
 
 		log.Debug("fetching channels for group", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
@@ -91,7 +92,7 @@ func getGroupChannelsController(channelService service.IChannelService) gtk.Cont
 		channels, err := channelService.GetChannelsByGroupID(r.Context(), groupID)
 		if err != nil {
 			log.Error("failed to get channels for group", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		channelResponses := make([]dto.ChannelResponseDTO, len(channels))
@@ -107,13 +108,15 @@ func getGroupChannelsController(channelService service.IChannelService) gtk.Cont
 
 		log.Debug("successfully fetched channels", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Int("channel_count", len(channels)))
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(channelResponses)
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       channelResponses,
+		}, nil
 	}
 }
 
 func getChannelInfoController(channelService service.IChannelService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get channel info handler called")
 
@@ -124,7 +127,7 @@ func getChannelInfoController(channelService service.IChannelService) gtk.Contro
 		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
 		if err != nil {
 			log.Warn("invalid channel id in get channel info request", zap.String("channel_id_str", vars["channelID"]), zap.Int64("user_id", userIDInt))
-			return &gtk.ValidationError{Message: "invalid channel id"}
+			return nil, &gtk.ValidationError{Message: "invalid channel id"}
 		}
 
 		log.Debug("fetching channel info", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID))
@@ -132,18 +135,20 @@ func getChannelInfoController(channelService service.IChannelService) gtk.Contro
 		channel, err := channelService.GetChannelByID(r.Context(), channelID)
 		if err != nil {
 			log.Error("failed to get channel info", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("channel info retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID), zap.String("channel_name", channel.Name))
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(dto.ChannelResponseDTO{
-			ID:        channel.ID,
-			Name:      channel.Name,
-			GroupID:   channel.GroupID,
-			CreatedAt: channel.CreatedAt,
-			UpdatedAt: channel.UpdatedAt,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: dto.ChannelResponseDTO{
+				ID:        channel.ID,
+				Name:      channel.Name,
+				GroupID:   channel.GroupID,
+				CreatedAt: channel.CreatedAt,
+				UpdatedAt: channel.UpdatedAt,
+			},
+		}, nil
 	}
 }

@@ -165,7 +165,7 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 
 	// Create test RabbitMQ service with nil connection (simulates unavailability)
 	// This ensures tests get proper error handling when publishing messages
-	testRabbitMQ, _ := service.NewRabbitMQService(nil, nil, cbs.RabbitMQ)
+	testRabbitMQ := service.NewRabbitMQService(testLogger, cbs.RabbitMQ)
 
 	// Create listener for test server
 	listener, err := net.Listen("tcp", "127.0.0.1:0")

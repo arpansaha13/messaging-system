@@ -2,7 +2,7 @@ module github.com/arpansaha13/messaging-system/apps/common
 
 go 1.25.6
 
-require github.com/arpansaha13/gotoolkit v0.8.1
+require github.com/arpansaha13/gotoolkit v0.8.2
 
 require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect

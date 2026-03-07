@@ -88,17 +88,18 @@ func TestContactHandler_AddContact(t *testing.T) {
 
 			// Call the controller function directly
 			controller := addContactController(mockService)
-			err = controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, utils.Ptr(gtk.NotFoundError{Message: "user not found"}).Error(), err.Error())
 			} else {
 				require.NoError(t, err)
-				var resp dto.ContactResponseDTO
-				err := json.NewDecoder(w.Body).Decode(&resp)
-				require.NoError(t, err)
-				assert.Equal(t, int64(2), resp.UserID) // The UserIDInContact from the request
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusCreated, resp.StatusCode)
+				contactResp, ok := resp.Body.(dto.ContactResponseDTO)
+				require.True(t, ok, "response body should be ContactResponseDTO")
+				assert.Equal(t, int64(2), contactResp.UserID) // The UserIDInContact from the request
 			}
 		})
 	}
@@ -141,13 +142,15 @@ func TestContactHandler_GetContacts(t *testing.T) {
 			w := httptest.NewRecorder()
 
 			controller := getContactsController(mockService)
-			err := controller(w, req)
+			resp, err := controller(w, req)
 
 			if tt.expectedError != nil {
 				require.Error(t, err)
 				assert.Equal(t, tt.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, http.StatusOK, resp.StatusCode)
 			}
 		})
 	}

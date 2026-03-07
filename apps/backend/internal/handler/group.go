@@ -22,7 +22,7 @@ func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupServ
 }
 
 func createGroupController(groupService service.IGroupService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("create group handler called")
 
@@ -30,7 +30,7 @@ func createGroupController(groupService service.IGroupService) gtk.ControllerFun
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in create group", zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -41,25 +41,26 @@ func createGroupController(groupService service.IGroupService) gtk.ControllerFun
 		group, err := groupService.CreateGroup(r.Context(), req.Name, userIDInt)
 		if err != nil {
 			log.Error("failed to create group", zap.Int64("founder_id", userIDInt), zap.String("group_name", req.Name), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("group created successfully", zap.Int64("group_id", group.ID), zap.String("group_name", group.Name), zap.Int64("founder_id", userIDInt))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		return json.NewEncoder(w).Encode(dto.GroupResponseDTO{
-			ID:        group.ID,
-			Name:      group.Name,
-			FounderID: group.FounderID,
-			CreatedAt: group.CreatedAt,
-			UpdatedAt: group.UpdatedAt,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusCreated,
+			Body: dto.GroupResponseDTO{
+				ID:        group.ID,
+				Name:      group.Name,
+				FounderID: group.FounderID,
+				CreatedAt: group.CreatedAt,
+				UpdatedAt: group.UpdatedAt,
+			},
+		}, nil
 	}
 }
 
 func getGroupsController(groupService service.IGroupService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get groups handler called")
 
@@ -71,7 +72,7 @@ func getGroupsController(groupService service.IGroupService) gtk.ControllerFunc 
 		groups, err := groupService.GetGroups(r.Context(), userIDInt)
 		if err != nil {
 			log.Error("failed to get groups", zap.Int64("user_id", userIDInt), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("groups retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int("group_count", len(groups)))
@@ -87,7 +88,9 @@ func getGroupsController(groupService service.IGroupService) gtk.ControllerFunc 
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(groupResponses)
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       groupResponses,
+		}, nil
 	}
 }

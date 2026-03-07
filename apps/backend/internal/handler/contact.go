@@ -22,7 +22,7 @@ func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contact
 }
 
 func addContactController(contactService service.IContactService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("add contact handler called")
 
@@ -30,7 +30,7 @@ func addContactController(contactService service.IContactService) gtk.Controller
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in add contact", zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		userID := middleware.GetUserIDFromContext(r)
@@ -41,25 +41,26 @@ func addContactController(contactService service.IContactService) gtk.Controller
 		contact, err := contactService.AddContact(r.Context(), userIDInt, req.UserIDInContact)
 		if err != nil {
 			log.Error("failed to add contact", zap.Int64("user_id", userIDInt), zap.Int64("contact_user_id", req.UserIDInContact), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("contact added successfully", zap.Int64("user_id", userIDInt), zap.Int64("contact_id", contact.ID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		return json.NewEncoder(w).Encode(dto.ContactResponseDTO{
-			ID:         contact.ID,
-			GlobalName: "", // This would be populated when fetching contacts via GetContacts
-			DP:         nil,
-			Bio:        "",
-			UserID:     contact.UserIDInContact,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusCreated,
+			Body: dto.ContactResponseDTO{
+				ID:         contact.ID,
+				GlobalName: "", // This would be populated when fetching contacts via GetContacts
+				DP:         nil,
+				Bio:        "",
+				UserID:     contact.UserIDInContact,
+			},
+		}, nil
 	}
 }
 
 func getContactsController(contactService service.IContactService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get contacts handler called")
 
@@ -71,7 +72,7 @@ func getContactsController(contactService service.IContactService) gtk.Controlle
 		contacts, err := contactService.GetContacts(r.Context(), userIDInt)
 		if err != nil {
 			log.Error("failed to get contacts", zap.Int64("user_id", userIDInt), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("contacts retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int("contact_count", len(contacts)))
@@ -88,7 +89,9 @@ func getContactsController(contactService service.IContactService) gtk.Controlle
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(contactResponses)
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       contactResponses,
+		}, nil
 	}
 }

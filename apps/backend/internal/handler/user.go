@@ -25,14 +25,14 @@ func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userServic
 
 // getUserMeController returns the authenticated user's auth details
 func getUserMeController(userService service.IUserService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get user me handler called")
 
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in get user me request")
-			return &gtk.UnauthorizedError{Message: "unauthorized"}
+			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		log.Debug("fetching user profile", zap.Int64("user_id", authUser.UserID), zap.String("email", authUser.Email))
@@ -40,39 +40,41 @@ func getUserMeController(userService service.IUserService) gtk.ControllerFunc {
 		userProfile, err := userService.GetUserProfile(r.Context(), authUser.UserID)
 		if err != nil {
 			log.Error("failed to get user profile", zap.Int64("user_id", authUser.UserID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("user profile retrieved successfully", zap.Int64("user_id", authUser.UserID))
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
-			ID:         authUser.UserID,
-			Email:      authUser.Email,
-			Username:   authUser.Username,
-			GlobalName: userProfile.GlobalName,
-			DP:         userProfile.DP,
-			Bio:        userProfile.Bio,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: dto.AuthUserResponseDTO{
+				ID:         authUser.UserID,
+				Email:      authUser.Email,
+				Username:   authUser.Username,
+				GlobalName: userProfile.GlobalName,
+				DP:         userProfile.DP,
+				Bio:        userProfile.Bio,
+			},
+		}, nil
 	}
 }
 
 // updateUserMeController updates the authenticated user's profile
 func updateUserMeController(userService service.IUserService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("update user me handler called")
 
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in update user me request")
-			return &gtk.UnauthorizedError{Message: "unauthorized"}
+			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		var req dto.UpdateUserRequestDTO
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Warn("invalid request body in update user me", zap.Error(err))
-			return &gtk.ValidationError{Message: "invalid request body"}
+			return nil, &gtk.ValidationError{Message: "invalid request body"}
 		}
 
 		log.Debug("updating user profile", zap.Int64("user_id", authUser.UserID))
@@ -81,35 +83,38 @@ func updateUserMeController(userService service.IUserService) gtk.ControllerFunc
 		updatedProfile, err := userService.UpdateUserProfile(r.Context(), authUser.UserID, req.GlobalName, req.Bio, req.DP)
 		if err != nil {
 			log.Error("failed to update user profile", zap.Int64("user_id", authUser.UserID), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Info("user profile updated successfully", zap.Int64("user_id", authUser.UserID))
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		return json.NewEncoder(w).Encode(dto.AuthUserResponseDTO{
-			ID:         authUser.UserID,
-			Email:      authUser.Email,
-			Username:   authUser.Username,
-			GlobalName: updatedProfile.GlobalName,
-			DP:         updatedProfile.DP,
-			Bio:        updatedProfile.Bio,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: dto.AuthUserResponseDTO{
+				ID:         authUser.UserID,
+				Email:      authUser.Email,
+				Username:   authUser.Username,
+				GlobalName: updatedProfile.GlobalName,
+				DP:         updatedProfile.DP,
+				Bio:        updatedProfile.Bio,
+			},
+		}, nil
 	}
 }
 
 // searchUserProfilesController searches for user profiles
 func searchUserProfilesController(userService service.IUserService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("search user profiles handler called")
 
 		query := r.URL.Query().Get("q")
 		if query == "" {
 			log.Debug("empty search query, returning empty results")
-			w.Header().Set("Content-Type", "application/json")
-			return json.NewEncoder(w).Encode([]any{})
+			return &gtk.ControllerResponse{
+				StatusCode: http.StatusOK,
+				Body:       []dto.UserProfileResponseDTO{},
+			}, nil
 		}
 
 		log.Debug("searching user profiles", zap.String("query", query))
@@ -117,7 +122,7 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 		userProfiles, err := userService.SearchUserProfiles(r.Context(), query)
 		if err != nil {
 			log.Error("failed to search user profiles", zap.String("query", query), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("user profiles search completed", zap.String("query", query), zap.Int("result_count", len(userProfiles)))
@@ -133,14 +138,16 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(profileResponses)
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       profileResponses,
+		}, nil
 	}
 }
 
 // getUserProfileByIDController retrieves a user profile by ID
 func getUserProfileByIDController(userService service.IUserService) gtk.ControllerFunc {
-	return func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
 		log.Debug("get user profile by id handler called")
 
@@ -148,13 +155,13 @@ func getUserProfileByIDController(userService service.IUserService) gtk.Controll
 		id, err := strconv.ParseInt(vars["id"], 10, 64)
 		if err != nil {
 			log.Warn("invalid user id in get profile request", zap.String("id_str", vars["id"]))
-			return &gtk.ValidationError{Message: "invalid user id"}
+			return nil, &gtk.ValidationError{Message: "invalid user id"}
 		}
 
 		authUser := middleware.GetAuthUserFromContext(r)
 		if authUser == nil {
 			log.Warn("user not authenticated in get user profile request")
-			return &gtk.UnauthorizedError{Message: "unauthorized"}
+			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
 		log.Debug("fetching user profile", zap.Int64("requested_user_id", id), zap.Int64("auth_user_id", authUser.UserID))
@@ -162,7 +169,7 @@ func getUserProfileByIDController(userService service.IUserService) gtk.Controll
 		userProfile, contact, err := userService.GetUserProfileWithContact(r.Context(), authUser.UserID, id)
 		if err != nil {
 			log.Error("failed to get user profile", zap.Int64("requested_user_id", id), zap.Error(err))
-			return err
+			return nil, err
 		}
 
 		log.Debug("user profile retrieved successfully", zap.Int64("requested_user_id", id), zap.Bool("is_contact", contact != nil))
@@ -175,13 +182,15 @@ func getUserProfileByIDController(userService service.IUserService) gtk.Controll
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		return json.NewEncoder(w).Encode(dto.UserProfileResponseDTO{
-			ID:         userProfile.ID,
-			GlobalName: userProfile.GlobalName,
-			DP:         userProfile.DP,
-			Bio:        userProfile.Bio,
-			Contact:    contactInfo,
-		})
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body: dto.UserProfileResponseDTO{
+				ID:         userProfile.ID,
+				GlobalName: userProfile.GlobalName,
+				DP:         userProfile.DP,
+				Bio:        userProfile.Bio,
+				Contact:    contactInfo,
+			},
+		}, nil
 	}
 }

@@ -37,9 +37,11 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := createGroupController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
 }
 
 func TestGroupHandler_GetGroups(t *testing.T) {
@@ -56,7 +58,9 @@ func TestGroupHandler_GetGroups(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := getGroupsController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }

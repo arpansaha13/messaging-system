@@ -26,7 +26,9 @@ func TestUserGroupHandler_GetGroupMembers(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	controller := getGroupMembersController(mockService)
-	err := controller(w, req)
+	resp, err := controller(w, req)
 
 	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
 }
