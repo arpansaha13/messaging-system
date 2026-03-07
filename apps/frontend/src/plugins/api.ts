@@ -8,13 +8,8 @@ export default defineNuxtPlugin(nuxtApp => {
       if (import.meta.client) {
         options.credentials = 'include'
       } else {
+        // Environment variables are validated at startup, so these are guaranteed to exist
         const authCookieName = runtimeConfig.authCookieName
-        if (!authCookieName) return
-
-        const baseURL = runtimeConfig.apiBaseUrl
-        if (baseURL) {
-          options.baseURL = baseURL
-        }
 
         const headers = new Headers(options.headers)
         const token = useCookie<string | null>(authCookieName)

@@ -40,10 +40,9 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    apiBaseUrl: process.env.API_BASE_URL ?? '',
-    authCookieName: process.env.AUTH_COOKIE_NAME ?? '',
+    authCookieName: process.env.AUTH_COOKIE_NAME,
     public: {
-      csrfCookieName: process.env.CSRF_COOKIE_NAME ?? '',
+      csrfCookieName: process.env.CSRF_COOKIE_NAME,
     },
   },
 

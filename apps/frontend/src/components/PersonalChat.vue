@@ -153,4 +153,12 @@ watchEffect(() => {
 
   prevReceiverId.value = currentReceiverId
 })
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+    typingTimeout = null
+  }
+})
 </script>

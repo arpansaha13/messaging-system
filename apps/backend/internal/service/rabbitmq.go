@@ -3,9 +3,9 @@ package service
 import (
 	"encoding/json"
 
-	"github.com/sony/gobreaker/v2"
 	"github.com/arpansaha13/gotoolkit"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 )
 
@@ -59,27 +59,14 @@ type RabbitMQService struct {
 	cb      *gobreaker.CircuitBreaker[any]
 }
 
-// NewRabbitMQService creates a new RabbitMQ service with injected connection and channel
-func NewRabbitMQService(conn *amqp.Connection, channel *amqp.Channel, cb *gobreaker.CircuitBreaker[any]) (*RabbitMQService, error) {
-	service := &RabbitMQService{
-		conn:    conn,
-		channel: channel,
-		logger:  zap.L(),
+// NewRabbitMQService creates a new RabbitMQ service with injected logger and circuit breaker
+func NewRabbitMQService(logger *zap.Logger, cb *gobreaker.CircuitBreaker[any]) *RabbitMQService {
+	return &RabbitMQService{
+		conn:    nil,
+		channel: nil,
+		logger:  logger,
 		cb:      cb,
 	}
-
-	// Skip exchange declaration if connection is nil (test scenarios)
-	if conn == nil {
-		return service, nil
-	}
-
-	// Declare exchanges
-	if err := service.declareExchanges(); err != nil {
-		zap.L().Error("failed to declare exchanges", zap.Error(err))
-		return nil, err
-	}
-
-	return service, nil
 }
 
 // declareExchanges declares the required exchanges
@@ -111,6 +98,34 @@ func (r *RabbitMQService) declareExchanges() error {
 	}
 
 	return nil
+}
+
+// SetConnection sets the connection and performs initial setup (exchange declaration)
+func (r *RabbitMQService) SetConnection(conn *amqp.Connection) error {
+	r.conn = conn
+
+	// Create channel from the connection
+	ch, err := conn.Channel()
+	if err != nil {
+		r.logger.Error("failed to open RabbitMQ channel", zap.Error(err))
+		return err
+	}
+
+	r.channel = ch
+
+	// Declare exchanges
+	if err := r.declareExchanges(); err != nil {
+		r.logger.Error("failed to declare exchanges", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+// UnsetConnection clears the connection and channel
+func (r *RabbitMQService) UnsetConnection() {
+	r.conn = nil
+	r.channel = nil
 }
 
 // PublishToIncoming publishes a message to the incoming exchange

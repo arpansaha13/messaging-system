@@ -62,3 +62,7 @@ data
 
 # Nuxt fonts
 .data
+
+# Other
+temp
+.serena
