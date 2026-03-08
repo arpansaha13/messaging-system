@@ -38,7 +38,7 @@ services:
 
   auth:
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
-    container_name: auth_system_prod
+    container_name: auth_prod
     labels:
       service_name: "auth"
     logging:
@@ -155,9 +155,8 @@ services:
     container_name: frontend_prod
     environment:
       ENVIRONMENT: production
-      API_BASE_URL: ${API_BASE_URL}
-      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
-      CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      NUXT_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
     depends_on:
@@ -167,7 +166,7 @@ services:
 
   memcached:
     image: memcached:1.6.40-alpine
-    container_name: memcached
+    container_name: memcached_prod
     networks:
       - messaging-network
 
@@ -177,8 +176,8 @@ services:
     ports:
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 10s
@@ -217,7 +216,7 @@ services:
 
   kafka:
     image: apache/kafka:3.9.2
-    container_name: kafka
+    container_name: kafka_prod
     # ports:
     #   - "7070:9092"
     environment:
@@ -247,7 +246,7 @@ services:
 
   init-kafka:
     image: apache/kafka:3.9.2
-    container_name: init-kafka
+    container_name: init-kafka_prod
     depends_on:
       - kafka
     entrypoint: ["/bin/sh", "-c"]

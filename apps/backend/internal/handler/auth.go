@@ -13,6 +13,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)
@@ -135,7 +136,7 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 			Path:     "/",
 			MaxAge:   maxAge,
 			HttpOnly: true,
-			Secure:   true,
+			Secure:   cfg.Environment == constants.EnvProduction,
 			SameSite: http.SameSiteLaxMode, // Using Lax instead of Strict for CORS compatibility
 		})
 
@@ -195,6 +196,8 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 
 		// Get auth cookie name from environment or use default
 		authCookieName := "auth_token"
+		verifyCfg, verifyCfgErr := config.Load()
+		verifySecure := verifyCfgErr == nil && verifyCfg.Environment == constants.EnvProduction
 
 		// Set session token as HttpOnly Secure cookie
 		http.SetCookie(w, &http.Cookie{
@@ -203,7 +206,7 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 			Path:     "/",
 			MaxAge:   30 * 60, // 30 minutes
 			HttpOnly: true,
-			Secure:   true,
+			Secure:   verifySecure,
 			SameSite: http.SameSiteLaxMode,
 		})
 
@@ -259,7 +262,7 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 			Path:     "/",
 			MaxAge:   -1,
 			HttpOnly: true,
-			Secure:   true,
+			Secure:   cfg.Environment == constants.EnvProduction,
 			SameSite: http.SameSiteLaxMode,
 		})
 

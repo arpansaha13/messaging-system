@@ -40,9 +40,9 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    authCookieName: process.env.AUTH_COOKIE_NAME,
+    authCookieName: '',
     public: {
-      csrfCookieName: process.env.CSRF_COOKIE_NAME,
+      csrfCookieName: '',
     },
   },
 

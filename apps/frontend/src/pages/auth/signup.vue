@@ -2,6 +2,7 @@
   <UPageCard class="w-full max-w-md">
     <UAuthForm
       ref="authForm"
+	  data-testid="signup-form"
       :schema="signupSchema"
       :fields="signupFields"
       :validate="validateSignup"

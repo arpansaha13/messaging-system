@@ -1,0 +1,266 @@
+# compose.test.yaml — E2E test stack
+#
+# Runs all functional services needed for Playwright E2E tests.
+# Excludes the logging stack (Kafka, Loki, Alloy, Grafana, Fluent-bit).
+#
+# Images are pre-built via compose.build.yaml — no inline builds here.
+# See docs/e2e-image-strategy.md for the full strategy.
+#
+# nginx provides a single HTTP-only origin at :7500 for Playwright.
+# It proxies /api/* → backend, /socket.io/* → socket, /* → frontend.
+#
+# Usage:
+#   docker compose -f compose.build.yaml build nginx auth backend socket frontend chat-worker
+#   docker compose -f compose.test.yaml up -d --wait
+#   pnpm exec playwright test --config=tests/e2e/playwright.config.ts
+#   docker compose -f compose.test.yaml down -v
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Nginx — HTTP-only reverse proxy (no TLS) for unified origin
+  # Playwright connects to http://localhost:7500
+  # nginx.test.conf is volume-mounted to override the baked-in production config
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx_test
+    ports:
+      - "7500:80"
+    volumes:
+      - ./apps/nginx/nginx.test.conf:/etc/nginx/nginx.conf
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+      socket:
+        condition: service_started
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Auth service database
+  # Exposed on :7511 so global-setup.ts can query OTP codes directly
+  # ---------------------------------------------------------------------------
+  auth-db:
+    image: postgres:16-alpine
+    container_name: auth-db_test
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: auth_test_db
+    ports:
+      - "7511:5432"
+    volumes:
+      - ./data/test/auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - messaging-test-network
+
+  # Messaging DB exposed on :7521 for test data verification if needed
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres_test
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: messaging_test_db
+    ports:
+      - "7521:5432"
+    volumes:
+      - ./data/test/default:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # RabbitMQ — shared by backend, socket, chat-worker
+  # Management UI on :7551 for debugging
+  # ---------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:4.2.2-management-alpine
+    container_name: rabbitmq_test
+    ports:
+      - "7551:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - ./data/test/rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Memcached — online/offline presence
+  # ---------------------------------------------------------------------------
+  memcached:
+    image: memcached:1.6.40-alpine
+    container_name: memcached_test
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Auth gRPC service
+  # Uses MockEmailProvider (ENVIRONMENT != production) — OTP is stored in DB
+  # only, not sent. global-setup.ts reads OTP from auth-db directly.
+  # ---------------------------------------------------------------------------
+  auth:
+    image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
+    container_name: auth_test
+    environment:
+      ENVIRONMENT: test
+      DATABASE_URL: postgres://testuser:testpass@auth-db:5432/auth_test_db?sslmode=disable
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50051
+      SESSION_TTL_MINUTES: 30
+      SESSION_CLEANUP_INTERVAL_MINUTES: 5
+      SECRET_KEY: test-secret-key-32-chars-minimum!
+      JWT_SECRET: test-jwt-secret-key-for-e2e-tests
+      SMTP_HOST: localhost
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      EMAIL_FROM: noreply@test.local
+      # Short OTP expiry enables expired-OTP test case (S-06)
+      OTP_EXPIRY_MINUTES: 1
+      OTP_LENGTH: 6
+      EMAIL_WORKER_POOL_SIZE: 2
+      EMAIL_TASK_QUEUE_SIZE: 10
+      LOG_LEVEL: info
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    expose:
+      - "50051"
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Backend REST API
+  # Exposed on :7530 so global-setup.ts can call /api/auth/signup etc. directly
+  # without going through nginx (useful in setup before nginx is verified ready)
+  # ---------------------------------------------------------------------------
+  backend:
+    image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
+    container_name: backend_test
+    environment:
+      ENVIRONMENT: test
+      API_PORT: 4000
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://testuser:testpass@postgres:5432/messaging_test_db?sslmode=disable
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: testuser
+      DB_PASSWORD: testpass
+      DB_NAME: messaging_test_db
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin
+      # Set Secure=false on session cookie so HTTP-only test env works.
+      # See docs/e2e-test-plan.md prerequisite P2.
+      AUTH_COOKIE_NAME: session
+      AUTH_SYSTEM_HOST: auth:50051
+      JWT_SECRET: test-jwt-secret-key-for-e2e-tests
+      SESSION_SECRET: test-session-secret-key-here
+      JWT_TOKEN_VALIDITY_SECONDS: 86400
+      OTP_VALIDATION_SECONDS: 3600
+    ports:
+      - "7530:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Socket.IO WebSocket server
+  # ---------------------------------------------------------------------------
+  socket:
+    image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
+    container_name: socket_test
+    environment:
+      ENVIRONMENT: test
+      LOG_LEVEL: info
+      PORT: 4000
+      SERVER_ID: test-server-1
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin
+      # Playwright connects from same origin (http://localhost:7500) via nginx
+      CLIENT_DOMAIN: http://localhost:7500
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Chat worker — consumes RabbitMQ worker queue, persists messages to DB
+  # ---------------------------------------------------------------------------
+  chat-worker:
+    image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
+    container_name: chat-worker_test
+    environment:
+      ENVIRONMENT: test
+      LOG_LEVEL: info
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: testuser
+      DB_PASSWORD: testpass
+      DB_NAME: messaging_test_db
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - messaging-test-network
+
+  # ---------------------------------------------------------------------------
+  # Nuxt 4 frontend — production image (cookie names set at runtime via NUXT_ vars)
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
+    container_name: frontend_test
+    environment:
+      ENVIRONMENT: test
+      NUXT_AUTH_COOKIE_NAME: session
+      NUXT_CSRF_COOKIE_NAME: ""
+      NUXT_PUBLIC_AUTH_COOKIE_NAME: session
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ""
+    depends_on:
+      - backend
+    networks:
+      - messaging-test-network
+
+networks:
+  messaging-test-network:
+    driver: bridge

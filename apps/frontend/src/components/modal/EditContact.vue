@@ -20,7 +20,7 @@
 
           <!-- Alias Input -->
           <UFormField required name="alias" label="Contact Name">
-            <UInput v-model="formState.alias" required placeholder="Enter contact name" class="w-full" />
+            <UInput v-model="formState.alias" required placeholder="Enter contact name" class="w-full" data-testid="edit-contact-alias" />
           </UFormField>
         </Uform>
       </div>
@@ -29,7 +29,7 @@
     <template #footer>
       <div class="flex gap-2 w-full">
         <UButton block variant="outline" color="neutral" label="Cancel" @click="cancel" />
-        <UButton block label="Save Changes" :loading="loading" @click="submit" />
+        <UButton block label="Save Changes" :loading="loading" data-testid="edit-contact-save" @click="submit" />
       </div>
     </template>
   </UModal>

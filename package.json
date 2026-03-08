@@ -6,9 +6,19 @@
   "type": "module",
   "private": true,
   "packageManager": "pnpm@10.26.2",
-  "license": "MIT",
   "scripts": {
-    "preinstall": "npx -y only-allow pnpm"
+    "preinstall": "npx -y only-allow pnpm",
+    "test:e2e": "./scripts/run-e2e.sh --ui --skip-migrations --no-teardown",
+    "test:e2e:build": "docker compose -f compose.build.yaml build && docker compose -f compose.test.yaml up -d && test:e2e",
+    "test:e2e:report": "playwright show-report tests/e2e/test-report",
+    "test:e2e:trace": "pnpm exec playwright show-trace tests/e2e/test-results/**/*.zip"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.11.0",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.20.0"
   },
   "engines": {
     "node": ">=22.0.0"

@@ -27,8 +27,6 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile.prod
-      args:
-        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
     image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
 
   chat-worker:

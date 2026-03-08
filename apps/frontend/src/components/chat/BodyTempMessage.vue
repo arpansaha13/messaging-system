@@ -9,7 +9,7 @@ defineProps<Props>()
 </script>
 
 <template>
-  <div class="mb-4 ml-auto w-max">
+  <div class="mb-4 ml-auto w-max" data-testid="temp-message-bubble">
     <div class="relative min-w-full space-y-1.5 rounded-lg border-b border-gray-400/50 p-2 text-sm text-gray-900 last:mb-0 bg-green-100 dark:bg-brand-800 dark:border-none dark:text-gray-100 lg:max-w-lg xl:max-w-xl">
       <p class="wrap-break-word">{{ message.content }}</p>
     </div>

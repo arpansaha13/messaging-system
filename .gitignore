@@ -9,10 +9,6 @@ node_modules
 coverage
 .nyc_output
 
-# next.js
-.next
-out
-
 # production
 build
 dist
@@ -62,6 +58,12 @@ data
 
 # Nuxt fonts
 .data
+
+# Playwright E2E
+tests/e2e/.auth/
+tests/e2e/test-results/
+tests/e2e/test-report/
+playwright-report/
 
 # Other
 temp

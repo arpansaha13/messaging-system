@@ -1,7 +1,8 @@
 <template>
   <UPageCard class="w-full max-w-md">
     <UAuthForm
-      ref="authForm"
+	  ref="authForm"
+      data-testid="login-form"
       :schema="loginSchema"
       :fields="loginFields"
       title="Welcome Back"

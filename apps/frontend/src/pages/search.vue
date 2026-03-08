@@ -10,6 +10,7 @@
             icon="i-lucide-search"
             variant="subtle"
             class="w-full"
+            data-testid="search-input"
           />
         </template>
 
@@ -25,6 +26,7 @@
             v-for="user in searchResults"
             :key="user.id"
             class="flex cursor-pointer items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            data-testid="search-result-item"
           >
             <ULink class="flex items-center gap-3" :to="{ query: { ...route.query, to: user.id } }">
               <UAvatar :src="user.dp || undefined" :alt="user.globalName" size="md" :ui="{ root: 'shadow-md' }" />
@@ -42,7 +44,7 @@
             <div v-if="!user.contact" class="shrink-0">
               <!-- Add to Contacts Modal -->
               <UModal v-model="isAddModalOpen" title="Add to Contacts">
-                <UButton size="sm" label="Add" @click="openAddModal(user)" />
+                <UButton size="sm" label="Add" data-testid="add-contact-btn" @click="openAddModal(user)" />
 
                 <template #body>
                   <div v-if="selectedUser" class="space-y-4">
@@ -66,6 +68,7 @@
                         v-model="aliasInput"
                         placeholder="Enter contact name"
                         class="w-full"
+                        data-testid="add-contact-alias"
                         @keydown.enter="submitAdd"
                       />
                     </UFormField>
@@ -75,13 +78,13 @@
                 <template #footer>
                   <div class="flex justify-end gap-2">
                     <UButton variant="outline" label="Cancel" @click="isAddModalOpen = false" />
-                    <UButton label="Add Contact" :loading="isAddingContact" @click="submitAdd" />
+                    <UButton label="Add Contact" :loading="isAddingContact" data-testid="add-contact-submit" @click="submitAdd" />
                   </div>
                 </template>
               </UModal>
             </div>
             <div v-else class="shrink-0">
-              <UBadge color="success" label="Contact" />
+              <UBadge color="success" label="Contact" data-testid="contact-badge" />
             </div>
           </li>
         </ul>
