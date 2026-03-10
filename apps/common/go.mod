@@ -2,9 +2,10 @@ module github.com/arpansaha13/messaging-system/apps/common
 
 go 1.25.6
 
-require github.com/arpansaha13/gotoolkit v0.8.2
+require github.com/arpansaha13/gotoolkit v0.8.3
 
 require (
+	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

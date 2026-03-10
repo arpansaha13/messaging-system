@@ -16,6 +16,10 @@ services:
       - frontend
     networks:
       - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/nginx/nginx.conf
 
   auth-db:
     image: postgres:16-alpine
@@ -114,7 +118,7 @@ services:
   socket:
     build:
       context: .
-      dockerfile: apps/socket/Dockerfile.dev
+      dockerfile: apps/socket-go/Dockerfile
     container_name: socket
     environment:
       ENVIRONMENT: development
@@ -137,11 +141,14 @@ services:
       - messaging-network
     develop:
       watch:
-        - action: sync
-          path: ./apps/socket/src
-          target: /app/apps/socket/src
         - action: rebuild
-          path: ./apps/socket/tsconfig.json
+          path: ./apps/socket-go/cmd
+        - action: rebuild
+          path: ./apps/socket-go/internal
+        - action: rebuild
+          path: ./apps/socket-go/go.mod
+        - action: rebuild
+          path: ./apps/socket-go/go.sum
 
   rabbitmq:
     image: rabbitmq:4.2.2-management-alpine

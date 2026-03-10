@@ -6,8 +6,10 @@ github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 h1:UQHMgLO+TxOEl
 github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/arpansaha13/gotoolkit v0.8.2 h1:r4x2/iK/vCcITzWYp+CHoaCg1sTl882D4cGY0ojWOHU=
-github.com/arpansaha13/gotoolkit v0.8.2/go.mod h1:wQw6/MAW7NKqO0SklhqTIpTgRYwBnz5EqHYu5D0cUY8=
+github.com/arpansaha13/gotoolkit v0.8.3 h1:oxyp2bUHszGC3Cfg/3bKJdPwmu8XNLTyILsicsIAZ1U=
+github.com/arpansaha13/gotoolkit v0.8.3/go.mod h1:7eB0MXY5cApaD2/VZxdj4zG++ZxCqJR1vkE22Ss4L6I=
+github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf h1:TqhNAT4zKbTdLa62d2HDBFdvgSbIGB3eJE8HqhgiL9I=
+github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf/go.mod h1:r5xuitiExdLAJ09PR7vBVENGvp4ZuTBeWTGtxuX3K+c=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
