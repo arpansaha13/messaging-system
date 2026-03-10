@@ -12,11 +12,9 @@
  * logger.error('Failed to fetch data', error)
  */
 export function useLogger(contextLabel: string) {
-  const isDev = process.env.NODE_ENV === 'development'
-
   return {
     debug: (message: string, data?: unknown) => {
-      if (isDev) {
+      if (import.meta.env.DEV) {
         console.debug(`[${contextLabel}] ${message}`, data)
       }
     },
