@@ -222,7 +222,7 @@ services:
       dockerfile: apps/frontend/Dockerfile.dev
     container_name: frontend
     environment:
-      ENVIRONMENT: development
+      NUXT_ENVIRONMENT: development
       NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
