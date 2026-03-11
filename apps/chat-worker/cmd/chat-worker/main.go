@@ -14,12 +14,8 @@ import (
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/controller"
-	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
-	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 )
 
 func main() {
@@ -55,40 +51,11 @@ func main() {
 
 	// Initialize RabbitMQ broker
 	amqpURL := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPass, cfg.RabbitMQHost, cfg.RabbitMQPort)
-	messageBroker := broker.NewRabbitMQBroker(amqpURL, cbs.RabbitMQ)
-	if err := messageBroker.Connect(rootCtx); err != nil {
-		log.Fatal("failed to connect to RabbitMQ", zap.Error(err))
-	}
-	defer messageBroker.Disconnect()
 
-	// Initialize processors
-	messageProcessor := processor.NewMessageProcessor(database, messageBroker, cbs.Postgres)
-	statusProcessor := processor.NewStatusProcessor(database, messageBroker, cbs.Postgres)
-	connectionProcessor := processor.NewConnectionProcessor(database, messageBroker, cbs.Postgres)
-
-	// Initialize event controller with dependency injection
-	eventController := controller.NewEventController(messageProcessor, statusProcessor, connectionProcessor)
-
-	// Setup worker queue consumer
-	if err := messageBroker.ConsumeWorkerQueue(func(msg *commonbr.MessagePayload, ack func()) error {
-		if err := eventController.HandleWorkerQueueEvent(rootCtx, msg); err != nil {
-			log.Error("error handling worker queue event", zap.Error(err))
-		}
-		ack()
-		return nil
-	}); err != nil {
-		log.Fatal("failed to setup worker queue consumer", zap.Error(err))
-	}
-
-	// Setup connection queue consumer
-	if err := messageBroker.ConsumeConnectionQueue(func(msg *commonbr.UserConnectionPayload, ack func()) error {
-		if err := eventController.HandleConnectionQueueEvent(rootCtx, msg); err != nil {
-			log.Error("error handling connection queue event", zap.Error(err))
-		}
-		ack()
-		return nil
-	}); err != nil {
-		log.Fatal("failed to setup connection queue consumer", zap.Error(err))
+	// Setup RabbitMQ connection manager with auto-reconnect
+	rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, cfg, log, database, amqpURL, cbs)
+	if err != nil {
+		log.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
 	log.Info("chat worker started and ready to process messages")
@@ -99,6 +66,11 @@ func main() {
 
 	<-sigChan
 	log.Info("SIGTERM received, shutting down gracefully")
+
+	// Stop RabbitMQ connection manager
+	if err := rabbitMQConnMgr.Stop(); err != nil {
+		log.Error("error stopping rabbitmq connection manager", zap.Error(err))
+	}
 
 	// Close database
 	sqlDB, err := database.DB()

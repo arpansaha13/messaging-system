@@ -4,7 +4,7 @@ go 1.25.6
 
 require (
 	github.com/arpansaha13/goauthkit v0.2.9
-	github.com/arpansaha13/gotoolkit v0.8.3
+	github.com/arpansaha13/gotoolkit v0.9.1
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/sony/gobreaker/v2 v2.4.0
 	go.uber.org/zap v1.27.1
