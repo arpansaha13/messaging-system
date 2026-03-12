@@ -130,7 +130,7 @@ services:
       - messaging-network
 
   socket:
-    image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
+    image: europe-north1-docker.pkg.dev/chat-application-13/socket-go/ws:0.1.0
     container_name: socket_prod
     environment:
       ENVIRONMENT: production
@@ -157,6 +157,7 @@ services:
       ENVIRONMENT: production
       NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      NUXT_API_BASE_URL: ${NUXT_API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
     depends_on:

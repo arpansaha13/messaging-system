@@ -225,6 +225,7 @@ services:
       NUXT_ENVIRONMENT: development
       NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
+      NUXT_API_BASE_URL: ${NUXT_API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ${CSRF_COOKIE_NAME:-}
     depends_on:
@@ -317,9 +318,9 @@ services:
           "CMD-SHELL",
           "/opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092 || exit 1",
         ]
-      interval: 15s
-      timeout: 10s
-      retries: 3
+      interval: 20s
+      timeout: 5s
+      retries: 5
     networks:
       - messaging-network
 

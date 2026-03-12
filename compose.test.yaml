@@ -7,7 +7,7 @@
 # See docs/e2e-image-strategy.md for the full strategy.
 #
 # nginx provides a single HTTP-only origin at :7500 for Playwright.
-# It proxies /api/* → backend, /socket.io/* → socket, /* → frontend.
+# It proxies /api/* → backend, /socket/* → socket, /* → frontend.
 #
 # Usage:
 #   docker compose -f compose.build.yaml build nginx auth backend socket frontend chat-worker
@@ -16,7 +16,6 @@
 #   docker compose -f compose.test.yaml down -v
 
 services:
-
   # ---------------------------------------------------------------------------
   # Nginx — HTTP-only reverse proxy (no TLS) for unified origin
   # Playwright connects to http://localhost:7500
@@ -26,7 +25,7 @@ services:
     image: nginx:1.27-alpine
     container_name: nginx_test
     ports:
-      - "7500:80"
+      - '7500:80'
     volumes:
       - ./apps/nginx/nginx.test.conf:/etc/nginx/nginx.conf
     depends_on:
@@ -51,11 +50,11 @@ services:
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: auth_test_db
     ports:
-      - "7511:5432"
+      - '7511:5432'
     volumes:
       - ./data/test/auth:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      test: ['CMD-SHELL', 'pg_isready -U testuser']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -71,11 +70,11 @@ services:
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: messaging_test_db
     ports:
-      - "7521:5432"
+      - '7521:5432'
     volumes:
       - ./data/test/default:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U testuser"]
+      test: ['CMD-SHELL', 'pg_isready -U testuser']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -90,14 +89,14 @@ services:
     image: rabbitmq:4.2.2-management-alpine
     container_name: rabbitmq_test
     ports:
-      - "7551:15672"
+      - '7551:15672'
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
     volumes:
       - ./data/test/rabbitmq:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      test: ['CMD-SHELL', 'rabbitmq-diagnostics -q ping']
       interval: 10s
       timeout: 5s
       retries: 10
@@ -132,8 +131,8 @@ services:
       JWT_SECRET: test-jwt-secret-key-for-e2e-tests
       SMTP_HOST: localhost
       SMTP_PORT: 1025
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
+      SMTP_USER: ''
+      SMTP_PASSWORD: ''
       EMAIL_FROM: noreply@test.local
       # Short OTP expiry enables expired-OTP test case (S-06)
       OTP_EXPIRY_MINUTES: 1
@@ -145,7 +144,7 @@ services:
       auth-db:
         condition: service_healthy
     expose:
-      - "50051"
+      - '50051'
     networks:
       - messaging-test-network
 
@@ -180,7 +179,7 @@ services:
       JWT_TOKEN_VALIDITY_SECONDS: 86400
       OTP_VALIDATION_SECONDS: 3600
     ports:
-      - "7530:4000"
+      - '7530:4000'
     depends_on:
       postgres:
         condition: service_healthy
@@ -192,10 +191,10 @@ services:
       - messaging-test-network
 
   # ---------------------------------------------------------------------------
-  # Socket.IO WebSocket server
+  # Go WebSocket server
   # ---------------------------------------------------------------------------
   socket:
-    image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
+    image: europe-north1-docker.pkg.dev/chat-application-13/socket-go/ws:0.1.0
     container_name: socket_test
     environment:
       ENVIRONMENT: test
@@ -253,9 +252,10 @@ services:
     environment:
       ENVIRONMENT: test
       NUXT_AUTH_COOKIE_NAME: session
-      NUXT_CSRF_COOKIE_NAME: ""
+      NUXT_CSRF_COOKIE_NAME: ''
+      NUXT_API_BASE_URL: ${NUXT_API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: session
-      NUXT_PUBLIC_CSRF_COOKIE_NAME: ""
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ''
     depends_on:
       - backend
     networks:
