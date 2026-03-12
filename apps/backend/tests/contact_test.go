@@ -34,7 +34,8 @@ func (s *ContactTestSuite) TestAddContact() {
 			},
 			Test: func(f *TestFixture) error {
 				req := map[string]any{
-					"contact_id": int64(3002),
+					"userIdToAdd": int64(3002),
+					"alias":       "User B",
 				}
 
 				resp, err := f.HTTPClient.POST("/api/contacts", req)
@@ -61,7 +62,8 @@ func (s *ContactTestSuite) TestAddContact() {
 			},
 			Test: func(f *TestFixture) error {
 				req := map[string]any{
-					"contact_id": int64(99999),
+					"userIdToAdd": int64(99999),
+					"alias":       "Missing",
 				}
 
 				resp, err := f.HTTPClient.POST("/api/contacts", req)

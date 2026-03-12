@@ -142,6 +142,13 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 			mockService := tt.mockFunc()
 
 			req := httptest.NewRequest(http.MethodGet, "/api/users/search?q="+tt.query, nil)
+			ctx := context.WithValue(req.Context(), middleware.AuthUserContextKey, &domain.AuthUser{
+				UserID:   1,
+				Email:    "test@example.com",
+				Username: "testuser",
+				Verified: true,
+			})
+			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 
 			controller := searchUserProfilesController(mockService)

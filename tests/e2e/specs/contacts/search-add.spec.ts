@@ -70,7 +70,9 @@ test.describe('Search & Add Contacts', () => {
     await alicePage.getByTestId('add-contact-alias').fill('My Bob')
     await alicePage.getByTestId('add-contact-submit').click()
 
-    await expect(alicePage.getByText(/added to your contacts/i)).toBeVisible({ timeout: 5_000 })
+    await expect(alicePage.getByText('Bob has been added to your contacts', { exact: true })).toBeVisible({
+      timeout: 5_000,
+    })
 
     // Navigate to contacts — alias appears
     await alicePage.goto('/contacts')

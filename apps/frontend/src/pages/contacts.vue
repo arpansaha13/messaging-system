@@ -55,13 +55,17 @@
                       size="sm"
                       variant="ghost"
                       icon="i-lucide-edit-2"
+                      aria-label="Edit contact"
+                      data-testid="edit-contact-btn"
                       @click.stop.prevent="handleEditContact(contact)"
                     />
                     <UButton
                       size="sm"
                       variant="ghost"
                       icon="i-lucide-trash-2"
-                      color="red"
+                      color="error"
+                      aria-label="Delete contact"
+                      data-testid="delete-contact-btn"
                       @click.stop.prevent="handleDeleteContact(contact)"
                     />
                   </div>

@@ -33,16 +33,17 @@ func TestContactHandler_AddContact(t *testing.T) {
 			name:   "successful add contact",
 			userID: 1,
 			requestBody: &dto.AddContactRequestDTO{
-				UserIDInContact: 2,
+				UserIDToAdd: 2,
+				Alias:       "Friend",
 			},
 			mockFunc: func() *mocks.MockContactService {
 				return &mocks.MockContactService{
-					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64) (*domain.Contact, error) {
+					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error) {
 						return &domain.Contact{
 							ID:              1,
 							UserID:          userID,
 							UserIDInContact: userIDInContact,
-							Alias:           "",
+							Alias:           alias,
 						}, nil
 					},
 				}
@@ -58,11 +59,11 @@ func TestContactHandler_AddContact(t *testing.T) {
 			name:   "user not found error",
 			userID: 1,
 			requestBody: &dto.AddContactRequestDTO{
-				UserIDInContact: 999,
+				UserIDToAdd: 999,
 			},
 			mockFunc: func() *mocks.MockContactService {
 				return &mocks.MockContactService{
-					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64) (*domain.Contact, error) {
+					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error) {
 						return nil, &gtk.NotFoundError{Message: "user not found"}
 					},
 				}

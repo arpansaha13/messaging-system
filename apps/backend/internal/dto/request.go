@@ -89,7 +89,13 @@ type CreateChannelRequestDTO struct {
 
 // AddContactRequestDTO represents an add contact request
 type AddContactRequestDTO struct {
-	UserIDInContact int64 `json:"contact_id"`
+	UserIDToAdd int64  `json:"userIdToAdd"`
+	Alias       string `json:"alias"`
+}
+
+// UpdateContactAliasRequestDTO represents an update contact alias request
+type UpdateContactAliasRequestDTO struct {
+	NewAlias string `json:"new_alias"`
 }
 
 // UserGroup Request DTOs

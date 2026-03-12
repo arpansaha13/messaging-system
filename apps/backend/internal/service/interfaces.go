@@ -29,8 +29,10 @@ type IUserService interface {
 
 // ContactService defines the interface for contact service operations
 type IContactService interface {
-	AddContact(ctx context.Context, userID, userIDInContact int64) (*domain.Contact, error)
+	AddContact(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error)
 	GetContacts(ctx context.Context, userID int64) ([]*repository.ContactWithUserInfo, error)
+	UpdateContactAlias(ctx context.Context, userID, contactID int64, alias string) (*domain.Contact, error)
+	DeleteContact(ctx context.Context, userID, contactID int64) error
 }
 
 // ChatService defines the interface for chat service operations

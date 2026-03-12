@@ -119,6 +119,13 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 
 		log.Debug("searching user profiles", zap.String("query", query))
 
+		// TODO: Why is auth middleware not catching this unauthorized error?
+		authUser := middleware.GetAuthUserFromContext(r)
+		if authUser == nil {
+			log.Warn("user not authenticated in search user profiles request")
+			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
+		}
+
 		userProfiles, err := userService.SearchUserProfiles(r.Context(), query)
 		if err != nil {
 			log.Error("failed to search user profiles", zap.String("query", query), zap.Error(err))
@@ -129,12 +136,26 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 
 		profileResponses := make([]dto.UserProfileResponseDTO, len(userProfiles))
 		for i, profile := range userProfiles {
+			_, contact, err := userService.GetUserProfileWithContact(r.Context(), authUser.UserID, profile.ID)
+			if err != nil {
+				log.Error("failed to resolve contact info", zap.Int64("profile_id", profile.ID), zap.Error(err))
+				return nil, err
+			}
+
+			var contactInfo *dto.ContactInfoDTO
+			if contact != nil {
+				contactInfo = &dto.ContactInfoDTO{
+					ID:    contact.ID,
+					Alias: contact.Alias,
+				}
+			}
+
 			profileResponses[i] = dto.UserProfileResponseDTO{
 				ID:         profile.ID,
 				GlobalName: profile.GlobalName,
 				DP:         profile.DP,
 				Bio:        profile.Bio,
-				Contact:    nil,
+				Contact:    contactInfo,
 			}
 		}
 

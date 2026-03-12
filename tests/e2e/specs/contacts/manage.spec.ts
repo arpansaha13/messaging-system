@@ -44,7 +44,7 @@ test.describe('Contacts — Manage', () => {
 
     await alicePage.getByTestId('delete-contact-confirm').click()
 
-    await expect(alicePage.getByText('Bob')).not.toBeVisible({ timeout: 5_000 })
+    await expect(alicePage.getByRole('heading', { name: 'No contacts' })).toBeVisible({ timeout: 5_000 })
   })
 
   test('M-03 cancel delete keeps contact in list', async ({ alicePage }) => {

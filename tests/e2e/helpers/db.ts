@@ -64,3 +64,16 @@ export async function userExists(email: string): Promise<boolean> {
     await client.end()
   }
 }
+
+/**
+ * Clears contacts to keep E2E runs isolated.
+ */
+export async function clearContacts(): Promise<void> {
+  const messagingClient = new pg.Client({ connectionString: MESSAGING_DB_URL })
+  await messagingClient.connect()
+  try {
+    await messagingClient.query('DELETE FROM contacts')
+  } finally {
+    await messagingClient.end()
+  }
+}

@@ -12,10 +12,13 @@ export default defineNuxtPlugin(() => {
   const runtimeConfig = useRuntimeConfig()
 
   // Define required environment variables
-  const requiredEnvVars = [{ key: 'authCookieName', displayName: 'AUTH_COOKIE_NAME' }] as const
+  const requiredEnvVars = [
+    { key: 'authCookieName', displayName: 'NUXT_AUTH_COOKIE_NAME' },
+    { key: 'apiBaseUrl', displayName: 'NUXT_API_BASE_URL' },
+  ] as const
 
   const requiredPublicEnvVars = [
-    // { key: 'csrfCookieName', displayName: 'CSRF_COOKIE_NAME' },
+    // { key: 'csrfCookieName', displayName: 'NUXT_CSRF_COOKIE_NAME' },
   ] as const
 
   const missingPrivateVars: string[] = []

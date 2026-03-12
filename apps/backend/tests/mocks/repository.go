@@ -59,6 +59,7 @@ type MockContactRepository struct {
 	GetAllFunc                 func(ctx context.Context, userID int64) ([]*domain.Contact, error)
 	DeleteFunc                 func(ctx context.Context, contactID int64) error
 	ExistsFunc                 func(ctx context.Context, userID, contactID int64) (bool, error)
+	UpdateAliasFunc            func(ctx context.Context, contactID int64, alias string) error
 	GetContactWithUserInfoFunc func(ctx context.Context, userID int64) (any, error)
 	GetByIDFunc                func(ctx context.Context, contactID int64) (*domain.Contact, error)
 	GetUserContactsFunc        func(ctx context.Context, userID int64) ([]*repository.ContactWithUserInfo, error)
@@ -97,6 +98,13 @@ func (m *MockContactRepository) Exists(ctx context.Context, userID, contactID in
 		return m.ExistsFunc(ctx, userID, contactID)
 	}
 	return false, nil
+}
+
+func (m *MockContactRepository) UpdateAlias(ctx context.Context, contactID int64, alias string) error {
+	if m.UpdateAliasFunc != nil {
+		return m.UpdateAliasFunc(ctx, contactID, alias)
+	}
+	return nil
 }
 
 func (m *MockContactRepository) GetAllWithUserInfo(ctx context.Context, userID int64) (any, error) {

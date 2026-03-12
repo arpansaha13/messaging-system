@@ -8,8 +8,12 @@ export default defineConfig({
   timeout: 90_000,
   retries: 1,
   fullyParallel: false,
-  workers: 1,
-  reporter: [['html', { outputFolder: 'test-report', open: 'never' }], ['list']],
+  workers: 3,
+  reporter: [
+    ['html', { outputFolder: 'test-report', open: 'never' }],
+    ['json', { outputFile: 'test-results/results.json' }],
+    ['list'],
+  ],
   use: {
     baseURL: 'http://localhost:7500',
     trace: 'on-first-retry',

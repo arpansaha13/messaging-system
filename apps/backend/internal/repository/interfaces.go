@@ -22,6 +22,7 @@ type IContactRepository interface {
 	GetByID(ctx context.Context, contactID int64) (*domain.Contact, error)
 	GetUserContacts(ctx context.Context, userID int64) ([]*ContactWithUserInfo, error)
 	Exists(ctx context.Context, userID, contactID int64) (bool, error)
+	UpdateAlias(ctx context.Context, contactID int64, alias string) error
 	Delete(ctx context.Context, contactID int64) error
 	GetContactByUserIds(ctx context.Context, userID, contactUserID int64) (*domain.Contact, error)
 }

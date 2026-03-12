@@ -19,6 +19,7 @@ func TestContactServiceAddContact(t *testing.T) {
 		name              string
 		userID            int64
 		userIDInContact   int64
+		alias             string
 		mockContactRepo   func() *mocks.MockContactRepository
 		mockUserRepo      func() *mocks.MockUserRepository
 		expectedError     bool
@@ -29,6 +30,7 @@ func TestContactServiceAddContact(t *testing.T) {
 			name:            "successful add contact",
 			userID:          1,
 			userIDInContact: 2,
+			alias:           "Friend 2",
 			mockContactRepo: func() *mocks.MockContactRepository {
 				return &mocks.MockContactRepository{
 					CreateFunc: func(ctx context.Context, contact *domain.Contact) error {
@@ -52,12 +54,14 @@ func TestContactServiceAddContact(t *testing.T) {
 				assert.NotNil(t, contact)
 				assert.Equal(t, int64(1), contact.UserID)
 				assert.Equal(t, int64(2), contact.UserIDInContact)
+				assert.Equal(t, "Friend 2", contact.Alias)
 			},
 		},
 		{
 			name:            "contact user not found",
 			userID:          1,
 			userIDInContact: 999,
+			alias:           "Missing",
 			mockContactRepo: func() *mocks.MockContactRepository {
 				return &mocks.MockContactRepository{}
 			},
@@ -78,7 +82,7 @@ func TestContactServiceAddContact(t *testing.T) {
 			mockUserRepo := tt.mockUserRepo()
 			svc := service.NewContactService(mockContactRepo, mockUserRepo)
 
-			contact, err := svc.AddContact(context.Background(), tt.userID, tt.userIDInContact)
+			contact, err := svc.AddContact(context.Background(), tt.userID, tt.userIDInContact, tt.alias)
 
 			if tt.expectedError {
 				assert.Error(t, err)

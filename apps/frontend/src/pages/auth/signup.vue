@@ -61,7 +61,6 @@ const signupFields: AuthFormField[] = [
     placeholder: 'Enter your name',
     required: true,
     minlength: 1,
-    maxlength: 20,
   },
   {
     name: 'password',

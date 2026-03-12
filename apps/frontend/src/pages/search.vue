@@ -78,7 +78,12 @@
                 <template #footer>
                   <div class="flex justify-end gap-2">
                     <UButton variant="outline" label="Cancel" @click="isAddModalOpen = false" />
-                    <UButton label="Add Contact" :loading="isAddingContact" data-testid="add-contact-submit" @click="submitAdd" />
+                    <UButton
+                      label="Add Contact"
+                      :loading="isAddingContact"
+                      data-testid="add-contact-submit"
+                      @click="submitAdd"
+                    />
                   </div>
                 </template>
               </UModal>
@@ -183,6 +188,7 @@ async function submitAdd() {
     isAddModalOpen.value = false
     selectedUser.value = null
     aliasInput.value = ''
+    await refreshNuxtData(asyncKeys.contacts)
     // Refetch search results to update contact status
     await refreshNuxtData('search:users')
   } catch (error: any) {

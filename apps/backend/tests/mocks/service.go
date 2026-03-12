@@ -10,13 +10,15 @@ import (
 
 // MockContactService is a mock implementation of IContactService
 type MockContactService struct {
-	AddContactFunc  func(ctx context.Context, userID, userIDInContact int64) (*domain.Contact, error)
-	GetContactsFunc func(ctx context.Context, userID int64) ([]*repository.ContactWithUserInfo, error)
+	AddContactFunc         func(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error)
+	GetContactsFunc        func(ctx context.Context, userID int64) ([]*repository.ContactWithUserInfo, error)
+	UpdateContactAliasFunc func(ctx context.Context, userID, contactID int64, alias string) (*domain.Contact, error)
+	DeleteContactFunc      func(ctx context.Context, userID, contactID int64) error
 }
 
-func (m *MockContactService) AddContact(ctx context.Context, userID, userIDInContact int64) (*domain.Contact, error) {
+func (m *MockContactService) AddContact(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error) {
 	if m.AddContactFunc != nil {
-		return m.AddContactFunc(ctx, userID, userIDInContact)
+		return m.AddContactFunc(ctx, userID, userIDInContact, alias)
 	}
 	return nil, nil
 }
@@ -26,6 +28,20 @@ func (m *MockContactService) GetContacts(ctx context.Context, userID int64) ([]*
 		return m.GetContactsFunc(ctx, userID)
 	}
 	return nil, nil
+}
+
+func (m *MockContactService) UpdateContactAlias(ctx context.Context, userID, contactID int64, alias string) (*domain.Contact, error) {
+	if m.UpdateContactAliasFunc != nil {
+		return m.UpdateContactAliasFunc(ctx, userID, contactID, alias)
+	}
+	return nil, nil
+}
+
+func (m *MockContactService) DeleteContact(ctx context.Context, userID, contactID int64) error {
+	if m.DeleteContactFunc != nil {
+		return m.DeleteContactFunc(ctx, userID, contactID)
+	}
+	return nil
 }
 
 // MockGroupService is a mock implementation of IGroupService

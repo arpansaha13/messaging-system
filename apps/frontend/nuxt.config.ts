@@ -41,6 +41,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     authCookieName: '',
+    apiBaseUrl: '',
     public: {
       environment: '',
       csrfCookieName: '',

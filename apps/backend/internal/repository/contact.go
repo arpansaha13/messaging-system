@@ -95,7 +95,7 @@ func (r *ContactRepository) Exists(ctx context.Context, userID, contactID int64)
 		var count int64
 		err := r.db.WithContext(ctx).
 			Model(&domain.Contact{}).
-			Where("user_id = ? AND contact_id = ?", userID, contactID).
+			Where("user_id = ? AND user_id_in_contact = ?", userID, contactID).
 			Count(&count).Error
 		if err != nil {
 			return nil, err
@@ -107,6 +107,30 @@ func (r *ContactRepository) Exists(ctx context.Context, userID, contactID int64)
 		return false, &gotoolkit.InternalError{Message: "failed to check contact", Err: err}
 	}
 	return result.(bool), nil
+}
+
+// UpdateAlias updates a contact alias
+func (r *ContactRepository) UpdateAlias(ctx context.Context, contactID int64, alias string) error {
+	_, err := r.cb.Execute(func() (any, error) {
+		result := r.db.WithContext(ctx).
+			Model(&domain.Contact{}).
+			Where("id = ?", contactID).
+			Update("alias", alias)
+		if result.Error != nil {
+			return nil, result.Error
+		}
+		if result.RowsAffected == 0 {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, nil
+	})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return &gotoolkit.NotFoundError{Message: "contact not found"}
+		}
+		return &gotoolkit.InternalError{Message: "failed to update contact alias", Err: err}
+	}
+	return nil
 }
 
 // Delete deletes a contact

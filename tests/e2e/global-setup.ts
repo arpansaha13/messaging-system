@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import bcrypt from 'bcryptjs'
 import * as api from './helpers/api'
-import { seedTestUser, userExists } from './helpers/db'
+import { clearContacts, seedTestUser, userExists } from './helpers/db'
 import { getDirname } from './helpers/dirname'
 import { TEST_USERS, type TestUserKey } from './fixtures/users'
 
@@ -15,6 +15,8 @@ export default async function globalSetup() {
   await fs.mkdir(AUTH_DIR, { recursive: true })
 
   await waitForBackend()
+  await clearContacts()
+  console.log('[global-setup] Cleared contacts')
 
   const userIds: Record<string, number> = {}
 
