@@ -165,9 +165,9 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
-      interval: 10s
+      interval: 20s
       timeout: 5s
-      retries: 5
+      retries: 10
     networks:
       - messaging-network
 
