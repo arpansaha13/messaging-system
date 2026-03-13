@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
 import { waitForHydration } from '../../helpers/hydration'
 
 // Uses a unique email per run to avoid conflicts with global-setup test users

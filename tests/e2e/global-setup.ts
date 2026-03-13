@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 import bcrypt from 'bcryptjs'
 import * as api from './helpers/api'
-import { clearChats, clearContacts, clearMessages, seedTestUser, userExists } from './helpers/db'
+import { clearChats, clearContacts, clearGroups, clearInvites, clearMessages, seedTestUser, userExists } from './helpers/db'
 import { getDirname } from './helpers/dirname'
 import { TEST_USERS, type TestUserKey } from './fixtures/users'
 
@@ -18,7 +18,9 @@ export default async function globalSetup() {
   await clearMessages()
   await clearChats()
   await clearContacts()
-  console.log('[global-setup] Cleared messages, chats, contacts')
+  await clearInvites()
+  await clearGroups()
+  console.log('[global-setup] Cleared messages, chats, contacts, invites, groups')
 
   const userIds: Record<string, number> = {}
 
@@ -41,9 +43,6 @@ export default async function globalSetup() {
 
     const me = await api.getMe(sessionToken)
     userIds[key] = me.id
-
-    const storageState = api.buildStorageState(sessionToken)
-    await fs.writeFile(path.join(AUTH_DIR, `${key}.json`), JSON.stringify(storageState, null, 2))
 
     console.log(`[global-setup] ${user.email} ready (id=${me.id})`)
   }

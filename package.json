@@ -9,8 +9,8 @@
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
     "build": "docker compose -f compose.build.yaml build",
-    "test:e2e": "pnpm test:e2e:setup && scripts/run-e2e.sh --no-teardown",
-    "test:e2e:ui": "pnpm test:e2e:setup && scripts/run-e2e.sh --ui --no-teardown",
+    "test:e2e": "pnpm test:e2e:setup && bash scripts/run-e2e.sh --no-teardown",
+    "test:e2e:ui": "pnpm test:e2e:setup && bash scripts/run-e2e.sh --ui --no-teardown",
     "test:e2e:setup": "pnpm build && docker compose -f compose.test.yaml up -d --remove-orphans",
     "test:e2e:report": "playwright show-report tests/e2e/test-report",
     "test:e2e:trace": "playwright show-trace tests/e2e/test-results/**/*.zip"

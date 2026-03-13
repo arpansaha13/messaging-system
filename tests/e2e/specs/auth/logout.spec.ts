@@ -1,7 +1,28 @@
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
+import { createAuthenticatedContext } from '../../helpers/session'
 
 test.describe('Authentication — Logout', () => {
-  test('LO-01 logout clears session and redirects to login', async ({ alicePage }) => {
+  let aliceContext: BrowserContext
+  let alicePage: Page
+
+  test.beforeAll(async ({ browser }) => {
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+  })
+
+  test.afterAll(async () => {
+    await aliceContext?.close()
+  })
+
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('LO-01 logout clears session and redirects to login', async () => {
     await alicePage.goto('/')
     await expect(alicePage).toHaveURL('/')
 

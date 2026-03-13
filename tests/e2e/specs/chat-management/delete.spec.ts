@@ -1,5 +1,5 @@
 import type { BrowserContext, Page } from '@playwright/test'
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
 import { loadUserIds } from '../../helpers/api'
 import { waitForHydration } from '../../helpers/hydration'
 import { createAuthenticatedContext } from '../../helpers/session'

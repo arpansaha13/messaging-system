@@ -1,22 +1,31 @@
-import path from 'node:path'
-import { test, expect } from '@playwright/test'
-import { loadUserIds } from '../../helpers/api'
-import { getDirname } from '../../helpers/dirname'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
 import { waitForHydration } from '../../helpers/hydration'
-
-const __dirname = getDirname(import.meta.url)
-const AUTH_DIR = path.join(__dirname, '../../.auth')
+import { createAuthenticatedContext } from '../../helpers/session'
 
 test.describe('Invites — Create & Join', () => {
-  let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let bobContext: BrowserContext
+  let alicePage: Page
+  let bobPage: Page
 
-  test.beforeAll(() => {
-    userIds = loadUserIds()
+  test.beforeAll(async ({ browser }) => {
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+    bobContext = await createAuthenticatedContext(browser, 'bob')
   })
 
-  test('I-01 create invite returns a navigable hash', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const alicePage = await aliceCtx.newPage()
+  test.afterAll(async () => {
+    await aliceContext?.close()
+    await bobContext?.close()
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+    await bobPage?.close()
+  })
+
+  test('I-01 create invite returns a navigable hash', async () => {
+    alicePage = await aliceContext.newPage()
 
     const groupRes = await alicePage.request.post('/api/groups', {
       data: { name: `InvGroup1-${Date.now()}` },
@@ -33,14 +42,11 @@ test.describe('Invites — Create & Join', () => {
     await alicePage.goto(`/invites/${invite.hash}`)
     await expect(alicePage).not.toHaveURL('/auth/login')
 
-    await aliceCtx.close()
   })
 
-  test('I-02 Bob joins group via invite link', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('I-02 Bob joins group via invite link', async () => {
+    alicePage = await aliceContext.newPage()
+    bobPage = await bobContext.newPage()
 
     const groupRes = await alicePage.request.post('/api/groups', {
       data: { name: `JoinGroup-${Date.now()}` },
@@ -58,15 +64,11 @@ test.describe('Invites — Create & Join', () => {
     // Bob's navbar should show the group
     await expect(bobPage.getByText(group.name)).toBeVisible({ timeout: 10_000 })
 
-    await aliceCtx.close()
-    await bobCtx.close()
   })
 
-  test('I-03 expired invite shows error state', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('I-03 expired invite shows error state', async () => {
+    alicePage = await aliceContext.newPage()
+    bobPage = await bobContext.newPage()
 
     const groupRes = await alicePage.request.post('/api/groups', {
       data: { name: `ExpGroup-${Date.now()}` },
@@ -79,7 +81,5 @@ test.describe('Invites — Create & Join', () => {
 
     await expect(bobPage.getByText(/expired|invalid|not found/i)).toBeVisible({ timeout: 10_000 })
 
-    await aliceCtx.close()
-    await bobCtx.close()
   })
 })

@@ -1,4 +1,5 @@
 import pg from 'pg'
+import { TEST_USERS, type TestUserKey } from '../fixtures/users'
 
 const AUTH_DB_URL = 'postgresql://testuser:testpass@localhost:7511/auth_test_db'
 const MESSAGING_DB_URL = 'postgresql://testuser:testpass@localhost:7521/messaging_test_db'
@@ -100,6 +101,52 @@ export async function clearChats(): Promise<void> {
   await messagingClient.connect()
   try {
     await messagingClient.query('DELETE FROM chats')
+  } finally {
+    await messagingClient.end()
+  }
+}
+
+/**
+ * Clears group-related data (invites/user_groups/channels/groups).
+ * Invites are cleared separately because some may have NULL group_id.
+ */
+export async function clearInvites(): Promise<void> {
+  const messagingClient = new pg.Client({ connectionString: MESSAGING_DB_URL })
+  await messagingClient.connect()
+  try {
+    await messagingClient.query('DELETE FROM invites')
+  } finally {
+    await messagingClient.end()
+  }
+}
+
+export async function clearGroups(): Promise<void> {
+  const messagingClient = new pg.Client({ connectionString: MESSAGING_DB_URL })
+  await messagingClient.connect()
+  try {
+    await messagingClient.query('DELETE FROM user_groups')
+    await messagingClient.query('DELETE FROM channels')
+    await messagingClient.query('DELETE FROM groups')
+  } finally {
+    await messagingClient.end()
+  }
+}
+
+/**
+ * Resets test user profiles to seeded values.
+ */
+export async function resetProfiles(userIds: Record<TestUserKey, number>): Promise<void> {
+  const messagingClient = new pg.Client({ connectionString: MESSAGING_DB_URL })
+  await messagingClient.connect()
+  try {
+    for (const [key, user] of Object.entries(TEST_USERS) as [TestUserKey, (typeof TEST_USERS)[TestUserKey]][]) {
+      const userId = userIds[key]
+      if (!userId) continue
+      await messagingClient.query(
+        'UPDATE user_profiles SET global_name = $1, bio = $2, dp = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
+        [user.globalName, 'Hey there!', userId],
+      )
+    }
   } finally {
     await messagingClient.end()
   }

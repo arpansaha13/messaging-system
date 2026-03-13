@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
 
 const PROTECTED_ROUTES = ['/', '/contacts', '/search', '/archived', '/settings/profile']
 

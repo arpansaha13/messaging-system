@@ -1,5 +1,5 @@
 import type { BrowserContext, Page } from '@playwright/test'
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
 import { waitForHydration } from '../../helpers/hydration'
 import { createAuthenticatedContext } from '../../helpers/session'
 
@@ -46,6 +46,7 @@ test.describe('Settings — Profile', () => {
   })
 
   test('PR-02 update bio saves and persists on reload', async () => {
+    const originalBio = await alicePage.getByTestId('profile-bio-textarea').inputValue()
     const newBio = `Bio updated at ${Date.now()}`
 
     await alicePage.getByTestId('profile-bio-textarea').fill(newBio)
@@ -58,6 +59,10 @@ test.describe('Settings — Profile', () => {
     await alicePage.reload()
     await waitForHydration(alicePage)
     await expect(alicePage.getByTestId('profile-bio-textarea')).toHaveValue(newBio)
+
+    // Restore original bio
+    await alicePage.getByTestId('profile-bio-textarea').fill(originalBio)
+    await alicePage.getByTestId('profile-save-btn').click()
   })
 
   test('PR-03 cancel reverts form to saved values', async () => {
