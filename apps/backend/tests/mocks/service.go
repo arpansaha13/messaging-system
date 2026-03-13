@@ -66,15 +66,15 @@ func (m *MockGroupService) GetGroups(ctx context.Context, userID int64) ([]*doma
 
 // MockChannelService is a mock implementation of IChannelService
 type MockChannelService struct {
-	CreateChannelFunc        func(ctx context.Context, name string, groupID int64) (*domain.Channel, error)
+	CreateChannelFunc        func(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error)
 	GetChannelsFunc          func(ctx context.Context) ([]*domain.Channel, error)
 	GetChannelsByGroupIDFunc func(ctx context.Context, groupID int64) ([]*domain.Channel, error)
 	GetChannelByIDFunc       func(ctx context.Context, channelID int64) (*domain.Channel, error)
 }
 
-func (m *MockChannelService) CreateChannel(ctx context.Context, name string, groupID int64) (*domain.Channel, error) {
+func (m *MockChannelService) CreateChannel(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error) {
 	if m.CreateChannelFunc != nil {
-		return m.CreateChannelFunc(ctx, name, groupID)
+		return m.CreateChannelFunc(ctx, userID, name, groupID)
 	}
 	return nil, nil
 }

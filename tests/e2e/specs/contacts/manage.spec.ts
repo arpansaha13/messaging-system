@@ -1,22 +1,40 @@
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
 import { waitForHydration } from '../../helpers/hydration'
+import { createAuthenticatedContext } from '../../helpers/session'
 
 test.describe('Contacts — Manage', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
   })
 
-  test.beforeEach(async ({ alicePage }) => {
+  test.afterAll(async () => {
+    await aliceContext?.close()
+  })
+
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
     // Ensure Bob is Alice's contact before each test
-    await alicePage.request.post('/api/contacts', {
+    const res = await alicePage.request.post('/api/contacts', {
       data: { userIdToAdd: userIds.bob, alias: 'Bob' },
     })
+    if (!res.ok()) {
+      const body = await res.text()
+      throw new Error(`Failed to add contact (${res.status}): ${body}`)
+    }
   })
 
-  test('M-01 edit contact alias updates display name', async ({ alicePage }) => {
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('M-01 edit contact alias updates display name', async () => {
     await alicePage.goto('/contacts')
     await waitForHydration(alicePage)
 
@@ -34,7 +52,7 @@ test.describe('Contacts — Manage', () => {
     await expect(alicePage.getByText('Bobby')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('M-02 delete contact removes it from list', async ({ alicePage }) => {
+  test('M-02 delete contact removes it from list', async () => {
     await alicePage.goto('/contacts')
     await waitForHydration(alicePage)
 
@@ -47,7 +65,7 @@ test.describe('Contacts — Manage', () => {
     await expect(alicePage.getByRole('heading', { name: 'No contacts' })).toBeVisible({ timeout: 5_000 })
   })
 
-  test('M-03 cancel delete keeps contact in list', async ({ alicePage }) => {
+  test('M-03 cancel delete keeps contact in list', async () => {
     await alicePage.goto('/contacts')
     await waitForHydration(alicePage)
 

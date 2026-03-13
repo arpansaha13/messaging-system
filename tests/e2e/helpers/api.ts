@@ -42,7 +42,8 @@ export async function getMe(sessionToken: string): Promise<{ id: number; globalN
 // storageState builder for Playwright
 // ---------------------------------------------------------------------------
 
-export function buildStorageState(sessionToken: string): object {
+export function buildStorageState(sessionToken: string) {
+  const expiresInSeconds = Math.floor(Date.now() / 1000) + 30 * 60
   return {
     cookies: [
       {
@@ -50,10 +51,10 @@ export function buildStorageState(sessionToken: string): object {
         value: sessionToken,
         domain: 'localhost',
         path: '/',
-        expires: -1,
+        expires: expiresInSeconds,
         httpOnly: true,
         secure: false,
-        sameSite: 'Lax',
+        sameSite: 'Lax' as const,
       },
     ],
     origins: [],

@@ -1,15 +1,32 @@
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
 import { waitForHydration } from '../../helpers/hydration'
+import { createAuthenticatedContext } from '../../helpers/session'
 
 test.describe('Search & Add Contacts', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
   })
 
-  test('SA-01 search by name returns matching user', async ({ alicePage }) => {
+  test.afterAll(async () => {
+    await aliceContext?.close()
+  })
+
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('SA-01 search by name returns matching user', async () => {
     await alicePage.goto('/search')
     await waitForHydration(alicePage)
 
@@ -24,7 +41,7 @@ test.describe('Search & Add Contacts', () => {
     ).toBeVisible()
   })
 
-  test('SA-02 search for nonexistent user shows empty state', async ({ alicePage }) => {
+  test('SA-02 search for nonexistent user shows empty state', async () => {
     await alicePage.goto('/search')
     await waitForHydration(alicePage)
 
@@ -36,7 +53,7 @@ test.describe('Search & Add Contacts', () => {
     await expect(alicePage.getByText('No users found')).toBeVisible()
   })
 
-  test('SA-03 debounce — no search request fires before 1s', async ({ alicePage }) => {
+  test('SA-03 debounce — no search request fires before 1s', async () => {
     await alicePage.goto('/search')
     await waitForHydration(alicePage)
 
@@ -51,7 +68,7 @@ test.describe('Search & Add Contacts', () => {
     expect(searchFired).toBe(false)
   })
 
-  test('SA-04 add contact saves with alias and appears in /contacts', async ({ alicePage }) => {
+  test('SA-04 add contact saves with alias and appears in /contacts', async () => {
     await alicePage.goto('/search')
     await waitForHydration(alicePage)
 
@@ -80,11 +97,15 @@ test.describe('Search & Add Contacts', () => {
     await expect(alicePage.getByText('My Bob')).toBeVisible()
   })
 
-  test('SA-05 already-contact user shows badge, not Add button', async ({ alicePage }) => {
+  test('SA-05 already-contact user shows badge, not Add button', async () => {
     // Add Bob as contact first
-    await alicePage.request.post('/api/contacts', {
+    const res = await alicePage.request.post('/api/contacts', {
       data: { userIdToAdd: userIds.bob, alias: 'Bob' },
     })
+    if (!res.ok()) {
+      const body = await res.text()
+      throw new Error(`Failed to add contact (${res.status}): ${body}`)
+    }
 
     await alicePage.goto('/search')
     await waitForHydration(alicePage)

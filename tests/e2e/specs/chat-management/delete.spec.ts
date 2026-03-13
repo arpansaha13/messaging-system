@@ -1,24 +1,46 @@
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
 import { waitForHydration } from '../../helpers/hydration'
+import { createAuthenticatedContext } from '../../helpers/session'
 
 test.describe('Chat Management — Delete', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
   })
 
-  test.beforeEach(async ({ alicePage }) => {
-    await alicePage.request.post('/api/contacts', {
+  test.afterAll(async () => {
+    await aliceContext?.close()
+  })
+
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+    const contactRes = await alicePage.request.post('/api/contacts', {
       data: { userIdToAdd: userIds.bob, alias: 'Bob' },
     })
-    await alicePage.request.post('/api/messages/send/personal', {
+    if (!contactRes.ok()) {
+      const body = await contactRes.text()
+      throw new Error(`Failed to add contact (${contactRes.status}): ${body}`)
+    }
+    const messageRes = await alicePage.request.post('/api/messages/send/personal', {
       data: { receiverId: userIds.bob, content: 'delete test setup' },
     })
+    if (!messageRes.ok()) {
+      const body = await messageRes.text()
+      throw new Error(`Failed to send message (${messageRes.status}): ${body}`)
+    }
   })
 
-  test('D-01 delete chat removes it from list after confirmation', async ({ alicePage }) => {
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('D-01 delete chat removes it from list after confirmation', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
 
@@ -35,7 +57,7 @@ test.describe('Chat Management — Delete', () => {
     await expect(chatItem).not.toBeVisible({ timeout: 5_000 })
   })
 
-  test('D-02 cancel delete keeps chat in list', async ({ alicePage }) => {
+  test('D-02 cancel delete keeps chat in list', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
 

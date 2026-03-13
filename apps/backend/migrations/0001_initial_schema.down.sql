@@ -1,8 +1,6 @@
 -- Down migration: Drop all tables
 
-DROP INDEX IF EXISTS idx_invites_status;
-DROP INDEX IF EXISTS idx_invites_invited_by;
-DROP INDEX IF EXISTS idx_invites_user_id;
+DROP INDEX IF EXISTS idx_invites_inviter_id;
 DROP INDEX IF EXISTS idx_invites_group_id;
 DROP INDEX IF EXISTS idx_user_groups_group_id;
 DROP INDEX IF EXISTS idx_user_groups_user_id;

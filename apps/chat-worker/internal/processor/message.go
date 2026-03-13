@@ -197,6 +197,22 @@ func (mp *MessageProcessor) ProcessGroupMessage(ctx context.Context, payload *br
 			}
 		}
 
+		// Publish SENT event to sender so temp message can be confirmed
+		if err := mp.broker.PublishToOutgoing(strconv.FormatInt(payload.SenderId, 10), map[string]any{
+			"event":  "group:sent",
+			"userId": payload.SenderId,
+			"data": map[string]any{
+				"hash":      payload.Hash,
+				"messageId": message.ID,
+				"groupId":   payload.GroupId,
+				"channelId": payload.ChannelId,
+				"createdAt": message.CreatedAt,
+				"status":    domain.MessageStatusSent,
+			},
+		}); err != nil {
+			log.Error("failed to publish GROUP SENT event", zap.Int64("sender_id", payload.SenderId), zap.Error(err))
+		}
+
 		// Publish message to channel using channelId as routing key
 		// RabbitMQ will route to all server queues that have a binding for this channelId
 		// Each server that has users subscribed to this channel will receive the message

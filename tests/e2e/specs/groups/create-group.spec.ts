@@ -1,8 +1,29 @@
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { waitForHydration } from '../../helpers/hydration'
+import { createAuthenticatedContext } from '../../helpers/session'
 
 test.describe('Groups — Create Group', () => {
-  test('G-01 create group shows it in navbar group list', async ({ alicePage }) => {
+  let aliceContext: BrowserContext
+  let alicePage: Page
+
+  test.beforeAll(async ({ browser }) => {
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+  })
+
+  test.afterAll(async () => {
+    await aliceContext?.close()
+  })
+
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('G-01 create group shows it in navbar group list', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
 
@@ -17,7 +38,7 @@ test.describe('Groups — Create Group', () => {
     await expect(alicePage.getByText(groupName)).toBeVisible({ timeout: 10_000 })
   })
 
-  test('G-02 empty group name does not create a group', async ({ alicePage }) => {
+  test('G-02 empty group name does not create a group', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
 

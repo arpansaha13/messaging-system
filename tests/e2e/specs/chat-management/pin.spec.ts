@@ -1,24 +1,34 @@
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
 import { waitForHydration } from '../../helpers/hydration'
+import { createAuthenticatedContext } from '../../helpers/session'
+import { ensureChatReady } from '../../helpers/chat'
 
 test.describe('Chat Management — Pin', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
   })
 
-  test.beforeEach(async ({ alicePage }) => {
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await alicePage.request.post('/api/messages/send/personal', {
-      data: { receiverId: userIds.bob, content: 'pin test setup' },
-    })
+  test.afterAll(async () => {
+    await aliceContext?.close()
   })
 
-  test('P-01 pin chat moves it to top of list with pin indicator', async ({ alicePage }) => {
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+    await ensureChatReady(alicePage, userIds.bob, 'Bob')
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('P-01 pin chat moves it to top of list with pin indicator', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
 
@@ -33,25 +43,22 @@ test.describe('Chat Management — Pin', () => {
     await expect(alicePage.getByTestId('chat-list-item').first()).toContainText('Bob')
   })
 
-  test('P-02 unpin chat returns it to normal sort order', async ({ alicePage }) => {
-    // Pin via API
-    const chatsRes = await alicePage.request.get('/api/chats')
-    const chats = (await chatsRes.json()) as { id: number; receiver: { id: number } }[]
-    const bobChat = chats.find(c => c.receiver.id === userIds.bob)
-    if (bobChat) {
-      await alicePage.request.post(`/api/chats/${bobChat.id}/pin`)
-    }
-
+  test('P-02 unpin chat returns it to normal sort order', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
     const chatItem = alicePage
       .getByTestId('chat-list-item')
       .filter({ hasText: 'Bob' })
       .first()
+
+    // Pin via UI
+    await chatItem.click({ button: 'right' })
+    await alicePage.getByText('Pin chat').click()
+
+    // Unpin via UI
     await chatItem.click({ button: 'right' })
     await alicePage.getByText('Unpin chat').click()
 
-    // Item no longer necessarily first; the pin icon should be gone
     // Confirm context menu now shows 'Pin chat' option
     await chatItem.click({ button: 'right' })
     await expect(alicePage.getByText('Pin chat')).toBeVisible()

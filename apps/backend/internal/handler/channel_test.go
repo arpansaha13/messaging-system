@@ -35,7 +35,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 			},
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{
-					CreateChannelFunc: func(ctx context.Context, name string, groupID int64) (*domain.Channel, error) {
+					CreateChannelFunc: func(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error) {
 						return &domain.Channel{
 							ID:      1,
 							Name:    name,

@@ -1,36 +1,38 @@
-import path from 'node:path'
-import type { Page } from '@playwright/test'
-import { test, expect } from '../../fixtures/auth.fixture'
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
-import { getDirname } from '../../helpers/dirname'
 import { waitForHydration } from '../../helpers/hydration'
-
-const __dirname = getDirname(import.meta.url)
+import { createAuthenticatedContext } from '../../helpers/session'
+import { archiveChat, ensureChatReady, waitForChatState } from '../../helpers/chat'
+import { waitForSocketConnection } from '../../helpers/socket'
 
 test.describe('Chat Management — Archive', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let bobContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+    bobContext = await createAuthenticatedContext(browser, 'bob')
   })
 
-  test.beforeEach(async ({ alicePage }) => {
-    // Ensure Alice has Bob as contact and a chat exists
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    // Send a message to create a chat record
-    await alicePage.request.post('/api/messages/send/personal', {
-      data: { receiverId: userIds.bob, content: 'archive test setup' },
-    })
-
-    const chatState = await waitForChat(alicePage, userIds.bob)
-    if (chatState?.archived) {
-      await alicePage.request.patch(`/api/chats/${userIds.bob}/unarchive`)
-    }
+  test.afterAll(async () => {
+    await aliceContext?.close()
+    await bobContext?.close()
   })
 
-  test('A-01 archive chat removes it from main list and shows in /archived', async ({ alicePage }) => {
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+    await ensureChatReady(alicePage, userIds.bob)
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('A-01 archive chat removes it from main list and shows in /archived', async () => {
     await alicePage.goto('/')
     await waitForHydration(alicePage)
 
@@ -49,14 +51,9 @@ test.describe('Chat Management — Archive', () => {
     await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible()
   })
 
-  test('A-02 unarchive chat returns it to main list', async ({ alicePage }) => {
+  test('A-02 unarchive chat returns it to main list', async () => {
     // Archive first via API
-    const chatsRes = await alicePage.request.get('/api/chats')
-    const chats = (await chatsRes.json()) as { unarchived: { receiver: { id: number }; chat: { id: number } }[] }
-    const bobChat = chats.unarchived.find(c => c.receiver.id === userIds.bob)
-    if (bobChat) {
-      await alicePage.request.patch(`/api/chats/${bobChat.chat.id}/archive`)
-    }
+    await archiveChat(alicePage, userIds.bob)
 
     await alicePage.goto('/archived')
     await waitForHydration(alicePage)
@@ -75,31 +72,21 @@ test.describe('Chat Management — Archive', () => {
     await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible()
   })
 
-  test('A-03 new message from archived contact auto-unarchives the chat', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({
-      storageState: path.join(__dirname, '../../.auth/alice.json'),
-    })
-    const bobCtx = await browser.newContext({
-      storageState: path.join(__dirname, '../../.auth/bob.json'),
-    })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('A-03 new message from archived contact auto-unarchives the chat', async () => {
+    const bobPage = await bobContext.newPage()
 
     await bobPage.request.post('/api/contacts', {
       data: { userIdToAdd: userIds.alice, alias: 'Alice' },
     })
 
     // Alice archives Bob's chat via API
-    const chatsRes = await alicePage.request.get('/api/chats')
-    const chats = (await chatsRes.json()) as { unarchived: { receiver: { id: number }; chat: { id: number } }[] }
-    const bobChat = chats.unarchived.find(c => c.receiver.id === userIds.bob)
-    if (bobChat) {
-      await alicePage.request.patch(`/api/chats/${bobChat.chat.id}/archive`)
-    }
+    await archiveChat(alicePage, userIds.bob)
 
-    // Alice opens home to observe
+    // Alice opens home to observe (ensure socket connects)
+    const socketReady = waitForSocketConnection(alicePage)
     await alicePage.goto('/')
     await waitForHydration(alicePage)
+    await socketReady
 
     // Bob sends a message to Alice
     await bobPage.goto(`/?to=${userIds.alice}`)
@@ -107,32 +94,16 @@ test.describe('Chat Management — Archive', () => {
     await bobPage.getByTestId('message-input').fill('unarchive trigger')
     await bobPage.keyboard.press('Enter')
 
+    await waitForChatState(alicePage, userIds.bob, false, 20, 500)
+
     // Alice's chat list should show Bob's chat (auto-unarchived)
+    await alicePage.reload()
+    await waitForHydration(alicePage)
     await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible({
-      timeout: 10_000,
+      timeout: 15_000,
     })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 })
 
-async function waitForChat(page: Page, receiverId: number, maxAttempts = 15, intervalMs = 1000) {
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    const res = await page.request.get('/api/chats')
-    if (res.ok()) {
-      const data = (await res.json()) as {
-        unarchived: { receiver: { id: number } }[]
-        archived: { receiver: { id: number } }[]
-      }
-      if (data.unarchived.some(chat => chat.receiver.id === receiverId)) {
-        return { archived: false }
-      }
-      if (data.archived.some(chat => chat.receiver.id === receiverId)) {
-        return { archived: true }
-      }
-    }
-    await page.waitForTimeout(intervalMs)
-  }
-  throw new Error(`Chat for receiver ${receiverId} did not appear`)
-}

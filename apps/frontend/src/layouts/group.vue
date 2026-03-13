@@ -8,7 +8,7 @@
             <UAvatar :alt="group?.name" size="3xl" class="shadow-md" />
 
             <div class="flex items-center gap-2">
-              <UModal title="Create channel" :description="`Create a new channel in ${group?.name}`">
+              <UModal v-if="isFounder" title="Create channel" :description="`Create a new channel in ${group?.name}`">
                 <UButton square size="sm" variant="ghost">
                   <span class="sr-only">Create new channel</span>
                   <Icon name="i-heroicons-plus-solid" size="1.25rem" />
@@ -128,6 +128,7 @@
 <script setup lang="ts">
 const route = useRoute()
 const { data: groups } = await useFetchGroups()
+const { data: authUser } = await useFetchAuthUser()
 
 const groupId = computed(() => {
   const id = route.params.groupId
@@ -144,6 +145,13 @@ const groupId = computed(() => {
 
 const group = computed(() => {
   return groups.value?.find(g => g.id === groupId.value) || null
+})
+
+const isFounder = computed(() => {
+  const userId = authUser.value?.id
+  if (!userId) return false
+  const groupValue = group.value as null | { founderId?: number }
+  return groupValue?.founderId === userId
 })
 
 const { data: members, pending, error } = useFetchGroupMembers(groupId)

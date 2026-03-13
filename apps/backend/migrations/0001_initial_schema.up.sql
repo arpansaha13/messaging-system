@@ -96,29 +96,25 @@ CREATE TABLE IF NOT EXISTS user_groups (
 
 -- Invites table
 CREATE TABLE IF NOT EXISTS invites (
-    id BIGSERIAL PRIMARY KEY,
-    group_id BIGINT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-    invited_by BIGINT NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
-    status VARCHAR(50) DEFAULT 'pending',
+    hash VARCHAR(32) PRIMARY KEY,
+    inviter_id BIGINT NOT NULL REFERENCES user_profiles(id) ON DELETE CASCADE,
+    group_id BIGINT REFERENCES groups(id) ON DELETE CASCADE,
+    expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP WITH TIME ZONE
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better query performance
-CREATE INDEX idx_chats_sender_id ON chats(sender_id);
-CREATE INDEX idx_chats_receiver_id ON chats(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_chats_sender_id ON chats(sender_id);
+CREATE INDEX IF NOT EXISTS idx_chats_receiver_id ON chats(receiver_id);
 -- CREATE INDEX idx_messages_chat_id ON messages(chat_id);
-CREATE INDEX idx_messages_sender_id ON messages(sender_id);
-CREATE INDEX idx_message_recipients_message_id ON message_recipients(message_id);
-CREATE INDEX idx_message_recipients_receiver_id ON message_recipients(receiver_id);
-CREATE INDEX idx_contacts_user_id ON contacts(user_id);
-CREATE INDEX idx_contacts_contact_id ON contacts(user_id_in_contact);
-CREATE INDEX idx_groups_created_by ON groups(founder_id);
-CREATE INDEX idx_user_groups_user_id ON user_groups(user_id);
-CREATE INDEX idx_user_groups_group_id ON user_groups(group_id);
-CREATE INDEX idx_invites_group_id ON invites(group_id);
-CREATE INDEX idx_invites_user_id ON invites(user_id);
-CREATE INDEX idx_invites_invited_by ON invites(invited_by);
-CREATE INDEX idx_invites_status ON invites(status);
+CREATE INDEX IF NOT EXISTS idx_messages_sender_id ON messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_message_recipients_message_id ON message_recipients(message_id);
+CREATE INDEX IF NOT EXISTS idx_message_recipients_receiver_id ON message_recipients(receiver_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_user_id ON contacts(user_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_contact_id ON contacts(user_id_in_contact);
+CREATE INDEX IF NOT EXISTS idx_groups_created_by ON groups(founder_id);
+CREATE INDEX IF NOT EXISTS idx_user_groups_user_id ON user_groups(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_groups_group_id ON user_groups(group_id);
+CREATE INDEX IF NOT EXISTS idx_invites_group_id ON invites(group_id);
+CREATE INDEX IF NOT EXISTS idx_invites_inviter_id ON invites(inviter_id);

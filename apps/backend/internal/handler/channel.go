@@ -51,7 +51,7 @@ func createChannelController(channelService service.IChannelService) gtk.Control
 
 		log.Debug("creating channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name))
 
-		channel, err := channelService.CreateChannel(r.Context(), req.Name, groupID)
+		channel, err := channelService.CreateChannel(r.Context(), userIDInt, req.Name, groupID)
 		if err != nil {
 			log.Error("failed to create channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name), zap.Error(err))
 			return nil, err

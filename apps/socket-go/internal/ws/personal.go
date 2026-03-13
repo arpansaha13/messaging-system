@@ -39,11 +39,8 @@ func (p *PersonalHandlers) HandleConnect(client *Client) {
 	p.store.SetClient(client.userId, client.id)
 
 	if err := p.broker.PublishToIncoming("connection.user", broker.UserConnectionPayload{
-		Type: "USER_CONNECTED",
-		Payload: broker.UserConnectionDetail{
-			UserId:   client.userId,
-			ServerId: p.broker.GetServerId(),
-		},
+		UserId:   client.userId,
+		ServerId: p.broker.GetServerId(),
 	}); err != nil {
 		p.log.Error("failed to publish USER_CONNECTED",
 			zap.Int64("user_id", client.userId),

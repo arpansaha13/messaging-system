@@ -15,6 +15,7 @@ import (
 func TestChannelServiceCreateChannel(t *testing.T) {
 	tests := []struct {
 		name          string
+		userID        int64
 		channelName   string
 		groupID       int64
 		mockFunc      func() *mocks.MockChannelRepository
@@ -23,6 +24,7 @@ func TestChannelServiceCreateChannel(t *testing.T) {
 	}{
 		{
 			name:        "successful create channel",
+			userID:      1,
 			channelName: "general",
 			groupID:     1,
 			mockFunc: func() *mocks.MockChannelRepository {
@@ -44,10 +46,14 @@ func TestChannelServiceCreateChannel(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockRepo := tt.mockFunc()
-			mockGroupRepo := &mocks.MockGroupRepository{}
+			mockGroupRepo := &mocks.MockGroupRepository{
+				GetByIDFunc: func(ctx context.Context, id int64) (*domain.Group, error) {
+					return &domain.Group{ID: id, FounderID: tt.userID}, nil
+				},
+			}
 			svc := service.NewChannelService(mockRepo, mockGroupRepo)
 
-			channel, err := svc.CreateChannel(context.Background(), tt.channelName, tt.groupID)
+			channel, err := svc.CreateChannel(context.Background(), tt.userID, tt.channelName, tt.groupID)
 
 			if tt.expectedError {
 				assert.Error(t, err)

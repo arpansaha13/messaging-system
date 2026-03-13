@@ -55,7 +55,8 @@ export interface IContact {
 export interface IGroup {
   id: number
   name: string
-  founder: IUser
+  founderId?: number
+  founder?: IUser
 }
 
 export interface IChannel {
@@ -65,6 +66,9 @@ export interface IChannel {
 
 export interface IInvite {
   hash: string
-  expiresAt: string
-  group: Omit<IGroup, 'founder'>
+  inviterId: number
+  groupId?: number
+  createdAt?: string
+  updatedAt?: string
+  expiresAt?: string
 }

@@ -25,12 +25,6 @@ type SubscriptionMessage struct {
 
 // UserConnectionPayload is published to the incoming exchange on user connect.
 type UserConnectionPayload struct {
-	Type    string               `json:"type"`
-	Payload UserConnectionDetail `json:"payload"`
-}
-
-// UserConnectionDetail holds the details of a connection event.
-type UserConnectionDetail struct {
 	UserId   int64  `json:"userId"`
 	ServerId string `json:"serverId"`
 }

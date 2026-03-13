@@ -59,7 +59,7 @@ type IMessageService interface {
 
 // ChannelService defines the interface for channel service operations
 type IChannelService interface {
-	CreateChannel(ctx context.Context, name string, groupID int64) (*domain.Channel, error)
+	CreateChannel(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error)
 	GetChannels(ctx context.Context) ([]*domain.Channel, error)
 	GetChannelsByGroupID(ctx context.Context, groupID int64) ([]*domain.Channel, error)
 	GetChannelByID(ctx context.Context, channelID int64) (*domain.Channel, error)

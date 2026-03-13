@@ -1,36 +1,43 @@
-import path from 'node:path'
+import type { BrowserContext, Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
-import { getDirname } from '../../helpers/dirname'
 import { waitForHydration } from '../../helpers/hydration'
-
-const __dirname = getDirname(import.meta.url)
-const AUTH_DIR = path.join(__dirname, '../../.auth')
+import { createAuthenticatedContext } from '../../helpers/session'
+import { waitForSocketConnection } from '../../helpers/socket'
 
 test.describe('Typing Indicator', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let bobContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+    bobContext = await createAuthenticatedContext(browser, 'bob')
   })
 
-  test('TY-01 typing shows indicator on receiver side', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test.afterAll(async () => {
+    await aliceContext?.close()
+    await bobContext?.close()
+  })
 
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await bobPage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.alice, alias: 'Alice' },
-    })
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+  })
 
-    await bobPage.goto(`/?to=${userIds.alice}`)
-    await waitForHydration(bobPage)
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('TY-01 typing shows indicator on receiver side', async () => {
+    const bobPage = await bobContext.newPage()
+
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await ensureContact(bobPage, userIds.alice, 'Alice')
+
+    await openChat(bobPage, userIds.alice, true)
+    await openChat(alicePage, userIds.bob, true)
 
     // Alice starts typing
     await alicePage.getByTestId('message-input').type('typing...')
@@ -40,27 +47,17 @@ test.describe('Typing Indicator', () => {
       timeout: 5_000,
     })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 
-  test('TY-02 typing indicator disappears after 1s inactivity', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('TY-02 typing indicator disappears after 1s inactivity', async () => {
+    const bobPage = await bobContext.newPage()
 
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await bobPage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.alice, alias: 'Alice' },
-    })
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await ensureContact(bobPage, userIds.alice, 'Alice')
 
-    await bobPage.goto(`/?to=${userIds.alice}`)
-    await waitForHydration(bobPage)
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+    await openChat(bobPage, userIds.alice, true)
+    await openChat(alicePage, userIds.bob, true)
 
     await alicePage.getByTestId('message-input').type('typing...')
     await expect(bobPage.getByTestId('chat-header-subtitle').filter({ hasText: /typing/i })).toBeVisible({
@@ -75,7 +72,25 @@ test.describe('Typing Indicator', () => {
       timeout: 5_000,
     })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 })
+
+async function ensureContact(page: Page, userIdToAdd: number, alias: string) {
+  const res = await page.request.post('/api/contacts', {
+    data: { userIdToAdd, alias },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Failed to add contact (${res.status}): ${body}`)
+  }
+}
+
+async function openChat(page: Page, receiverId: number, waitForSocket = false) {
+  const socketReady = waitForSocket ? waitForSocketConnection(page) : null
+  await page.goto(`/?to=${receiverId}`)
+  await waitForHydration(page)
+  if (socketReady) {
+    await socketReady
+  }
+}

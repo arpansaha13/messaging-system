@@ -5,6 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -25,15 +26,20 @@ func NewChannelService(channelRepo repository.IChannelRepository, groupRepo repo
 }
 
 // CreateChannel creates a new channel within a group
-func (s *ChannelService) CreateChannel(ctx context.Context, name string, groupID int64) (*domain.Channel, error) {
+func (s *ChannelService) CreateChannel(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("creating channel", zap.String("channel_name", name), zap.Int64("group_id", groupID))
+	log.Debug("creating channel", zap.String("channel_name", name), zap.Int64("group_id", groupID), zap.Int64("user_id", userID))
 
 	// Verify group exists
-	_, err := s.groupRepo.GetByID(ctx, groupID)
+	group, err := s.groupRepo.GetByID(ctx, groupID)
 	if err != nil {
 		log.Error("failed to verify group existence", zap.Int64("group_id", groupID), zap.Error(err))
 		return nil, err
+	}
+
+	if group.FounderID != userID {
+		log.Warn("user not allowed to create channel", zap.Int64("user_id", userID), zap.Int64("group_id", groupID))
+		return nil, &gotoolkit.ValidationError{Message: "not allowed to create channels"}
 	}
 
 	channel := &domain.Channel{

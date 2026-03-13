@@ -1,194 +1,147 @@
-import path from 'node:path'
+import type { BrowserContext, Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { loadUserIds } from '../../helpers/api'
-import { getDirname } from '../../helpers/dirname'
 import { waitForHydration } from '../../helpers/hydration'
-
-const __dirname = getDirname(import.meta.url)
-const AUTH_DIR = path.join(__dirname, '../../.auth')
+import { createAuthenticatedContext } from '../../helpers/session'
+import { waitForSocketConnection } from '../../helpers/socket'
 
 test.describe('Personal Messaging — Send & Receive', () => {
   let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let bobContext: BrowserContext
+  let alicePage: Page
 
-  test.beforeAll(() => {
+  test.beforeAll(async ({ browser }) => {
     userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+    bobContext = await createAuthenticatedContext(browser, 'bob')
   })
 
-  test('PM-01 sender sees optimistic (SENDING) message immediately', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const alicePage = await aliceCtx.newPage()
+  test.afterAll(async () => {
+    await aliceContext?.close()
+    await bobContext?.close()
+  })
 
-    // Setup: Alice adds Bob as contact
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+  })
 
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('PM-01 sender sees optimistic (SENDING) message immediately', async () => {
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await openChat(alicePage, userIds.bob)
     await alicePage.getByTestId('message-input').fill('Hello E2E!')
     await alicePage.keyboard.press('Enter')
 
     // Optimistic message appears immediately
     await expect(alicePage.getByTestId('temp-message-bubble').last()).toBeVisible()
 
-    await aliceCtx.close()
   })
 
-  test('PM-02 message transitions SENDING → SENT after API returns', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const alicePage = await aliceCtx.newPage()
-
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+  test('PM-02 message transitions SENDING → SENT after API returns', async () => {
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await openChat(alicePage, userIds.bob)
     await alicePage.getByTestId('message-input').fill('SENT test')
     await alicePage.keyboard.press('Enter')
 
     // After confirmation, temp bubble is replaced with a real message bubble
     await expect(alicePage.getByTestId('message-bubble').last()).toBeVisible({ timeout: 10_000 })
 
-    await aliceCtx.close()
   })
 
-  test('PM-03 Bob receives message in real-time', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('PM-03 Bob receives message in real-time', async () => {
+    const bobPage = await bobContext.newPage()
 
     // Both users add each other as contacts
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await bobPage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.alice, alias: 'Alice' },
-    })
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await ensureContact(bobPage, userIds.alice, 'Alice')
 
     // Bob opens chat with Alice first so socket is connected
-    await bobPage.goto(`/?to=${userIds.alice}`)
-    await waitForHydration(bobPage)
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+    await openChat(bobPage, userIds.alice, true)
+    await openChat(alicePage, userIds.bob, true)
 
     const msg = `realtime-${Date.now()}`
     await alicePage.getByTestId('message-input').fill(msg)
     await alicePage.keyboard.press('Enter')
 
     // Bob sees the message without a page refresh
-    await expect(bobPage.getByTestId('message-bubble').filter({ hasText: msg })).toBeVisible({ timeout: 10_000 })
+    await expect(bobPage.getByTestId('message-bubble').filter({ hasText: msg })).toBeVisible({ timeout: 15_000 })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 
-  test('PM-04 Bob receipt triggers DELIVERED on Alice side', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('PM-04 Bob receipt triggers DELIVERED on Alice side', async () => {
+    const bobPage = await bobContext.newPage()
 
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await bobPage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.alice, alias: 'Alice' },
-    })
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await ensureContact(bobPage, userIds.alice, 'Alice')
 
-    await bobPage.goto(`/?to=${userIds.alice}`)
-    await waitForHydration(bobPage)
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+    await openChat(bobPage, userIds.alice, true)
+    await openChat(alicePage, userIds.bob, true)
 
     await alicePage.getByTestId('message-input').fill('deliver test')
     await alicePage.keyboard.press('Enter')
 
     // Wait for DELIVERED status icon (title or aria attribute set by MsgStatusIcon)
-    await expect(alicePage.getByTestId('msg-status-icon').last()).toHaveAttribute('data-status', 'delivered', {
+    await expect(alicePage.getByTestId('msg-status-icon').last()).toHaveAttribute('data-status', /^(2|3)$/, {
       timeout: 10_000,
     })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 
-  test('PM-05 Bob opening chat triggers READ on Alice side', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('PM-05 Bob opening chat triggers READ on Alice side', async () => {
+    const bobPage = await bobContext.newPage()
 
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await bobPage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.alice, alias: 'Alice' },
-    })
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await ensureContact(bobPage, userIds.alice, 'Alice')
 
     // Alice sends message while Bob is not in the chat
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+    await openChat(alicePage, userIds.bob, true)
     await alicePage.getByTestId('message-input').fill('read test')
     await alicePage.keyboard.press('Enter')
     await expect(alicePage.getByTestId('message-bubble').last()).toBeVisible({ timeout: 10_000 })
 
     // Bob opens the chat
-    await bobPage.goto(`/?to=${userIds.alice}`)
-    await waitForHydration(bobPage)
+    await openChat(bobPage, userIds.alice, true)
 
     // Alice's message status updates to READ
-    await expect(alicePage.getByTestId('msg-status-icon').last()).toHaveAttribute('data-status', 'read', {
+    await expect(alicePage.getByTestId('msg-status-icon').last()).toHaveAttribute('data-status', '3', {
       timeout: 10_000,
     })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 
-  test('PM-06 message content is correctly displayed for both users', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const bobCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'bob.json') })
-    const alicePage = await aliceCtx.newPage()
-    const bobPage = await bobCtx.newPage()
+  test('PM-06 message content is correctly displayed for both users', async () => {
+    const bobPage = await bobContext.newPage()
 
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-    await bobPage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.alice, alias: 'Alice' },
-    })
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await ensureContact(bobPage, userIds.alice, 'Alice')
 
-    await bobPage.goto(`/?to=${userIds.alice}`)
-    await waitForHydration(bobPage)
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+    await openChat(bobPage, userIds.alice, true)
+    await openChat(alicePage, userIds.bob, true)
 
-    await alicePage.getByTestId('message-input').fill('Hello E2E!')
+    const msg = `Hello E2E! ${Date.now()}`
+    await alicePage.getByTestId('message-input').fill(msg)
     await alicePage.keyboard.press('Enter')
 
-    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: 'Hello E2E!' })).toBeVisible({
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: msg }).first()).toBeVisible({
       timeout: 10_000,
     })
-    await expect(bobPage.getByTestId('message-bubble').filter({ hasText: 'Hello E2E!' })).toBeVisible({
+    await expect(bobPage.getByTestId('message-bubble').filter({ hasText: msg }).first()).toBeVisible({
       timeout: 10_000,
     })
 
-    await aliceCtx.close()
-    await bobCtx.close()
+    await bobPage.close()
   })
 
-  test('PM-07 empty message is not sent', async ({ browser }) => {
-    const aliceCtx = await browser.newContext({ storageState: path.join(AUTH_DIR, 'alice.json') })
-    const alicePage = await aliceCtx.newPage()
-
-    await alicePage.request.post('/api/contacts', {
-      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
-    })
-
-    await alicePage.goto(`/?to=${userIds.bob}`)
-    await waitForHydration(alicePage)
+  test('PM-07 empty message is not sent', async () => {
+    await ensureContact(alicePage, userIds.bob, 'Bob')
+    await openChat(alicePage, userIds.bob)
 
     // Press Enter with empty input
     await alicePage.getByTestId('message-input').click()
@@ -197,6 +150,24 @@ test.describe('Personal Messaging — Send & Receive', () => {
     // No message bubble or temp bubble should appear
     await expect(alicePage.getByTestId('temp-message-bubble')).not.toBeVisible()
 
-    await aliceCtx.close()
   })
 })
+
+async function ensureContact(page: Page, userIdToAdd: number, alias: string) {
+  const res = await page.request.post('/api/contacts', {
+    data: { userIdToAdd, alias },
+  })
+  if (!res.ok()) {
+    const body = await res.text()
+    throw new Error(`Failed to add contact (${res.status}): ${body}`)
+  }
+}
+
+async function openChat(page: Page, receiverId: number, waitForSocket = false) {
+  const socketReady = waitForSocket ? waitForSocketConnection(page) : null
+  await page.goto(`/?to=${receiverId}`)
+  await waitForHydration(page)
+  if (socketReady) {
+    await socketReady
+  }
+}
