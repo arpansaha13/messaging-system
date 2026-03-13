@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"context"
-	"net/http"
 	"sync"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
@@ -193,23 +192,3 @@ func (c *MockAuthServiceClient) Close() error {
 	return nil
 }
 
-// getTokenFromRequest extracts the token from the request
-func getTokenFromRequest(r *http.Request) string {
-	// Try Authorization header
-	auth := r.Header.Get("Authorization")
-	if auth != "" {
-		// Remove "Bearer " prefix
-		if len(auth) > 7 && auth[:7] == "Bearer " {
-			return auth[7:]
-		}
-		return auth
-	}
-
-	// Try cookie
-	cookie, err := r.Cookie("sessionToken")
-	if err == nil {
-		return cookie.Value
-	}
-
-	return ""
-}

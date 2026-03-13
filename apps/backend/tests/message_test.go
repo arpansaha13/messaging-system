@@ -55,10 +55,11 @@ func (s *MessageTestSuite) TestGetMessages() {
 				s.Require().NoError(err)
 				s.Require().Equal(200, resp.StatusCode)
 
-				var result []any
+				var result map[string]any
 				err = ReadResponseBody(resp, &result)
 				s.Require().NoError(err)
-				s.Require().NotEmpty(result, "expected messages in response")
+				messages := result["messages"].([]any)
+				s.Require().NotEmpty(messages, "expected messages in response")
 				return nil
 			},
 			ExpectError: false,
@@ -81,10 +82,12 @@ func (s *MessageTestSuite) TestGetMessages() {
 				s.Require().NoError(err)
 				s.Require().Equal(200, resp.StatusCode)
 
-				var result []any
+				var result map[string]any
 				err = ReadResponseBody(resp, &result)
 				s.Require().NoError(err)
-				s.Require().NotNil(result, "expected empty array, not nil")
+				messages := result["messages"].([]any)
+				s.Require().NotNil(messages, "expected messages field in response")
+				s.Require().Empty(messages, "expected empty messages array")
 
 				return nil
 			},
