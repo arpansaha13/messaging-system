@@ -6,7 +6,8 @@ function buildKey(namespace: string, id?: string | number) {
 
 export const asyncKeys = {
   authUser: 'auth:user',
-  chatList: 'chats:list',
+  chatListUnarchived: 'chats:list:unarchived',
+  chatListArchived: 'chats:list:archived',
   contacts: 'contacts:list',
   invites: 'invites:list',
   notification: 'app:notification',

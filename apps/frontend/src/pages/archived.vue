@@ -37,11 +37,7 @@ const toast = useToast()
 const overlay = useOverlay()
 const deleteModal = overlay.create(DeleteChatModal)
 
-const { data: chatList } = await useFetchChats()
-
-const archivedChats = computed(() => {
-  return chatList.value?.archived || []
-})
+const { data: archivedChats } = await useFetchArchivedChats()
 
 async function handleDelete(deleteTarget: IChatListItem) {
   const instance = deleteModal.open({ deleteTarget })

@@ -32,7 +32,7 @@ type IChatRepository interface {
 	Create(ctx context.Context, chat *domain.Chat) error
 	GetByID(ctx context.Context, chatID int64) (*domain.Chat, error)
 	GetByUsers(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
-	GetUserChats(ctx context.Context, userID int64) ([]*ChatWithReceiverInfo, error)
+	GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*ChatWithReceiverInfo, error)
 	Delete(ctx context.Context, chatID int64) error
 	Update(ctx context.Context, chat *domain.Chat) error
 }

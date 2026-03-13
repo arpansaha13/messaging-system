@@ -13,7 +13,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
-func TestChatService_GetUserChats(t *testing.T) {
+func TestChatService_GetUserUnarchivedChats(t *testing.T) {
 	tests := []struct {
 		name            string
 		userID          int64
@@ -22,11 +22,11 @@ func TestChatService_GetUserChats(t *testing.T) {
 		expectedError   bool
 	}{
 		{
-			name:   "successful get user chats",
+			name:   "successful get unarchived chats",
 			userID: 1,
 			mockChatRepo: func() *mocks.MockChatRepository {
 				return &mocks.MockChatRepository{
-					GetUserChatsFunc: func(ctx context.Context, userID int64) ([]*repository.ChatWithReceiverInfo, error) {
+					GetUserChatsByArchivedFunc: func(ctx context.Context, userID int64, archived bool) ([]*repository.ChatWithReceiverInfo, error) {
 						return []*repository.ChatWithReceiverInfo{}, nil
 					},
 				}
@@ -44,7 +44,50 @@ func TestChatService_GetUserChats(t *testing.T) {
 			mockMessageRepo := tt.mockMessageRepo()
 			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
 
-			response, err := svc.GetUserChats(context.Background(), tt.userID)
+			response, err := svc.GetUserUnarchivedChats(context.Background(), tt.userID)
+
+			if tt.expectedError {
+				assert.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				assert.NotNil(t, response)
+			}
+		})
+	}
+}
+
+func TestChatService_GetUserArchivedChats(t *testing.T) {
+	tests := []struct {
+		name            string
+		userID          int64
+		mockChatRepo    func() *mocks.MockChatRepository
+		mockMessageRepo func() *mocks.MockMessageRepository
+		expectedError   bool
+	}{
+		{
+			name:   "successful get archived chats",
+			userID: 1,
+			mockChatRepo: func() *mocks.MockChatRepository {
+				return &mocks.MockChatRepository{
+					GetUserChatsByArchivedFunc: func(ctx context.Context, userID int64, archived bool) ([]*repository.ChatWithReceiverInfo, error) {
+						return []*repository.ChatWithReceiverInfo{}, nil
+					},
+				}
+			},
+			mockMessageRepo: func() *mocks.MockMessageRepository {
+				return &mocks.MockMessageRepository{}
+			},
+			expectedError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockChatRepo := tt.mockChatRepo()
+			mockMessageRepo := tt.mockMessageRepo()
+			svc := service.NewChatService(mockChatRepo, mockMessageRepo)
+
+			response, err := svc.GetUserArchivedChats(context.Background(), tt.userID)
 
 			if tt.expectedError {
 				assert.Error(t, err)

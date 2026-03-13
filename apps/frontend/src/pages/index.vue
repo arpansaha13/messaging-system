@@ -6,8 +6,8 @@
           <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Messages</h2>
         </template>
 
-        <ul v-if="chatList?.unarchived && chatList.unarchived.length > 0" class="space-y-1">
-          <li v-for="chatListItem in chatList.unarchived" :key="chatListItem.receiver.id">
+        <ul v-if="chatList && chatList.length > 0" class="space-y-1">
+          <li v-for="chatListItem in chatList" :key="chatListItem.receiver.id">
             <ChatListItem :chat-list-item="chatListItem" @delete="handleDelete" />
           </li>
         </ul>
@@ -31,7 +31,7 @@ const toast = useToast()
 const overlay = useOverlay()
 const deleteModal = overlay.create(DeleteChatModal)
 
-const { data: chatList } = await useFetchChats()
+const { data: chatList } = await useFetchUnarchivedChats()
 
 async function handleDelete(deleteTarget: IChatListItem) {
   const instance = deleteModal.open({ deleteTarget })

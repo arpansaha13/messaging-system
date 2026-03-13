@@ -14,13 +14,10 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 )
 
-func TestChatHandler_GetUserChats(t *testing.T) {
+func TestChatHandler_GetUserUnarchivedChats(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		GetUserChatsFunc: func(ctx context.Context, userID int64) (*service.ChatsResponseDTO, error) {
-			return &service.ChatsResponseDTO{
-				Unarchived: []*service.ChatItemDTO{},
-				Archived:   []*service.ChatItemDTO{},
-			}, nil
+		GetUserUnarchivedChatsFunc: func(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error) {
+			return []*service.ChatItemDTO{}, nil
 		},
 	}
 
@@ -30,7 +27,28 @@ func TestChatHandler_GetUserChats(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	controller := getUserChatsController(mockService)
+	controller := getUserUnarchivedChatsController(mockService)
+	resp, err := controller(w, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestChatHandler_GetUserArchivedChats(t *testing.T) {
+	mockService := &mocks.MockChatService{
+		GetUserArchivedChatsFunc: func(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error) {
+			return []*service.ChatItemDTO{}, nil
+		},
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/chats/archived", nil)
+	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+
+	controller := getUserArchivedChatsController(mockService)
 	resp, err := controller(w, req)
 
 	require.NoError(t, err)

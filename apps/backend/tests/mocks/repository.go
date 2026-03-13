@@ -226,12 +226,12 @@ func (m *MockChannelRepository) Update(ctx context.Context, channel *domain.Chan
 
 // MockChatRepository is a mock implementation of IChatRepository
 type MockChatRepository struct {
-	CreateFunc       func(ctx context.Context, chat *domain.Chat) error
-	GetByIDFunc      func(ctx context.Context, chatID int64) (*domain.Chat, error)
-	GetByUsersFunc   func(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
-	GetUserChatsFunc func(ctx context.Context, userID int64) ([]*repository.ChatWithReceiverInfo, error)
-	UpdateFunc       func(ctx context.Context, chat *domain.Chat) error
-	DeleteFunc       func(ctx context.Context, chatID int64) error
+	CreateFunc                func(ctx context.Context, chat *domain.Chat) error
+	GetByIDFunc               func(ctx context.Context, chatID int64) (*domain.Chat, error)
+	GetByUsersFunc            func(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
+	GetUserChatsByArchivedFunc func(ctx context.Context, userID int64, archived bool) ([]*repository.ChatWithReceiverInfo, error)
+	UpdateFunc                func(ctx context.Context, chat *domain.Chat) error
+	DeleteFunc                func(ctx context.Context, chatID int64) error
 }
 
 func (m *MockChatRepository) Create(ctx context.Context, chat *domain.Chat) error {
@@ -255,9 +255,9 @@ func (m *MockChatRepository) GetByUsers(ctx context.Context, user1ID, user2ID in
 	return nil, nil
 }
 
-func (m *MockChatRepository) GetUserChats(ctx context.Context, userID int64) ([]*repository.ChatWithReceiverInfo, error) {
-	if m.GetUserChatsFunc != nil {
-		return m.GetUserChatsFunc(ctx, userID)
+func (m *MockChatRepository) GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*repository.ChatWithReceiverInfo, error) {
+	if m.GetUserChatsByArchivedFunc != nil {
+		return m.GetUserChatsByArchivedFunc(ctx, userID, archived)
 	}
 	return nil, nil
 }

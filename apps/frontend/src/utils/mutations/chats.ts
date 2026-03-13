@@ -1,4 +1,4 @@
-import type { IChatListItem, IChatsResponse, IUser } from '~/types'
+import type { IChatListItem, IUser } from '~/types'
 import type { IMessage } from '@shared/types'
 import type { MessageStatus } from '@shared/constants'
 
@@ -45,24 +45,37 @@ function apiFetchChatByReceiver(receiverId: IUser['id']) {
 // ================== Helpers ==================
 // =============================================
 
-/** Get cached chatList using useNuxtData */
-export function getChatListData() {
-  return useNuxtData<IChatsResponse>(asyncKeys.chatList).data
+export function getUnarchivedChatListData() {
+  return useNuxtData<IChatListItem[]>(asyncKeys.chatListUnarchived).data
 }
 
-/** Mutate the cached chatList data */
-function mutateChatListData(mutator: (state: IChatsResponse) => void) {
-  const chatListData = getChatListData()
-  if (!chatListData.value) return
+export function getArchivedChatListData() {
+  return useNuxtData<IChatListItem[]>(asyncKeys.chatListArchived).data
+}
 
-  mutator(chatListData.value)
-  const current = chatListData.value
+function ensureChatLists() {
+  const unarchivedData = getUnarchivedChatListData()
+  const archivedData = getArchivedChatListData()
 
-  // Trigger reactivity by reassigning
-  chatListData.value = {
-    archived: [...current.archived],
-    unarchived: [...current.unarchived],
+  if (!unarchivedData.value) {
+    unarchivedData.value = []
   }
+
+  if (!archivedData.value) {
+    archivedData.value = []
+  }
+
+  return { unarchivedData, archivedData }
+}
+
+function mutateChatLists(mutator: (state: { unarchived: IChatListItem[]; archived: IChatListItem[] }) => void) {
+  const { unarchivedData, archivedData } = ensureChatLists()
+
+  mutator({ unarchived: unarchivedData.value!, archived: archivedData.value! })
+
+  // Trigger reactivity by reassigning arrays
+  unarchivedData.value = [...unarchivedData.value!]
+  archivedData.value = [...archivedData.value!]
 }
 
 /** Helper to find chat in list */
@@ -87,7 +100,7 @@ function sortChatList(list: IChatListItem[]) {
 
 export async function initializeNewChat(receiverId: IUser['id']) {
   const chat = await apiFetchChatByReceiver(receiverId)
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     state.unarchived.push(chat)
     sortChatList(state.unarchived)
   })
@@ -95,7 +108,7 @@ export async function initializeNewChat(receiverId: IUser['id']) {
 
 /** Update a specific chat item in the list */
 export function updateChatListItem(receiverId: IUser['id'], updater: (item: IChatListItem) => void) {
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     const unarchivedIdx = findChatIndex(receiverId, state.unarchived)
     if (unarchivedIdx !== -1) {
       updater(state.unarchived[unarchivedIdx]!)
@@ -114,7 +127,7 @@ export async function togglePinChat(receiverId: IUser['id'], pinned: boolean) {
     item.chat.pinned = pinned
   })
 
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     sortChatList(state.unarchived)
   })
 
@@ -130,7 +143,7 @@ export async function togglePinChat(receiverId: IUser['id'], pinned: boolean) {
 }
 
 export async function archiveChat(receiverId: IUser['id']) {
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     const idx = findChatIndex(receiverId, state.unarchived)
     if (idx !== -1) {
       const convo = state.unarchived.splice(idx, 1)[0]!
@@ -150,7 +163,7 @@ export async function archiveChat(receiverId: IUser['id']) {
 }
 
 export async function unarchiveChat(receiverId: IUser['id']) {
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     const idx = findChatIndex(receiverId, state.archived)
     if (idx !== -1) {
       const convo = state.archived.splice(idx, 1)[0]!
@@ -176,7 +189,7 @@ export async function unarchiveChat(receiverId: IUser['id']) {
 export async function deleteChat(receiverId: IUser['id'], archivedList: boolean) {
   try {
     await apiDeleteChat(receiverId)
-    mutateChatListData(state => {
+    mutateChatLists(state => {
       const list = archivedList ? state.archived : state.unarchived
       const idx = findChatIndex(receiverId, list)
       if (idx !== -1) {
@@ -195,14 +208,14 @@ export function clearLatestMessageFromChatList(receiverId: IUser['id']) {
 }
 
 export function insertNewUnarchivedChat(item: IChatListItem) {
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     state.unarchived.push(item)
     sortChatList(state.unarchived)
   })
 }
 
 export function updateLatestMessageInChatList(receiverId: IUser['id'], latestMsg: IMessage | null) {
-  mutateChatListData(state => {
+  mutateChatLists(state => {
     const archivedIdx = findChatIndex(receiverId, state.archived)
     if (archivedIdx !== -1) {
       const convo = state.archived.splice(archivedIdx, 1)[0]!

@@ -16,11 +16,11 @@ func (s *ChatTestSuite) SetupTest() {
 	s.CleanupTablesForSuite()
 }
 
-// TestGetChats tests the GET /api/chats endpoint
-func (s *ChatTestSuite) TestGetChats() {
+// TestGetUnarchivedChats tests the GET /api/chats endpoint
+func (s *ChatTestSuite) TestGetUnarchivedChats() {
 	tests := []TableDrivenTestCase{
 		{
-			Name: "Get chats for user with multiple conversations",
+			Name: "Get unarchived chats for user with multiple conversations",
 			Setup: func(f *TestFixture) error {
 				f.SetUserID(2001)
 				if _, err := f.TestDB.CreateTestUserProfile(2001, "User 1"); err != nil {
@@ -43,19 +43,17 @@ func (s *ChatTestSuite) TestGetChats() {
 				s.Require().NoError(err)
 				s.Require().Equal(200, resp.StatusCode)
 
-				var result map[string]any
+				var result []any
 				err = ReadResponseBody(resp, &result)
 				s.Require().NoError(err)
 
-				unarchived, ok := result["unarchived"].([]any)
-				s.Require().True(ok, "expected unarchived array in response")
-				s.Require().NotEmpty(unarchived, "expected chats in response")
+				s.Require().NotEmpty(result, "expected chats in response")
 				return nil
 			},
 			ExpectError: false,
 		},
 		{
-			Name: "Get chats returns empty array when no chats",
+			Name: "Get unarchived chats returns empty array when no chats",
 			Setup: func(f *TestFixture) error {
 				f.SetUserID(2010)
 				_, err := f.TestDB.CreateTestUserProfile(2010, "User 10")
@@ -66,13 +64,92 @@ func (s *ChatTestSuite) TestGetChats() {
 				s.Require().NoError(err)
 				s.Require().Equal(200, resp.StatusCode)
 
-				var result map[string]any
+				var result []any
 				err = ReadResponseBody(resp, &result)
 				s.Require().NoError(err)
 
-				unarchived, ok := result["unarchived"].([]any)
-				s.Require().True(ok, "expected unarchived array in response")
-				s.Require().Empty(unarchived, "expected empty unarchived array")
+				s.Require().Empty(result, "expected empty unarchived array")
+				return nil
+			},
+			ExpectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.Name, func() {
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture.Setup()
+
+			err := tt.Setup(fixture)
+			s.Require().NoError(err, "setup failed")
+
+			err = tt.Test(fixture)
+			if tt.ExpectError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+
+			if tt.Verify != nil {
+				if err := tt.Verify(fixture); err != nil {
+					s.T().Errorf("verification failed: %v", err)
+				}
+			}
+		})
+	}
+}
+
+// TestGetArchivedChats tests the GET /api/chats/archived endpoint
+func (s *ChatTestSuite) TestGetArchivedChats() {
+	tests := []TableDrivenTestCase{
+		{
+			Name: "Get archived chats returns archived conversations only",
+			Setup: func(f *TestFixture) error {
+				f.SetUserID(2051)
+				if _, err := f.TestDB.CreateTestUserProfile(2051, "User 1"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(2052, "User 2"); err != nil {
+					return err
+				}
+				chat, err := f.TestDB.CreateTestChat(2051, 2052)
+				if err != nil {
+					return err
+				}
+				chat.Archived = true
+				return f.TestDB.ChatRepo.Update(f.Ctx, chat)
+			},
+			Test: func(f *TestFixture) error {
+				resp, err := f.HTTPClient.GET("/api/chats/archived")
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
+
+				var result []any
+				err = ReadResponseBody(resp, &result)
+				s.Require().NoError(err)
+
+				s.Require().Len(result, 1, "expected one archived chat in response")
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "Get archived chats returns empty array when none archived",
+			Setup: func(f *TestFixture) error {
+				f.SetUserID(2060)
+				_, err := f.TestDB.CreateTestUserProfile(2060, "User 10")
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				resp, err := f.HTTPClient.GET("/api/chats/archived")
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
+
+				var result []any
+				err = ReadResponseBody(resp, &result)
+				s.Require().NoError(err)
+
+				s.Require().Empty(result, "expected empty archived array")
 				return nil
 			},
 			ExpectError: false,

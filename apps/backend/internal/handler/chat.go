@@ -15,7 +15,8 @@ import (
 
 // SetupChatRoutes sets up chat routes
 func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatService service.IChatService) {
-	protectedRouter.HandleFunc("/api/chats", gtk.HttpControllerAdaptor(getUserChatsController(chatService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/chats", gtk.HttpControllerAdaptor(getUserUnarchivedChatsController(chatService))).Methods("GET")
+	protectedRouter.HandleFunc("/api/chats/archived", gtk.HttpControllerAdaptor(getUserArchivedChatsController(chatService))).Methods("GET")
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/pin", gtk.HttpControllerAdaptor(pinChatController(chatService))).Methods("PATCH")
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/unpin", gtk.HttpControllerAdaptor(unpinChatController(chatService))).Methods("PATCH")
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/archive", gtk.HttpControllerAdaptor(archiveChatController(chatService))).Methods("PATCH")
@@ -24,23 +25,48 @@ func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatServic
 	protectedRouter.HandleFunc("/api/chats/{receiverID}/delete", gtk.HttpControllerAdaptor(deleteChatController(chatService))).Methods("DELETE")
 }
 
-func getUserChatsController(chatService service.IChatService) gtk.ControllerFunc {
+func getUserUnarchivedChatsController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
 		log := logger.FromContext(r.Context())
-		log.Debug("get user chats handler called")
+		log.Debug("get unarchived chats handler called")
 
 		userID := middleware.GetUserIDFromContext(r)
 		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
 
-		log.Debug("fetching chats for user", zap.Int64("user_id", userIDInt))
+		log.Debug("fetching unarchived chats for user", zap.Int64("user_id", userIDInt))
 
-		chatsResponse, err := chatService.GetUserChats(r.Context(), userIDInt)
+		chatsResponse, err := chatService.GetUserUnarchivedChats(r.Context(), userIDInt)
 		if err != nil {
-			log.Error("failed to get user chats", zap.Int64("user_id", userIDInt), zap.Error(err))
+			log.Error("failed to get unarchived user chats", zap.Int64("user_id", userIDInt), zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("user chats retrieved successfully", zap.Int64("user_id", userIDInt))
+		log.Debug("unarchived chats retrieved successfully", zap.Int64("user_id", userIDInt))
+
+		return &gtk.ControllerResponse{
+			StatusCode: http.StatusOK,
+			Body:       chatsResponse,
+		}, nil
+	}
+}
+
+func getUserArchivedChatsController(chatService service.IChatService) gtk.ControllerFunc {
+	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
+		log := logger.FromContext(r.Context())
+		log.Debug("get archived chats handler called")
+
+		userID := middleware.GetUserIDFromContext(r)
+		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
+
+		log.Debug("fetching archived chats for user", zap.Int64("user_id", userIDInt))
+
+		chatsResponse, err := chatService.GetUserArchivedChats(r.Context(), userIDInt)
+		if err != nil {
+			log.Error("failed to get archived user chats", zap.Int64("user_id", userIDInt), zap.Error(err))
+			return nil, err
+		}
+
+		log.Debug("archived chats retrieved successfully", zap.Int64("user_id", userIDInt))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,

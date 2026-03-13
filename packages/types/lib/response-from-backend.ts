@@ -36,7 +36,3 @@ export interface IChatListItemResponseFromBE {
   }
 }
 
-export interface IChatsResponseFromBE {
-  archived: IChatListItemResponseFromBE[]
-  unarchived: IChatListItemResponseFromBE[]
-}

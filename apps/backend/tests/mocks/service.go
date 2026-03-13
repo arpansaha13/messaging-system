@@ -102,14 +102,15 @@ func (m *MockChannelService) GetChannelByID(ctx context.Context, channelID int64
 
 // MockChatService is a mock implementation of IChatService
 type MockChatService struct {
-	CreateChatFunc    func(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
-	GetUserChatsFunc  func(ctx context.Context, userID int64) (*service.ChatsResponseDTO, error)
-	PinChatFunc       func(ctx context.Context, userID, receiverID int64) error
-	UnpinChatFunc     func(ctx context.Context, userID, receiverID int64) error
-	ArchiveChatFunc   func(ctx context.Context, userID, receiverID int64) error
-	UnarchiveChatFunc func(ctx context.Context, userID, receiverID int64) error
-	ClearChatFunc     func(ctx context.Context, userID, receiverID int64) error
-	DeleteChatFunc    func(ctx context.Context, userID, receiverID int64) error
+	CreateChatFunc             func(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
+	GetUserUnarchivedChatsFunc func(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error)
+	GetUserArchivedChatsFunc   func(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error)
+	PinChatFunc                func(ctx context.Context, userID, receiverID int64) error
+	UnpinChatFunc              func(ctx context.Context, userID, receiverID int64) error
+	ArchiveChatFunc            func(ctx context.Context, userID, receiverID int64) error
+	UnarchiveChatFunc          func(ctx context.Context, userID, receiverID int64) error
+	ClearChatFunc              func(ctx context.Context, userID, receiverID int64) error
+	DeleteChatFunc             func(ctx context.Context, userID, receiverID int64) error
 }
 
 func (m *MockChatService) CreateChat(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error) {
@@ -119,9 +120,16 @@ func (m *MockChatService) CreateChat(ctx context.Context, user1ID, user2ID int64
 	return nil, nil
 }
 
-func (m *MockChatService) GetUserChats(ctx context.Context, userID int64) (*service.ChatsResponseDTO, error) {
-	if m.GetUserChatsFunc != nil {
-		return m.GetUserChatsFunc(ctx, userID)
+func (m *MockChatService) GetUserUnarchivedChats(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error) {
+	if m.GetUserUnarchivedChatsFunc != nil {
+		return m.GetUserUnarchivedChatsFunc(ctx, userID)
+	}
+	return nil, nil
+}
+
+func (m *MockChatService) GetUserArchivedChats(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error) {
+	if m.GetUserArchivedChatsFunc != nil {
+		return m.GetUserArchivedChatsFunc(ctx, userID)
 	}
 	return nil, nil
 }

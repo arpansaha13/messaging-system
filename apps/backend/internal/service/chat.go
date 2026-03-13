@@ -33,11 +33,6 @@ type ChatMetadataDTO struct {
 	Archived bool `json:"archived"`
 }
 
-type ChatsResponseDTO struct {
-	Unarchived []*ChatItemDTO `json:"unarchived"`
-	Archived   []*ChatItemDTO `json:"archived"`
-}
-
 // ChatService handles chat business logic
 type ChatService struct {
 	chatRepo    repository.IChatRepository
@@ -83,21 +78,27 @@ func (s *ChatService) CreateChat(ctx context.Context, user1ID, user2ID int64) (*
 	return chat, nil
 }
 
-// GetUserChats retrieves all chats for a user split into archived and unarchived
-func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsResponseDTO, error) {
-	log := logger.FromContext(ctx)
-	log.Debug("retrieving user chats", zap.Int64("user_id", userID))
+// GetUserUnarchivedChats retrieves all unarchived chats for a user
+func (s *ChatService) GetUserUnarchivedChats(ctx context.Context, userID int64) ([]*ChatItemDTO, error) {
+	return s.getUserChatsByArchivedStatus(ctx, userID, false)
+}
 
-	chats, err := s.chatRepo.GetUserChats(ctx, userID)
+// GetUserArchivedChats retrieves all archived chats for a user
+func (s *ChatService) GetUserArchivedChats(ctx context.Context, userID int64) ([]*ChatItemDTO, error) {
+	return s.getUserChatsByArchivedStatus(ctx, userID, true)
+}
+
+func (s *ChatService) getUserChatsByArchivedStatus(ctx context.Context, userID int64, archived bool) ([]*ChatItemDTO, error) {
+	log := logger.FromContext(ctx)
+	log.Debug("retrieving user chats", zap.Int64("user_id", userID), zap.Bool("archived", archived))
+
+	chats, err := s.chatRepo.GetUserChatsByArchived(ctx, userID, archived)
 	if err != nil {
-		log.Error("failed to retrieve user chats", zap.Int64("user_id", userID), zap.Error(err))
+		log.Error("failed to retrieve user chats", zap.Int64("user_id", userID), zap.Bool("archived", archived), zap.Error(err))
 		return nil, err
 	}
 
-	response := &ChatsResponseDTO{
-		Unarchived: []*ChatItemDTO{},
-		Archived:   []*ChatItemDTO{},
-	}
+	items := make([]*ChatItemDTO, 0, len(chats))
 
 	// Build a map of chats to their metadata
 	chatMetadataMap := make(map[int64]*ChatMetadataDTO)
@@ -149,19 +150,13 @@ func (s *ChatService) GetUserChats(ctx context.Context, userID int64) (*ChatsRes
 			Chat:      chatMetadataMap[chat.ID],
 		}
 
-		if item.Chat.Archived {
-			response.Archived = append(response.Archived, item)
-		} else {
-			response.Unarchived = append(response.Unarchived, item)
-		}
+		items = append(items, item)
 	}
 
-	// Sort both lists
-	sortChats(response.Unarchived)
-	sortChats(response.Archived)
+	sortChats(items)
 
-	log.Debug("user chats retrieved successfully", zap.Int64("user_id", userID), zap.Int("total_chats", len(chats)), zap.Int("unarchived_count", len(response.Unarchived)), zap.Int("archived_count", len(response.Archived)))
-	return response, nil
+	log.Debug("user chats retrieved successfully", zap.Int64("user_id", userID), zap.Bool("archived", archived), zap.Int("total_chats", len(chats)))
+	return items, nil
 }
 
 // sortChats sorts chats by pinned status, then by latest message timestamp

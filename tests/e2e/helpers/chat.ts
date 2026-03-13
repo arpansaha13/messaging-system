@@ -35,18 +35,20 @@ export async function ensureChatReady(page: Page, receiverId: number, alias = 'B
 }
 
 export async function getChatState(page: Page, receiverId: number): Promise<ChatState | null> {
-  const res = await page.request.get('/api/chats')
-  if (!res.ok()) {
+  const unarchivedRes = await page.request.get('/api/chats')
+  const archivedRes = await page.request.get('/api/chats/archived')
+
+  if (!unarchivedRes.ok() || !archivedRes.ok()) {
     return null
   }
-  const data = (await res.json()) as {
-    unarchived: { receiver: { id: number } }[]
-    archived: { receiver: { id: number } }[]
-  }
-  if (data.unarchived.some(chat => chat.receiver.id === receiverId)) {
+
+  const unarchived = (await unarchivedRes.json()) as { receiver: { id: number } }[]
+  const archived = (await archivedRes.json()) as { receiver: { id: number } }[]
+
+  if (unarchived.some(chat => chat.receiver.id === receiverId)) {
     return { archived: false }
   }
-  if (data.archived.some(chat => chat.receiver.id === receiverId)) {
+  if (archived.some(chat => chat.receiver.id === receiverId)) {
     return { archived: true }
   }
   return null

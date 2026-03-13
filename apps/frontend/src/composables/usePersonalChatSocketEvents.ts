@@ -151,20 +151,20 @@ export async function usePersonalChatSocketEvents() {
 }
 
 function findConversation(receiverId: number) {
-  const chatListData = getChatListData()
-  if (!chatListData.value) return null
+  const unarchivedChats = getUnarchivedChatListData()
+  const archivedChats = getArchivedChatListData()
 
   return (
-    chatListData.value.unarchived.find(item => item.receiver.id === receiverId) ??
-    chatListData.value.archived.find(item => item.receiver.id === receiverId) ??
+    unarchivedChats.value?.find(item => item.receiver.id === receiverId) ??
+    archivedChats.value?.find(item => item.receiver.id === receiverId) ??
     null
   )
 }
 
 function isConversationArchived(receiverId: number) {
-  const chatListData = getChatListData()
-  if (!chatListData.value) return false
-  return chatListData.value.archived.some(item => item.receiver.id === receiverId)
+  const archivedChats = getArchivedChatListData()
+  if (!archivedChats.value) return false
+  return archivedChats.value.some(item => item.receiver.id === receiverId)
 }
 
 function pushMessage(receiverId: IUser['id'], message: IMessage) {

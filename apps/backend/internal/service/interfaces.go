@@ -38,7 +38,8 @@ type IContactService interface {
 // ChatService defines the interface for chat service operations
 type IChatService interface {
 	CreateChat(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
-	GetUserChats(ctx context.Context, userID int64) (*ChatsResponseDTO, error)
+	GetUserUnarchivedChats(ctx context.Context, userID int64) ([]*ChatItemDTO, error)
+	GetUserArchivedChats(ctx context.Context, userID int64) ([]*ChatItemDTO, error)
 	PinChat(ctx context.Context, userID, receiverID int64) error
 	UnpinChat(ctx context.Context, userID, receiverID int64) error
 	ArchiveChat(ctx context.Context, userID, receiverID int64) error
