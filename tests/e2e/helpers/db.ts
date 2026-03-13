@@ -67,6 +67,31 @@ export async function userExists(email: string): Promise<boolean> {
 }
 
 /**
+ * Deletes a user by email from auth DB and corresponding profile from messaging DB.
+ */
+export async function deleteUserByEmail(email: string): Promise<void> {
+  const authClient = new pg.Client({ connectionString: AUTH_DB_URL })
+  const messagingClient = new pg.Client({ connectionString: MESSAGING_DB_URL })
+
+  await authClient.connect()
+  await messagingClient.connect()
+
+  try {
+    const result = await authClient.query<{ id: number }>('SELECT id FROM users WHERE email = $1', [email])
+    if (result.rows.length === 0) {
+      return
+    }
+    const userId = result.rows[0].id
+
+    await authClient.query('DELETE FROM users WHERE id = $1', [userId])
+    await messagingClient.query('DELETE FROM user_profiles WHERE id = $1', [userId])
+  } finally {
+    await authClient.end()
+    await messagingClient.end()
+  }
+}
+
+/**
  * Clears contacts to keep E2E runs isolated.
  */
 export async function clearContacts(): Promise<void> {
@@ -149,5 +174,21 @@ export async function resetProfiles(userIds: Record<TestUserKey, number>): Promi
     }
   } finally {
     await messagingClient.end()
+  }
+}
+
+/**
+ * Clears auth sessions and OTPs for the seeded test users.
+ */
+export async function clearAuthSessionsAndOtps(userIds: Record<TestUserKey, number>): Promise<void> {
+  const authClient = new pg.Client({ connectionString: AUTH_DB_URL })
+  await authClient.connect()
+  try {
+    const ids = Object.values(userIds).filter(Boolean)
+    if (ids.length === 0) return
+    await authClient.query('DELETE FROM sessions WHERE user_id = ANY($1)', [ids])
+    await authClient.query('DELETE FROM otps WHERE user_id = ANY($1)', [ids])
+  } finally {
+    await authClient.end()
   }
 }
