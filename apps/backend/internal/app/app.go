@@ -64,6 +64,11 @@ func New(deps Deps) *http.Server {
 	protectedRouter := router.PathPrefix("").Subrouter()
 	protectedRouter.Use(middleware.AuthMiddleware(deps.AuthClient))
 
+	// Liveness probe — no auth, no dependencies
+	router.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods(http.MethodGet)
+
 	// Setup routes - user group routes must be registered before user routes
 	// to ensure /api/users/groups matches before /api/users/{id}
 	handler.SetupAuthRoutes(router, deps.AuthClient)

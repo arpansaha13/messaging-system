@@ -70,6 +70,9 @@ func main() {
 
 	// HTTP mux — path /socket keeps nginx routing unchanged
 	mux := http.NewServeMux()
+	mux.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 	mux.HandleFunc("/socket", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("WebSocket connection request", zap.String("remote_addr", r.RemoteAddr))
 		ws.ServeWs(hub, chatsStore, dispatch,

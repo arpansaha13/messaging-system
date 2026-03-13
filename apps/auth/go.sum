@@ -1,5 +1,5 @@
-github.com/arpansaha13/goauthkit v0.2.9 h1:5xSZ1/aHAWdeNCmZtO8XkDPByBQakGsP95teSGEGxoU=
-github.com/arpansaha13/goauthkit v0.2.9/go.mod h1:c/OoBwMgBGZZRVuwodAjHCNqrSYA+4z3BSJ2EXEZTIA=
+github.com/arpansaha13/goauthkit v0.2.10 h1:fKTcleQTl40O0+YL/o4TAqnPgaq5MLM/YU6eiDVLzSA=
+github.com/arpansaha13/goauthkit v0.2.10/go.mod h1:Lh8jPrmO+PTPnbbEvk8Ouq+Mp/jh3dUX0hM2VX7AJBE=
 github.com/arpansaha13/gotoolkit v0.9.1 h1:tAZKfAkcBdhiF6nQTSULdb2Favv8tUzBdRGLcggSk0Y=
 github.com/arpansaha13/gotoolkit v0.9.1/go.mod h1:7eB0MXY5cApaD2/VZxdj4zG++ZxCqJR1vkE22Ss4L6I=
 github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf h1:TqhNAT4zKbTdLa62d2HDBFdvgSbIGB3eJE8HqhgiL9I=
