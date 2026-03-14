@@ -41,6 +41,11 @@ test.describe('Chat Management — Pin', () => {
 
     // Pinned item appears first in the list
     await expect(alicePage.getByTestId('chat-list-item').first()).toContainText('Bob')
+
+    // Verify pinned position persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByTestId('chat-list-item').first()).toContainText('Bob')
   })
 
   test('P-02 unpin chat returns it to normal sort order', async () => {
@@ -61,6 +66,14 @@ test.describe('Chat Management — Pin', () => {
 
     // Confirm context menu now shows 'Pin chat' option
     await chatItem.click({ button: 'right' })
+    await expect(alicePage.getByText('Pin chat')).toBeVisible()
+    await alicePage.keyboard.press('Escape')
+
+    // Verify unpinned state persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    const unpinnedItem = alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()
+    await unpinnedItem.click({ button: 'right' })
     await expect(alicePage.getByText('Pin chat')).toBeVisible()
     await alicePage.keyboard.press('Escape')
   })

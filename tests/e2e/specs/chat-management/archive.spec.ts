@@ -49,6 +49,11 @@ test.describe('Chat Management — Archive', () => {
     await alicePage.goto('/archived')
     await waitForHydration(alicePage)
     await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible()
+
+    // Verify archived state persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible()
   })
 
   test('A-02 unarchive chat returns it to main list', async () => {
@@ -68,6 +73,11 @@ test.describe('Chat Management — Archive', () => {
 
     // Appears back in main list
     await alicePage.goto('/')
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible()
+
+    // Verify unarchived state persists on reload
+    await alicePage.reload()
     await waitForHydration(alicePage)
     await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' }).first()).toBeVisible()
   })

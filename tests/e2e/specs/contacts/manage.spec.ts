@@ -50,6 +50,11 @@ test.describe('Contacts — Manage', () => {
     await alicePage.getByTestId('edit-contact-save').click()
 
     await expect(alicePage.getByText('Bobby')).toBeVisible({ timeout: 5_000 })
+
+    // Verify alias change persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByText('Bobby')).toBeVisible()
   })
 
   test('M-02 delete contact removes it from list', async () => {
@@ -63,6 +68,11 @@ test.describe('Contacts — Manage', () => {
     await alicePage.getByTestId('delete-contact-confirm').click()
 
     await expect(alicePage.getByRole('heading', { name: 'No contacts' })).toBeVisible({ timeout: 5_000 })
+
+    // Verify deletion persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByRole('heading', { name: 'No contacts' })).toBeVisible()
   })
 
   test('M-03 cancel delete keeps contact in list', async () => {

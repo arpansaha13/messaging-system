@@ -48,6 +48,11 @@ test.describe('Groups — Create Channel', () => {
     await alicePage.getByRole('button', { name: /create channel/i }).click()
 
     await expect(alicePage.getByText('general')).toBeVisible({ timeout: 10_000 })
+
+    // Verify channel persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByText('general')).toBeVisible()
   })
 
   test('CH-02 non-founder cannot create a channel', async () => {

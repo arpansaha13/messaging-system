@@ -95,6 +95,11 @@ test.describe('Search & Add Contacts', () => {
     await alicePage.goto('/contacts')
     await waitForHydration(alicePage)
     await expect(alicePage.getByText('My Bob')).toBeVisible()
+
+    // Verify contact persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByText('My Bob')).toBeVisible()
   })
 
   test('SA-05 already-contact user shows badge, not Add button', async () => {

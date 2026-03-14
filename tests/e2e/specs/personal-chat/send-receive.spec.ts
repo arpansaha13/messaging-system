@@ -50,6 +50,15 @@ test.describe('Personal Messaging — Send & Receive', () => {
     // After confirmation, temp bubble is replaced with a real message bubble
     await expect(alicePage.getByTestId('message-bubble').last()).toBeVisible({ timeout: 10_000 })
 
+    // Verify message is persisted on reload.
+    // Wait for the messages API to confirm DB persistence first — the bubble
+    // appearing means the socket server confirmed receipt, but the chat-worker
+    // persists asynchronously via RabbitMQ and may not have finished yet.
+    await waitForMessageInApi(alicePage, userIds.bob, 'SENT test')
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: 'SENT test' }).first()).toBeVisible()
+
   })
 
   test('PM-03 Bob receives message in real-time', async () => {
@@ -136,6 +145,11 @@ test.describe('Personal Messaging — Send & Receive', () => {
       timeout: 10_000,
     })
 
+    // Verify message persists in Alice's history on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: msg }).first()).toBeVisible()
+
     await bobPage.close()
   })
 
@@ -170,4 +184,18 @@ async function openChat(page: Page, receiverId: number, waitForSocket = false) {
   if (socketReady) {
     await socketReady
   }
+}
+
+async function waitForMessageInApi(page: Page, receiverId: number, content: string) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const res = await page.request.get(`/api/messages/${receiverId}`)
+    if (res.ok()) {
+      const data = (await res.json()) as { messages: { content: string }[] }
+      if (data.messages?.some(msg => msg.content === content)) {
+        return
+      }
+    }
+    await page.waitForTimeout(1_000)
+  }
+  throw new Error(`Message "${content}" did not appear in API after 20 s`)
 }

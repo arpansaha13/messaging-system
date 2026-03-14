@@ -33,5 +33,9 @@ test.describe('Authentication — Logout', () => {
     // Navigate to home — should be redirected to login now that session is gone
     await alicePage.goto('/')
     await expect(alicePage).toHaveURL('/auth/login', { timeout: 10_000 })
+
+    // Verify logged-out state persists on reload
+    await alicePage.reload()
+    await expect(alicePage).toHaveURL('/auth/login', { timeout: 10_000 })
   })
 })

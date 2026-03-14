@@ -55,6 +55,11 @@ test.describe('Chat Management — Delete', () => {
     await alicePage.getByTestId('delete-chat-confirm').click()
 
     await expect(chatItem).not.toBeVisible({ timeout: 5_000 })
+
+    // Verify deletion persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByTestId('chat-list-item').filter({ hasText: 'Bob' })).toHaveCount(0)
   })
 
   test('D-02 cancel delete keeps chat in list', async () => {

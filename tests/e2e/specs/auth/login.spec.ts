@@ -14,6 +14,11 @@ test.describe('Authentication — Login', () => {
     await page.locator('[data-testid="login-form"] button[type="submit"]').click()
 
     await expect(page).toHaveURL('/', { timeout: 15_000 })
+
+    // Verify session persists on reload
+    await page.reload()
+    await waitForHydration(page)
+    await expect(page).toHaveURL('/')
   })
 
   test('L-02 login with wrong password shows error', async ({ page }) => {

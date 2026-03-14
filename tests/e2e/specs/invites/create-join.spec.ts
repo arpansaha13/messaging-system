@@ -64,6 +64,11 @@ test.describe('Invites — Create & Join', () => {
     // Bob's navbar should show the group
     await expect(bobPage.getByText(group.name)).toBeVisible({ timeout: 10_000 })
 
+    // Verify group membership persists on reload
+    await bobPage.reload()
+    await waitForHydration(bobPage)
+    await expect(bobPage.getByText(group.name)).toBeVisible()
+
   })
 
   test('I-03 expired invite shows error state', async () => {

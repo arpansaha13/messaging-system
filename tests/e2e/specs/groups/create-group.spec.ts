@@ -36,6 +36,11 @@ test.describe('Groups — Create Group', () => {
 
     // New group appears in the navbar
     await expect(alicePage.getByText(groupName)).toBeVisible({ timeout: 10_000 })
+
+    // Verify group persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByText(groupName)).toBeVisible()
   })
 
   test('G-02 empty group name does not create a group', async () => {
