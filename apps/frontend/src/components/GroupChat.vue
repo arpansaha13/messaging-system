@@ -25,9 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import type { IChannel } from '~/types'
-import { MessageStatus } from '@shared/constants'
-import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
+import type { IChannel, IGroupMessage, IGroupMessageSending  } from '~/types'
+import { MessageStatus } from '~/constants'
 import { sendGroupMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()

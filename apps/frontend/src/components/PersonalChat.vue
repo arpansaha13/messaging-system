@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import type { IMessage, IMessageSending } from '@shared/types'
-import { MessageStatus, SocketEvents } from '@shared/constants'
+import type { IMessage, IMessageSending } from '~/types'
+import { MessageStatus, SocketEvents } from '~/constants'
 import { sendPersonalMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()

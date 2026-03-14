@@ -1,5 +1,4 @@
-import type { IGroupMessage } from '@shared/types'
-import type { IChannel } from '~/types'
+import type { IGroupMessage, IChannel  } from '~/types'
 
 interface PaginatedGroupMessagesResponse {
   messages: IGroupMessage[]

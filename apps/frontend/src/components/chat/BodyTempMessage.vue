@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { IMessageSending } from '@shared/types'
-import { MessageStatus } from '@shared/constants'
+import type { IMessageSending } from '~/types'
+import { MessageStatus } from '~/constants'
 
 interface Props {
   message: IMessageSending

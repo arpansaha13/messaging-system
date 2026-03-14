@@ -1,6 +1,5 @@
-import type { IChatListItem, IContact, IUser } from '~/types'
-import { SocketEvents } from '@shared/constants'
-import type { SocketEventPayloads } from '@shared/types'
+import type { IChatListItem, IContact, IUser, SocketEventPayloads  } from '~/types'
+import { SocketEvents } from '~/constants'
 
 export function useOnlineStatusStore() {
   const onlineStatusState = useState<Map<IUser['id'], boolean>>('onlineStatus', () => new Map())

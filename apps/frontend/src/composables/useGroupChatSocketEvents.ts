@@ -1,5 +1,5 @@
-import { MessageStatus, SocketEvents } from '@shared/constants'
-import type { IGroupMessage, SocketEventPayloads } from '@shared/types'
+import { MessageStatus, SocketEvents } from '~/constants'
+import type { IGroupMessage, SocketEventPayloads } from '~/types'
 
 export async function useGroupChatSocketEvents() {
   if (!import.meta.client) {

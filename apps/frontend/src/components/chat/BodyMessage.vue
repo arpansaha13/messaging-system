@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IMessage } from '@shared/types'
+import type { IMessage } from '~/types'
 
 defineProps<{
   message: IMessage

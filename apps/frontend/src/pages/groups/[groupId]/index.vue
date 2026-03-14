@@ -13,8 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import type { IChannel } from '~/types'
-
 const route = useRoute()
 const { data: groups } = await useFetchGroups()
 
@@ -34,42 +32,4 @@ const groupId = computed(() => {
 const group = computed(() => {
   return groups.value?.find((g: any) => g.id === groupId.value) || null
 })
-
-// Form state
-const channelFormData = reactive({
-  name: '',
-})
-
-const isCreatingChannel = ref(false)
-const isCreateChannelModalOpen = ref(false)
-
-// Create new channel
-const handleCreateChannel = async () => {
-  if (!channelFormData.name.trim() || !groupId.value) return
-
-  isCreatingChannel.value = true
-  try {
-    const response = await $fetch<IChannel>(`/api/groups/${groupId.value}/channels`, {
-      method: 'POST',
-      body: {
-        name: channelFormData.name.trim(),
-      },
-    })
-
-    // Reset form
-    channelFormData.name = ''
-
-    // Close modal
-    isCreateChannelModalOpen.value = false
-
-    // Optionally navigate to the new channel
-    if (response?.id) {
-      await navigateTo(`/groups/${groupId.value}/${response.id}`)
-    }
-  } catch (error) {
-    console.error('Error creating channel:', error)
-  } finally {
-    isCreatingChannel.value = false
-  }
-}
 </script>

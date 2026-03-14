@@ -9,7 +9,7 @@
       variant="subtle"
       class="grow"
       data-testid="message-input"
-      @update:modelValue="emit('change')"
+      @update:model-value="emit('change')"
       @keydown="handleKeydown"
       @compositionstart="handleCompositionStart"
       @compositionend="handleCompositionEnd"

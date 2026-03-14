@@ -1,5 +1,4 @@
-import type { IUser } from '~/types'
-import type { IMessage } from '@shared/types'
+import type { IUser, IMessage  } from '~/types'
 
 interface PaginatedMessagesResponse {
   messages: IMessage[]

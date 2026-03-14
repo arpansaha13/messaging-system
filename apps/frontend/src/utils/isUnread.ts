@@ -1,5 +1,5 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
-import { MessageStatus } from '@shared/constants'
+import { MessageStatus } from '~/constants'
 import type { IChatListItem } from '~/types'
 
 export function isUnread(authUserId: number, latestMsg: IChatListItem['latestMsg']) {

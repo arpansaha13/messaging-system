@@ -1,94 +1,82 @@
-import type { MessageStatus } from '@shared/constants'
+import type { MessageStatus } from '~/constants'
 import type { IGroupMessage, IGroupMessageSending, IMessage, IMessageSending } from './message'
 import type { ChannelId, GroupId, UserId } from './id'
 
-export namespace SocketEventPayloads {
-  export namespace Personal {
-    export interface EmitMessage {
+export type SocketEventPayloads = {
+  Personal: {
+    EmitMessage: {
       hash: IMessageSending['hash']
       content: IMessage['content']
       senderId: UserId
       receiverId: UserId
       status: MessageStatus.SENDING
     }
-
-    export interface OnMessage {
+    OnMessage: {
       messageId: IMessage['id']
       content: IMessage['content']
       senderId: UserId
       createdAt: string
       status: MessageStatus.SENT
     }
-
-    export interface OnDelivered {
+    OnDelivered: {
       messageId: IMessage['id']
       receiverId: UserId
       status: MessageStatus.DELIVERED
     }
-
-    export interface OnRead {
+    OnRead: {
       messageId: IMessage['id']
       receiverId: UserId
       status: MessageStatus.DELIVERED
     }
-
-    export interface EmitDelivered {
+    EmitDelivered: {
       messageId: IMessage['id']
       senderId: UserId
       receiverId: UserId
     }
-
-    export interface EmitRead {
+    EmitRead: {
       messageId: IMessage['id']
       senderId: UserId
       receiverId: UserId
     }
-
-    export interface EmitTyping {
+    EmitTyping: {
       senderId: IMessage['id']
       receiverId: UserId
       isTyping: boolean
     }
-
-    export type OnTyping = EmitTyping
-
-    export interface EmitCheckOnline {
+    OnTyping: {
+      senderId: IMessage['id']
+      receiverId: UserId
+      isTyping: boolean
+    }
+    EmitCheckOnline: {
       userIds: UserId[]
     }
-
-    export interface OnCheckOnline {
+    OnCheckOnline: {
       statuses: Record<UserId, boolean>
     }
   }
-
-  export namespace Group {
-    export interface EmitNewGroup {
+  Group: {
+    EmitNewGroup: {
       groupId: number
-
       /** Comma-separated channel ids */
       channels: string
     }
-
-    export interface EmitJoinGroup {
+    EmitJoinGroup: {
       groupId: number
-
       /** Comma-separated channel ids */
       channels: string
     }
-
-    export interface EmitNewChannel {
+    EmitNewChannel: {
       groupId: number
       channelId: number
     }
-
-    export interface OnNewChannel {
+    OnNewChannel: {
       id: number
       name: string
       groupId: number
       createdAt: string
     }
-
-    export interface EmitMessage {
+    EmitMessage: {
       hash: IGroupMessageSending['hash']
       content: IGroupMessage['content']
       senderId: UserId
@@ -96,8 +84,7 @@ export namespace SocketEventPayloads {
       channelId: ChannelId
       status: MessageStatus.SENDING
     }
-
-    export interface OnMessage {
+    OnMessage: {
       messageId: IGroupMessage['id']
       content: IGroupMessage['content']
       senderId: UserId
@@ -106,8 +93,7 @@ export namespace SocketEventPayloads {
       createdAt: string
       status: MessageStatus.SENT
     }
-
-    export interface OnSent {
+    OnSent: {
       hash: IMessageSending['hash']
       messageId: IMessage['id']
       groupId: GroupId
@@ -115,13 +101,11 @@ export namespace SocketEventPayloads {
       createdAt: string
       status: MessageStatus.SENT
     }
-
-    export interface EmitDelivered {
+    EmitDelivered: {
       messageId: IMessage['id']
       receiverId: UserId
     }
-
-    export interface EmitRead {
+    EmitRead: {
       messageId: IMessage['id']
       receiverId: UserId
     }

@@ -1,4 +1,4 @@
-import type { MessageStatus } from '@shared/constants'
+import type { MessageStatus } from '~/constants'
 import type { ChannelId, UserId } from './id'
 
 export interface IMessageSending {

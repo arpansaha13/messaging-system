@@ -9,18 +9,11 @@ RUN npm i -g --force corepack && corepack enable
 
 # Copy workspace manifests for caching
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
-COPY packages/constants/package.json ./packages/constants/
-COPY packages/types/package.json ./packages/types/
 COPY apps/frontend/package.json ./apps/frontend/
 
 # Install all deps (including dev) for build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm install --frozen-lockfile
-
-# Copy and build shared packages
-COPY packages ./packages
-RUN cd /app/packages/constants && pnpm build
-RUN cd /app/packages/types && pnpm build
+	pnpm install --frozen-lockfile
 
 # Copy frontend source and build Nuxt
 COPY apps/frontend ./apps/frontend
@@ -39,6 +32,6 @@ COPY --from=builder /app/apps/frontend/package.json ./package.json
 EXPOSE 3000
 
 HEALTHCHECK --retries=10 --start-period=5s \
-  CMD wget --no-verbose --spider http://0.0.0.0:3000/ || exit 1
+	CMD wget --no-verbose --spider http://0.0.0.0:3000/ || exit 1
 
 CMD ["node", ".output/server/index.mjs"]

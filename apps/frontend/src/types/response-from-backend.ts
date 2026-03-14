@@ -1,4 +1,4 @@
-import { MessageStatus } from '@shared/constants'
+import type { MessageStatus } from '~/constants'
 
 export interface IContactResponseFromBE {
   id: number
@@ -35,4 +35,3 @@ export interface IChatListItemResponseFromBE {
     archived: boolean
   }
 }
-

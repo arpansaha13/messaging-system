@@ -1,6 +1,5 @@
-import { MessageStatus, SocketEvents } from '@shared/constants'
-import type { IMessage, SocketEventPayloads } from '@shared/types'
-import type { IUser } from '~/types'
+import { MessageStatus, SocketEvents } from '~/constants'
+import type { IMessage, SocketEventPayloads, IUser  } from '~/types'
 import { handleDelivered, handleRead } from '~/utils/mutations/messages'
 
 export async function usePersonalChatSocketEvents() {

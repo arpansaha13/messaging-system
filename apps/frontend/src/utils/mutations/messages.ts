@@ -1,5 +1,4 @@
-import type { IChannel, IUser } from '~/types'
-import type { IGroupMessage, IMessage } from '@shared/types'
+import type { IChannel, IUser, IGroupMessage, IMessage  } from '~/types'
 
 export function fetchMessages(receiverId: IUser['id']) {
   const { $api } = useNuxtApp()

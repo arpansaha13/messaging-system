@@ -12,8 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IMessage, IMessageSending } from '@shared/types'
-import type { IUser } from '~/types'
+import type { IMessage, IMessageSending, IUser  } from '~/types'
 
 const props = defineProps<{
   authUserId: IUser['id']

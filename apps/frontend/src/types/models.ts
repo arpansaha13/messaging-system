@@ -1,4 +1,4 @@
-import type { IMessage } from '@shared/types'
+import type { IMessage } from './message'
 
 export interface IChatListItem {
   latestMsg: IMessage | null

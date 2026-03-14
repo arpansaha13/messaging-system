@@ -1,6 +1,5 @@
-import type { IUser } from '~/types'
-import type { IMessageSending } from '@shared/types'
-import { MessageStatus } from '@shared/constants'
+import type { IUser, IMessageSending  } from '~/types'
+import type { MessageStatus } from '~/constants'
 
 type TempMessageMap = Map<string, IMessageSending>
 

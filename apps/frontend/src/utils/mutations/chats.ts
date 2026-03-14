@@ -1,6 +1,5 @@
-import type { IChatListItem, IUser } from '~/types'
-import type { IMessage } from '@shared/types'
-import type { MessageStatus } from '@shared/constants'
+import type { IChatListItem, IUser, IMessage  } from '~/types'
+import type { MessageStatus } from '~/constants'
 
 // =============================================
 // ================= API Calls =================

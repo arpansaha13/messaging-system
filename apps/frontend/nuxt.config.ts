@@ -35,10 +35,6 @@ export default defineNuxtConfig({
     dirs: ['~/store', '~/utils/mutations', '~/composables/api'],
   },
 
-  devServer: {
-    port: 3000,
-  },
-
   runtimeConfig: {
     authCookieName: '',
     apiBaseUrl: '',
@@ -52,5 +48,23 @@ export default defineNuxtConfig({
 
   ui: {
     colorMode: false,
+  },
+
+  devServer: {
+    port: 3000,
+  },
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        '@arpansaha13/utils',
+        '@heroicons/vue/24/outline',
+        '@heroicons/vue/24/solid',
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'date-fns',
+        'zod',
+      ],
+    },
   },
 })

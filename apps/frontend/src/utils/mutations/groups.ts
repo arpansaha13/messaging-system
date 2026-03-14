@@ -1,6 +1,5 @@
-import type { IChannel, IGroup, IInvite } from '~/types'
-import type { IGroupMessage } from '@shared/types'
-import type { MessageStatus } from '@shared/constants'
+import type { IChannel, IGroup, IInvite, IGroupMessage  } from '~/types'
+import type { MessageStatus } from '~/constants'
 
 export function createInvite(groupId: IGroup['id']) {
   const { $api } = useNuxtApp()
