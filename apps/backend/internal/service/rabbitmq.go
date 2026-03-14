@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/arpansaha13/gotoolkit"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -50,26 +49,6 @@ type ReadPayload struct {
 	MessageID  int64 `json:"messageId"`
 	SenderID   int64 `json:"senderId"`
 	ReceiverID int64 `json:"receiverId"`
-}
-
-// ForwardPersonalMessagePayload carries a pre-persisted personal message for forwarding
-type ForwardPersonalMessagePayload struct {
-	MessageID  int64     `json:"messageId"`
-	SenderID   int64     `json:"senderId"`
-	ReceiverID int64     `json:"receiverId"`
-	Content    string    `json:"content"`
-	CreatedAt  time.Time `json:"createdAt"`
-}
-
-// ForwardGroupMessagePayload carries a pre-persisted group message for forwarding
-type ForwardGroupMessagePayload struct {
-	MessageID int64     `json:"messageId"`
-	SenderID  int64     `json:"senderId"`
-	GroupID   int64     `json:"groupId"`
-	ChannelID int64     `json:"channelId"`
-	Content   string    `json:"content"`
-	Hash      string    `json:"hash"`
-	CreatedAt time.Time `json:"createdAt"`
 }
 
 // RabbitMQService handles RabbitMQ connection and messaging

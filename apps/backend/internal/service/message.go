@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/sony/gobreaker/v2"
@@ -103,23 +104,23 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 		return 0, time.Time{}, err
 	}
 
-	// Enqueue forward event so the chat-worker can push it to the recipient's socket
-	forwardPayload := ForwardPersonalMessagePayload{
-		MessageID:  messageID,
-		SenderID:   senderID,
-		ReceiverID: receiverID,
-		Content:    content,
-		CreatedAt:  createdAt,
-	}
-	if err := s.rabbitmqService.PublishToIncoming("personal.message", RabbitMQMessage{
-		Type:    "MESSAGE_FORWARD",
-		Payload: forwardPayload,
+	// Publish to the recipient's socket server queue via the outgoing exchange
+	if err := s.rabbitmqService.PublishToOutgoing(strconv.FormatInt(receiverID, 10), map[string]any{
+		"event":  "personal:receive-message",
+		"userId": receiverID,
+		"data": map[string]any{
+			"messageId": messageID,
+			"content":   content,
+			"senderId":  senderID,
+			"createdAt": createdAt,
+			"status":    domain.MessageStatusSent,
+		},
 	}); err != nil {
-		log.Error("failed to enqueue forward event", zap.Int64("sender_id", senderID), zap.Int64("message_id", messageID), zap.Error(err))
+		log.Error("failed to publish receive event to outgoing exchange", zap.Int64("sender_id", senderID), zap.Int64("message_id", messageID), zap.Error(err))
 		return 0, time.Time{}, err
 	}
 
-	log.Info("personal message persisted and queued for delivery", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int64("message_id", messageID))
+	log.Info("personal message persisted and forwarded to socket server", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int64("message_id", messageID))
 	return messageID, createdAt, nil
 }
 
@@ -184,25 +185,25 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 		return 0, time.Time{}, err
 	}
 
-	// Enqueue forward event so the chat-worker can push it to the channel subscribers
-	forwardPayload := ForwardGroupMessagePayload{
-		MessageID: messageID,
-		SenderID:  senderID,
-		GroupID:   groupID,
-		ChannelID: channelID,
-		Content:   content,
-		Hash:      hash,
-		CreatedAt: createdAt,
-	}
-	if err := s.rabbitmqService.PublishToIncoming("group.message", RabbitMQMessage{
-		Type:    "MESSAGE_FORWARD",
-		Payload: forwardPayload,
+	// Publish to the channel room via the outgoing exchange
+	if err := s.rabbitmqService.PublishToOutgoing("channel:"+strconv.FormatInt(channelID, 10), map[string]any{
+		"event":     "group:receive-message",
+		"channelId": channelID,
+		"data": map[string]any{
+			"messageId": messageID,
+			"content":   content,
+			"senderId":  senderID,
+			"channelId": channelID,
+			"groupId":   groupID,
+			"createdAt": createdAt,
+			"status":    domain.MessageStatusSent,
+		},
 	}); err != nil {
-		log.Error("failed to enqueue group forward event", zap.Int64("sender_id", senderID), zap.Int64("message_id", messageID), zap.Error(err))
+		log.Error("failed to publish receive event to outgoing exchange", zap.Int64("sender_id", senderID), zap.Int64("message_id", messageID), zap.Error(err))
 		return 0, time.Time{}, err
 	}
 
-	log.Info("group message persisted and queued for delivery", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID), zap.Int64("message_id", messageID))
+	log.Info("group message persisted and forwarded to socket server", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID), zap.Int64("message_id", messageID))
 	return messageID, createdAt, nil
 }
 

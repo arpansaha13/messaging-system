@@ -30,12 +30,11 @@ func setupRabbitMQ(
 	messageBroker := broker.NewRabbitMQBroker(creds.GetUrl(), cbs.RabbitMQ)
 
 	// Initialize processors (persist across reconnects)
-	messageProcessor := processor.NewMessageProcessor(messageBroker)
 	statusProcessor := processor.NewStatusProcessor(db, messageBroker, cbs.Postgres)
 	connectionProcessor := processor.NewConnectionProcessor(db, messageBroker, cbs.Postgres)
 
 	// Initialize event controller with dependency injection (persist across reconnects)
-	eventController := controller.NewEventController(messageProcessor, statusProcessor, connectionProcessor)
+	eventController := controller.NewEventController(statusProcessor, connectionProcessor)
 
 	// Helper function to setup consumers
 	setupConsumers := func() error {

@@ -2,7 +2,6 @@ package broker
 
 import (
 	"context"
-	"time"
 
 	"github.com/arpansaha13/gotoolkit"
 )
@@ -42,26 +41,6 @@ type ReadPayload struct {
 	MessageId  int64 `json:"messageId"`
 	SenderId   int64 `json:"senderId"`
 	ReceiverId int64 `json:"receiverId"`
-}
-
-// ForwardPersonalMessagePayload carries a pre-persisted personal message to forward to the recipient
-type ForwardPersonalMessagePayload struct {
-	MessageId  int64     `json:"messageId"`
-	SenderId   int64     `json:"senderId"`
-	ReceiverId int64     `json:"receiverId"`
-	Content    string    `json:"content"`
-	CreatedAt  time.Time `json:"createdAt"`
-}
-
-// ForwardGroupMessagePayload carries a pre-persisted group message to forward to the channel
-type ForwardGroupMessagePayload struct {
-	MessageId int64     `json:"messageId"`
-	SenderId  int64     `json:"senderId"`
-	GroupId   int64     `json:"groupId"`
-	ChannelId int64     `json:"channelId"`
-	Content   string    `json:"content"`
-	Hash      string    `json:"hash"`
-	CreatedAt time.Time `json:"createdAt"`
 }
 
 // UserConnectionPayload for user connection events

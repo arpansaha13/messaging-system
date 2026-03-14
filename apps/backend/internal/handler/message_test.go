@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -17,8 +18,8 @@ import (
 
 func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 	mockService := &mocks.MockMessageService{
-		SendPersonalMessageFunc: func(ctx context.Context, senderID, receiverID int64, content, hash string) error {
-			return nil
+		SendPersonalMessageFunc: func(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error) {
+			return 1, time.Now(), nil
 		},
 	}
 
@@ -39,13 +40,13 @@ func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	require.Equal(t, http.StatusAccepted, resp.StatusCode)
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
 }
 
 func TestMessageHandler_SendGroupMessage(t *testing.T) {
 	mockService := &mocks.MockMessageService{
-		SendGroupMessageFunc: func(ctx context.Context, senderID, groupID, channelID int64, content, hash string) error {
-			return nil
+		SendGroupMessageFunc: func(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error) {
+			return 1, time.Now(), nil
 		},
 	}
 
@@ -67,5 +68,5 @@ func TestMessageHandler_SendGroupMessage(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	require.Equal(t, http.StatusAccepted, resp.StatusCode)
+	require.Equal(t, http.StatusCreated, resp.StatusCode)
 }
