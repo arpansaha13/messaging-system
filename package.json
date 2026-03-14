@@ -8,6 +8,7 @@
   "packageManager": "pnpm@10.26.2",
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
+    "dev": "docker compose --profile app watch --prune",
     "build": "docker compose -f compose.build.yaml build",
     "test:e2e": "pnpm test:e2e:setup && bash scripts/run-e2e.sh --no-teardown",
     "test:e2e:ui": "pnpm test:e2e:setup && bash scripts/run-e2e.sh --ui --no-teardown",

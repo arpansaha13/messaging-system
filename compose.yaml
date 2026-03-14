@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: apps/nginx/Dockerfile
     container_name: nginx
+    profiles: [app]
     environment:
       ENVIRONMENT: development
     ports:
@@ -24,6 +25,7 @@ services:
   auth-db:
     image: postgres:16-alpine
     container_name: auth-db
+    profiles: [app]
     environment:
       POSTGRES_USER: ${AUTH_DB_USERNAME}
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
@@ -43,6 +45,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: postgres
+    profiles: [app]
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -64,6 +67,7 @@ services:
       context: .
       dockerfile: apps/backend/Dockerfile
     container_name: backend
+    profiles: [app]
     labels:
       service_name: "backend"
     logging:
@@ -120,6 +124,7 @@ services:
       context: .
       dockerfile: apps/socket/Dockerfile
     container_name: socket
+    profiles: [app]
     environment:
       ENVIRONMENT: development
       LOG_LEVEL: ${LOG_LEVEL}
@@ -153,6 +158,7 @@ services:
   rabbitmq:
     image: rabbitmq:4.2.2-management-alpine
     container_name: rabbitmq
+    profiles: [app]
     ports:
       - "7050:15672"
     environment:
@@ -171,6 +177,7 @@ services:
       context: .
       dockerfile: apps/auth/Dockerfile
     container_name: auth
+    profiles: [app]
     labels:
       service_name: "auth"
     logging:
@@ -221,6 +228,7 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile.dev
     container_name: frontend
+    profiles: [app]
     environment:
       NUXT_ENVIRONMENT: development
       NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
@@ -251,6 +259,7 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached
+    profiles: [app]
     networks:
       - messaging-network
 
@@ -259,6 +268,7 @@ services:
       context: .
       dockerfile: apps/chat-worker/Dockerfile
     container_name: chat-worker
+    profiles: [app]
     labels:
       service_name: "chat-worker"
     logging:
@@ -297,6 +307,7 @@ services:
   kafka:
     image: apache/kafka:3.9.2
     container_name: kafka
+    profiles: [logging]
     # ports:
     #   - "7070:9092"
     environment:
@@ -327,6 +338,7 @@ services:
   init-kafka:
     image: apache/kafka:3.9.2
     container_name: init-kafka
+    profiles: [logging]
     depends_on:
       - kafka
     entrypoint: ["/bin/sh", "-c"]
@@ -346,6 +358,7 @@ services:
       context: .
       dockerfile: apps/loki/Dockerfile
     container_name: loki
+    profiles: [logging]
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
@@ -370,6 +383,7 @@ services:
       context: .
       dockerfile: apps/alloy/Dockerfile
     container_name: alloy
+    profiles: [logging]
     depends_on:
       kafka:
         condition: service_healthy
@@ -391,6 +405,7 @@ services:
       context: .
       dockerfile: apps/grafana/Dockerfile
     container_name: grafana
+    profiles: [logging]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_SECURITY_ADMIN_USER: admin
@@ -423,6 +438,7 @@ services:
       context: .
       dockerfile: apps/fluent-bit/Dockerfile
     container_name: fluent-bit
+    profiles: [logging]
     volumes:
       - //var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:
