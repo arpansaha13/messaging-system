@@ -13,13 +13,12 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/ws"
 )
 
-
 // Deps contains all dependencies needed to assemble the socket server
 type Deps struct {
-	Logger        *zap.Logger
-	Hub           *ws.Hub
-	RabbitBroker  *broker.RabbitMQBroker
-	ChatsStore    *store.ChatsStore
+	Logger           *zap.Logger
+	Hub              *ws.Hub
+	RabbitBroker     *broker.RabbitMQBroker
+	ChatsStore       *store.ChatsStore
 	MemcachedService *cache.MemcachedService
 	// GroupHandlers is created in main before setupRabbitMQ (consumer callbacks need it).
 	GroupHandlers *ws.GroupHandlers
@@ -50,12 +49,12 @@ func New(deps Deps) *http.Server {
 	mux := http.NewServeMux()
 
 	// Liveness probe — no auth, no dependencies
-	mux.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/ws/livez", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	// WebSocket endpoint — path /socket keeps nginx routing unchanged
-	mux.HandleFunc("/socket", func(w http.ResponseWriter, r *http.Request) {
+	// WebSocket endpoint
+	mux.HandleFunc("/ws/socket", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("WebSocket connection request", zap.String("remote_addr", r.RemoteAddr))
 		ws.ServeWs(
 			deps.Hub,

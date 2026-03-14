@@ -37,6 +37,10 @@ services:
         condition: service_started
     networks:
       - messaging-test-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/nginx/nginx.test.conf
 
   # ---------------------------------------------------------------------------
   # Auth service database
