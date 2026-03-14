@@ -9,11 +9,11 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/broker"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/constants"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/ws"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
 )
 
 // setupRabbitMQ creates a RabbitMQBroker and a ConnectionManager with auto-reconnect.

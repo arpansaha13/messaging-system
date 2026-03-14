@@ -7,10 +7,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/broker"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/cache"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/ws"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
 )
 
 // Deps contains all dependencies needed to assemble the socket server

@@ -8,4 +8,4 @@ use ./apps/backend
 
 use ./apps/chat-worker
 
-use ./apps/socket-go
+use ./apps/socket

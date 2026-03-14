@@ -118,7 +118,7 @@ services:
   socket:
     build:
       context: .
-      dockerfile: apps/socket-go/Dockerfile
+      dockerfile: apps/socket/Dockerfile
     container_name: socket
     environment:
       ENVIRONMENT: development
@@ -142,13 +142,13 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/socket-go/cmd
+          path: ./apps/socket/cmd
         - action: rebuild
-          path: ./apps/socket-go/internal
+          path: ./apps/socket/internal
         - action: rebuild
-          path: ./apps/socket-go/go.mod
+          path: ./apps/socket/go.mod
         - action: rebuild
-          path: ./apps/socket-go/go.sum
+          path: ./apps/socket/go.sum
 
   rabbitmq:
     image: rabbitmq:4.2.2-management-alpine

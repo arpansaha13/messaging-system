@@ -8,8 +8,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/cache"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/config"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 )
 
 // setupMemcached creates a MemcachedService and a ConnectionManager with auto-reconnect.

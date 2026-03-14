@@ -1,4 +1,4 @@
-module github.com/arpansaha13/messaging-system/apps/socket-go
+module github.com/arpansaha13/messaging-system/apps/socket
 
 go 1.25.6
 

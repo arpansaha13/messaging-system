@@ -7,8 +7,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/constants"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 )
 
 // GroupHandlers handles events related to group and channel management.

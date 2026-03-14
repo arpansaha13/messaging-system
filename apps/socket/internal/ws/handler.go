@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/constants"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 )
 
 // NewUpgrader returns a gorilla WebSocket upgrader that validates the Origin

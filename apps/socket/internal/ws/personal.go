@@ -6,10 +6,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/broker"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/cache"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/constants"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 )
 
 // PersonalHandlers handles all events related to 1-to-1 personal chats.

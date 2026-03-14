@@ -13,10 +13,10 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/app"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/ws"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/app"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
 )
 
 const (
@@ -64,14 +64,14 @@ func main() {
 
 	// Assemble HTTP server — app.New creates PersonalHandlers from injected deps
 	httpServer := app.New(app.Deps{
-		Logger:        log,
-		Hub:           hub,
-		RabbitBroker:  rabbitBroker,
-		ChatsStore:    chatsStore,
+		Logger:           log,
+		Hub:              hub,
+		RabbitBroker:     rabbitBroker,
+		ChatsStore:       chatsStore,
 		MemcachedService: memcachedService,
-		GroupHandlers: groupHandlers,
-		ClientDomain:  cfg.ClientDomain,
-		Port:          cfg.Port,
+		GroupHandlers:    groupHandlers,
+		ClientDomain:     cfg.ClientDomain,
+		Port:             cfg.Port,
 	})
 
 	// Ping flush ticker: periodically flush online-status pings to Memcached.

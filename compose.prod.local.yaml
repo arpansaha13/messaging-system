@@ -130,7 +130,7 @@ services:
       - messaging-network
 
   socket:
-    image: europe-north1-docker.pkg.dev/chat-application-13/socket-go/ws:0.1.0
+    image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
     container_name: socket_prod
     environment:
       ENVIRONMENT: production
