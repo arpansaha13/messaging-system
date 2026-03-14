@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/ws"
@@ -43,43 +43,35 @@ func main() {
 	// In-memory state
 	chatsStore := store.NewChatsStore()
 
-	// Setup Memcached for online status tracking
-	memcachedSvc, err := setupMemcached(rootCtx, log, cfg.MemcachedHost, cfg.MemcachedPort)
+	// Setup Memcached connection manager with auto-reconnect
+	memcachedService, memcachedConnMgr, err := setupMemcached(rootCtx, cfg.Memcached, log)
 	if err != nil {
 		log.Fatal("failed to setup memcached", zap.Error(err))
 	}
 
-	// Initialize WebSocket hub first (needed for ConnectionManager callbacks)
+	// Initialize WebSocket hub
 	hub := ws.NewHub(log)
 
-	amqpURL := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPass, cfg.RabbitMQHost, cfg.RabbitMQPort)
-	rabbitBroker := broker.NewRabbitMQBroker(amqpURL, cfg.ServerId, log)
-
-	// WebSocket handlers (needed for setupRabbitMQ function)
-	personalHandlers := ws.NewPersonalHandlers(chatsStore, memcachedSvc, rabbitBroker, hub, log)
+	// GroupHandlers has no service deps — created before broker setup
+	// because setupRabbitMQ needs it for subscription consumer callbacks.
 	groupHandlers := ws.NewGroupHandlers(chatsStore, hub, log)
 
-	// Setup RabbitMQ connection manager with auto-reconnect
-	rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, log, rabbitBroker, hub, chatsStore, groupHandlers)
+	// Setup RabbitMQ — creates RabbitMQBroker internally
+	rabbitBroker, rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, cfg.RabbitMQ, cfg.ServerId, log, hub, chatsStore, groupHandlers)
 	if err != nil {
 		log.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
-	upgrader := ws.NewUpgrader(cfg.ClientDomain)
-	dispatch := ws.BuildDispatcher(personalHandlers, groupHandlers, log)
-
-	// HTTP mux — path /socket keeps nginx routing unchanged
-	mux := http.NewServeMux()
-	mux.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-	mux.HandleFunc("/socket", func(w http.ResponseWriter, r *http.Request) {
-		log.Debug("WebSocket connection request", zap.String("remote_addr", r.RemoteAddr))
-		ws.ServeWs(hub, chatsStore, dispatch,
-			personalHandlers.HandleConnect,
-			personalHandlers.HandleDisconnect,
-			upgrader, log, w, r,
-		)
+	// Assemble HTTP server — app.New creates PersonalHandlers from injected deps
+	httpServer := app.New(app.Deps{
+		Logger:        log,
+		Hub:           hub,
+		RabbitBroker:  rabbitBroker,
+		ChatsStore:    chatsStore,
+		MemcachedService: memcachedService,
+		GroupHandlers: groupHandlers,
+		ClientDomain:  cfg.ClientDomain,
+		Port:          cfg.Port,
 	})
 
 	// Ping flush ticker: periodically flush online-status pings to Memcached.
@@ -89,7 +81,7 @@ func main() {
 		for range ticker.C {
 			userIds := chatsStore.GetAndClearPingTrackingSet()
 			if len(userIds) > 0 {
-				if err := memcachedSvc.SetBatchOnline(userIds, onlineStatusTTL); err != nil {
+				if err := memcachedService.SetBatchOnline(userIds, onlineStatusTTL); err != nil {
 					log.Error("error flushing ping tracking to memcached", zap.Error(err))
 				}
 			}
@@ -97,10 +89,6 @@ func main() {
 	}()
 
 	// Start HTTP server
-	httpServer := &http.Server{
-		Addr:    fmt.Sprintf(":%d", cfg.Port),
-		Handler: mux,
-	}
 	go func() {
 		log.Info("WebSocket server listening", zap.String("addr", httpServer.Addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -115,7 +103,10 @@ func main() {
 
 	log.Info("shutdown signal received, stopping gracefully")
 
-	// Stop RabbitMQ connection manager
+	if err := memcachedConnMgr.Stop(); err != nil {
+		log.Error("error stopping memcached connection manager", zap.Error(err))
+	}
+
 	if err := rabbitMQConnMgr.Stop(); err != nil {
 		log.Error("error stopping rabbitmq connection manager", zap.Error(err))
 	}

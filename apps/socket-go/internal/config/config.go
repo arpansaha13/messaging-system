@@ -6,18 +6,38 @@ import (
 	"strconv"
 )
 
+// RabbitMQCreds holds RabbitMQ connection credentials.
+type RabbitMQCreds struct {
+	Host string
+	Port int
+	User string
+	Pass string
+}
+
+// GetUrl constructs the AMQP connection URL from the credentials.
+func (c RabbitMQCreds) GetUrl() string {
+	return fmt.Sprintf("amqp://%s:%s@%s:%d/", c.User, c.Pass, c.Host, c.Port)
+}
+
+// MemcachedCreds holds Memcached connection credentials.
+type MemcachedCreds struct {
+	Host string
+	Port string
+}
+
+// GetUrl constructs the Memcached address string from the credentials.
+func (c MemcachedCreds) GetUrl() string {
+	return fmt.Sprintf("%s:%s", c.Host, c.Port)
+}
+
 // Config holds all application configuration loaded from environment variables.
 type Config struct {
-	Port          int
-	ServerId      string
-	ClientDomain  string
-	RabbitMQHost  string
-	RabbitMQPort  int
-	RabbitMQUser  string
-	RabbitMQPass  string
-	MemcachedHost string
-	MemcachedPort string
-	LogLevel      string
+	Port         int
+	ServerId     string
+	ClientDomain string
+	LogLevel     string
+	RabbitMQ     RabbitMQCreds
+	Memcached    MemcachedCreds
 }
 
 // Load reads configuration from environment variables and returns a Config.
@@ -34,16 +54,20 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		Port:          port,
-		ServerId:      getEnv("SERVER_ID", "server-1"),
-		ClientDomain:  os.Getenv("CLIENT_DOMAIN"),
-		RabbitMQHost:  getEnv("RABBITMQ_HOST", "localhost"),
-		RabbitMQPort:  rabbitPort,
-		RabbitMQUser:  getEnv("RABBITMQ_USER", "guest"),
-		RabbitMQPass:  getEnv("RABBITMQ_PASS", "guest"),
-		MemcachedHost: getEnv("MEMCACHED_HOST", "memcached"),
-		MemcachedPort: getEnv("MEMCACHED_PORT", "11211"),
-		LogLevel:      getEnv("LOG_LEVEL", "info"),
+		Port:         port,
+		ServerId:     getEnv("SERVER_ID", "server-1"),
+		ClientDomain: os.Getenv("CLIENT_DOMAIN"),
+		LogLevel:     getEnv("LOG_LEVEL", "info"),
+		RabbitMQ: RabbitMQCreds{
+			Host: getEnv("RABBITMQ_HOST", "localhost"),
+			Port: rabbitPort,
+			User: getEnv("RABBITMQ_USER", "guest"),
+			Pass: getEnv("RABBITMQ_PASS", "guest"),
+		},
+		Memcached: MemcachedCreds{
+			Host: getEnv("MEMCACHED_HOST", "memcached"),
+			Port: getEnv("MEMCACHED_PORT", "11211"),
+		},
 	}, nil
 }
 

@@ -148,6 +148,9 @@ func (rb *RabbitMQBroker) UnbindGroupFromQueue(groupId int64) error {
 }
 
 func (rb *RabbitMQBroker) bind(routingKey string) error {
+	if rb.channel == nil {
+		return fmt.Errorf("RabbitMQ channel not initialized")
+	}
 	if err := rb.channel.QueueBind(rb.serverQueue, routingKey, outgoingExchange, false, nil); err != nil {
 		return fmt.Errorf("bind %q: %w", routingKey, err)
 	}
@@ -156,6 +159,9 @@ func (rb *RabbitMQBroker) bind(routingKey string) error {
 }
 
 func (rb *RabbitMQBroker) unbind(routingKey string) error {
+	if rb.channel == nil {
+		return fmt.Errorf("RabbitMQ channel not initialized")
+	}
 	if err := rb.channel.QueueUnbind(rb.serverQueue, routingKey, outgoingExchange, nil); err != nil {
 		return fmt.Errorf("unbind %q: %w", routingKey, err)
 	}
@@ -177,6 +183,9 @@ func (rb *RabbitMQBroker) PublishToOutgoing(routingKey string, message any) erro
 }
 
 func (rb *RabbitMQBroker) publish(exchange, routingKey string, message any) error {
+	if rb.channel == nil {
+		return fmt.Errorf("RabbitMQ channel not initialized")
+	}
 	body, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("marshal: %w", err)
@@ -193,6 +202,9 @@ func (rb *RabbitMQBroker) publish(exchange, routingKey string, message any) erro
 // ConsumeFromServerQueue starts consuming from the per-server queue. Runs in a
 // background goroutine. Messages that cannot be unmarshalled are nack'd without requeue.
 func (rb *RabbitMQBroker) ConsumeFromServerQueue(onMessage func(msg *ServerQueueMessage, ack func())) error {
+	if rb.channel == nil {
+		return fmt.Errorf("RabbitMQ channel not initialized")
+	}
 	deliveries, err := rb.channel.Consume(rb.serverQueue, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("consume from server queue: %w", err)
@@ -216,6 +228,9 @@ func (rb *RabbitMQBroker) ConsumeFromServerQueue(onMessage func(msg *ServerQueue
 
 // ConsumeFromSubscriptionQueue starts consuming from the per-server subscription queue.
 func (rb *RabbitMQBroker) ConsumeFromSubscriptionQueue(onMessage func(msg *SubscriptionMessage, ack func())) error {
+	if rb.channel == nil {
+		return fmt.Errorf("RabbitMQ channel not initialized")
+	}
 	deliveries, err := rb.channel.Consume(rb.subscriptionQueue, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("consume from subscription queue: %w", err)

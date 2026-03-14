@@ -10,22 +10,25 @@ import (
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/broker"
+	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/constants"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket-go/internal/ws"
 )
 
-// setupRabbitMQ initializes the RabbitMQ connection manager with auto-reconnect support.
-// It handles consumer setup, initializes the ConnectionManager, starts it, and returns it.
+// setupRabbitMQ creates a RabbitMQBroker and a ConnectionManager with auto-reconnect.
+// Returns the broker (for injection into app) and the manager (for graceful shutdown in main).
 func setupRabbitMQ(
 	ctx context.Context,
+	creds config.RabbitMQCreds,
+	serverId string,
 	log *zap.Logger,
-	rabbitBroker *broker.RabbitMQBroker,
 	hub *ws.Hub,
 	chatsStore *store.ChatsStore,
 	groupHandlers *ws.GroupHandlers,
-) (*gotoolkit.ConnectionManager, error) {
-	// Define setupConsumers closure that can access all handlers
+) (*broker.RabbitMQBroker, *gotoolkit.ConnectionManager, error) {
+	rabbitBroker := broker.NewRabbitMQBroker(creds.GetUrl(), serverId, log)
+
 	setupConsumers := func() error {
 		// Server-queue consumer: route messages to the correct socket or room.
 		if err := rabbitBroker.ConsumeFromServerQueue(func(msg *broker.ServerQueueMessage, ack func()) {
@@ -102,38 +105,30 @@ func setupRabbitMQ(
 		return nil
 	}
 
-	// Declare connection manager variable first (for closure capture)
-	var rabbitMQConnMgr *gotoolkit.ConnectionManager
-
-	// Initialize RabbitMQ connection manager with auto-reconnect support
-	rabbitMQConnMgr = gotoolkit.NewConnectionManager(
+	rabbitMQConnMgr := gotoolkit.NewConnectionManager(
 		gotoolkit.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		log,
-		// onConnect callback: connect broker and setup consumers
 		func(connectCtx context.Context) error {
 			if err := rabbitBroker.Connect(connectCtx); err != nil {
 				return err
 			}
-			// Setup consumers after successful connection
 			if err := setupConsumers(); err != nil {
 				rabbitBroker.Disconnect()
 				return fmt.Errorf("failed to setup consumers: %w", err)
 			}
 			return nil
 		},
-		// onDisconnect callback: cleanup
 		func() {
 			rabbitBroker.Disconnect()
 		},
 	)
 
-	// Start the RabbitMQ connection manager
 	if err := rabbitMQConnMgr.Start(ctx); err != nil {
-		return nil, fmt.Errorf("failed to start rabbitmq connection manager: %w", err)
+		return nil, nil, fmt.Errorf("failed to start rabbitmq connection manager: %w", err)
 	}
 
-	return rabbitMQConnMgr, nil
+	return rabbitBroker, rabbitMQConnMgr, nil
 }

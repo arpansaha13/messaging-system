@@ -49,11 +49,8 @@ func main() {
 		log.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	// Initialize RabbitMQ broker
-	amqpURL := fmt.Sprintf("amqp://%s:%s@%s:%d/", cfg.RabbitMQUser, cfg.RabbitMQPass, cfg.RabbitMQHost, cfg.RabbitMQPort)
-
 	// Setup RabbitMQ connection manager with auto-reconnect
-	rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, cfg, log, database, amqpURL, cbs)
+	rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, cfg.RabbitMQ, log, database, cbs)
 	if err != nil {
 		log.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}

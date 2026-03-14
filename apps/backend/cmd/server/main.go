@@ -55,11 +55,8 @@ func main() {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	// Initialize RabbitMQ service
-	rabbitmqService := service.NewRabbitMQService(zapLogger, cbs.RabbitMQ)
-
-	// Setup RabbitMQ connection manager with auto-reconnect
-	rabbitMQConnMgr, err := setupRabbitMQ(svcCtx, cfg, zapLogger, rabbitmqService)
+	// Setup RabbitMQ — creates RabbitMQService internally
+	rabbitmqService, rabbitMQConnMgr, err := setupRabbitMQ(svcCtx, cfg.RabbitMQ, zapLogger, cbs)
 	if err != nil {
 		zapLogger.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}

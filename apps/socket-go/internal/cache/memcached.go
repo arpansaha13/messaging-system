@@ -1,11 +1,9 @@
 package cache
 
 import (
-	"context"
 	"fmt"
 	"sync"
 
-	"github.com/arpansaha13/gotoolkit"
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
@@ -19,21 +17,41 @@ import (
 // same byte values on the server, so there is no data incompatibility.
 type MemcachedService struct {
 	client *memcache.Client
+	mu     sync.RWMutex
 }
 
-// NewMemcachedService creates a MemcachedService with a verified connection.
-// address should be "host:port".
-func NewMemcachedService(ctx context.Context, address string) (*MemcachedService, error) {
-	client, err := gotoolkit.ConnectMemcachedWithBackoff(ctx, address)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to memcached: %w", err)
-	}
-	return &MemcachedService{client: client}, nil
+// NewMemcachedService creates an unconnected MemcachedService.
+// Call SetClient after a successful connection is established.
+func NewMemcachedService() *MemcachedService {
+	return &MemcachedService{}
+}
+
+func (m *MemcachedService) SetClient(client *memcache.Client) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.client = client
+}
+
+func (m *MemcachedService) UnsetClient() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.client = nil
+}
+
+func (m *MemcachedService) getClient() *memcache.Client {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.client
 }
 
 // SetOnline marks userId as online with the given TTL in seconds.
+// Returns nil when not connected (presence updates are best-effort).
 func (m *MemcachedService) SetOnline(userId int64, ttl int32) error {
-	return m.client.Set(&memcache.Item{
+	client := m.getClient()
+	if client == nil {
+		return nil
+	}
+	return client.Set(&memcache.Item{
 		Key:        m.key(userId),
 		Value:      []byte("1"),
 		Expiration: ttl,
@@ -41,9 +59,14 @@ func (m *MemcachedService) SetOnline(userId int64, ttl int32) error {
 }
 
 // SetBatchOnline marks all userIds as online concurrently.
-// Returns the first error encountered; other sets may still succeed.
+// Returns nil when not connected (presence updates are best-effort).
+// Returns the first error encountered when connected; other sets may still succeed.
 func (m *MemcachedService) SetBatchOnline(userIds []int64, ttl int32) error {
 	if len(userIds) == 0 {
+		return nil
+	}
+	client := m.getClient()
+	if client == nil {
 		return nil
 	}
 
@@ -55,7 +78,11 @@ func (m *MemcachedService) SetBatchOnline(userIds []int64, ttl int32) error {
 		i, userId := i, userId
 		go func() {
 			defer wg.Done()
-			errs[i] = m.SetOnline(userId, ttl)
+			errs[i] = client.Set(&memcache.Item{
+				Key:        m.key(userId),
+				Value:      []byte("1"),
+				Expiration: ttl,
+			})
 		}()
 	}
 
@@ -73,6 +100,11 @@ func (m *MemcachedService) SetBatchOnline(userIds []int64, ttl int32) error {
 // A cache miss is treated as offline. Network errors are also treated as offline
 // and the first such error is returned alongside the (partial) status map.
 func (m *MemcachedService) GetBatchOnlineStatus(userIds []int64) (map[int64]bool, error) {
+	client := m.getClient()
+	if client == nil {
+		return nil, fmt.Errorf("memcached not connected")
+	}
+
 	type result struct {
 		userId   int64
 		isOnline bool
@@ -87,7 +119,7 @@ func (m *MemcachedService) GetBatchOnlineStatus(userIds []int64) (map[int64]bool
 		i, userId := i, userId
 		go func() {
 			defer wg.Done()
-			_, err := m.client.Get(m.key(userId))
+			_, err := client.Get(m.key(userId))
 			switch {
 			case err == nil:
 				results[i] = result{userId: userId, isOnline: true}

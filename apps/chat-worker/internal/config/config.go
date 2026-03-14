@@ -6,15 +6,25 @@ import (
 	"strconv"
 )
 
+// RabbitMQCreds holds RabbitMQ connection credentials.
+type RabbitMQCreds struct {
+	Host string
+	Port int
+	User string
+	Pass string
+}
+
+// GetUrl constructs the AMQP connection URL from the credentials.
+func (c RabbitMQCreds) GetUrl() string {
+	return fmt.Sprintf("amqp://%s:%s@%s:%d/", c.User, c.Pass, c.Host, c.Port)
+}
+
 // Config holds all application configuration
 type Config struct {
-	LogLevel     string
-	Environment  string
-	DatabaseURL  string
-	RabbitMQHost string
-	RabbitMQPort int
-	RabbitMQUser string
-	RabbitMQPass string
+	LogLevel    string
+	Environment string
+	DatabaseURL string
+	RabbitMQ    RabbitMQCreds
 }
 
 // Load loads configuration from environment variables
@@ -32,7 +42,6 @@ func Load() (*Config, error) {
 	// Load database URL - either single DATABASE_URL or build from individual vars
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		// Validate each required database env var
 		dbHost := os.Getenv("DB_HOST")
 		if dbHost == "" {
 			return nil, fmt.Errorf("DB_HOST is required")
@@ -83,10 +92,12 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("RABBITMQ_PASS is required")
 	}
 
-	cfg.RabbitMQHost = rabbitmqHost
-	cfg.RabbitMQPort = rabbitmqPort
-	cfg.RabbitMQUser = rabbitmqUser
-	cfg.RabbitMQPass = rabbitmqPass
+	cfg.RabbitMQ = RabbitMQCreds{
+		Host: rabbitmqHost,
+		Port: rabbitmqPort,
+		User: rabbitmqUser,
+		Pass: rabbitmqPass,
+	}
 
 	if err := cfg.Validate(); err != nil {
 		return nil, err
