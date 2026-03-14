@@ -3,8 +3,11 @@ package tests
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // InviteTestSuite is a test suite for invite endpoints
@@ -141,6 +144,76 @@ func (s *InviteTestSuite) TestAcceptInvite() {
 			},
 			ExpectError: false,
 		},
+		{
+			Name: "Accept expired invite returns 400",
+			Setup: func(f *TestFixture) error {
+				senderID := int64(4014)
+				recipientID := int64(4015)
+				f.SetUserID(recipientID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(senderID, "Sender 7"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(recipientID, "Recipient 7"); err != nil {
+					return err
+				}
+				group, err := f.TestDB.CreateTestGroup("Expired Invite Group", senderID)
+				if err != nil {
+					return err
+				}
+
+				// Insert invite with a past expiry directly — CreateTestInvite always sets +24h
+				expiresAt := time.Now().Add(-1 * time.Hour)
+				invite := &domain.Invite{
+					Hash:      "hashexpired",
+					InviterID: senderID,
+					GroupID:   &group.ID,
+					ExpiresAt: &expiresAt,
+				}
+				return f.TestDB.DB.Create(invite).Error
+			},
+			Test: func(f *TestFixture) error {
+				resp, err := f.HTTPClient.POST("/api/invites/hashexpired/accept", nil)
+				s.Require().NoError(err)
+				s.Require().Equal(400, resp.StatusCode, "expected 400 for expired invite")
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "Accept invite when user already in group returns 400",
+			Setup: func(f *TestFixture) error {
+				senderID := int64(4016)
+				recipientID := int64(4017)
+				f.SetUserID(recipientID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(senderID, "Sender 8"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(recipientID, "Recipient 8"); err != nil {
+					return err
+				}
+				group, err := f.TestDB.CreateTestGroup("Already Member Group", senderID)
+				if err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestInvite(group.ID, senderID, "hashalreadymember"); err != nil {
+					return err
+				}
+				// Add recipient to the group before they try to accept the invite
+				_, err = f.TestDB.CreateTestUserGroup(recipientID, group.ID, "MEMBER")
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				resp, err := f.HTTPClient.POST("/api/invites/hashalreadymember/accept", nil)
+				s.Require().NoError(err)
+				s.Require().Equal(400, resp.StatusCode, "expected 400 when user is already in group")
+
+				return nil
+			},
+			ExpectError: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -196,6 +269,23 @@ func (s *InviteTestSuite) TestCreateInvite() {
 				err = ReadResponseBody(inviteResp, &result)
 				s.Require().NoError(err)
 				s.Require().NotEmpty(result["hash"], "expected hash in response")
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "Create invite for non-existent group returns 404",
+			Setup: func(f *TestFixture) error {
+				userID := int64(4051)
+				f.SetUserID(userID)
+				_, err := f.TestDB.CreateTestUserProfile(userID, "Sender 9")
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				resp, err := f.HTTPClient.POST("/api/groups/999999/invites", nil)
+				s.Require().NoError(err)
+				s.Require().Equal(404, resp.StatusCode, "expected 404 for non-existent group")
 
 				return nil
 			},
