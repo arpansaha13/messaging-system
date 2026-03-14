@@ -45,7 +45,7 @@ func New(deps Deps) *http.Server {
 	// Initialize services
 	userService := service.NewUserService(userRepo, contactRepo)
 	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, deps.RabbitMQ)
+	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, deps.RabbitMQ, deps.DB, deps.Circuits.Postgres)
 	channelService := service.NewChannelService(channelRepo, groupRepo)
 	contactService := service.NewContactService(contactRepo, userRepo)
 	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)

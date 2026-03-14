@@ -13,6 +13,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // SetupMessageRoutes sets up message routes
@@ -42,16 +43,24 @@ func sendPersonalMessageController(messageService service.IMessageService) gtk.C
 
 		log.Debug("sending personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID))
 
-		if err := messageService.SendPersonalMessage(r.Context(), senderID, req.ReceiverID, req.Content, req.Hash); err != nil {
+		messageID, createdAt, err := messageService.SendPersonalMessage(r.Context(), senderID, req.ReceiverID, req.Content, req.Hash)
+		if err != nil {
 			log.Error("failed to send personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("personal message sent successfully", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID))
+		log.Info("personal message sent successfully", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Int64("message_id", messageID))
 
 		return &gtk.ControllerResponse{
-			StatusCode: http.StatusAccepted,
-			Body:       map[string]bool{"success": true},
+			StatusCode: http.StatusCreated,
+			Body: dto.SendPersonalMessageResponseDTO{
+				ID:        messageID,
+				Hash:      req.Hash,
+				Content:   req.Content,
+				SenderID:  senderID,
+				CreatedAt: createdAt,
+				Status:    domain.MessageStatusSent,
+			},
 		}, nil
 	}
 }
@@ -73,16 +82,25 @@ func sendGroupMessageController(messageService service.IMessageService) gtk.Cont
 
 		log.Debug("sending group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
 
-		if err := messageService.SendGroupMessage(r.Context(), senderID, req.GroupID, req.ChannelID, req.Content, req.Hash); err != nil {
+		messageID, createdAt, err := messageService.SendGroupMessage(r.Context(), senderID, req.GroupID, req.ChannelID, req.Content, req.Hash)
+		if err != nil {
 			log.Error("failed to send group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID), zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("group message sent successfully", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
+		log.Info("group message sent successfully", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID), zap.Int64("message_id", messageID))
 
 		return &gtk.ControllerResponse{
-			StatusCode: http.StatusAccepted,
-			Body:       map[string]bool{"success": true},
+			StatusCode: http.StatusCreated,
+			Body: dto.SendGroupMessageResponseDTO{
+				ID:        messageID,
+				Hash:      req.Hash,
+				Content:   req.Content,
+				SenderID:  senderID,
+				ChannelID: req.ChannelID,
+				CreatedAt: createdAt,
+				Status:    domain.MessageStatusSent,
+			},
 		}, nil
 	}
 }

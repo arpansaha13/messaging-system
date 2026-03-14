@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { IMessageSending } from '@shared/types'
+import { MessageStatus } from '@shared/constants'
 
 interface Props {
   message: IMessageSending
@@ -15,14 +16,11 @@ defineProps<Props>()
     </div>
     <div class="mt-0.5 flex justify-end">
       <p class="flex min-w-18 items-center gap-1 justify-end text-xs text-gray-500 dark:text-gray-400">
-        <span v-if="message.status === 'pending'" class="inline-flex animate-spin">
+        <span v-if="message.status === MessageStatus.SENDING" class="inline-flex animate-spin">
           <UIcon name="i-lucide-loader-circle" class="size-3" />
         </span>
-        <span v-else-if="message.status === 'sent'">
+        <span v-else-if="message.status === MessageStatus.SENT">
           <UIcon name="i-lucide-check" class="size-4" />
-        </span>
-        <span v-else-if="message.status === 'failed'" class="text-error">
-          <UIcon name="i-lucide-alert-circle" class="size-4" />
         </span>
       </p>
     </div>

@@ -41,23 +41,20 @@ test.describe('Personal Messaging — Send & Receive', () => {
 
   })
 
-  test('PM-02 message transitions SENDING → SENT after API returns', async () => {
+  test('PM-02 message transitions SENDING → SENT after API returns 201', async () => {
     await ensureContact(alicePage, userIds.bob, 'Bob')
     await openChat(alicePage, userIds.bob)
     await alicePage.getByTestId('message-input').fill('SENT test')
-    await alicePage.keyboard.press('Enter')
 
-    // After confirmation, temp bubble is replaced with a real message bubble
-    await expect(alicePage.getByTestId('message-bubble').last()).toBeVisible({ timeout: 10_000 })
+    // Capture the 201 response and send concurrently
+    const [response] = await Promise.all([
+      alicePage.waitForResponse(r => r.url().includes('/api/messages/send/personal') && r.status() === 201),
+      alicePage.keyboard.press('Enter'),
+    ])
+    expect(response.status()).toBe(201)
 
-    // Verify message is persisted on reload.
-    // Wait for the messages API to confirm DB persistence first — the bubble
-    // appearing means the socket server confirmed receipt, but the chat-worker
-    // persists asynchronously via RabbitMQ and may not have finished yet.
-    await waitForMessageInApi(alicePage, userIds.bob, 'SENT test')
-    await alicePage.reload()
-    await waitForHydration(alicePage)
-    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: 'SENT test' }).first()).toBeVisible()
+    // After 201, temp message is replaced by real message bubble
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: 'SENT test' })).toBeVisible()
 
   })
 
@@ -94,7 +91,12 @@ test.describe('Personal Messaging — Send & Receive', () => {
     await alicePage.getByTestId('message-input').fill('deliver test')
     await alicePage.keyboard.press('Enter')
 
-    // Wait for DELIVERED status icon (title or aria attribute set by MsgStatusIcon)
+    // Bob receives the message — proves persistence and auto-sends DELIVERED
+    await expect(bobPage.getByTestId('message-bubble').filter({ hasText: 'deliver test' }).first()).toBeVisible({
+      timeout: 15_000,
+    })
+
+    // Alice has the real message ID from the 201 response; DELIVERED socket event updates status directly
     await expect(alicePage.getByTestId('msg-status-icon').last()).toHaveAttribute('data-status', /^(2|3)$/, {
       timeout: 10_000,
     })
@@ -111,13 +113,22 @@ test.describe('Personal Messaging — Send & Receive', () => {
     // Alice sends message while Bob is not in the chat
     await openChat(alicePage, userIds.bob, true)
     await alicePage.getByTestId('message-input').fill('read test')
-    await alicePage.keyboard.press('Enter')
-    await expect(alicePage.getByTestId('message-bubble').last()).toBeVisible({ timeout: 10_000 })
 
-    // Bob opens the chat
+    // Wait for 201 so the real message ID is in Alice's store before Bob opens the chat
+    await Promise.all([
+      alicePage.waitForResponse(r => r.url().includes('/api/messages/send/personal') && r.status() === 201),
+      alicePage.keyboard.press('Enter'),
+    ])
+
+    // 201 replaced the temp with a real message bubble
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: 'read test' }).first()).toBeVisible({
+      timeout: 10_000,
+    })
+
+    // Bob opens the chat → triggers READ for Alice's message
     await openChat(bobPage, userIds.alice, true)
 
-    // Alice's message status updates to READ
+    // Alice's message status updates to READ in real-time (real message ID available from 201)
     await expect(alicePage.getByTestId('msg-status-icon').last()).toHaveAttribute('data-status', '3', {
       timeout: 10_000,
     })
@@ -138,9 +149,8 @@ test.describe('Personal Messaging — Send & Receive', () => {
     await alicePage.getByTestId('message-input').fill(msg)
     await alicePage.keyboard.press('Enter')
 
-    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: msg }).first()).toBeVisible({
-      timeout: 10_000,
-    })
+    // After 201, temp is replaced by real message bubble; Bob sees the message via real-time socket
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: msg }).first()).toBeVisible({ timeout: 5_000 })
     await expect(bobPage.getByTestId('message-bubble').filter({ hasText: msg }).first()).toBeVisible({
       timeout: 10_000,
     })
@@ -186,16 +196,3 @@ async function openChat(page: Page, receiverId: number, waitForSocket = false) {
   }
 }
 
-async function waitForMessageInApi(page: Page, receiverId: number, content: string) {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const res = await page.request.get(`/api/messages/${receiverId}`)
-    if (res.ok()) {
-      const data = (await res.json()) as { messages: { content: string }[] }
-      if (data.messages?.some(msg => msg.content === content)) {
-        return
-      }
-    }
-    await page.waitForTimeout(1_000)
-  }
-  throw new Error(`Message "${content}" did not appear in API after 20 s`)
-}

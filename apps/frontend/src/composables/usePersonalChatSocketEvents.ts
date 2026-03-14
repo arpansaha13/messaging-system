@@ -11,7 +11,6 @@ export async function usePersonalChatSocketEvents() {
   const route = useRoute()
   const { socket } = await useSocket()
   const { data: authUser } = await useFetchAuthUser()
-  const tempMessages = usePersonalMessagesStore()
   const { setTyping } = useTypingStore()
 
   const currentReceiverId = computed(() => {
@@ -55,28 +54,6 @@ export async function usePersonalChatSocketEvents() {
       pushMessage(payload.senderId, message)
     }
 
-    const handleStatusSent = async (payload: SocketEventPayloads.Personal.OnSent) => {
-      const tempMessage = tempMessages.getTempMessage(payload.receiverId, payload.hash)
-      if (!tempMessage) return
-
-      const message: IMessage = {
-        id: payload.messageId,
-        senderId: user.id,
-        status: payload.status,
-        content: tempMessage.content,
-        createdAt: payload.createdAt,
-      }
-
-      const chatExists = Boolean(findConversation(payload.receiverId))
-      if (!chatExists) {
-        await initializeNewChat(payload.receiverId)
-      }
-
-      tempMessages.deleteTempMessage(payload.receiverId, tempMessage.hash)
-      updateLatestMessageInChatList(payload.receiverId, message)
-      pushMessage(payload.receiverId, message)
-    }
-
     const handleStatusDelivered = (payload: SocketEventPayloads.Personal.OnDelivered) => {
       updateLatestMessageStatusInChatList(payload.receiverId, payload.messageId, payload.status)
       updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
@@ -94,14 +71,12 @@ export async function usePersonalChatSocketEvents() {
     }
 
     connection.on(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
-    connection.on(SocketEvents.PERSONAL.STATUS_SENT, handleStatusSent)
     connection.on(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
     connection.on(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
     connection.on(SocketEvents.PERSONAL.TYPING, handleTyping)
 
     onCleanup(() => {
       connection.off(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
-      connection.off(SocketEvents.PERSONAL.STATUS_SENT, handleStatusSent)
       connection.off(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
       connection.off(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
       connection.off(SocketEvents.PERSONAL.TYPING, handleTyping)

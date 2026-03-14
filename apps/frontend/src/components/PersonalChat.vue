@@ -125,8 +125,13 @@ const sendMessage = async (message: string) => {
     inputValue.value = ''
     if (typingTimeout) clearTimeout(typingTimeout)
 
-    // Send message via HTTP API instead of socket
-    await sendPersonalMessage(receiverId.value, newMessage.content, newMessage.hash)
+    // Send message via HTTP API — 201 means message is persisted; replace temp with real IMessage
+    const { hash, ...realMessage } = await sendPersonalMessage(receiverId.value, newMessage.content, newMessage.hash)
+    personalMessages.deleteTempMessage(receiverId.value, newMessage.hash)
+    updateLatestMessageInChatList(receiverId.value, realMessage)
+    if (messagesData.value) {
+      messagesData.value.push(realMessage)
+    }
   } catch (error) {
     console.error('Error sending message:', error)
   }

@@ -5,7 +5,7 @@ export interface IMessageSending {
   hash: string
   content: string
   senderId: UserId
-  status: MessageStatus.SENDING
+  status: MessageStatus.SENDING | MessageStatus.SENT
 
   /** For deciding the order in which messages should be shown in chat window */
   createdInClientAt: string

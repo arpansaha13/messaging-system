@@ -20,14 +20,6 @@ export namespace SocketEventPayloads {
       status: MessageStatus.SENT
     }
 
-    export interface OnSent {
-      hash: IMessageSending['hash']
-      messageId: IMessage['id']
-      receiverId: UserId
-      createdAt: string
-      status: MessageStatus.SENT
-    }
-
     export interface OnDelivered {
       messageId: IMessage['id']
       receiverId: UserId

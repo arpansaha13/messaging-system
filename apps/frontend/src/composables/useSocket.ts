@@ -3,9 +3,9 @@ import type { Ref } from 'vue'
 // Thin adapter that mimics Socket.IO's .on()/.off()/.emit() API
 // over a native browser WebSocket with { "event": "...", "data": {...} } framing.
 export interface SocketAdapter {
-  on(event: string, handler: (data: unknown) => void): void
-  off(event: string, handler: (data: unknown) => void): void
-  emit(event: string, data: unknown): void
+  on(event: string, handler: (data: any) => void): void
+  off(event: string, handler: (data: any) => void): void
+  emit(event: string, data: any): void
   readonly connected: boolean
   close(): void
 }
@@ -16,7 +16,7 @@ export interface SocketWrapper {
 }
 
 function createAdapter(ws: WebSocket): SocketAdapter {
-  const listeners = new Map<string, Set<(data: unknown) => void>>()
+  const listeners = new Map<string, Set<(data: any) => void>>()
 
   ws.onmessage = event => {
     try {

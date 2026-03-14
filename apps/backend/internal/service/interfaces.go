@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
@@ -50,8 +51,8 @@ type IChatService interface {
 
 // MessageService defines the interface for message service operations
 type IMessageService interface {
-	SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) error
-	SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) error
+	SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error)
+	SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error)
 	GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error)
 	MarkMessageAsDelivered(ctx context.Context, messageID, receiverID, senderID int64) error
 	MarkMessageAsRead(ctx context.Context, messages []ReadPayload) error

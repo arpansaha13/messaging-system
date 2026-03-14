@@ -53,6 +53,27 @@ type AuthUserResponseDTO struct {
 
 // Message Response DTOs
 
+// SendPersonalMessageResponseDTO represents the response when a personal message is created
+type SendPersonalMessageResponseDTO struct {
+	ID        int64                `json:"id"`
+	Hash      string               `json:"hash"`
+	Content   string               `json:"content"`
+	SenderID  int64                `json:"senderId"`
+	CreatedAt time.Time            `json:"createdAt"`
+	Status    domain.MessageStatus `json:"status"`
+}
+
+// SendGroupMessageResponseDTO represents the response when a group message is created
+type SendGroupMessageResponseDTO struct {
+	ID        int64                `json:"id"`
+	Hash      string               `json:"hash"`
+	Content   string               `json:"content"`
+	SenderID  int64                `json:"senderId"`
+	ChannelID int64                `json:"channelId"`
+	CreatedAt time.Time            `json:"createdAt"`
+	Status    domain.MessageStatus `json:"status"`
+}
+
 // MessageResponseDTO represents a message in responses
 type MessageResponseDTO struct {
 	ID        int64                `json:"id"`

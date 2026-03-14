@@ -72,10 +72,6 @@ function mutateChatLists(mutator: (state: { unarchived: IChatListItem[]; archive
   const { unarchivedData, archivedData } = ensureChatLists()
 
   mutator({ unarchived: unarchivedData.value!, archived: archivedData.value! })
-
-  // Trigger reactivity by reassigning arrays
-  unarchivedData.value = [...unarchivedData.value!]
-  archivedData.value = [...archivedData.value!]
 }
 
 /** Helper to find chat in list */

@@ -30,7 +30,7 @@ func setupRabbitMQ(
 	messageBroker := broker.NewRabbitMQBroker(creds.GetUrl(), cbs.RabbitMQ)
 
 	// Initialize processors (persist across reconnects)
-	messageProcessor := processor.NewMessageProcessor(db, messageBroker, cbs.Postgres)
+	messageProcessor := processor.NewMessageProcessor(messageBroker)
 	statusProcessor := processor.NewStatusProcessor(db, messageBroker, cbs.Postgres)
 	connectionProcessor := processor.NewConnectionProcessor(db, messageBroker, cbs.Postgres)
 

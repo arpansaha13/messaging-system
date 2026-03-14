@@ -122,8 +122,17 @@ const sendMessage = async (message: string) => {
     // Add temp message to UI
     groupMessages.upsertTempGroupMessages(channelId.value as number, [newMessage])
 
-    // Send message via HTTP API instead of socket
-    await sendGroupMessage(groupId.value, channelId.value, newMessage.content, newMessage.hash)
+    // Send message via HTTP API — 201 means message is persisted; replace temp with real IGroupMessage
+    const realMessage = await sendGroupMessage(groupId.value, channelId.value, newMessage.content, newMessage.hash)
+    groupMessages.deleteTempGroupMessage(channelId.value as number, newMessage.hash)
+    upsertGroupMessages(channelId.value as number, [{
+      id: realMessage.id,
+      content: realMessage.content,
+      senderId: realMessage.senderId,
+      channelId: realMessage.channelId,
+      createdAt: realMessage.createdAt,
+      status: realMessage.status,
+    }])
   } catch (error) {
     console.error('Error sending message:', error)
   }

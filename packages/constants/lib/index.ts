@@ -8,7 +8,6 @@ export enum MessageStatus {
 enum SocketEvents_Personal {
   MESSAGE_SEND = 'personal:send-message',
   MESSAGE_RECEIVE = 'personal:receive-message',
-  STATUS_SENT = 'personal:sent',
   STATUS_DELIVERED = 'personal:delivered',
   STATUS_READ = 'personal:read',
   TYPING = 'personal:typing',

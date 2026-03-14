@@ -13,7 +13,7 @@ export function fetchGroupMessages(channelId: IChannel['id']) {
 
 export async function sendPersonalMessage(receiverId: IUser['id'], content: string, hash: string) {
   const { $api } = useNuxtApp()
-  return $api('/api/messages/send/personal', {
+  return $api<IMessage & { hash: string }>('/api/messages/send/personal', {
     method: 'POST',
     body: {
       receiverId,
@@ -25,7 +25,7 @@ export async function sendPersonalMessage(receiverId: IUser['id'], content: stri
 
 export async function sendGroupMessage(groupId: number, channelId: IChannel['id'], content: string, hash: string) {
   const { $api } = useNuxtApp()
-  return $api('/api/messages/send/group', {
+  return $api<IGroupMessage & { hash: string }>('/api/messages/send/group', {
     method: 'POST',
     body: {
       groupId,

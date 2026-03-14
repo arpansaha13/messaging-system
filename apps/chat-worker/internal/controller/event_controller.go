@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/processor"
@@ -37,8 +38,8 @@ func (ec *EventController) HandleWorkerQueueEvent(ctx context.Context, msg *brok
 	log.Debug("worker queue event received")
 
 	switch msg.Type {
-	case "MESSAGE_SEND":
-		return ec.handleMessageSend(ctx, msg)
+	case "MESSAGE_FORWARD":
+		return ec.handleMessageForward(ctx, msg)
 	case "STATUS_DELIVERED":
 		return ec.handleStatusDelivered(ctx, msg)
 	case "STATUS_READ":
@@ -57,36 +58,43 @@ func (ec *EventController) HandleConnectionQueueEvent(ctx context.Context, msg *
 	return ec.connectionProcessor.ProcessUserConnection(ctx, msg)
 }
 
-// handleMessageSend processes MESSAGE_SEND events (personal and group)
-func (ec *EventController) handleMessageSend(ctx context.Context, msg *broker.MessagePayload) error {
+// handleMessageForward processes MESSAGE_FORWARD events (personal and group)
+func (ec *EventController) handleMessageForward(ctx context.Context, msg *broker.MessagePayload) error {
 	payload, ok := msg.Payload.(map[string]any)
 	if !ok {
-		return fmt.Errorf("invalid payload format for MESSAGE_SEND")
+		return fmt.Errorf("invalid payload format for MESSAGE_FORWARD")
 	}
 
-	// Check if it's a group or personal message
+	// Parse createdAt (comes as RFC3339 string from JSON)
+	var createdAt time.Time
+	if createdAtStr, ok := payload["createdAt"].(string); ok {
+		createdAt, _ = time.Parse(time.RFC3339Nano, createdAtStr)
+	}
+
+	// Dispatch on presence of groupId
 	if groupId, hasGroup := payload["groupId"]; hasGroup && groupId != nil {
-		// Group message
-		groupPayload := &broker.GroupMessagePayload{
+		groupPayload := &broker.ForwardGroupMessagePayload{
+			MessageId: int64(payload["messageId"].(float64)),
 			SenderId:  int64(payload["senderId"].(float64)),
 			GroupId:   int64(groupId.(float64)),
 			ChannelId: int64(payload["channelId"].(float64)),
 			Content:   payload["content"].(string),
 			Hash:      payload["hash"].(string),
+			CreatedAt: createdAt,
 		}
-		if err := ec.messageProcessor.ProcessGroupMessage(ctx, groupPayload); err != nil {
-			return fmt.Errorf("error processing group message: %w", err)
+		if err := ec.messageProcessor.ForwardGroupMessage(ctx, groupPayload); err != nil {
+			return fmt.Errorf("error forwarding group message: %w", err)
 		}
 	} else {
-		// Personal message
-		personalPayload := &broker.PersonalMessagePayload{
+		personalPayload := &broker.ForwardPersonalMessagePayload{
+			MessageId:  int64(payload["messageId"].(float64)),
 			SenderId:   int64(payload["senderId"].(float64)),
 			ReceiverId: int64(payload["receiverId"].(float64)),
 			Content:    payload["content"].(string),
-			Hash:       payload["hash"].(string),
+			CreatedAt:  createdAt,
 		}
-		if err := ec.messageProcessor.ProcessPersonalMessage(ctx, personalPayload); err != nil {
-			return fmt.Errorf("error processing personal message: %w", err)
+		if err := ec.messageProcessor.ForwardPersonalMessage(ctx, personalPayload); err != nil {
+			return fmt.Errorf("error forwarding personal message: %w", err)
 		}
 	}
 

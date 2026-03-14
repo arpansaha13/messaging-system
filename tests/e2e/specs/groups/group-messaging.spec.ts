@@ -119,10 +119,8 @@ test.describe('Group Messaging', () => {
     await alicePage.getByTestId('message-input').fill('status test')
     await alicePage.keyboard.press('Enter')
 
-    // Temp bubble visible first
-    await expect(alicePage.getByTestId('temp-message-bubble').last()).toBeVisible()
-    // Then confirmed message appears
-    await expect(alicePage.getByTestId('message-bubble').last()).toBeVisible({ timeout: 10_000 })
+    // After 201, temp message is replaced by real message bubble
+    await expect(alicePage.getByTestId('message-bubble').filter({ hasText: 'status test' })).toBeVisible({ timeout: 10_000 })
 
   })
 })

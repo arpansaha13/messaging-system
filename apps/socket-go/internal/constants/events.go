@@ -9,7 +9,6 @@ type SocketEvent = string
 const (
 	PersonalMessageSend     SocketEvent = "personal:send-message"
 	PersonalMessageReceive  SocketEvent = "personal:receive-message"
-	PersonalStatusSent      SocketEvent = "personal:sent"
 	PersonalStatusDelivered SocketEvent = "personal:delivered"
 	PersonalStatusRead      SocketEvent = "personal:read"
 	PersonalTyping          SocketEvent = "personal:typing"
