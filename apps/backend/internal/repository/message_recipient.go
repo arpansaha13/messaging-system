@@ -140,4 +140,24 @@ func (r *MessageRecipientRepository) Delete(ctx context.Context, recipientID int
 	return nil
 }
 
+// GetByMessageIDsAndReceiver retrieves message recipients for multiple messages by a given receiver
+func (r *MessageRecipientRepository) GetByMessageIDsAndReceiver(ctx context.Context, messageIDs []int64, receiverID int64) ([]*domain.MessageRecipient, error) {
+	result, err := r.cb.Execute(func() (any, error) {
+		var recipients []*domain.MessageRecipient
+		err := r.db.WithContext(ctx).
+			Where("message_id IN ? AND receiver_id = ?", messageIDs, receiverID).
+			Find(&recipients).Error
+		if err != nil {
+			return nil, err
+		}
+		return recipients, nil
+	})
+
+	if err != nil {
+		return nil, &gotoolkit.InternalError{Message: "failed to get message recipients by message IDs and receiver", Err: err}
+	}
+
+	return result.([]*domain.MessageRecipient), nil
+}
+
 var _ IMessageRecipientRepository = (*MessageRecipientRepository)(nil)

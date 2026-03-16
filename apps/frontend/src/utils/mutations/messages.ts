@@ -35,30 +35,22 @@ export async function sendGroupMessage(groupId: number, channelId: IChannel['id'
   })
 }
 
-export async function handleDelivered(messageId: IMessage['id'], receiverId: IUser['id'], senderId: IUser['id']) {
+export async function handleDelivered(messageId: IMessage['id']) {
   const { $api } = useNuxtApp()
   return $api('/api/messages/status/delivered', {
     method: 'POST',
     body: {
       messageId,
-      receiverId,
-      senderId,
     },
   })
 }
 
-export async function handleRead(
-  messages: Array<{
-    messageId: IMessage['id']
-    senderId: IUser['id']
-    receiverId: IUser['id']
-  }>,
-) {
+export async function handleRead(messageIds: IMessage['id'][]) {
   const { $api } = useNuxtApp()
   return $api('/api/messages/status/read', {
     method: 'POST',
     body: {
-      messages,
+      messages: messageIds.map(id => ({ messageId: id })),
     },
   })
 }

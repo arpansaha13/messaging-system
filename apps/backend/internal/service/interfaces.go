@@ -54,8 +54,8 @@ type IMessageService interface {
 	SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error)
 	SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error)
 	GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error)
-	MarkMessageAsDelivered(ctx context.Context, messageID, receiverID, senderID int64) error
-	MarkMessageAsRead(ctx context.Context, messages []ReadPayload) error
+	MarkMessageAsDelivered(ctx context.Context, messageID, receiverID int64) error
+	MarkMessageAsRead(ctx context.Context, messages []MarkReadInput) error
 	GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error)
 }
 

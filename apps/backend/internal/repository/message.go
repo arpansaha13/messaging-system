@@ -350,4 +350,22 @@ func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelI
 	return result.(*ChannelMessagePage), nil
 }
 
+// GetByIDs retrieves messages by a list of IDs
+func (r *MessageRepository) GetByIDs(ctx context.Context, ids []int64) ([]*domain.Message, error) {
+	result, err := r.cb.Execute(func() (any, error) {
+		var messages []*domain.Message
+		err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&messages).Error
+		if err != nil {
+			return nil, err
+		}
+		return messages, nil
+	})
+
+	if err != nil {
+		return nil, &gotoolkit.InternalError{Message: "failed to get messages by IDs", Err: err}
+	}
+
+	return result.([]*domain.Message), nil
+}
+
 var _ IMessageRepository = (*MessageRepository)(nil)

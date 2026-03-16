@@ -54,16 +54,12 @@ type SendGroupMessageDTO struct {
 
 // HandleDeliveredDTO represents a handle delivered message request
 type HandleDeliveredDTO struct {
-	MessageID  int64 `json:"messageId"`
-	ReceiverID int64 `json:"receiverId"`
-	SenderID   int64 `json:"senderId"`
+	MessageID int64 `json:"messageId"`
 }
 
 // HandleReadDTO represents a handle read message request
 type HandleReadDTO struct {
-	MessageID  int64 `json:"messageId"`
-	SenderID   int64 `json:"senderId"`
-	ReceiverID int64 `json:"receiverId"`
+	MessageID int64 `json:"messageId"`
 }
 
 // HandleReadMultipleDTO represents multiple read messages request

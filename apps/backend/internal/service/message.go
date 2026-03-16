@@ -222,8 +222,9 @@ func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int
 	return page, nil
 }
 
-// MarkMessageAsDelivered publishes a delivered status update to RabbitMQ
-func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, receiverID, senderID int64) error {
+// MarkMessageAsDelivered verifies the authenticated receiver owns the recipient record,
+// derives senderID from the DB, then publishes a delivered status update to RabbitMQ.
+func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, receiverID int64) error {
 	log := logger.FromContext(ctx)
 	log.Debug("marking message as delivered", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID))
 
@@ -232,10 +233,27 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, 
 		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
+	// Verify the authenticated user is the actual recipient of this message.
+	if _, err := s.messageRecipientRepo.GetByMessageAndReceiver(ctx, messageID, receiverID); err != nil {
+		if gotoolkit.IsNotFound(err) {
+			log.Warn("delivered status rejected: caller is not the recipient", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID))
+			return &gotoolkit.ForbiddenError{Message: "not a recipient of this message"}
+		}
+		log.Error("failed to verify message recipient for delivered status", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID), zap.Error(err))
+		return err
+	}
+
+	// Derive senderID from the message record — never trust client-supplied values.
+	msg, err := s.messageRepo.GetByID(ctx, messageID)
+	if err != nil {
+		log.Error("failed to get message for delivered status", zap.Int64("message_id", messageID), zap.Error(err))
+		return err
+	}
+
 	payload := DeliveredPayload{
 		MessageID:  messageID,
 		ReceiverID: receiverID,
-		SenderID:   senderID,
+		SenderID:   msg.SenderID,
 	}
 
 	message := RabbitMQMessage{
@@ -243,8 +261,7 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, 
 		Payload: payload,
 	}
 
-	err := s.rabbitmqService.PublishToIncoming("personal.delivered", message)
-	if err != nil {
+	if err := s.rabbitmqService.PublishToIncoming("personal.delivered", message); err != nil {
 		log.Error("failed to publish delivered status", zap.Int64("message_id", messageID), zap.Error(err))
 		return err
 	}
@@ -253,28 +270,94 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, 
 	return nil
 }
 
-// MarkMessageAsRead publishes read status updates to RabbitMQ
-func (s *MessageService) MarkMessageAsRead(ctx context.Context, messages []ReadPayload) error {
+// MarkMessageAsRead batch-verifies the authenticated receiver owns each recipient record,
+// derives senderIDs from the DB, then publishes read status updates to RabbitMQ.
+// Messages that cannot be verified (stale frontend state) are silently dropped.
+func (s *MessageService) MarkMessageAsRead(ctx context.Context, inputs []MarkReadInput) error {
 	log := logger.FromContext(ctx)
-	log.Debug("marking messages as read", zap.Int("message_count", len(messages)))
+	log.Debug("marking messages as read", zap.Int("message_count", len(inputs)))
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for read status")
 		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
-	message := RabbitMQMessage{
-		Type:    "STATUS_READ",
-		Payload: messages,
+	if len(inputs) == 0 {
+		return nil
 	}
 
-	err := s.rabbitmqService.PublishToIncoming("personal.read", message)
+	// All inputs share the same receiverID (set by the handler from context).
+	receiverID := inputs[0].ReceiverID
+
+	messageIDs := make([]int64, len(inputs))
+	for i, inp := range inputs {
+		messageIDs[i] = inp.MessageID
+	}
+
+	// Batch-verify: only process messages where the caller is the actual recipient.
+	recipients, err := s.messageRecipientRepo.GetByMessageIDsAndReceiver(ctx, messageIDs, receiverID)
 	if err != nil {
-		log.Error("failed to publish read status", zap.Int("message_count", len(messages)), zap.Error(err))
+		log.Error("failed to verify message recipients for read status", zap.Error(err))
 		return err
 	}
 
-	log.Info("read status published successfully", zap.Int("message_count", len(messages)))
+	verifiedIDs := make(map[int64]struct{}, len(recipients))
+	for _, r := range recipients {
+		verifiedIDs[r.MessageID] = struct{}{}
+	}
+
+	// Warn about any unverified messageIDs (stale frontend state).
+	for _, id := range messageIDs {
+		if _, ok := verifiedIDs[id]; !ok {
+			log.Warn("message recipient not found for read status; skipping", zap.Int64("message_id", id), zap.Int64("receiver_id", receiverID))
+		}
+	}
+
+	if len(verifiedIDs) == 0 {
+		return nil
+	}
+
+	verifiedMessageIDs := make([]int64, 0, len(verifiedIDs))
+	for id := range verifiedIDs {
+		verifiedMessageIDs = append(verifiedMessageIDs, id)
+	}
+
+	// Derive senderIDs from the messages table — never trust client-supplied values.
+	msgs, err := s.messageRepo.GetByIDs(ctx, verifiedMessageIDs)
+	if err != nil {
+		log.Error("failed to get messages for read status", zap.Error(err))
+		return err
+	}
+
+	senderByMessageID := make(map[int64]int64, len(msgs))
+	for _, msg := range msgs {
+		senderByMessageID[msg.ID] = msg.SenderID
+	}
+
+	readPayloads := make([]ReadPayload, 0, len(msgs))
+	for _, msg := range msgs {
+		readPayloads = append(readPayloads, ReadPayload{
+			MessageID:  msg.ID,
+			SenderID:   senderByMessageID[msg.ID],
+			ReceiverID: receiverID,
+		})
+	}
+
+	if len(readPayloads) == 0 {
+		return nil
+	}
+
+	rmqMsg := RabbitMQMessage{
+		Type:    "STATUS_READ",
+		Payload: readPayloads,
+	}
+
+	if err := s.rabbitmqService.PublishToIncoming("personal.read", rmqMsg); err != nil {
+		log.Error("failed to publish read status", zap.Int("message_count", len(readPayloads)), zap.Error(err))
+		return err
+	}
+
+	log.Info("read status published successfully", zap.Int("message_count", len(readPayloads)))
 	return nil
 }
 

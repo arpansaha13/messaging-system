@@ -189,9 +189,9 @@ func handleDeliveredController(messageService service.IMessageService) gtk.Contr
 		userID := middleware.GetUserIDFromContext(r)
 		receiverID, _ := strconv.ParseInt(userID, 10, 64)
 
-		log.Debug("marking message as delivered", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID), zap.Int64("sender_id", req.SenderID))
+		log.Debug("marking message as delivered", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID))
 
-		if err := messageService.MarkMessageAsDelivered(r.Context(), req.MessageID, receiverID, req.SenderID); err != nil {
+		if err := messageService.MarkMessageAsDelivered(r.Context(), req.MessageID, receiverID); err != nil {
 			log.Error("failed to mark message as delivered", zap.Int64("message_id", req.MessageID), zap.Error(err))
 			return nil, err
 		}
@@ -222,22 +222,20 @@ func handleReadController(messageService service.IMessageService) gtk.Controller
 
 		log.Debug("marking messages as read", zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(req.Messages)))
 
-		// Convert HandleReadDTO to ReadPayload and set receiverID
-		readPayloads := make([]service.ReadPayload, len(req.Messages))
+		inputs := make([]service.MarkReadInput, len(req.Messages))
 		for i, msg := range req.Messages {
-			readPayloads[i] = service.ReadPayload{
+			inputs[i] = service.MarkReadInput{
 				MessageID:  msg.MessageID,
-				SenderID:   msg.SenderID,
 				ReceiverID: receiverID,
 			}
 		}
 
-		if err := messageService.MarkMessageAsRead(r.Context(), readPayloads); err != nil {
-			log.Error("failed to mark messages as read", zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(readPayloads)), zap.Error(err))
+		if err := messageService.MarkMessageAsRead(r.Context(), inputs); err != nil {
+			log.Error("failed to mark messages as read", zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(inputs)), zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("messages marked as read successfully", zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(readPayloads)))
+		log.Info("messages marked as read successfully", zap.Int64("receiver_id", receiverID), zap.Int("message_count", len(inputs)))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,

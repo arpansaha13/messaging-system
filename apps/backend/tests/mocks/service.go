@@ -182,8 +182,8 @@ type MockMessageService struct {
 	SendPersonalMessageFunc    func(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error)
 	SendGroupMessageFunc       func(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error)
 	GetMessagesFunc            func(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error)
-	MarkMessageAsDeliveredFunc func(ctx context.Context, messageID, receiverID, senderID int64) error
-	MarkMessageAsReadFunc      func(ctx context.Context, messages []service.ReadPayload) error
+	MarkMessageAsDeliveredFunc func(ctx context.Context, messageID, receiverID int64) error
+	MarkMessageAsReadFunc      func(ctx context.Context, messages []service.MarkReadInput) error
 	GetChannelMessagesFunc     func(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error)
 }
 
@@ -208,14 +208,14 @@ func (m *MockMessageService) GetMessages(ctx context.Context, userID, receiverID
 	return nil, nil
 }
 
-func (m *MockMessageService) MarkMessageAsDelivered(ctx context.Context, messageID, receiverID, senderID int64) error {
+func (m *MockMessageService) MarkMessageAsDelivered(ctx context.Context, messageID, receiverID int64) error {
 	if m.MarkMessageAsDeliveredFunc != nil {
-		return m.MarkMessageAsDeliveredFunc(ctx, messageID, receiverID, senderID)
+		return m.MarkMessageAsDeliveredFunc(ctx, messageID, receiverID)
 	}
 	return nil
 }
 
-func (m *MockMessageService) MarkMessageAsRead(ctx context.Context, messages []service.ReadPayload) error {
+func (m *MockMessageService) MarkMessageAsRead(ctx context.Context, messages []service.MarkReadInput) error {
 	if m.MarkMessageAsReadFunc != nil {
 		return m.MarkMessageAsReadFunc(ctx, messages)
 	}

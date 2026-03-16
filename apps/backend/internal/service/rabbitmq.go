@@ -51,6 +51,14 @@ type ReadPayload struct {
 	ReceiverID int64 `json:"receiverId"`
 }
 
+// MarkReadInput is the service-layer input for marking messages as read.
+// Kept separate from ReadPayload (the RabbitMQ wire format) so broker details
+// are not exposed to callers.
+type MarkReadInput struct {
+	MessageID  int64
+	ReceiverID int64
+}
+
 // RabbitMQService handles RabbitMQ connection and messaging
 type RabbitMQService struct {
 	conn    *amqp.Connection

@@ -45,7 +45,7 @@ export async function usePersonalChatSocketEvents() {
 
       // Notify server that message was delivered via HTTP API
       try {
-        await handleDelivered(message.id, user.id, payload.senderId)
+        await handleDelivered(message.id)
       } catch (error) {
         console.error('Error sending delivered status:', error)
       }
@@ -98,26 +98,22 @@ export async function usePersonalChatSocketEvents() {
     const { data: messages } = useNuxtData<IMessage[]>(asyncKeys.messages(receiverId))
     if (!messages.value) return
 
-    const payloads: SocketEventPayloads.Personal.EmitRead[] = []
+    const messageIds: IMessage['id'][] = []
 
     messages.value.forEach(message => {
       if (message.senderId === user.id || message.status === MessageStatus.READ) {
         return
       }
 
-      payloads.push({
-        messageId: message.id,
-        senderId: receiverId,
-        receiverId: user.id,
-      })
+      messageIds.push(message.id)
 
       updateLatestMessageStatusInChatList(receiverId, message.id, MessageStatus.READ)
       updateMessageStatus(receiverId, message.id, MessageStatus.READ)
     })
 
-    if (payloads.length > 0) {
+    if (messageIds.length > 0) {
       // Send read status via HTTP API
-      handleRead(payloads).catch(error => {
+      handleRead(messageIds).catch(error => {
         console.error('Error sending read status:', error)
       })
     }

@@ -41,6 +41,7 @@ type IChatRepository interface {
 type IMessageRepository interface {
 	Create(ctx context.Context, message *domain.Message) error
 	GetByID(ctx context.Context, messageID int64) (*domain.Message, error)
+	GetByIDs(ctx context.Context, ids []int64) ([]*domain.Message, error)
 	GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, before, after *int64) (*MessagePage, error)
 	Delete(ctx context.Context, messageID int64) error
 	Update(ctx context.Context, message *domain.Message) error
@@ -53,6 +54,7 @@ type IMessageRecipientRepository interface {
 	Create(ctx context.Context, recipient *domain.MessageRecipient) error
 	GetByID(ctx context.Context, recipientID int64) (*domain.MessageRecipient, error)
 	GetByMessageAndReceiver(ctx context.Context, messageID, receiverID int64) (*domain.MessageRecipient, error)
+	GetByMessageIDsAndReceiver(ctx context.Context, messageIDs []int64, receiverID int64) ([]*domain.MessageRecipient, error)
 	GetByMessageID(ctx context.Context, messageID int64) ([]*domain.MessageRecipient, error)
 	UpdateStatus(ctx context.Context, recipientID int64, status domain.MessageStatus) error
 	UpdateStatusByMessageAndReceiver(ctx context.Context, messageID, receiverID int64, status domain.MessageStatus) error
