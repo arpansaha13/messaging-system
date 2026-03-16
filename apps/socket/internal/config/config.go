@@ -32,12 +32,14 @@ func (c MemcachedCreds) GetUrl() string {
 
 // Config holds all application configuration loaded from environment variables.
 type Config struct {
-	Port         int
-	ServerId     string
-	ClientDomain string
-	LogLevel     string
-	RabbitMQ     RabbitMQCreds
-	Memcached    MemcachedCreds
+	Port           int
+	ServerId       string
+	ClientDomain   string
+	AuthSystemHost string
+	AuthCookieName string
+	LogLevel       string
+	RabbitMQ       RabbitMQCreds
+	Memcached      MemcachedCreds
 }
 
 // Load reads configuration from environment variables and returns a Config.
@@ -54,10 +56,12 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		Port:         port,
-		ServerId:     getEnv("SERVER_ID", "server-1"),
-		ClientDomain: os.Getenv("CLIENT_DOMAIN"),
-		LogLevel:     getEnv("LOG_LEVEL", "info"),
+		Port:           port,
+		ServerId:       getEnv("SERVER_ID", "server-1"),
+		ClientDomain:   os.Getenv("CLIENT_DOMAIN"),
+		AuthSystemHost: getEnv("AUTH_SYSTEM_HOST", "auth:50051"),
+		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
+		LogLevel:       getEnv("LOG_LEVEL", "info"),
 		RabbitMQ: RabbitMQCreds{
 			Host: getEnv("RABBITMQ_HOST", "localhost"),
 			Port: rabbitPort,

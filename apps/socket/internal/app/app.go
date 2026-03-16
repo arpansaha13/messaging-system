@@ -5,15 +5,20 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
+	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/middleware"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
 )
 
-// Deps contains all dependencies needed to assemble the socket server
+// Deps contains all dependencies needed to assemble the socket server.
 type Deps struct {
 	Logger           *zap.Logger
 	Hub              *ws.Hub
@@ -22,11 +27,12 @@ type Deps struct {
 	MemcachedService *cache.MemcachedService
 	// GroupHandlers is created in main before setupRabbitMQ (consumer callbacks need it).
 	GroupHandlers *ws.GroupHandlers
+	AuthClient    service.IAuthServiceClient
 	ClientDomain  string
 	Port          int
 }
 
-// New assembles all WebSocket components and returns a configured HTTP server
+// New assembles all WebSocket components and returns a configured HTTP server.
 func New(deps Deps) *http.Server {
 	log := deps.Logger
 
@@ -45,16 +51,25 @@ func New(deps Deps) *http.Server {
 	// Build message dispatcher
 	dispatch := ws.BuildDispatcher(personalHandlers, deps.GroupHandlers, log)
 
-	// Setup HTTP mux with WebSocket routes
-	mux := http.NewServeMux()
+	// Setup HTTP router
+	router := mux.NewRouter()
+
+	// Apply middlewares
+	router.Use(gotoolkit.HttpRecoveryMiddleware)
+	router.Use(logger.HttpMiddleware(log))
+	router.Use(gotoolkit.HttpErrorMiddleware)
 
 	// Liveness probe — no auth, no dependencies
-	mux.HandleFunc("/ws/livez", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/ws/livez", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-	})
+	}).Methods(http.MethodGet)
+
+	// Protected sub-router — requires valid session
+	protectedRouter := router.PathPrefix("").Subrouter()
+	protectedRouter.Use(middleware.AuthMiddleware(deps.AuthClient))
 
 	// WebSocket endpoint
-	mux.HandleFunc("/ws/socket", func(w http.ResponseWriter, r *http.Request) {
+	protectedRouter.HandleFunc("/ws/socket", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("WebSocket connection request", zap.String("remote_addr", r.RemoteAddr))
 		ws.ServeWs(
 			deps.Hub,
@@ -67,12 +82,12 @@ func New(deps Deps) *http.Server {
 			w,
 			r,
 		)
-	})
+	}).Methods(http.MethodGet)
 
 	// Create HTTP server
 	httpServer := &http.Server{
 		Addr:         fmt.Sprintf(":%d", deps.Port),
-		Handler:      mux,
+		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

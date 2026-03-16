@@ -11,12 +11,17 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/app"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
+	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 )
 
 const (
@@ -39,6 +44,19 @@ func main() {
 
 	log := zap.L()
 	rootCtx := logger.WithContext(context.Background(), zapLogger)
+
+	// Initialize circuit breakers
+	cbs := circuits.New(log)
+
+	// Initialize gRPC auth service connection
+	conn, err := grpc.NewClient(
+		cfg.AuthSystemHost,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		log.Fatal("failed to connect to auth service", zap.Error(err))
+	}
+	authService := service.NewAuthService(conn, pb.NewAuthServiceClient(conn), cbs.AuthGRPC)
 
 	// In-memory state
 	chatsStore := store.NewChatsStore()
@@ -70,6 +88,7 @@ func main() {
 		ChatsStore:       chatsStore,
 		MemcachedService: memcachedService,
 		GroupHandlers:    groupHandlers,
+		AuthClient:       authService,
 		ClientDomain:     cfg.ClientDomain,
 		Port:             cfg.Port,
 	})
@@ -109,6 +128,10 @@ func main() {
 
 	if err := rabbitMQConnMgr.Stop(); err != nil {
 		log.Error("error stopping rabbitmq connection manager", zap.Error(err))
+	}
+
+	if err := authService.Close(); err != nil {
+		log.Error("error closing auth service connection", zap.Error(err))
 	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

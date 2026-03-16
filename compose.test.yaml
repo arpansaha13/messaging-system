@@ -211,6 +211,8 @@ services:
       RABBITMQ_PASS: admin
       # Playwright connects from same origin (http://localhost:7500) via nginx
       CLIENT_DOMAIN: http://localhost:7500
+      AUTH_SYSTEM_HOST: auth:50051
+      AUTH_COOKIE_NAME: session
       MEMCACHED_HOST: memcached
       MEMCACHED_PORT: 11211
     depends_on:

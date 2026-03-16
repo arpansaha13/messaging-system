@@ -84,7 +84,7 @@ export async function useSocket(): Promise<SocketWrapper> {
     })
 
     function connectWithRetry(userId: number, attempt = 0, maxAttempts = 10, baseDelay = 1000, maxDelay = 5000) {
-      const ws = new WebSocket(`/ws/socket?userId=${userId}`)
+      const ws = new WebSocket(`/ws/socket`)
       const adapter = createAdapter(ws)
 
       ws.onopen = () => {

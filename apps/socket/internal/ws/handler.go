@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 )
 
@@ -43,10 +44,11 @@ func ServeWs(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	userIdStr := r.URL.Query().Get("userId")
+	// userId is set in context by AuthMiddleware after session validation
+	userIdStr := middleware.GetUserIDFromContext(r)
 	userId, err := strconv.ParseInt(userIdStr, 10, 64)
 	if err != nil || userId <= 0 {
-		http.Error(w, "missing or invalid userId", http.StatusBadRequest)
+		http.Error(w, "missing or invalid userId in context", http.StatusUnauthorized)
 		return
 	}
 
