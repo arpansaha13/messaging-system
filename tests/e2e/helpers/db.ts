@@ -1,8 +1,8 @@
 import pg from 'pg'
 import { TEST_USERS, type TestUserKey } from '../fixtures/users'
 
-const AUTH_DB_URL = 'postgresql://testuser:testpass@localhost:7511/auth_test_db'
-const MESSAGING_DB_URL = 'postgresql://testuser:testpass@localhost:7521/messaging_test_db'
+const AUTH_DB_URL = 'postgresql://testuser:testpass@localhost:7511/auth_e2e_db'
+const MESSAGING_DB_URL = 'postgresql://testuser:testpass@localhost:7521/messaging_e2e_db'
 
 export interface SeedUserParams {
   email: string

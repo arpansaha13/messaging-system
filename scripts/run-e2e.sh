@@ -16,6 +16,7 @@
 set -euo pipefail
 
 COMPOSE_FILE="compose.test.yaml"
+COMPOSE_ENV_FILE="env/.env.e2e.test"
 CONFIG="tests/e2e/playwright.config.ts"
 SKIP_MIGRATIONS=false
 NO_TEARDOWN=false
@@ -25,8 +26,8 @@ SPEC_FILE=""
 # Path to goauthkit migrations — edit if goauthkit lives elsewhere
 GOAUTHKIT_MIGRATIONS_DIR="../../7. Libraries/goauthkit/migrations"
 
-AUTH_DB_URL="postgres://testuser:testpass@localhost:7511/auth_test_db?sslmode=disable"
-MESSAGING_DB_URL="postgres://testuser:testpass@localhost:7521/messaging_test_db?sslmode=disable"
+AUTH_DB_URL="postgres://testuser:testpass@localhost:7511/auth_e2e_db?sslmode=disable"
+MESSAGING_DB_URL="postgres://testuser:testpass@localhost:7521/messaging_e2e_db?sslmode=disable"
 
 # ---------------------------------------------------------------------------
 # Parse arguments
@@ -56,10 +57,10 @@ log() { echo "[run-e2e] $*"; }
 teardown() {
   if [[ "$NO_TEARDOWN" == false ]]; then
     log "Tearing down test stack..."
-    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans
+    docker compose --env-file "$COMPOSE_ENV_FILE" -f "$COMPOSE_FILE" down -v --remove-orphans
   else
     log "Skipping teardown (--no-teardown). Run manually:"
-    echo "  docker compose -f $COMPOSE_FILE down -v"
+    echo "  docker compose --env-file $COMPOSE_ENV_FILE -f $COMPOSE_FILE down -v"
   fi
 }
 

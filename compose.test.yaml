@@ -19,28 +19,34 @@ services:
   # ---------------------------------------------------------------------------
   # Nginx — HTTP-only reverse proxy (no TLS) for unified origin
   # Playwright connects to http://localhost:7500
-  # nginx.test.conf is volume-mounted to override the baked-in production config
+  # nginx.conf is selected via NGINX_CONF_PATH in env files
   # ---------------------------------------------------------------------------
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx_test
+    profiles:
+      - e2e
+      - load
     ports:
       - '7500:80'
     volumes:
-      - ./apps/nginx/nginx.test.conf:/etc/nginx/nginx.conf
+      - ${NGINX_CONF_PATH}:/etc/nginx/nginx.conf
     depends_on:
-      frontend:
-        condition: service_started
       backend:
         condition: service_started
       socket:
         condition: service_started
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
     develop:
       watch:
         - action: rebuild
-          path: ./apps/nginx/nginx.test.conf
+          path: ${NGINX_CONF_PATH}
 
   # ---------------------------------------------------------------------------
   # Auth service database
@@ -49,14 +55,18 @@ services:
   auth-db:
     image: postgres:16-alpine
     container_name: auth-db_test
+    profiles:
+      - e2e
+      - load
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
-      POSTGRES_DB: auth_test_db
+      POSTGRES_DB: ${AUTH_DB_NAME}
     ports:
       - '7511:5432'
     volumes:
       - ./data/test/auth:/var/lib/postgresql/data
+      - ./tests/init-auth-dbs.sh:/docker-entrypoint-initdb.d/init-auth-dbs.sh:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U testuser']
       interval: 10s
@@ -64,19 +74,28 @@ services:
       retries: 10
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1G
 
   # Messaging DB exposed on :7521 for test data verification if needed
   postgres:
     image: postgres:16-alpine
     container_name: postgres_test
+    profiles:
+      - e2e
+      - load
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
-      POSTGRES_DB: messaging_test_db
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - '7521:5432'
     volumes:
       - ./data/test/default:/var/lib/postgresql/data
+      - ./tests/init-default-dbs.sh:/docker-entrypoint-initdb.d/init-default-dbs.sh:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U testuser']
       interval: 10s
@@ -84,6 +103,11 @@ services:
       retries: 10
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1G
 
   # ---------------------------------------------------------------------------
   # RabbitMQ — shared by backend, socket, chat-worker
@@ -92,6 +116,9 @@ services:
   rabbitmq:
     image: rabbitmq:4.2.2-management-alpine
     container_name: rabbitmq_test
+    profiles:
+      - e2e
+      - load
     ports:
       - '7551:15672'
     environment:
@@ -106,6 +133,11 @@ services:
       retries: 10
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1G
 
   # ---------------------------------------------------------------------------
   # Memcached — online/offline presence
@@ -113,8 +145,16 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached_test
+    profiles:
+      - e2e
+      - load
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
 
   # ---------------------------------------------------------------------------
   # Auth gRPC service
@@ -124,9 +164,12 @@ services:
   auth:
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
     container_name: auth_test
+    profiles:
+      - e2e
+      - load
     environment:
       ENVIRONMENT: test
-      DATABASE_URL: postgres://testuser:testpass@auth-db:5432/auth_test_db?sslmode=disable
+      DATABASE_URL: postgres://testuser:testpass@auth-db:5432/${AUTH_DB_NAME}?sslmode=disable
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: 50051
       SESSION_TTL_MINUTES: 30
@@ -143,7 +186,7 @@ services:
       OTP_LENGTH: 6
       EMAIL_WORKER_POOL_SIZE: 2
       EMAIL_TASK_QUEUE_SIZE: 10
-      LOG_LEVEL: info
+      LOG_LEVEL: ${LOG_LEVEL}
     depends_on:
       auth-db:
         condition: service_healthy
@@ -151,6 +194,11 @@ services:
       - '50051'
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
 
   # ---------------------------------------------------------------------------
   # Backend REST API
@@ -160,16 +208,19 @@ services:
   backend:
     image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
     container_name: backend_test
+    profiles:
+      - e2e
+      - load
     environment:
       ENVIRONMENT: test
       API_PORT: 4000
-      LOG_LEVEL: info
-      DATABASE_URL: postgres://testuser:testpass@postgres:5432/messaging_test_db?sslmode=disable
+      LOG_LEVEL: ${LOG_LEVEL}
+      DATABASE_URL: postgres://testuser:testpass@postgres:5432/${DB_NAME}?sslmode=disable
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: testuser
       DB_PASSWORD: testpass
-      DB_NAME: messaging_test_db
+      DB_NAME: ${DB_NAME}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: admin
@@ -193,6 +244,11 @@ services:
         condition: service_started
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.00'
+          memory: 1G
 
   # ---------------------------------------------------------------------------
   # Go WebSocket server
@@ -200,9 +256,12 @@ services:
   socket:
     image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
     container_name: socket_test
+    profiles:
+      - e2e
+      - load
     environment:
       ENVIRONMENT: test
-      LOG_LEVEL: info
+      LOG_LEVEL: ${LOG_LEVEL}
       PORT: 4000
       SERVER_ID: test-server-1
       RABBITMQ_HOST: rabbitmq
@@ -222,6 +281,11 @@ services:
         condition: service_started
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
 
   # ---------------------------------------------------------------------------
   # Chat worker — consumes RabbitMQ worker queue, persists messages to DB
@@ -229,9 +293,12 @@ services:
   chat-worker:
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
     container_name: chat-worker_test
+    profiles:
+      - e2e
+      - load
     environment:
       ENVIRONMENT: test
-      LOG_LEVEL: info
+      LOG_LEVEL: ${LOG_LEVEL}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: admin
@@ -240,7 +307,7 @@ services:
       DB_PORT: 5432
       DB_USERNAME: testuser
       DB_PASSWORD: testpass
-      DB_NAME: messaging_test_db
+      DB_NAME: ${DB_NAME}
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -248,6 +315,11 @@ services:
         condition: service_healthy
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
 
   # ---------------------------------------------------------------------------
   # Nuxt 4 frontend — production image (cookie names set at runtime via NUXT_ vars)
@@ -255,6 +327,8 @@ services:
   frontend:
     image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
     container_name: frontend_test
+    profiles:
+      - e2e
     environment:
       ENVIRONMENT: test
       NUXT_AUTH_COOKIE_NAME: session
@@ -266,6 +340,11 @@ services:
       - backend
     networks:
       - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
 
 networks:
   messaging-test-network:
