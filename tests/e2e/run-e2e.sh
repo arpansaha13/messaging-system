@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
 # run-e2e.sh — Run DB migrations, E2E tests, and teardown.
 # Building images and starting the stack are handled by npm scripts in package.json.
-# Must be executed from the project root.
+# Must be executed from tests/e2e/ (the e2e package root).
 #
 # Usage:
-#   ./scripts/run-e2e.sh                        # run all specs
-#   ./scripts/run-e2e.sh --spec auth/login      # run a specific spec file
-#   ./scripts/run-e2e.sh --ui                   # interactive Playwright UI mode
-#   ./scripts/run-e2e.sh --skip-migrations      # skip DB migrations (already applied)
-#   ./scripts/run-e2e.sh --no-teardown          # keep stack running after tests
+#   ./run-e2e.sh                        # run all specs
+#   ./run-e2e.sh --spec auth/login      # run a specific spec file
+#   ./run-e2e.sh --ui                   # interactive Playwright UI mode
+#   ./run-e2e.sh --skip-migrations      # skip DB migrations (already applied)
+#   ./run-e2e.sh --no-teardown          # keep stack running after tests
 #
 # Environment variables:
-#   GOAUTHKIT_MIGRATIONS_DIR  Path to goauthkit migrations dir (default: relative to project root)
+#   GOAUTHKIT_MIGRATIONS_DIR  Path to goauthkit migrations dir (default: relative to tests/e2e/)
 
 set -euo pipefail
 
-COMPOSE_FILE="compose.test.yaml"
-COMPOSE_ENV_FILE="env/.env.e2e.test"
-CONFIG="tests/e2e/playwright.config.ts"
+COMPOSE_FILE="../../compose.test.yaml"
+COMPOSE_ENV_FILE=".env.test"
+CONFIG="playwright.config.ts"
 SKIP_MIGRATIONS=false
 NO_TEARDOWN=false
 UI_MODE=false
 SPEC_FILE=""
 
 # Path to goauthkit migrations — edit if goauthkit lives elsewhere
-GOAUTHKIT_MIGRATIONS_DIR="../../7. Libraries/goauthkit/migrations"
+GOAUTHKIT_MIGRATIONS_DIR="../../../../7. Libraries/goauthkit/migrations"
 
 AUTH_DB_URL="postgres://testuser:testpass@localhost:7511/auth_e2e_db?sslmode=disable"
 MESSAGING_DB_URL="postgres://testuser:testpass@localhost:7521/messaging_e2e_db?sslmode=disable"
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
     --no-teardown)      NO_TEARDOWN=true;      shift ;;
     --ui)               UI_MODE=true;          shift ;;
     --spec)
-      SPEC_FILE="tests/e2e/specs/$2"
+      SPEC_FILE="specs/$2"
       shift 2
       ;;
     *)
@@ -76,7 +76,7 @@ if [[ "$SKIP_MIGRATIONS" == false ]]; then
   log "Running auth DB migrations..."
   migrate -path "${GOAUTHKIT_MIGRATIONS_DIR}" -database "${AUTH_DB_URL}" up
   log "Running messaging DB migrations..."
-  migrate -path "apps/backend/migrations" -database "${MESSAGING_DB_URL}" up
+  migrate -path "../../apps/backend/migrations" -database "${MESSAGING_DB_URL}" up
   log "Migrations complete."
 else
   log "Skipping migrations (--skip-migrations)."
@@ -85,7 +85,7 @@ fi
 # ---------------------------------------------------------------------------
 # 2. Install dependencies (if node_modules missing)
 # ---------------------------------------------------------------------------
-if [[ ! -d "node_modules/@playwright" ]]; then
+if [[ ! -d "../../node_modules/@playwright" ]]; then
   log "Installing root dependencies..."
   pnpm install --frozen-lockfile
   pnpm exec playwright install chromium
@@ -112,7 +112,7 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "$EXIT_CODE" -ne 0 ]]; then
   log "Tests failed. View traces with:"
-  echo "  pnpm exec playwright show-trace tests/e2e/test-results/**/*.zip"
+  echo "  pnpm exec playwright show-trace test-results/**/*.zip"
 fi
 
 # ---------------------------------------------------------------------------

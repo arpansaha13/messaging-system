@@ -9,23 +9,7 @@
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
     "dev": "docker compose --profile app watch --prune",
-    "build": "docker compose -f compose.build.yaml build",
-    "test:e2e": "pnpm test:e2e:setup && bash scripts/run-e2e.sh --no-teardown",
-    "test:e2e:ui": "pnpm test:e2e:setup && bash scripts/run-e2e.sh --ui --no-teardown",
-    "test:e2e:setup": "pnpm build && docker compose --env-file env/.env.e2e.test -f compose.test.yaml --profile e2e up -d --remove-orphans",
-    "test:e2e:report": "playwright show-report tests/e2e/test-report",
-    "test:e2e:trace": "playwright show-trace tests/e2e/test-results/**/*.zip",
-    "test:load": "pnpm test:load:setup && pnpm test:load:personal && pnpm test:load:group",
-    "test:load:setup": "pnpm build && docker compose --env-file env/.env.load.test -f compose.test.yaml --profile load up -d --remove-orphans",
-    "test:load:personal": "node tests/load/specs/personal/run.js",
-    "test:load:group": "node tests/load/specs/group/run.js"
-  },
-  "devDependencies": {
-    "@playwright/test": "^1.58.2",
-    "@types/bcryptjs": "^2.4.6",
-    "@types/pg": "^8.11.0",
-    "bcryptjs": "^2.4.3",
-    "pg": "^8.20.0"
+    "build": "docker compose -f compose.build.yaml build"
   },
   "engines": {
     "node": ">=22.0.0"

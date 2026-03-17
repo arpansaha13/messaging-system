@@ -6,23 +6,7 @@ settings:
 
 importers:
 
-  .:
-    devDependencies:
-      '@playwright/test':
-        specifier: ^1.58.2
-        version: 1.58.2
-      '@types/bcryptjs':
-        specifier: ^2.4.6
-        version: 2.4.6
-      '@types/pg':
-        specifier: ^8.11.0
-        version: 8.18.0
-      bcryptjs:
-        specifier: ^2.4.3
-        version: 2.4.3
-      pg:
-        specifier: ^8.20.0
-        version: 8.20.0
+  .: {}
 
   apps/frontend:
     dependencies:
@@ -111,6 +95,33 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+
+  tests/e2e:
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.58.2
+        version: 1.58.2
+      '@types/bcryptjs':
+        specifier: ^2.4.6
+        version: 2.4.6
+      '@types/pg':
+        specifier: ^8.11.0
+        version: 8.18.0
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
+
+  tests/load:
+    devDependencies:
+      bcryptjs:
+        specifier: ^2.4.3
+        version: 2.4.3
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
 
 packages:
 
@@ -7786,7 +7797,7 @@ snapshots:
   '@types/pg@8.18.0':
     dependencies:
       '@types/node': 25.2.0
-      pg-protocol: 1.10.3
+      pg-protocol: 1.13.0
       pg-types: 2.2.0
 
   '@types/resolve@1.20.2': {}

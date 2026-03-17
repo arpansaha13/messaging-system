@@ -1,6 +1,8 @@
 packages:
   - apps/*
   - scripts/*
+  - tests/e2e
+  - tests/load
 
 onlyBuiltDependencies:
   - '@arpansaha13/utils'
