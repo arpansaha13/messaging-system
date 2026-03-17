@@ -18,10 +18,10 @@ import (
 
 // SetupContactRoutes sets up contact routes
 func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contactService service.IContactService) {
-	protectedRouter.HandleFunc("/api/contacts", gtk.HttpControllerAdaptor(addContactController(contactService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/contacts", gtk.HttpControllerAdaptor(getContactsController(contactService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/contacts/{id}", gtk.HttpControllerAdaptor(updateContactAliasController(contactService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/contacts/{id}", gtk.HttpControllerAdaptor(deleteContactController(contactService))).Methods("DELETE")
+	protectedRouter.HandleFunc("/contacts", gtk.HttpControllerAdaptor(addContactController(contactService))).Methods("POST")
+	protectedRouter.HandleFunc("/contacts", gtk.HttpControllerAdaptor(getContactsController(contactService))).Methods("GET")
+	protectedRouter.HandleFunc("/contacts/{id}", gtk.HttpControllerAdaptor(updateContactAliasController(contactService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/contacts/{id}", gtk.HttpControllerAdaptor(deleteContactController(contactService))).Methods("DELETE")
 }
 
 func addContactController(contactService service.IContactService) gtk.ControllerFunc {

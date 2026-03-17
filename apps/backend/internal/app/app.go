@@ -60,27 +60,30 @@ func New(deps Deps) *http.Server {
 	router.Use(logger.HttpMiddleware(deps.Logger))
 	router.Use(gotoolkit.HttpErrorMiddleware)
 
+	// All backend routes are under the /api prefix
+	apiRouter := router.PathPrefix("/api").Subrouter()
+
 	// Authentication middleware for protected routes
-	protectedRouter := router.PathPrefix("").Subrouter()
+	protectedRouter := apiRouter.PathPrefix("").Subrouter()
 	protectedRouter.Use(middleware.AuthMiddleware(deps.AuthClient))
 
 	// Liveness probe — no auth, no dependencies
-	router.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
+	apiRouter.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
 
 	// Setup routes - user group routes must be registered before user routes
-	// to ensure /api/users/groups matches before /api/users/{id}
-	handler.SetupAuthRoutes(router, deps.AuthClient)
+	// to ensure /users/groups matches before /users/{id}
+	handler.SetupAuthRoutes(apiRouter, deps.AuthClient)
 	handler.SetupAuthProtectedRoutes(protectedRouter, deps.AuthClient)
-	handler.SetupUserGroupRoutes(router, protectedRouter, userGroupService)
-	handler.SetupUserRoutes(router, protectedRouter, userService)
-	handler.SetupMessageRoutes(router, protectedRouter, messageService)
-	handler.SetupChatRoutes(router, protectedRouter, chatService)
-	handler.SetupChannelRoutes(router, protectedRouter, channelService)
-	handler.SetupContactRoutes(router, protectedRouter, contactService)
-	handler.SetupGroupRoutes(router, protectedRouter, groupService)
-	handler.SetupInviteRoutes(router, protectedRouter, inviteService)
+	handler.SetupUserGroupRoutes(apiRouter, protectedRouter, userGroupService)
+	handler.SetupUserRoutes(apiRouter, protectedRouter, userService)
+	handler.SetupMessageRoutes(apiRouter, protectedRouter, messageService)
+	handler.SetupChatRoutes(apiRouter, protectedRouter, chatService)
+	handler.SetupChannelRoutes(apiRouter, protectedRouter, channelService)
+	handler.SetupContactRoutes(apiRouter, protectedRouter, contactService)
+	handler.SetupGroupRoutes(apiRouter, protectedRouter, groupService)
+	handler.SetupInviteRoutes(apiRouter, protectedRouter, inviteService)
 
 	// Create HTTP server
 	httpHandler := otelhttp.NewHandler(router, deps.ServiceName)

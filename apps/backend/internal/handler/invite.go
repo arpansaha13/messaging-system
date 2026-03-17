@@ -16,10 +16,10 @@ import (
 
 // SetupInviteRoutes sets up invite routes
 func SetupInviteRoutes(router *mux.Router, protectedRouter *mux.Router, inviteService service.IInviteService) {
-	router.HandleFunc("/api/invites/{hash}", gtk.HttpControllerAdaptor(findInviteController(inviteService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/invites/{hash}/accept", gtk.HttpControllerAdaptor(acceptInviteController(inviteService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups/{groupId}/invites", gtk.HttpControllerAdaptor(createInviteController(inviteService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups/join", gtk.HttpControllerAdaptor(joinGroupController(inviteService))).Methods("POST")
+	router.HandleFunc("/invites/{hash}", gtk.HttpControllerAdaptor(findInviteController(inviteService))).Methods("GET")
+	protectedRouter.HandleFunc("/invites/{hash}/accept", gtk.HttpControllerAdaptor(acceptInviteController(inviteService))).Methods("POST")
+	protectedRouter.HandleFunc("/groups/{groupId}/invites", gtk.HttpControllerAdaptor(createInviteController(inviteService))).Methods("POST")
+	protectedRouter.HandleFunc("/groups/join", gtk.HttpControllerAdaptor(joinGroupController(inviteService))).Methods("POST")
 }
 
 func findInviteController(inviteService service.IInviteService) gtk.ControllerFunc {

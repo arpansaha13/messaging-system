@@ -17,10 +17,10 @@ import (
 
 // SetupUserRoutes sets up user routes
 func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userService service.IUserService) {
-	protectedRouter.HandleFunc("/api/users/me", gtk.HttpControllerAdaptor(getUserMeController(userService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/users/me", gtk.HttpControllerAdaptor(updateUserMeController(userService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/users/search", gtk.HttpControllerAdaptor(searchUserProfilesController(userService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/users/{id}", gtk.HttpControllerAdaptor(getUserProfileByIDController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/users/me", gtk.HttpControllerAdaptor(getUserMeController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/users/me", gtk.HttpControllerAdaptor(updateUserMeController(userService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/users/search", gtk.HttpControllerAdaptor(searchUserProfilesController(userService))).Methods("GET")
+	protectedRouter.HandleFunc("/users/{id}", gtk.HttpControllerAdaptor(getUserProfileByIDController(userService))).Methods("GET")
 }
 
 // getUserMeController returns the authenticated user's auth details

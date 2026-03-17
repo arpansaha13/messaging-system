@@ -18,12 +18,12 @@ import (
 
 // SetupMessageRoutes sets up message routes
 func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, messageService service.IMessageService) {
-	protectedRouter.HandleFunc("/api/messages/send/personal", gtk.HttpControllerAdaptor(sendPersonalMessageController(messageService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/send/group", gtk.HttpControllerAdaptor(sendGroupMessageController(messageService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/{receiverID}", gtk.HttpControllerAdaptor(getMessagesController(messageService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/channels/{channelID}/messages", gtk.HttpControllerAdaptor(getChannelMessagesController(messageService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/messages/status/delivered", gtk.HttpControllerAdaptor(handleDeliveredController(messageService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/messages/status/read", gtk.HttpControllerAdaptor(handleReadController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/messages/send/personal", gtk.HttpControllerAdaptor(sendPersonalMessageController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/messages/send/group", gtk.HttpControllerAdaptor(sendGroupMessageController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/messages/{receiverID}", gtk.HttpControllerAdaptor(getMessagesController(messageService))).Methods("GET")
+	protectedRouter.HandleFunc("/channels/{channelID}/messages", gtk.HttpControllerAdaptor(getChannelMessagesController(messageService))).Methods("GET")
+	protectedRouter.HandleFunc("/messages/status/delivered", gtk.HttpControllerAdaptor(handleDeliveredController(messageService))).Methods("POST")
+	protectedRouter.HandleFunc("/messages/status/read", gtk.HttpControllerAdaptor(handleReadController(messageService))).Methods("POST")
 }
 
 func sendPersonalMessageController(messageService service.IMessageService) gtk.ControllerFunc {

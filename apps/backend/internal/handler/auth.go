@@ -18,14 +18,14 @@ import (
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)
 func SetupAuthRoutes(router *mux.Router, authServiceClient service.IAuthServiceClient) {
-	router.HandleFunc("/api/auth/signup", gtk.HttpControllerAdaptor(signupController(authServiceClient))).Methods("POST")
-	router.HandleFunc("/api/auth/login", gtk.HttpControllerAdaptor(loginController(authServiceClient))).Methods("POST")
-	router.HandleFunc("/api/auth/verify/{otpHash}", gtk.HttpControllerAdaptor(verifyOTPController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/auth/signup", gtk.HttpControllerAdaptor(signupController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/auth/login", gtk.HttpControllerAdaptor(loginController(authServiceClient))).Methods("POST")
+	router.HandleFunc("/auth/verify/{otpHash}", gtk.HttpControllerAdaptor(verifyOTPController(authServiceClient))).Methods("POST")
 }
 
 // SetupAuthProtectedRoutes sets up authenticated auth routes
 func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient service.IAuthServiceClient) {
-	protectedRouter.HandleFunc("/api/auth/logout", gtk.HttpControllerAdaptor(logoutController(authServiceClient))).Methods("POST")
+	protectedRouter.HandleFunc("/auth/logout", gtk.HttpControllerAdaptor(logoutController(authServiceClient))).Methods("POST")
 }
 
 func signupController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {

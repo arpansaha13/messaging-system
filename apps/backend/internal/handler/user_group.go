@@ -16,7 +16,7 @@ import (
 
 // SetupUserGroupRoutes sets up user group routes
 func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userGroupService service.IUserGroupService) {
-	protectedRouter.HandleFunc("/api/groups/{groupID}/members", gtk.HttpControllerAdaptor(getGroupMembersController(userGroupService))).Methods("GET")
+	protectedRouter.HandleFunc("/groups/{groupID}/members", gtk.HttpControllerAdaptor(getGroupMembersController(userGroupService))).Methods("GET")
 }
 
 func getGroupMembersController(userGroupService service.IUserGroupService) gtk.ControllerFunc {

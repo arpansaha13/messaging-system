@@ -17,8 +17,8 @@ import (
 
 // SetupGroupRoutes sets up group routes
 func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupService service.IGroupService) {
-	protectedRouter.HandleFunc("/api/groups", gtk.HttpControllerAdaptor(createGroupController(groupService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups", gtk.HttpControllerAdaptor(getGroupsController(groupService))).Methods("GET")
+	protectedRouter.HandleFunc("/groups", gtk.HttpControllerAdaptor(createGroupController(groupService))).Methods("POST")
+	protectedRouter.HandleFunc("/groups", gtk.HttpControllerAdaptor(getGroupsController(groupService))).Methods("GET")
 }
 
 func createGroupController(groupService service.IGroupService) gtk.ControllerFunc {

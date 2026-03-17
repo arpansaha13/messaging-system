@@ -59,17 +59,20 @@ func New(deps Deps) *http.Server {
 	router.Use(logger.HttpMiddleware(log))
 	router.Use(gotoolkit.HttpErrorMiddleware)
 
+	// All socket routes are under the /ws prefix
+	wsRouter := router.PathPrefix("/ws").Subrouter()
+
 	// Liveness probe — no auth, no dependencies
-	router.HandleFunc("/ws/livez", func(w http.ResponseWriter, r *http.Request) {
+	wsRouter.HandleFunc("/livez", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods(http.MethodGet)
 
 	// Protected sub-router — requires valid session
-	protectedRouter := router.PathPrefix("").Subrouter()
+	protectedRouter := wsRouter.PathPrefix("").Subrouter()
 	protectedRouter.Use(middleware.AuthMiddleware(deps.AuthClient))
 
 	// WebSocket endpoint
-	protectedRouter.HandleFunc("/ws/socket", func(w http.ResponseWriter, r *http.Request) {
+	protectedRouter.HandleFunc("/socket", func(w http.ResponseWriter, r *http.Request) {
 		log.Debug("WebSocket connection request", zap.String("remote_addr", r.RemoteAddr))
 		ws.ServeWs(
 			deps.Hub,

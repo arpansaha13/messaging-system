@@ -15,14 +15,14 @@ import (
 
 // SetupChatRoutes sets up chat routes
 func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatService service.IChatService) {
-	protectedRouter.HandleFunc("/api/chats", gtk.HttpControllerAdaptor(getUserUnarchivedChatsController(chatService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/chats/archived", gtk.HttpControllerAdaptor(getUserArchivedChatsController(chatService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/pin", gtk.HttpControllerAdaptor(pinChatController(chatService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/unpin", gtk.HttpControllerAdaptor(unpinChatController(chatService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/archive", gtk.HttpControllerAdaptor(archiveChatController(chatService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/unarchive", gtk.HttpControllerAdaptor(unarchiveChatController(chatService))).Methods("PATCH")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/clear", gtk.HttpControllerAdaptor(clearChatController(chatService))).Methods("DELETE")
-	protectedRouter.HandleFunc("/api/chats/{receiverID}/delete", gtk.HttpControllerAdaptor(deleteChatController(chatService))).Methods("DELETE")
+	protectedRouter.HandleFunc("/chats", gtk.HttpControllerAdaptor(getUserUnarchivedChatsController(chatService))).Methods("GET")
+	protectedRouter.HandleFunc("/chats/archived", gtk.HttpControllerAdaptor(getUserArchivedChatsController(chatService))).Methods("GET")
+	protectedRouter.HandleFunc("/chats/{receiverID}/pin", gtk.HttpControllerAdaptor(pinChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/chats/{receiverID}/unpin", gtk.HttpControllerAdaptor(unpinChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/chats/{receiverID}/archive", gtk.HttpControllerAdaptor(archiveChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/chats/{receiverID}/unarchive", gtk.HttpControllerAdaptor(unarchiveChatController(chatService))).Methods("PATCH")
+	protectedRouter.HandleFunc("/chats/{receiverID}/clear", gtk.HttpControllerAdaptor(clearChatController(chatService))).Methods("DELETE")
+	protectedRouter.HandleFunc("/chats/{receiverID}/delete", gtk.HttpControllerAdaptor(deleteChatController(chatService))).Methods("DELETE")
 }
 
 func getUserUnarchivedChatsController(chatService service.IChatService) gtk.ControllerFunc {

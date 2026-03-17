@@ -17,9 +17,9 @@ import (
 
 // SetupChannelRoutes sets up channel routes
 func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channelService service.IChannelService) {
-	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", gtk.HttpControllerAdaptor(createChannelController(channelService))).Methods("POST")
-	protectedRouter.HandleFunc("/api/groups/{groupID}/channels", gtk.HttpControllerAdaptor(getGroupChannelsController(channelService))).Methods("GET")
-	protectedRouter.HandleFunc("/api/channels/{channelID}", gtk.HttpControllerAdaptor(getChannelInfoController(channelService))).Methods("GET")
+	protectedRouter.HandleFunc("/groups/{groupID}/channels", gtk.HttpControllerAdaptor(createChannelController(channelService))).Methods("POST")
+	protectedRouter.HandleFunc("/groups/{groupID}/channels", gtk.HttpControllerAdaptor(getGroupChannelsController(channelService))).Methods("GET")
+	protectedRouter.HandleFunc("/channels/{channelID}", gtk.HttpControllerAdaptor(getChannelInfoController(channelService))).Methods("GET")
 }
 
 func createChannelController(channelService service.IChannelService) gtk.ControllerFunc {
