@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -14,9 +14,9 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
-// setupRabbitMQ creates a RabbitMQService and a ConnectionManager with auto-reconnect.
+// SetupRabbitMQ creates a RabbitMQService and a ConnectionManager with auto-reconnect.
 // Returns the service (for injection into app) and the manager (for graceful shutdown in main).
-func setupRabbitMQ(
+func SetupRabbitMQ(
 	ctx context.Context,
 	creds config.RabbitMQCreds,
 	zapLogger *zap.Logger,

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -18,7 +18,7 @@ import (
 
 // setupRabbitMQ creates a RabbitMQBroker and a ConnectionManager with auto-reconnect.
 // Returns the broker (for injection into app) and the manager (for graceful shutdown in main).
-func setupRabbitMQ(
+func SetupRabbitMQ(
 	ctx context.Context,
 	creds config.RabbitMQCreds,
 	serverId string,

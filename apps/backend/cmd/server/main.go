@@ -10,20 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 
-	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 )
 
 const serviceName string = "backend"
@@ -34,7 +28,6 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	// Initialize logger (uptrace otelzap wrapping stdout JSON output)
 	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
@@ -42,49 +35,42 @@ func main() {
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 
-	// Initialize circuit breakers
 	cbs := circuits.New(zapLogger)
 
-	// Initialize database
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
-	gormCfg := gorm.Config{
-		Logger: gotoolkit.NewGormLogger(zapLogger, gormlogger.Warn),
-	}
-	db, err := gotoolkit.ConnectPostgresWithBackoff(svcCtx, cfg.DatabaseURL, &gormCfg)
+
+	db, err := app.SetupPostgres(svcCtx, cfg.DatabaseURL, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	// Setup RabbitMQ — creates RabbitMQService internally
-	rabbitmqService, rabbitMQConnMgr, err := setupRabbitMQ(svcCtx, cfg.RabbitMQ, zapLogger, cbs)
+	rabbitmqService, rabbitMQConnMgr, err := app.SetupRabbitMQ(svcCtx, cfg.RabbitMQ, zapLogger, cbs)
 	if err != nil {
 		zapLogger.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
-	// Initialize gRPC auth service connection
-	conn, err := grpc.NewClient(
-		cfg.AuthSystemHost,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	authService, err := app.SetupAuthService(cfg.AuthSystemHost, cbs)
 	if err != nil {
 		log.Fatalf("failed to connect to auth service: %v", err)
 	}
 
-	authService := service.NewAuthService(conn, pb.NewAuthServiceClient(conn), cbs.AuthGRPC)
-
-	// Assemble HTTP server with all components
-	addr := fmt.Sprintf(":%d", cfg.APIPort)
-	httpServer := app.New(app.Deps{
-		DB:          db,
-		RabbitMQ:    rabbitmqService,
-		AuthClient:  authService,
-		Circuits:    cbs,
-		Logger:      zapLogger,
-		ServiceName: serviceName,
-		Addr:        addr,
+	router := app.SetupRouter(app.Deps{
+		DB:         db,
+		RabbitMQ:   rabbitmqService,
+		AuthClient: authService,
+		Circuits:   cbs,
+		Logger:     zapLogger,
 	})
 
-	// Start server in a goroutine
+	addr := fmt.Sprintf(":%d", cfg.APIPort)
+	httpServer := &http.Server{
+		Addr:         addr,
+		Handler:      otelhttp.NewHandler(router, serviceName),
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
 	go func() {
 		zapLogger.Info("Server started", zap.String("address", addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {

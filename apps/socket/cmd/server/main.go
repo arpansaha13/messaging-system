@@ -11,17 +11,13 @@ import (
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
-	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 )
 
 const (
@@ -48,21 +44,15 @@ func main() {
 	// Initialize circuit breakers
 	cbs := circuits.New(log)
 
-	// Initialize gRPC auth service connection
-	conn, err := grpc.NewClient(
-		cfg.AuthSystemHost,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	authService, err := app.SetupAuthService(cfg.AuthSystemHost, cbs)
 	if err != nil {
 		log.Fatal("failed to connect to auth service", zap.Error(err))
 	}
-	authService := service.NewAuthService(conn, pb.NewAuthServiceClient(conn), cbs.AuthGRPC)
 
 	// In-memory state
 	chatsStore := store.NewChatsStore()
 
-	// Setup Memcached connection manager with auto-reconnect
-	memcachedService, memcachedConnMgr, err := setupMemcached(rootCtx, cfg.Memcached, log)
+	memcachedService, memcachedConnMgr, err := app.SetupMemcached(rootCtx, cfg.Memcached, log)
 	if err != nil {
 		log.Fatal("failed to setup memcached", zap.Error(err))
 	}
@@ -71,17 +61,15 @@ func main() {
 	hub := ws.NewHub(log)
 
 	// GroupHandlers has no service deps — created before broker setup
-	// because setupRabbitMQ needs it for subscription consumer callbacks.
+	// because SetupRabbitMQ needs it for subscription consumer callbacks.
 	groupHandlers := ws.NewGroupHandlers(chatsStore, hub, log)
 
-	// Setup RabbitMQ — creates RabbitMQBroker internally
-	rabbitBroker, rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, cfg.RabbitMQ, cfg.ServerId, log, hub, chatsStore, groupHandlers)
+	rabbitBroker, rabbitMQConnMgr, err := app.SetupRabbitMQ(rootCtx, cfg.RabbitMQ, cfg.ServerId, log, hub, chatsStore, groupHandlers)
 	if err != nil {
 		log.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
-	// Assemble HTTP server — app.New creates PersonalHandlers from injected deps
-	httpServer := app.New(app.Deps{
+	router := app.SetupRouter(app.Deps{
 		Logger:           log,
 		Hub:              hub,
 		RabbitBroker:     rabbitBroker,
@@ -90,8 +78,16 @@ func main() {
 		GroupHandlers:    groupHandlers,
 		AuthClient:       authService,
 		ClientDomain:     cfg.ClientDomain,
-		Port:             cfg.Port,
 	})
+
+	addr := fmt.Sprintf(":%d", cfg.Port)
+	httpServer := &http.Server{
+		Addr:         addr,
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
 
 	// Ping flush ticker: periodically flush online-status pings to Memcached.
 	ticker := time.NewTicker(pingFlushInterval)
@@ -109,18 +105,26 @@ func main() {
 
 	// Start HTTP server
 	go func() {
-		log.Info("WebSocket server listening", zap.String("addr", httpServer.Addr))
+		log.Info("WebSocket server listening", zap.String("addr", addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal("server error", zap.Error(err))
 		}
 	}()
 
-	// Graceful shutdown
+	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 	<-sigChan
 
 	log.Info("shutdown signal received, stopping gracefully")
+
+	// Graceful shutdown with timeout
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		log.Error("HTTP server shutdown error", zap.Error(err))
+	}
 
 	if err := memcachedConnMgr.Stop(); err != nil {
 		log.Error("error stopping memcached connection manager", zap.Error(err))
@@ -134,11 +138,7 @@ func main() {
 		log.Error("error closing auth service connection", zap.Error(err))
 	}
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := httpServer.Shutdown(shutdownCtx); err != nil {
-		log.Error("HTTP server shutdown error", zap.Error(err))
-	}
+	log.Info("server stopped")
 }
 
 func parseLogLevel(s string) zapcore.Level {

@@ -2,10 +2,8 @@ package app
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -20,17 +18,15 @@ import (
 
 // Deps contains all dependencies needed to assemble the server
 type Deps struct {
-	DB          *gorm.DB
-	RabbitMQ    *service.RabbitMQService // nil-safe: message service guards nil channel internally
-	AuthClient  service.IAuthServiceClient
-	Circuits    *circuits.Circuits
-	Logger      *zap.Logger
-	ServiceName string
-	Addr        string
+	DB         *gorm.DB
+	RabbitMQ   *service.RabbitMQService
+	AuthClient service.IAuthServiceClient
+	Circuits   *circuits.Circuits
+	Logger     *zap.Logger
 }
 
-// New assembles all components and returns a configured HTTP server
-func New(deps Deps) *http.Server {
+// SetupRouter assembles all components and returns a configured router.
+func SetupRouter(deps Deps) *mux.Router {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(deps.DB, deps.Circuits.Postgres)
 	messageRepo := repository.NewMessageRepository(deps.DB, deps.Circuits.Postgres)
@@ -85,15 +81,5 @@ func New(deps Deps) *http.Server {
 	handler.SetupGroupRoutes(apiRouter, protectedRouter, groupService)
 	handler.SetupInviteRoutes(apiRouter, protectedRouter, inviteService)
 
-	// Create HTTP server
-	httpHandler := otelhttp.NewHandler(router, deps.ServiceName)
-	httpServer := &http.Server{
-		Addr:         deps.Addr,
-		Handler:      httpHandler,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	return httpServer
+	return router
 }

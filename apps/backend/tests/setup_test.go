@@ -176,15 +176,14 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	s.HTTPServerAddr = "http://" + listener.Addr().String()
 
 	// Assemble HTTP server with all components
-	s.HTTPServer = app.New(app.Deps{
-		DB:          db,
-		RabbitMQ:    testRabbitMQ,
-		AuthClient:  mockAuthClient,
-		Circuits:    cbs,
-		Logger:      testLogger,
-		ServiceName: "backend-test",
-		Addr:        "",
+	router := app.SetupRouter(app.Deps{
+		DB:         db,
+		RabbitMQ:   testRabbitMQ,
+		AuthClient: mockAuthClient,
+		Circuits:   cbs,
+		Logger:     testLogger,
 	})
+	s.HTTPServer = &http.Server{Handler: router}
 
 	// Start HTTP server
 	go func() {

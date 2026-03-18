@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 
 // setupMemcached creates a MemcachedService and a ConnectionManager with auto-reconnect.
 // Returns the service (for injection into app) and the manager (for graceful shutdown in main).
-func setupMemcached(
+func SetupMemcached(
 	ctx context.Context,
 	creds config.MemcachedCreds,
 	log *zap.Logger,

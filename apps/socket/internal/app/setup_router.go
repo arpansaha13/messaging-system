@@ -1,9 +1,7 @@
 package app
 
 import (
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -25,15 +23,14 @@ type Deps struct {
 	RabbitBroker     *broker.RabbitMQBroker
 	ChatsStore       *store.ChatsStore
 	MemcachedService *cache.MemcachedService
-	// GroupHandlers is created in main before setupRabbitMQ (consumer callbacks need it).
+	// GroupHandlers is created in main before SetupRabbitMQ (consumer callbacks need it).
 	GroupHandlers *ws.GroupHandlers
 	AuthClient    service.IAuthServiceClient
 	ClientDomain  string
-	Port          int
 }
 
-// New assembles all WebSocket components and returns a configured HTTP server.
-func New(deps Deps) *http.Server {
+// SetupRouter assembles all WebSocket components and returns a configured router.
+func SetupRouter(deps Deps) *mux.Router {
 	log := deps.Logger
 
 	// Create WebSocket upgrader
@@ -87,14 +84,5 @@ func New(deps Deps) *http.Server {
 		)
 	}).Methods(http.MethodGet)
 
-	// Create HTTP server
-	httpServer := &http.Server{
-		Addr:         fmt.Sprintf(":%d", deps.Port),
-		Handler:      router,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	return httpServer
+	return router
 }
