@@ -35,7 +35,7 @@ func main() {
 
 	zapLogger.Info("starting auth service", zap.String("environment", cfg.Environment.String()))
 
-	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), "auth", zapLogger)
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), "auth", cfg.OTLPEndpoint, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to setup telemetry", zap.Error(err))
 	}

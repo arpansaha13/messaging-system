@@ -96,6 +96,7 @@ services:
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
       AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
+      OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
     ports:
       - "7030:4000"
     depends_on:
@@ -221,6 +222,7 @@ services:
       OTP_LENGTH: ${OTP_LENGTH}
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+      OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
     # ports:
     #   - '7060:${GRPC_PORT:-50051}'
     depends_on:
@@ -531,6 +533,24 @@ services:
       watch:
         - action: rebuild
           path: ./apps/prometheus/prometheus.yml
+
+  tempo:
+    image: grafana/tempo:2.7.2
+    container_name: tempo
+    profiles: [metrics]
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - ./data/tempo:/tmp/tempo
+    expose:
+      - "4317"  # OTLP gRPC — reachable by backend/auth as tempo:4317
+      - "3200"  # HTTP — reachable by Grafana as tempo:3200
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/tempo/tempo.yaml
 
 networks:
   messaging-network:

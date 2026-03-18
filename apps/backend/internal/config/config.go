@@ -35,6 +35,9 @@ type Config struct {
 	// Auth System gRPC
 	AuthSystemHost string
 
+	// OTel
+	OTLPEndpoint string
+
 	// JWT
 	JWTSecret string
 
@@ -67,6 +70,7 @@ func Load() (*Config, error) {
 		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
 		Environment:    env,
 		LogLevel:       getEnv("LOG_LEVEL", "info"),
+		OTLPEndpoint:   getEnv("OTLP_ENDPOINT", ""),
 	}
 
 	// Load database URL - either single DATABASE_URL or build from individual vars

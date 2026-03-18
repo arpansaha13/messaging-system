@@ -35,7 +35,7 @@ func main() {
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 
-	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), serviceName, zapLogger)
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), serviceName, cfg.OTLPEndpoint, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to setup telemetry", zap.Error(err))
 	}

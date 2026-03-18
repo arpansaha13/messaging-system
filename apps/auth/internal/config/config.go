@@ -47,6 +47,9 @@ type Config struct {
 	// Worker Pool
 	EmailWorkerPoolSize int
 	EmailTaskQueueSize  int
+
+	// OTel
+	OTLPEndpoint string
 }
 
 // Load loads configuration from environment variables
@@ -66,6 +69,7 @@ func Load() (*Config, error) {
 		GRPCHost:            getEnv("GRPC_HOST", "0.0.0.0"),
 		GRPCPort:            getEnv("GRPC_PORT", "50051"),
 		MetricsPort:         getEnvInt("METRICS_PORT", 9090),
+		OTLPEndpoint:        getEnv("OTLP_ENDPOINT", ""),
 		SecretKey:           getEnv("SECRET_KEY", ""),
 		JWTSecret:           getEnv("JWT_SECRET", ""),
 		SMTPHost:            getEnv("SMTP_HOST", "localhost"),

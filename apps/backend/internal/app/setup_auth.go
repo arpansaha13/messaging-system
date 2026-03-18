@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -16,6 +17,7 @@ func SetupAuthService(authSystemHost string, cbs *circuits.Circuits) (service.IA
 	conn, err := grpc.NewClient(
 		authSystemHost,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
