@@ -178,6 +178,7 @@ services:
       DATABASE_URL: postgres://testuser:testpass@auth-db:5432/${AUTH_DB_NAME}?sslmode=disable
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: 50051
+      METRICS_PORT: 9090
       SESSION_TTL_MINUTES: 30
       SESSION_CLEANUP_INTERVAL_MINUTES: 5
       SECRET_KEY: test-secret-key-32-chars-minimum!
@@ -220,6 +221,7 @@ services:
     environment:
       ENVIRONMENT: test
       API_PORT: 4000
+      METRICS_PORT: 9090
       LOG_LEVEL: ${LOG_LEVEL}
       DATABASE_URL: postgres://testuser:testpass@postgres:5432/${DB_NAME}?sslmode=disable
       DB_HOST: postgres
@@ -351,6 +353,83 @@ services:
         limits:
           cpus: '0.50'
           memory: 512M
+
+  # ---------------------------------------------------------------------------
+  # Metrics stack (--profile metrics)
+  # ---------------------------------------------------------------------------
+
+  postgres-exporter-auth:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: postgres-exporter-auth_test
+    profiles: [metrics]
+    environment:
+      DATA_SOURCE_NAME: postgresql://testuser:testpass@localhost:5432/${AUTH_DB_NAME}?sslmode=disable
+    network_mode: "service:auth-db"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+  postgres-exporter-messaging:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: postgres-exporter-messaging_test
+    profiles: [metrics]
+    environment:
+      DATA_SOURCE_NAME: postgresql://testuser:testpass@localhost:5432/${DB_NAME}?sslmode=disable
+    network_mode: "service:postgres"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  memcached-exporter:
+    image: prom/memcached-exporter:v0.15.0
+    container_name: memcached-exporter_test
+    profiles: [metrics]
+    command: ["--memcached.address=localhost:11211"]
+    network_mode: "service:memcached"
+    depends_on:
+      - memcached
+
+  prometheus:
+    image: prom/prometheus:v3.4.2
+    container_name: prometheus_test
+    profiles: [metrics]
+    volumes:
+      - ./apps/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    # ports:
+    #   - "7100:9090"
+    depends_on:
+      - backend
+      - auth
+      - rabbitmq
+      - postgres-exporter-auth
+      - postgres-exporter-messaging
+      - memcached-exporter
+    networks:
+      - messaging-test-network
+
+  grafana:
+    image: grafana/grafana-oss:12.3.3
+    container_name: grafana_test
+    profiles: [metrics]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS:
+      GF_LOG_LEVEL: info
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./data/test/grafana:/var/lib/grafana
+      - ./apps/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./apps/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "7090:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - messaging-test-network
 
 networks:
   messaging-test-network:

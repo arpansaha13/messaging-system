@@ -1,6 +1,7 @@
 package app
 
 import (
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"gorm.io/gorm"
@@ -60,6 +61,9 @@ func SetupGRPCServer(cfg *config.Config, db *gorm.DB, zapLogger *zap.Logger, cbs
 	)
 
 	opts := []grpc.ServerOption{
+		// otelgrpc stats handler must run before interceptors so span context
+		// is present when GrpcInterceptor reads trace_id/span_id.
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
 			gotoolkit.GrpcRecoveryInterceptor(),
 			logger.GrpcInterceptor(zapLogger),

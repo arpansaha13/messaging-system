@@ -35,6 +35,11 @@ func main() {
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), serviceName, zapLogger)
+	if err != nil {
+		zapLogger.Fatal("failed to setup telemetry", zap.Error(err))
+	}
+
 	cbs := circuits.New(zapLogger)
 
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
@@ -71,6 +76,14 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	metricsServer := app.SetupMetricsServer(cfg.MetricsPort)
+	go func() {
+		zapLogger.Info("Metrics server started", zap.Int("port", cfg.MetricsPort))
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			zapLogger.Error("metrics server error", zap.Error(err))
+		}
+	}()
+
 	go func() {
 		zapLogger.Info("Server started", zap.String("address", addr))
 		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -92,6 +105,12 @@ func main() {
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		zapLogger.Error("server shutdown error", zap.Error(err))
 	}
+
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		zapLogger.Error("metrics server shutdown error", zap.Error(err))
+	}
+
+	shutdownTelemetry(shutdownCtx)
 
 	// Close auth service connection
 	if err := authService.Close(); err != nil {

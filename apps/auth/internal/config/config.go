@@ -18,6 +18,9 @@ type Config struct {
 	GRPCHost string
 	GRPCPort string
 
+	// Metrics
+	MetricsPort int
+
 	// Session
 	SessionTTL             time.Duration
 	SessionCleanupInterval time.Duration
@@ -62,6 +65,7 @@ func Load() (*Config, error) {
 		DatabaseURL:         getEnv("DATABASE_URL", ""),
 		GRPCHost:            getEnv("GRPC_HOST", "0.0.0.0"),
 		GRPCPort:            getEnv("GRPC_PORT", "50051"),
+		MetricsPort:         getEnvInt("METRICS_PORT", 9090),
 		SecretKey:           getEnv("SECRET_KEY", ""),
 		JWTSecret:           getEnv("JWT_SECRET", ""),
 		SMTPHost:            getEnv("SMTP_HOST", "localhost"),

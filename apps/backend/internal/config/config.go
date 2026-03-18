@@ -29,7 +29,8 @@ type Config struct {
 	DatabaseURL string
 
 	// HTTP Server
-	APIPort int
+	APIPort     int
+	MetricsPort int
 
 	// Auth System gRPC
 	AuthSystemHost string
@@ -62,6 +63,7 @@ func Load() (*Config, error) {
 
 	cfg := &Config{
 		APIPort:        getEnvInt("API_PORT", 4000),
+		MetricsPort:    getEnvInt("METRICS_PORT", 9090),
 		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
 		Environment:    env,
 		LogLevel:       getEnv("LOG_LEVEL", "info"),

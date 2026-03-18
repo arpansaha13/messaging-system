@@ -77,6 +77,7 @@ services:
     environment:
       ENVIRONMENT: development
       API_PORT: 4000
+      METRICS_PORT: 9090
       LOG_LEVEL: ${LOG_LEVEL}
       DATABASE_URL: ${DATABASE_URL}
       DB_HOST: ${DB_HOST}
@@ -181,6 +182,12 @@ services:
       retries: 10
     networks:
       - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/rabbitmq/render-definitions.sh
+        - action: rebuild
+          path: ./apps/rabbitmq/definitions.json.tpl
 
   auth:
     build:
@@ -199,6 +206,7 @@ services:
       DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
       GRPC_HOST: ${GRPC_HOST}
       GRPC_PORT: ${GRPC_PORT}
+      METRICS_PORT: 9090
       SESSION_TTL_MINUTES: ${SESSION_TTL_MINUTES}
       SESSION_CLEANUP_INTERVAL_MINUTES: ${SESSION_CLEANUP_INTERVAL_MINUTES}
       SECRET_KEY: ${SECRET_KEY}
@@ -415,7 +423,7 @@ services:
       context: .
       dockerfile: apps/grafana/Dockerfile
     container_name: grafana
-    profiles: [logging]
+    profiles: [logging, metrics]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_SECURITY_ADMIN_USER: admin
@@ -424,9 +432,6 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./data/grafana:/var/lib/grafana
-    depends_on:
-      loki:
-        condition: service_healthy
     ports:
       - "7090:3000"
     healthcheck:
@@ -464,6 +469,68 @@ services:
           path: ./apps/fluent-bit/fluent-bit.yaml
         - action: rebuild
           path: ./apps/fluent-bit/parsers.conf
+
+  # ---------------------------------------------------------------------------
+  # Metrics stack (--profile metrics)
+  # Run alongside app profile: --profile app --profile metrics
+  # Prometheus UI at http://localhost:7100
+  # ---------------------------------------------------------------------------
+
+  postgres-exporter-auth:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: postgres-exporter-auth
+    profiles: [metrics]
+    environment:
+      DATA_SOURCE_NAME: postgresql://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@localhost:5432/${AUTH_DB_NAME}?sslmode=disable
+    # Sidecar: shares auth-db network namespace; Prometheus scrapes auth-db:9187
+    network_mode: "service:auth-db"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+
+  postgres-exporter-messaging:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    container_name: postgres-exporter-messaging
+    profiles: [metrics]
+    environment:
+      DATA_SOURCE_NAME: postgresql://${DB_USERNAME}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?sslmode=disable
+    # Sidecar: shares messaging postgres network namespace; Prometheus scrapes postgres:9187
+    network_mode: "service:postgres"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  memcached-exporter:
+    image: prom/memcached-exporter:v0.15.0
+    container_name: memcached-exporter
+    profiles: [metrics]
+    command: ["--memcached.address=localhost:11211"]
+    # Sidecar: shares memcached network namespace; Prometheus scrapes memcached:9150
+    network_mode: "service:memcached"
+    depends_on:
+      - memcached
+
+  prometheus:
+    build:
+      context: .
+      dockerfile: apps/prometheus/Dockerfile
+    container_name: prometheus
+    profiles: [metrics]
+    # ports:
+    #   - "7100:9090"
+    depends_on:
+      - backend
+      - auth
+      - rabbitmq
+      - postgres-exporter-auth
+      - postgres-exporter-messaging
+      - memcached-exporter
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/prometheus/prometheus.yml
 
 networks:
   messaging-network:

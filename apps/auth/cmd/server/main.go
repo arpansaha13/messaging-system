@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -34,6 +35,11 @@ func main() {
 
 	zapLogger.Info("starting auth service", zap.String("environment", cfg.Environment.String()))
 
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), "auth", zapLogger)
+	if err != nil {
+		zapLogger.Fatal("failed to setup telemetry", zap.Error(err))
+	}
+
 	cbs := circuits.New(zapLogger)
 
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
@@ -50,6 +56,14 @@ func main() {
 	if err != nil {
 		zapLogger.Fatal("failed to listen", zap.String("address", grpcAddr), zap.Error(err))
 	}
+
+	metricsServer := app.SetupMetricsServer(cfg.MetricsPort)
+	go func() {
+		zapLogger.Info("Metrics server started", zap.Int("port", cfg.MetricsPort))
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			zapLogger.Error("metrics server error", zap.Error(err))
+		}
+	}()
 
 	go func() {
 		zapLogger.Info("starting auth gRPC server", zap.String("address", grpcAddr))
@@ -81,6 +95,12 @@ func main() {
 		zapLogger.Warn("graceful stop timed out, forcing stop")
 		grpcServer.Stop()
 	}
+
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		zapLogger.Error("metrics server shutdown error", zap.Error(err))
+	}
+
+	shutdownTelemetry(shutdownCtx)
 
 	// Stop email worker pool
 	emailPool.Stop()
