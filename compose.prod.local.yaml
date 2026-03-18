@@ -112,8 +112,8 @@ services:
       DB_LOGGING: "false"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${BACKEND_RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${BACKEND_RABBITMQ_PASS:-guest}
+      RABBITMQ_USER: ${BACKEND_RABBITMQ_USER}
+      RABBITMQ_PASS: ${BACKEND_RABBITMQ_PASS}
       JWT_SECRET: ${JWT_SECRET}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       SESSION_SECRET: ${SESSION_SECRET}
@@ -139,8 +139,8 @@ services:
       SERVER_ID: ${SOCKET_SERVER_ID:-server-1}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS:-guest}
+      RABBITMQ_USER: ${SOCKET_RABBITMQ_USER}
+      RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS}
       CLIENT_DOMAIN: ${CLIENT_DOMAIN}
       AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
@@ -174,13 +174,19 @@ services:
       - messaging-network
 
   rabbitmq:
-    image: rabbitmq:4.2.2-management-alpine
+    image: europe-north1-docker.pkg.dev/chat-application-13/rabbitmq/broker:0.1.0
     container_name: rabbitmq_prod
     ports:
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASS: ${RABBITMQ_PASS}
+      BACKEND_RABBITMQ_USER: ${BACKEND_RABBITMQ_USER}
+      BACKEND_RABBITMQ_PASS: ${BACKEND_RABBITMQ_PASS}
+      SOCKET_RABBITMQ_USER: ${SOCKET_RABBITMQ_USER}
+      SOCKET_RABBITMQ_PASS: ${SOCKET_RABBITMQ_PASS}
+      CHAT_WORKER_RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER}
+      CHAT_WORKER_RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS}
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 20s
@@ -203,8 +209,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER:-guest}
-      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS:-guest}
+      RABBITMQ_USER: ${CHAT_WORKER_RABBITMQ_USER}
+      RABBITMQ_PASS: ${CHAT_WORKER_RABBITMQ_PASS}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}

@@ -35,6 +35,12 @@ services:
       dockerfile: apps/chat-worker/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
 
+  rabbitmq:
+    build:
+      context: .
+      dockerfile: apps/rabbitmq/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/rabbitmq/broker:0.1.0
+
   loki:
     build:
       context: .

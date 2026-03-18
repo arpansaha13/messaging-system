@@ -114,7 +114,7 @@ services:
   # Management UI on :7551 for debugging
   # ---------------------------------------------------------------------------
   rabbitmq:
-    image: rabbitmq:4.2.2-management-alpine
+    image: europe-north1-docker.pkg.dev/chat-application-13/rabbitmq/broker:0.1.0
     container_name: rabbitmq_test
     profiles:
       - e2e
@@ -122,8 +122,14 @@ services:
     ports:
       - '7551:15672'
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_USER: admin
+      RABBITMQ_PASS: admin
+      BACKEND_RABBITMQ_USER: backend
+      BACKEND_RABBITMQ_PASS: password
+      SOCKET_RABBITMQ_USER: socket
+      SOCKET_RABBITMQ_PASS: password
+      CHAT_WORKER_RABBITMQ_USER: chat-worker
+      CHAT_WORKER_RABBITMQ_PASS: password
     volumes:
       - ./data/test/rabbitmq:/var/lib/rabbitmq
     healthcheck:
@@ -223,8 +229,8 @@ services:
       DB_NAME: ${DB_NAME}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: admin
-      RABBITMQ_PASS: admin
+      RABBITMQ_USER: backend
+      RABBITMQ_PASS: password
       # Set Secure=false on session cookie so HTTP-only test env works.
       # See docs/e2e-test-plan.md prerequisite P2.
       AUTH_COOKIE_NAME: session
@@ -266,8 +272,8 @@ services:
       SERVER_ID: test-server-1
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: admin
-      RABBITMQ_PASS: admin
+      RABBITMQ_USER: socket
+      RABBITMQ_PASS: password
       # Playwright connects from same origin (http://localhost:7500) via nginx
       CLIENT_DOMAIN: http://localhost:7500
       AUTH_SYSTEM_HOST: auth:50051
@@ -301,8 +307,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USER: admin
-      RABBITMQ_PASS: admin
+      RABBITMQ_USER: chat-worker
+      RABBITMQ_PASS: password
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: testuser
