@@ -2170,7 +2170,7 @@
   "timeRangeUpdatedDuringEditOrView": false,
   "timepicker": {},
   "timezone": "browser",
-  "title": "Backend Server Metrics (HTTP)",
+  "title": "Runtime Metrics (HTTP)",
   "uid": "ednts9nu5i0hsd",
   "version": 15,
   "weekStart": "",

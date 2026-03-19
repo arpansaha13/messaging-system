@@ -3101,7 +3101,7 @@
     ]
   },
   "timezone": "",
-  "title": "Backend DB Metrics",
+  "title": "DB Metrics",
   "uid": "postgres-messaging",
   "version": 1
 }
