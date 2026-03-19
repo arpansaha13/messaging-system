@@ -17,21 +17,21 @@ import (
 
 // SetupGRPCServer wires repositories, email provider, auth service, and gRPC interceptors.
 // Returns the server (for Serve/GracefulStop) and the email pool (for Stop on shutdown).
-func SetupGRPCServer(cfg *config.Config, db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits) (*grpc.Server, *goauthkit.EmailWorkerPool) {
-	// Initialize repositories
+func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits) (*grpc.Server, *goauthkit.EmailWorkerPool) {
+	cfg, _ := config.Load()
+
 	userRepo := goauthkit.NewUserRepository(db, cbs.Postgres)
 	otpRepo := goauthkit.NewOTPRepository(db, cbs.Postgres)
 	sessionRepo := goauthkit.NewSessionRepository(db, cbs.Postgres)
 
-	// Initialize email provider based on environment
 	var emailProvider goauthkit.EmailProvider
-	if cfg.Environment == constants.EnvProduction {
+	if cfg.Environment() == constants.EnvProduction {
 		emailProvider = goauthkit.NewSMTPEmailProvider(
-			cfg.SMTPHost,
-			cfg.SMTPPort,
-			cfg.SMTPUser,
-			cfg.SMTPPassword,
-			cfg.EmailFrom,
+			cfg.SMTPHost(),
+			cfg.SMTPPort(),
+			cfg.SMTPUser(),
+			cfg.SMTPPassword(),
+			cfg.EmailFrom(),
 		)
 	} else {
 		emailProvider = goauthkit.NewMockEmailProvider()
@@ -41,8 +41,8 @@ func SetupGRPCServer(cfg *config.Config, db *gorm.DB, zapLogger *zap.Logger, cbs
 	validator := goauthkit.NewValidator()
 
 	emailPool := goauthkit.NewEmailWorkerPool(
-		cfg.EmailWorkerPoolSize,
-		cfg.EmailTaskQueueSize,
+		cfg.EmailWorkerPoolSize(),
+		cfg.EmailTaskQueueSize(),
 		emailProvider,
 	)
 
@@ -52,10 +52,10 @@ func SetupGRPCServer(cfg *config.Config, db *gorm.DB, zapLogger *zap.Logger, cbs
 		sessionRepo,
 		hasher,
 		goauthkit.AuthServiceConfig{
-			OTPExpiry:  cfg.OTPExpiry,
-			OTPLength:  cfg.OTPLength,
-			SessionTTL: cfg.SessionTTL,
-			SecretKey:  cfg.SecretKey,
+			OTPExpiry:  cfg.OTPExpiry(),
+			OTPLength:  cfg.OTPLength(),
+			SessionTTL: cfg.SessionTTL(),
+			SecretKey:  cfg.SecretKey(),
 			EmailPool:  emailPool,
 		},
 	)

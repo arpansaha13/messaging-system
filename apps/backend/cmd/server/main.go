@@ -28,14 +28,14 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
+	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel()))
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
 	defer zapLogger.Sync()
 	zap.ReplaceGlobals(zapLogger)
 
-	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), serviceName, cfg.OTLPEndpoint, zapLogger)
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), serviceName, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to setup telemetry", zap.Error(err))
 	}
@@ -44,17 +44,17 @@ func main() {
 
 	svcCtx := logger.WithContext(context.Background(), zapLogger)
 
-	db, err := app.SetupPostgres(svcCtx, cfg.DatabaseURL, zapLogger)
+	db, err := app.SetupPostgres(svcCtx, zapLogger)
 	if err != nil {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	rabbitmqService, rabbitMQConnMgr, err := app.SetupRabbitMQ(svcCtx, cfg.RabbitMQ, zapLogger, cbs)
+	rabbitmqService, rabbitMQConnMgr, err := app.SetupRabbitMQ(svcCtx, zapLogger, cbs)
 	if err != nil {
 		zapLogger.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
-	authService, err := app.SetupAuthService(cfg.AuthSystemHost, cbs)
+	authService, err := app.SetupAuthService(cbs)
 	if err != nil {
 		log.Fatalf("failed to connect to auth service: %v", err)
 	}
@@ -67,7 +67,7 @@ func main() {
 		Logger:     zapLogger,
 	})
 
-	addr := fmt.Sprintf(":%d", cfg.APIPort)
+	addr := fmt.Sprintf(":%d", cfg.APIPort())
 	httpServer := &http.Server{
 		Addr:         addr,
 		Handler:      otelhttp.NewHandler(router, serviceName),
@@ -76,9 +76,12 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	metricsServer := app.SetupMetricsServer(cfg.MetricsPort)
+	metricsServer, err := app.SetupMetricsServer()
+	if err != nil {
+		zapLogger.Fatal("failed to setup metrics server", zap.Error(err))
+	}
 	go func() {
-		zapLogger.Info("Metrics server started", zap.Int("port", cfg.MetricsPort))
+		zapLogger.Info("Metrics server started", zap.Int("port", cfg.MetricsPort()))
 		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			zapLogger.Error("metrics server error", zap.Error(err))
 		}
@@ -91,14 +94,12 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
 	zapLogger.Info("Shutting down server...")
 
-	// Graceful shutdown with timeout
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -112,17 +113,14 @@ func main() {
 
 	shutdownTelemetry(shutdownCtx)
 
-	// Close auth service connection
 	if err := authService.Close(); err != nil {
 		zap.L().Error("auth service close error", zap.Error(err))
 	}
 
-	// Close RabbitMQ connection manager
 	if err := rabbitMQConnMgr.Stop(); err != nil {
 		zap.L().Error("rabbitmq connection manager stop error", zap.Error(err))
 	}
 
-	// Close database connection
 	sqlDB, err := db.DB()
 	if err == nil {
 		sqlDB.Close()

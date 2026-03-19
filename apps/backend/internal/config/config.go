@@ -4,56 +4,65 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
 const DefaultMessagesPageSize = 50
 
-// RabbitMQCreds holds RabbitMQ connection credentials.
-type RabbitMQCreds struct {
-	Host string
-	Port int
-	User string
-	Pass string
+type rabbitMQCreds struct {
+	host string
+	port int
+	user string
+	pass string
 }
 
-// GetUrl constructs the AMQP connection URL from the credentials.
-func (c RabbitMQCreds) GetUrl() string {
-	return fmt.Sprintf("amqp://%s:%s@%s:%d/", c.User, c.Pass, c.Host, c.Port)
+func (c rabbitMQCreds) url() string {
+	return fmt.Sprintf("amqp://%s:%s@%s:%d/", c.user, c.pass, c.host, c.port)
 }
 
-// Config holds all application configuration
+// Config holds all application configuration. Fields are private; use getters to read them.
 type Config struct {
-	// Database
-	DatabaseURL string
-
-	// HTTP Server
-	APIPort     int
-	MetricsPort int
-
-	// Auth System gRPC
-	AuthSystemHost string
-
-	// OTel
-	OTLPEndpoint string
-
-	// JWT
-	JWTSecret string
-
-	// Cookies
-	AuthCookieName string
-
-	// Environment
-	Environment constants.Environment
-	LogLevel    string
-
-	// RabbitMQ
-	RabbitMQ RabbitMQCreds
+	databaseURL    string
+	apiPort        int
+	metricsPort    int
+	authSystemHost string
+	otlpEndpoint   string
+	jwtSecret      string
+	authCookieName string
+	environment    constants.Environment
+	logLevel       string
+	rabbitMQ       rabbitMQCreds
 }
 
-// Load loads configuration from environment variables
+func (c *Config) DatabaseURL() string                { return c.databaseURL }
+func (c *Config) APIPort() int                       { return c.apiPort }
+func (c *Config) MetricsPort() int                   { return c.metricsPort }
+func (c *Config) AuthSystemHost() string             { return c.authSystemHost }
+func (c *Config) OTLPEndpoint() string               { return c.otlpEndpoint }
+func (c *Config) JWTSecret() string                  { return c.jwtSecret }
+func (c *Config) AuthCookieName() string             { return c.authCookieName }
+func (c *Config) Environment() constants.Environment { return c.environment }
+func (c *Config) LogLevel() string                   { return c.logLevel }
+func (c *Config) RabbitMQURL() string                { return c.rabbitMQ.url() }
+
+var (
+	instance *Config
+	once     sync.Once
+	loadErr  error
+)
+
+// Load loads configuration from environment variables exactly once.
+// Subsequent calls return the same instance without re-reading env vars.
 func Load() (*Config, error) {
+	once.Do(func() {
+		instance, loadErr = load()
+	})
+	return instance, loadErr
+}
+
+func load() (*Config, error) {
 	environment := os.Getenv("ENVIRONMENT")
 	if environment == "" {
 		return nil, fmt.Errorf("ENVIRONMENT is required")
@@ -65,15 +74,14 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		APIPort:        getEnvInt("API_PORT", 4000),
-		MetricsPort:    getEnvInt("METRICS_PORT", 9090),
-		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
-		Environment:    env,
-		LogLevel:       getEnv("LOG_LEVEL", "info"),
-		OTLPEndpoint:   getEnv("OTLP_ENDPOINT", ""),
+		apiPort:        getEnvInt("API_PORT", 4000),
+		metricsPort:    getEnvInt("METRICS_PORT", 9090),
+		authCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
+		environment:    env,
+		logLevel:       getEnv("LOG_LEVEL", "info"),
+		otlpEndpoint:   getEnv("OTLP_ENDPOINT", ""),
 	}
 
-	// Load database URL - either single DATABASE_URL or build from individual vars
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		dbHost := os.Getenv("DB_HOST")
@@ -102,9 +110,8 @@ func Load() (*Config, error) {
 		}
 		databaseURL = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", dbUser, dbPass, dbHost, dbPort, dbName)
 	}
-	cfg.DatabaseURL = databaseURL
+	cfg.databaseURL = databaseURL
 
-	// Validate and load RabbitMQ env vars
 	rabbitmqHost := os.Getenv("RABBITMQ_HOST")
 	if rabbitmqHost == "" {
 		return nil, fmt.Errorf("RABBITMQ_HOST is required")
@@ -125,43 +132,40 @@ func Load() (*Config, error) {
 	if rabbitmqPass == "" {
 		return nil, fmt.Errorf("RABBITMQ_PASS is required")
 	}
-
-	cfg.RabbitMQ = RabbitMQCreds{
-		Host: rabbitmqHost,
-		Port: rabbitmqPort,
-		User: rabbitmqUser,
-		Pass: rabbitmqPass,
+	cfg.rabbitMQ = rabbitMQCreds{
+		host: rabbitmqHost,
+		port: rabbitmqPort,
+		user: rabbitmqUser,
+		pass: rabbitmqPass,
 	}
 
 	authSystemHost := os.Getenv("AUTH_SYSTEM_HOST")
 	if authSystemHost == "" {
-		authSystemHost = "auth:50051" // Default for Docker
+		authSystemHost = "auth:50051"
 	}
-	cfg.AuthSystemHost = authSystemHost
+	cfg.authSystemHost = authSystemHost
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
 		return nil, fmt.Errorf("JWT_SECRET is required")
 	}
-	cfg.JWTSecret = jwtSecret
+	cfg.jwtSecret = jwtSecret
 
-	if err := cfg.Validate(); err != nil {
+	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 
 	return cfg, nil
 }
 
-// Validate validates the configuration.
-// All critical validation is done during Load(), this is a sanity check.
-func (c *Config) Validate() error {
-	if c.DatabaseURL == "" {
+func (c *Config) validate() error {
+	if c.databaseURL == "" {
 		return fmt.Errorf("DatabaseURL must be set")
 	}
-	if c.JWTSecret == "" {
+	if c.jwtSecret == "" {
 		return fmt.Errorf("JWTSecret must be set")
 	}
-	if c.AuthSystemHost == "" {
+	if c.authSystemHost == "" {
 		return fmt.Errorf("AuthSystemHost must be set")
 	}
 	return nil

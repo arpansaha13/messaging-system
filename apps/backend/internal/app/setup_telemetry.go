@@ -17,18 +17,25 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 )
 
 // SetupTelemetry initialises the global OTel TracerProvider and MeterProvider.
 //
-// Tracing: if otlpEndpoint is non-empty, traces are exported via OTLP gRPC.
+// Tracing: if OTLP_ENDPOINT is set, traces are exported via OTLP gRPC.
 // Otherwise a no-op provider is used (spans created but not exported).
 //
 // Metrics: OTel metrics are bridged into the default Prometheus registry so
 // the existing /metrics server picks them up without additional configuration.
 //
 // Returns a shutdown function that flushes and closes both providers.
-func SetupTelemetry(ctx context.Context, serviceName, otlpEndpoint string, zapLogger *zap.Logger) (func(context.Context), error) {
+func SetupTelemetry(ctx context.Context, serviceName string, zapLogger *zap.Logger) (func(context.Context), error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
+
 	res, err := resource.New(ctx,
 		resource.WithAttributes(semconv.ServiceName(serviceName)),
 	)
@@ -36,9 +43,8 @@ func SetupTelemetry(ctx context.Context, serviceName, otlpEndpoint string, zapLo
 		return nil, fmt.Errorf("build OTel resource: %w", err)
 	}
 
-	// --- Tracer provider ---
 	var tp *sdktrace.TracerProvider
-	if otlpEndpoint != "" {
+	if otlpEndpoint := cfg.OTLPEndpoint(); otlpEndpoint != "" {
 		conn, err := grpc.NewClient(otlpEndpoint, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return nil, fmt.Errorf("connect to OTLP endpoint %s: %w", otlpEndpoint, err)
@@ -56,7 +62,6 @@ func SetupTelemetry(ctx context.Context, serviceName, otlpEndpoint string, zapLo
 	}
 	otel.SetTracerProvider(tp)
 
-	// --- Meter provider — bridges OTel metrics into the default Prometheus registry ---
 	promExporter, err := prometheus.New()
 	if err != nil {
 		return nil, fmt.Errorf("create Prometheus metrics exporter: %w", err)
@@ -67,11 +72,9 @@ func SetupTelemetry(ctx context.Context, serviceName, otlpEndpoint string, zapLo
 	)
 	otel.SetMeterProvider(mp)
 
-	// Go runtime metrics: goroutines, GC, heap, CGO, etc.
 	if err := otelruntime.Start(otelruntime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {
 		zapLogger.Warn("failed to start Go runtime instrumentation", zap.Error(err))
 	}
-	// Host metrics: CPU time, memory usage, network I/O, process CPU.
 	if err := otelhost.Start(); err != nil {
 		zapLogger.Warn("failed to start host instrumentation", zap.Error(err))
 	}

@@ -123,20 +123,16 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 			maxAge = max(int((expiresAtMs-nowMs)/1000), 0)
 		}
 
-		cfg, err := config.Load()
-		if err != nil {
-			log.Error("failed to load config", zap.Error(err))
-			return nil, &gtk.InternalError{Message: "failed to load config", Err: err}
-		}
+		cfg, _ := config.Load()
 
 		// Set session token as HttpOnly Secure cookie
 		http.SetCookie(w, &http.Cookie{
-			Name:     cfg.AuthCookieName,
+			Name:     cfg.AuthCookieName(),
 			Value:    loginResp.SessionToken,
 			Path:     "/",
 			MaxAge:   maxAge,
 			HttpOnly: true,
-			Secure:   cfg.Environment == constants.EnvProduction,
+			Secure:   cfg.Environment() == constants.EnvProduction,
 			SameSite: http.SameSiteLaxMode, // Using Lax instead of Strict for CORS compatibility
 		})
 
@@ -198,19 +194,16 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 
 		log.Info("otp verified successfully", zap.String("otp_hash", otpHash))
 
-		// Get auth cookie name from environment or use default
-		authCookieName := "auth_token"
-		verifyCfg, verifyCfgErr := config.Load()
-		verifySecure := verifyCfgErr == nil && verifyCfg.Environment == constants.EnvProduction
+		cfg, _ := config.Load()
 
 		// Set session token as HttpOnly Secure cookie
 		http.SetCookie(w, &http.Cookie{
-			Name:     authCookieName,
+			Name:     cfg.AuthCookieName(),
 			Value:    verifyResp.SessionToken,
 			Path:     "/",
 			MaxAge:   30 * 60, // 30 minutes
 			HttpOnly: true,
-			Secure:   verifySecure,
+			Secure:   cfg.Environment() == constants.EnvProduction,
 			SameSite: http.SameSiteLaxMode,
 		})
 
@@ -229,16 +222,12 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 		log.Debug("logout handler called")
 
 		// Get the session token from the cookie
-		cfg, err := config.Load()
-		if err != nil {
-			log.Error("failed to load config", zap.Error(err))
-			return nil, &gtk.InternalError{Message: "failed to load config", Err: err}
-		}
+		cfg, _ := config.Load()
 
-		cookie, err := r.Cookie(cfg.AuthCookieName)
+		cookie, err := r.Cookie(cfg.AuthCookieName())
 		if err != nil || cookie.Value == "" {
 			log.Warn("no session cookie found in logout request")
-			clearSessionCookie(w, cfg)
+			clearSessionCookie(w)
 			return &gtk.ControllerResponse{
 				StatusCode: http.StatusOK,
 				Body: map[string]string{
@@ -257,7 +246,7 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "not found") || strings.Contains(errMsg, "invalid") {
 				log.Warn("logout failed: invalid or expired session")
-				clearSessionCookie(w, cfg)
+				clearSessionCookie(w)
 				return &gtk.ControllerResponse{
 					StatusCode: http.StatusOK,
 					Body: map[string]string{
@@ -266,12 +255,12 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 				}, nil
 			}
 			log.Error("logout service failed", zap.Error(err))
-			clearSessionCookie(w, cfg)
+			clearSessionCookie(w)
 			return nil, &gtk.InternalError{Message: "logout failed", Err: err}
 		}
 
 		log.Info("user logged out successfully")
-		clearSessionCookie(w, cfg)
+		clearSessionCookie(w)
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
@@ -282,14 +271,15 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 	}
 }
 
-func clearSessionCookie(w http.ResponseWriter, cfg *config.Config) {
+func clearSessionCookie(w http.ResponseWriter) {
+	cfg, _ := config.Load()
 	http.SetCookie(w, &http.Cookie{
-		Name:     cfg.AuthCookieName,
+		Name:     cfg.AuthCookieName(),
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   cfg.Environment == constants.EnvProduction,
+		Secure:   cfg.Environment() == constants.EnvProduction,
 		SameSite: http.SameSiteLaxMode,
 	})
 }

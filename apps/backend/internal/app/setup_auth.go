@@ -8,14 +8,19 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 )
 
 // SetupAuthService establishes a gRPC connection to the auth service and returns a client.
-func SetupAuthService(authSystemHost string, cbs *circuits.Circuits) (service.IAuthServiceClient, error) {
+func SetupAuthService(cbs *circuits.Circuits) (service.IAuthServiceClient, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, err
+	}
 	conn, err := grpc.NewClient(
-		authSystemHost,
+		cfg.AuthSystemHost(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
 	)

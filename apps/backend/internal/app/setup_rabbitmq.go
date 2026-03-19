@@ -18,13 +18,16 @@ import (
 // Returns the service (for injection into app) and the manager (for graceful shutdown in main).
 func SetupRabbitMQ(
 	ctx context.Context,
-	creds config.RabbitMQCreds,
 	zapLogger *zap.Logger,
 	cbs *circuits.Circuits,
 ) (*service.RabbitMQService, *gotoolkit.ConnectionManager, error) {
+	cfg, err := config.Load()
+	if err != nil {
+		return nil, nil, err
+	}
+
 	rabbitmqService := service.NewRabbitMQService(zapLogger, cbs.RabbitMQ)
 
-	// Declare first so the disconnect-monitor goroutine can reference it.
 	var rabbitMQConnMgr *gotoolkit.ConnectionManager
 
 	rabbitMQConnMgr = gotoolkit.NewConnectionManager(
@@ -34,7 +37,7 @@ func SetupRabbitMQ(
 		},
 		zapLogger,
 		func(connectCtx context.Context) error {
-			amqpConn, err := gotoolkit.ConnectRabbitMQWithBackoff(connectCtx, creds.GetUrl())
+			amqpConn, err := gotoolkit.ConnectRabbitMQWithBackoff(connectCtx, cfg.RabbitMQURL())
 			if err != nil {
 				return err
 			}
@@ -42,7 +45,6 @@ func SetupRabbitMQ(
 				amqpConn.Close()
 				return err
 			}
-			// Monitor for connection close and trigger reconnect
 			go func(conn *amqp.Connection) {
 				<-conn.NotifyClose(make(chan *amqp.Error, 1))
 				zapLogger.Warn("RabbitMQ connection closed, triggering reconnect")

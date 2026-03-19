@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -104,10 +103,7 @@ func GetAuthUserFromContext(r *http.Request) *domain.AuthUser {
 
 // getToken extracts token from Authorization header or cookie
 func getToken(r *http.Request) string {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
-	}
+	cfg, _ := config.Load()
 
 	// First try to get token from Authorization header
 	authHeader := r.Header.Get("Authorization")
@@ -119,7 +115,7 @@ func getToken(r *http.Request) string {
 	}
 
 	// Fall back to cookie
-	cookie, err := r.Cookie(cfg.AuthCookieName)
+	cookie, err := r.Cookie(cfg.AuthCookieName())
 	if err == nil && cookie.Value != "" {
 		return cookie.Value
 	}
