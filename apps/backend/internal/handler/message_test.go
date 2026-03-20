@@ -12,13 +12,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 	mockService := &mocks.MockMessageService{
-		SendPersonalMessageFunc: func(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error) {
+		SendPersonalMessageFunc: func(ctx context.Context, req *dto.SendPersonalMessageDTO) (int64, time.Time, error) {
 			return 1, time.Now(), nil
 		},
 	}
@@ -30,7 +31,7 @@ func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/messages/send/personal", bytes.NewBuffer(body))
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.AuthUserContextKey, &domain.AuthUser{UserID: 1})
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -45,7 +46,7 @@ func TestMessageHandler_SendPersonalMessage(t *testing.T) {
 
 func TestMessageHandler_SendGroupMessage(t *testing.T) {
 	mockService := &mocks.MockMessageService{
-		SendGroupMessageFunc: func(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error) {
+		SendGroupMessageFunc: func(ctx context.Context, req *dto.SendGroupMessageDTO) (int64, time.Time, error) {
 			return 1, time.Now(), nil
 		},
 	}
@@ -58,7 +59,7 @@ func TestMessageHandler_SendGroupMessage(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/messages/send/group", bytes.NewBuffer(body))
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.AuthUserContextKey, &domain.AuthUser{UserID: 1})
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()

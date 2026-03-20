@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -22,65 +23,65 @@ type IAuthServiceClient interface {
 
 // UserService defines the interface for user service operations
 type IUserService interface {
-	GetUserProfile(ctx context.Context, userID int64) (*domain.UserProfile, error)
-	SearchUserProfiles(ctx context.Context, query string) ([]*domain.UserProfile, error)
-	GetUserProfileWithContact(ctx context.Context, authUserID, userID int64) (*domain.UserProfile, *domain.Contact, error)
-	UpdateUserProfile(ctx context.Context, userID int64, globalName, bio, dp *string) (*domain.UserProfile, error)
+	GetUserProfile(ctx context.Context) (*domain.UserProfile, error)
+	SearchUserProfiles(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error)
+	GetUserProfileWithContact(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error)
+	UpdateUserProfile(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error)
 }
 
 // ContactService defines the interface for contact service operations
 type IContactService interface {
-	AddContact(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error)
-	GetContacts(ctx context.Context, userID int64) ([]*repository.ContactWithUserInfo, error)
-	UpdateContactAlias(ctx context.Context, userID, contactID int64, alias string) (*domain.Contact, error)
-	DeleteContact(ctx context.Context, userID, contactID int64) error
+	AddContact(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error)
+	GetContacts(ctx context.Context) ([]*repository.ContactWithUserInfo, error)
+	UpdateContactAlias(ctx context.Context, req *dto.UpdateContactAliasDTO) (*domain.Contact, error)
+	DeleteContact(ctx context.Context, req *dto.DeleteContactDTO) error
 }
 
 // ChatService defines the interface for chat service operations
 type IChatService interface {
-	CreateChat(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
-	GetUserUnarchivedChats(ctx context.Context, userID int64) ([]*ChatItemDTO, error)
-	GetUserArchivedChats(ctx context.Context, userID int64) ([]*ChatItemDTO, error)
-	PinChat(ctx context.Context, userID, receiverID int64) error
-	UnpinChat(ctx context.Context, userID, receiverID int64) error
-	ArchiveChat(ctx context.Context, userID, receiverID int64) error
-	UnarchiveChat(ctx context.Context, userID, receiverID int64) error
-	ClearChat(ctx context.Context, userID, receiverID int64) error
-	DeleteChat(ctx context.Context, userID, receiverID int64) error
+	CreateChat(ctx context.Context, req *dto.CreateChatDTO) (*domain.Chat, error)
+	GetUserUnarchivedChats(ctx context.Context) ([]*ChatItemDTO, error)
+	GetUserArchivedChats(ctx context.Context) ([]*ChatItemDTO, error)
+	PinChat(ctx context.Context, req *dto.PinChatDTO) error
+	UnpinChat(ctx context.Context, req *dto.UnpinChatDTO) error
+	ArchiveChat(ctx context.Context, req *dto.ArchiveChatDTO) error
+	UnarchiveChat(ctx context.Context, req *dto.UnarchiveChatDTO) error
+	ClearChat(ctx context.Context, req *dto.ClearChatDTO) error
+	DeleteChat(ctx context.Context, req *dto.DeleteChatDTO) error
 }
 
 // MessageService defines the interface for message service operations
 type IMessageService interface {
-	SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error)
-	SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error)
-	GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error)
-	MarkMessageAsDelivered(ctx context.Context, messageID, receiverID int64) error
-	MarkMessageAsRead(ctx context.Context, messages []MarkReadInput) error
-	GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error)
+	SendPersonalMessage(ctx context.Context, req *dto.SendPersonalMessageDTO) (int64, time.Time, error)
+	SendGroupMessage(ctx context.Context, req *dto.SendGroupMessageDTO) (int64, time.Time, error)
+	GetMessages(ctx context.Context, req *dto.GetMessagesDTO) (*repository.MessagePage, error)
+	MarkMessageAsDelivered(ctx context.Context, req *dto.HandleDeliveredDTO) error
+	MarkMessageAsRead(ctx context.Context, req *dto.HandleReadMultipleDTO) error
+	GetChannelMessages(ctx context.Context, req *dto.GetChannelMessagesDTO) (*repository.ChannelMessagePage, error)
 }
 
 // ChannelService defines the interface for channel service operations
 type IChannelService interface {
-	CreateChannel(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error)
+	CreateChannel(ctx context.Context, req *dto.CreateChannelDTO) (*domain.Channel, error)
 	GetChannels(ctx context.Context) ([]*domain.Channel, error)
-	GetChannelsByGroupID(ctx context.Context, groupID int64) ([]*domain.Channel, error)
-	GetChannelByID(ctx context.Context, channelID int64) (*domain.Channel, error)
+	GetChannelsByGroupID(ctx context.Context, req *dto.GetGroupChannelsDTO) ([]*domain.Channel, error)
+	GetChannelByID(ctx context.Context, req *dto.GetChannelInfoDTO) (*domain.Channel, error)
 }
 
 // GroupService defines the interface for group service operations
 type IGroupService interface {
-	CreateGroup(ctx context.Context, name string, founderID int64) (*domain.Group, error)
-	GetGroups(ctx context.Context, userID int64) ([]*domain.Group, error)
+	CreateGroup(ctx context.Context, req *dto.CreateGroupDTO) (*domain.Group, error)
+	GetGroups(ctx context.Context) ([]*domain.Group, error)
 }
 
 // InviteService defines the interface for invite service operations
 type IInviteService interface {
-	CreateInvite(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error)
-	FindByHash(ctx context.Context, hash string) (*domain.Invite, error)
-	AcceptInvite(ctx context.Context, userID int64, inviteHash string) (*AcceptInviteResponseDTO, error)
+	CreateInvite(ctx context.Context, req *dto.CreateInviteDTO) (*domain.Invite, error)
+	FindByHash(ctx context.Context, req *dto.FindInviteDTO) (*domain.Invite, error)
+	AcceptInvite(ctx context.Context, input *dto.AcceptInviteInput) (*AcceptInviteResponseDTO, error)
 }
 
 // UserGroupService defines the interface for user group service operations
 type IUserGroupService interface {
-	GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error)
+	GetGroupMembers(ctx context.Context, req *dto.GetGroupMembersDTO) ([]*domain.UserGroup, error)
 }

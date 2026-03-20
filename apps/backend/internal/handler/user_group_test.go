@@ -9,13 +9,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestUserGroupHandler_GetGroupMembers(t *testing.T) {
 	mockService := &mocks.MockUserGroupService{
-		GetGroupMembersFunc: func(ctx context.Context, groupID int64) ([]*domain.UserGroup, error) {
+		GetGroupMembersFunc: func(ctx context.Context, req *dto.GetGroupMembersDTO) ([]*domain.UserGroup, error) {
 			return []*domain.UserGroup{}, nil
 		},
 	}

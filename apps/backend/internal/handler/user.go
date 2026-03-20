@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -37,7 +35,7 @@ func getUserMeController(userService service.IUserService) gtk.ControllerFunc {
 
 		log.Debug("fetching user profile", zap.Int64("user_id", authUser.UserID), zap.String("email", authUser.Email))
 
-		userProfile, err := userService.GetUserProfile(r.Context(), authUser.UserID)
+		userProfile, err := userService.GetUserProfile(r.Context())
 		if err != nil {
 			log.Error("failed to get user profile", zap.Int64("user_id", authUser.UserID), zap.Error(err))
 			return nil, err
@@ -71,16 +69,18 @@ func updateUserMeController(userService service.IUserService) gtk.ControllerFunc
 			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
-		var req dto.UpdateUserRequestDTO
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body in update user me", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
+		req, err := dto.NewUpdateUserDTO(r)
+		if err != nil {
+			log.Warn("failed to parse update user request", zap.Error(err))
+			return nil, err
+		}
+		if err := req.Validate(); err != nil {
+			return nil, err
 		}
 
 		log.Debug("updating user profile", zap.Int64("user_id", authUser.UserID))
 
-		// Update the user profile
-		updatedProfile, err := userService.UpdateUserProfile(r.Context(), authUser.UserID, req.GlobalName, req.Bio, req.DP)
+		updatedProfile, err := userService.UpdateUserProfile(r.Context(), req)
 		if err != nil {
 			log.Error("failed to update user profile", zap.Int64("user_id", authUser.UserID), zap.Error(err))
 			return nil, err
@@ -108,8 +108,9 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 		log := logger.FromContext(r.Context())
 		log.Debug("search user profiles handler called")
 
-		query := r.URL.Query().Get("q")
-		if query == "" {
+		req, _ := dto.NewSearchUsersDTO(r)
+
+		if req.Q == "" {
 			log.Debug("empty search query, returning empty results")
 			return &gtk.ControllerResponse{
 				StatusCode: http.StatusOK,
@@ -117,7 +118,7 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 			}, nil
 		}
 
-		log.Debug("searching user profiles", zap.String("query", query))
+		log.Debug("searching user profiles", zap.String("query", req.Q))
 
 		// TODO: Why is auth middleware not catching this unauthorized error?
 		authUser := middleware.GetAuthUserFromContext(r)
@@ -126,17 +127,17 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
-		userProfiles, err := userService.SearchUserProfiles(r.Context(), query)
+		userProfiles, err := userService.SearchUserProfiles(r.Context(), req)
 		if err != nil {
-			log.Error("failed to search user profiles", zap.String("query", query), zap.Error(err))
+			log.Error("failed to search user profiles", zap.String("query", req.Q), zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("user profiles search completed", zap.String("query", query), zap.Int("result_count", len(userProfiles)))
+		log.Debug("user profiles search completed", zap.String("query", req.Q), zap.Int("result_count", len(userProfiles)))
 
 		profileResponses := make([]dto.UserProfileResponseDTO, len(userProfiles))
 		for i, profile := range userProfiles {
-			_, contact, err := userService.GetUserProfileWithContact(r.Context(), authUser.UserID, profile.ID)
+			_, contact, err := userService.GetUserProfileWithContact(r.Context(), &dto.GetUserByIDDTO{ID: profile.ID})
 			if err != nil {
 				log.Error("failed to resolve contact info", zap.Int64("profile_id", profile.ID), zap.Error(err))
 				return nil, err
@@ -172,11 +173,10 @@ func getUserProfileByIDController(userService service.IUserService) gtk.Controll
 		log := logger.FromContext(r.Context())
 		log.Debug("get user profile by id handler called")
 
-		vars := mux.Vars(r)
-		id, err := strconv.ParseInt(vars["id"], 10, 64)
+		req, err := dto.NewGetUserByIDDTO(r)
 		if err != nil {
-			log.Warn("invalid user id in get profile request", zap.String("id_str", vars["id"]))
-			return nil, &gtk.ValidationError{Message: "invalid user id"}
+			log.Warn("invalid user id in get profile request", zap.Error(err))
+			return nil, err
 		}
 
 		authUser := middleware.GetAuthUserFromContext(r)
@@ -185,15 +185,15 @@ func getUserProfileByIDController(userService service.IUserService) gtk.Controll
 			return nil, &gtk.UnauthorizedError{Message: "unauthorized"}
 		}
 
-		log.Debug("fetching user profile", zap.Int64("requested_user_id", id), zap.Int64("auth_user_id", authUser.UserID))
+		log.Debug("fetching user profile", zap.Int64("requested_user_id", req.ID), zap.Int64("auth_user_id", authUser.UserID))
 
-		userProfile, contact, err := userService.GetUserProfileWithContact(r.Context(), authUser.UserID, id)
+		userProfile, contact, err := userService.GetUserProfileWithContact(r.Context(), req)
 		if err != nil {
-			log.Error("failed to get user profile", zap.Int64("requested_user_id", id), zap.Error(err))
+			log.Error("failed to get user profile", zap.Int64("requested_user_id", req.ID), zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("user profile retrieved successfully", zap.Int64("requested_user_id", id), zap.Bool("is_contact", contact != nil))
+		log.Debug("user profile retrieved successfully", zap.Int64("requested_user_id", req.ID), zap.Bool("is_contact", contact != nil))
 
 		var contactInfo *dto.ContactInfoDTO
 		if contact != nil {

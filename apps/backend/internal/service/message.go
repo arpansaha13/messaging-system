@@ -12,7 +12,9 @@ import (
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -47,12 +49,13 @@ func NewMessageService(
 
 // SendPersonalMessage persists a personal message and enqueues it for delivery to the recipient.
 // Returns the persisted message ID and creation timestamp so the caller can echo them back to the sender.
-func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, receiverID int64, content, hash string) (int64, time.Time, error) {
+func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendPersonalMessageDTO) (int64, time.Time, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("sending personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int("content_length", len(content)))
+	senderID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("sending personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Int("content_length", len(req.Content)))
 
 	if !s.rabbitmqService.IsConnected() {
-		log.Error("RabbitMQ not connected for personal message send", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID))
+		log.Error("RabbitMQ not connected for personal message send", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID))
 		return 0, time.Time{}, &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
@@ -63,21 +66,19 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 		return nil, s.db.Transaction(func(tx *gorm.DB) error {
 			zero := time.Time{}
 
-			// Ensure both chat rows exist (sender→receiver and receiver→sender)
-			senderChat := &domain.Chat{SenderID: senderID, ReceiverID: receiverID, ClearedAt: &zero}
-			if err := tx.FirstOrCreate(senderChat, domain.Chat{SenderID: senderID, ReceiverID: receiverID}).Error; err != nil {
+			senderChat := &domain.Chat{SenderID: senderID, ReceiverID: req.ReceiverID, ClearedAt: &zero}
+			if err := tx.FirstOrCreate(senderChat, domain.Chat{SenderID: senderID, ReceiverID: req.ReceiverID}).Error; err != nil {
 				return fmt.Errorf("failed to ensure sender-to-receiver chat: %w", err)
 			}
 
-			receiverChat := &domain.Chat{SenderID: receiverID, ReceiverID: senderID, ClearedAt: &zero}
-			if err := tx.FirstOrCreate(receiverChat, domain.Chat{SenderID: receiverID, ReceiverID: senderID}).Error; err != nil {
+			receiverChat := &domain.Chat{SenderID: req.ReceiverID, ReceiverID: senderID, ClearedAt: &zero}
+			if err := tx.FirstOrCreate(receiverChat, domain.Chat{SenderID: req.ReceiverID, ReceiverID: senderID}).Error; err != nil {
 				return fmt.Errorf("failed to ensure receiver-to-sender chat: %w", err)
 			}
 
-			// Persist message
 			message := &domain.Message{
 				SenderID: senderID,
-				Content:  content,
+				Content:  req.Content,
 			}
 			if err := tx.Create(message).Error; err != nil {
 				return fmt.Errorf("failed to create message: %w", err)
@@ -86,10 +87,9 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 			messageID = message.ID
 			createdAt = message.CreatedAt
 
-			// Persist recipient record
 			recipient := &domain.MessageRecipient{
 				MessageID:  message.ID,
-				ReceiverID: receiverID,
+				ReceiverID: req.ReceiverID,
 				Status:     domain.MessageStatusSent,
 			}
 			if err := tx.Create(recipient).Error; err != nil {
@@ -100,17 +100,16 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 		})
 	})
 	if err != nil {
-		log.Error("failed to persist personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Error(err))
+		log.Error("failed to persist personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
 		return 0, time.Time{}, err
 	}
 
-	// Publish to the recipient's socket server queue via the outgoing exchange
-	if err := s.rabbitmqService.PublishToOutgoing(strconv.FormatInt(receiverID, 10), map[string]any{
+	if err := s.rabbitmqService.PublishToOutgoing(strconv.FormatInt(req.ReceiverID, 10), map[string]any{
 		"event":  "personal:receive-message",
-		"userId": receiverID,
+		"userId": req.ReceiverID,
 		"data": map[string]any{
 			"messageId": messageID,
-			"content":   content,
+			"content":   req.Content,
 			"senderId":  senderID,
 			"createdAt": createdAt,
 			"status":    domain.MessageStatusSent,
@@ -120,18 +119,19 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, senderID, rece
 		return 0, time.Time{}, err
 	}
 
-	log.Info("personal message persisted and forwarded to socket server", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", receiverID), zap.Int64("message_id", messageID))
+	log.Info("personal message persisted and forwarded to socket server", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Int64("message_id", messageID))
 	return messageID, createdAt, nil
 }
 
 // SendGroupMessage persists a group message and enqueues it for delivery to the channel.
 // Returns the persisted message ID and creation timestamp so the caller can echo them back to the sender.
-func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID, channelID int64, content, hash string) (int64, time.Time, error) {
+func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGroupMessageDTO) (int64, time.Time, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("sending group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID), zap.Int("content_length", len(content)))
+	senderID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("sending group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID), zap.Int("content_length", len(req.Content)))
 
 	if !s.rabbitmqService.IsConnected() {
-		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID))
+		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
 		return 0, time.Time{}, &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
@@ -140,23 +140,20 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 
 	_, err := s.cb.Execute(func() (any, error) {
 		return nil, s.db.Transaction(func(tx *gorm.DB) error {
-			// Verify channel exists
 			var channel domain.Channel
-			if err := tx.First(&channel, channelID).Error; err != nil {
+			if err := tx.First(&channel, req.ChannelID).Error; err != nil {
 				return fmt.Errorf("channel not found: %w", err)
 			}
 
-			// Fetch group members excluding the sender
 			var userGroups []domain.UserGroup
-			if err := tx.Where("group_id = ? AND user_id != ?", groupID, senderID).Find(&userGroups).Error; err != nil {
+			if err := tx.Where("group_id = ? AND user_id != ?", req.GroupID, senderID).Find(&userGroups).Error; err != nil {
 				return fmt.Errorf("failed to fetch group members: %w", err)
 			}
 
-			// Persist message
 			message := &domain.Message{
 				SenderID:  senderID,
-				ChannelID: &channelID,
-				Content:   content,
+				ChannelID: &req.ChannelID,
+				Content:   req.Content,
 			}
 			if err := tx.Create(message).Error; err != nil {
 				return fmt.Errorf("failed to create message: %w", err)
@@ -165,7 +162,6 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 			messageID = message.ID
 			createdAt = message.CreatedAt
 
-			// Persist recipient records for all members except the sender
 			for _, ug := range userGroups {
 				recipient := &domain.MessageRecipient{
 					MessageID:  message.ID,
@@ -181,20 +177,19 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 		})
 	})
 	if err != nil {
-		log.Error("failed to persist group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Error(err))
+		log.Error("failed to persist group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Error(err))
 		return 0, time.Time{}, err
 	}
 
-	// Publish to the channel room via the outgoing exchange
-	if err := s.rabbitmqService.PublishToOutgoing("channel:"+strconv.FormatInt(channelID, 10), map[string]any{
+	if err := s.rabbitmqService.PublishToOutgoing("channel:"+strconv.FormatInt(req.ChannelID, 10), map[string]any{
 		"event":     "group:receive-message",
-		"channelId": channelID,
+		"channelId": req.ChannelID,
 		"data": map[string]any{
 			"messageId": messageID,
-			"content":   content,
+			"content":   req.Content,
 			"senderId":  senderID,
-			"channelId": channelID,
-			"groupId":   groupID,
+			"channelId": req.ChannelID,
+			"groupId":   req.GroupID,
 			"createdAt": createdAt,
 			"status":    domain.MessageStatusSent,
 		},
@@ -203,18 +198,19 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, senderID, groupID
 		return 0, time.Time{}, err
 	}
 
-	log.Info("group message persisted and forwarded to socket server", zap.Int64("sender_id", senderID), zap.Int64("group_id", groupID), zap.Int64("channel_id", channelID), zap.Int64("message_id", messageID))
+	log.Info("group message persisted and forwarded to socket server", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID), zap.Int64("message_id", messageID))
 	return messageID, createdAt, nil
 }
 
-// GetMessages retrieves messages between two users using cursor-based pagination
-func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int64, before, after *int64) (*repository.MessagePage, error) {
+// GetMessages retrieves messages between the authenticated user and a receiver using cursor-based pagination
+func (s *MessageService) GetMessages(ctx context.Context, req *dto.GetMessagesDTO) (*repository.MessagePage, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("retrieving messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID))
+	userID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("retrieving messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
-	page, err := s.messageRepo.GetMessagesByUserId(ctx, userID, receiverID, nil, before, after)
+	page, err := s.messageRepo.GetMessagesByUserId(ctx, userID, req.ReceiverID, nil, req.Before, req.After)
 	if err != nil {
-		log.Error("failed to get messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", receiverID), zap.Error(err))
+		log.Error("failed to get messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
 		return nil, err
 	}
 
@@ -224,34 +220,33 @@ func (s *MessageService) GetMessages(ctx context.Context, userID, receiverID int
 
 // MarkMessageAsDelivered verifies the authenticated receiver owns the recipient record,
 // derives senderID from the DB, then publishes a delivered status update to RabbitMQ.
-func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, receiverID int64) error {
+func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, req *dto.HandleDeliveredDTO) error {
 	log := logger.FromContext(ctx)
-	log.Debug("marking message as delivered", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID))
+	receiverID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("marking message as delivered", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID))
 
 	if !s.rabbitmqService.IsConnected() {
-		log.Error("RabbitMQ not connected for delivered status", zap.Int64("message_id", messageID))
+		log.Error("RabbitMQ not connected for delivered status", zap.Int64("message_id", req.MessageID))
 		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
-	// Verify the authenticated user is the actual recipient of this message.
-	if _, err := s.messageRecipientRepo.GetByMessageAndReceiver(ctx, messageID, receiverID); err != nil {
+	if _, err := s.messageRecipientRepo.GetByMessageAndReceiver(ctx, req.MessageID, receiverID); err != nil {
 		if gotoolkit.IsNotFound(err) {
-			log.Warn("delivered status rejected: caller is not the recipient", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID))
+			log.Warn("delivered status rejected: caller is not the recipient", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID))
 			return &gotoolkit.ForbiddenError{Message: "not a recipient of this message"}
 		}
-		log.Error("failed to verify message recipient for delivered status", zap.Int64("message_id", messageID), zap.Int64("receiver_id", receiverID), zap.Error(err))
+		log.Error("failed to verify message recipient for delivered status", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
 	}
 
-	// Derive senderID from the message record — never trust client-supplied values.
-	msg, err := s.messageRepo.GetByID(ctx, messageID)
+	msg, err := s.messageRepo.GetByID(ctx, req.MessageID)
 	if err != nil {
-		log.Error("failed to get message for delivered status", zap.Int64("message_id", messageID), zap.Error(err))
+		log.Error("failed to get message for delivered status", zap.Int64("message_id", req.MessageID), zap.Error(err))
 		return err
 	}
 
 	payload := DeliveredPayload{
-		MessageID:  messageID,
+		MessageID:  req.MessageID,
 		ReceiverID: receiverID,
 		SenderID:   msg.SenderID,
 	}
@@ -262,36 +257,34 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, messageID, 
 	}
 
 	if err := s.rabbitmqService.PublishToIncoming("personal.delivered", message); err != nil {
-		log.Error("failed to publish delivered status", zap.Int64("message_id", messageID), zap.Error(err))
+		log.Error("failed to publish delivered status", zap.Int64("message_id", req.MessageID), zap.Error(err))
 		return err
 	}
 
-	log.Debug("delivered status published", zap.Int64("message_id", messageID))
+	log.Debug("delivered status published", zap.Int64("message_id", req.MessageID))
 	return nil
 }
 
 // MarkMessageAsRead batch-verifies the authenticated receiver owns each recipient record,
 // derives senderIDs from the DB, then publishes read status updates to RabbitMQ.
 // Messages that cannot be verified (stale frontend state) are silently dropped.
-func (s *MessageService) MarkMessageAsRead(ctx context.Context, inputs []MarkReadInput) error {
+func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleReadMultipleDTO) error {
 	log := logger.FromContext(ctx)
-	log.Debug("marking messages as read", zap.Int("message_count", len(inputs)))
+	receiverID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("marking messages as read", zap.Int("message_count", len(req.Messages)))
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for read status")
 		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
 	}
 
-	if len(inputs) == 0 {
+	if len(req.Messages) == 0 {
 		return nil
 	}
 
-	// All inputs share the same receiverID (set by the handler from context).
-	receiverID := inputs[0].ReceiverID
-
-	messageIDs := make([]int64, len(inputs))
-	for i, inp := range inputs {
-		messageIDs[i] = inp.MessageID
+	messageIDs := make([]int64, len(req.Messages))
+	for i, item := range req.Messages {
+		messageIDs[i] = item.MessageID
 	}
 
 	// Batch-verify: only process messages where the caller is the actual recipient.
@@ -306,7 +299,6 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, inputs []MarkRea
 		verifiedIDs[r.MessageID] = struct{}{}
 	}
 
-	// Warn about any unverified messageIDs (stale frontend state).
 	for _, id := range messageIDs {
 		if _, ok := verifiedIDs[id]; !ok {
 			log.Warn("message recipient not found for read status; skipping", zap.Int64("message_id", id), zap.Int64("receiver_id", receiverID))
@@ -322,7 +314,6 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, inputs []MarkRea
 		verifiedMessageIDs = append(verifiedMessageIDs, id)
 	}
 
-	// Derive senderIDs from the messages table — never trust client-supplied values.
 	msgs, err := s.messageRepo.GetByIDs(ctx, verifiedMessageIDs)
 	if err != nil {
 		log.Error("failed to get messages for read status", zap.Error(err))
@@ -362,17 +353,17 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, inputs []MarkRea
 }
 
 // GetChannelMessages retrieves messages for a channel using cursor-based pagination
-func (s *MessageService) GetChannelMessages(ctx context.Context, channelID int64, before, after *int64) (*repository.ChannelMessagePage, error) {
+func (s *MessageService) GetChannelMessages(ctx context.Context, req *dto.GetChannelMessagesDTO) (*repository.ChannelMessagePage, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("retrieving channel messages", zap.Int64("channel_id", channelID))
+	log.Debug("retrieving channel messages", zap.Int64("channel_id", req.ChannelID))
 
-	page, err := s.messageRepo.GetMessagesByChannelID(ctx, channelID, before, after)
+	page, err := s.messageRepo.GetMessagesByChannelID(ctx, req.ChannelID, req.Before, req.After)
 	if err != nil {
-		log.Error("failed to retrieve channel messages", zap.Int64("channel_id", channelID), zap.Error(err))
+		log.Error("failed to retrieve channel messages", zap.Int64("channel_id", req.ChannelID), zap.Error(err))
 		return nil, err
 	}
 
-	log.Debug("channel messages retrieved successfully", zap.Int64("channel_id", channelID), zap.Int("message_count", len(page.Messages)))
+	log.Debug("channel messages retrieved successfully", zap.Int64("channel_id", req.ChannelID), zap.Int("message_count", len(page.Messages)))
 	return page, nil
 }
 

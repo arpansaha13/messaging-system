@@ -10,18 +10,19 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 func TestGroupHandler_CreateGroup(t *testing.T) {
 	mockService := &mocks.MockGroupService{
-		CreateGroupFunc: func(ctx context.Context, name string, founderID int64) (*domain.Group, error) {
+		CreateGroupFunc: func(ctx context.Context, req *dto.CreateGroupDTO) (*domain.Group, error) {
 			return &domain.Group{
 				ID:        1,
-				Name:      name,
-				FounderID: founderID,
+				Name:      req.Name,
+				FounderID: 1,
 			}, nil
 		},
 	}
@@ -31,7 +32,7 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/groups", bytes.NewBuffer(body))
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -46,13 +47,13 @@ func TestGroupHandler_CreateGroup(t *testing.T) {
 
 func TestGroupHandler_GetGroups(t *testing.T) {
 	mockService := &mocks.MockGroupService{
-		GetGroupsFunc: func(ctx context.Context, userID int64) ([]*domain.Group, error) {
+		GetGroupsFunc: func(ctx context.Context) ([]*domain.Group, error) {
 			return []*domain.Group{}, nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/groups", nil)
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()

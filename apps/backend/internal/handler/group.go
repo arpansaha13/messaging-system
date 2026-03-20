@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -11,7 +9,6 @@ import (
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
@@ -26,25 +23,25 @@ func createGroupController(groupService service.IGroupService) gtk.ControllerFun
 		log := logger.FromContext(r.Context())
 		log.Debug("create group handler called")
 
-		var req dto.CreateGroupRequestDTO
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body in create group", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("creating group", zap.Int64("founder_id", userIDInt), zap.String("group_name", req.Name))
-
-		group, err := groupService.CreateGroup(r.Context(), req.Name, userIDInt)
+		req, err := dto.NewCreateGroupDTO(r)
 		if err != nil {
-			log.Error("failed to create group", zap.Int64("founder_id", userIDInt), zap.String("group_name", req.Name), zap.Error(err))
+			log.Warn("failed to parse create group request", zap.Error(err))
+			return nil, err
+		}
+		if err := req.Validate(); err != nil {
+			log.Warn("create group validation failed")
 			return nil, err
 		}
 
-		log.Info("group created successfully", zap.Int64("group_id", group.ID), zap.String("group_name", group.Name), zap.Int64("founder_id", userIDInt))
+		log.Debug("creating group", zap.String("group_name", req.Name))
+
+		group, err := groupService.CreateGroup(r.Context(), req)
+		if err != nil {
+			log.Error("failed to create group", zap.String("group_name", req.Name), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("group created successfully", zap.Int64("group_id", group.ID), zap.String("group_name", group.Name))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusCreated,
@@ -64,18 +61,13 @@ func getGroupsController(groupService service.IGroupService) gtk.ControllerFunc 
 		log := logger.FromContext(r.Context())
 		log.Debug("get groups handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("fetching groups for user", zap.Int64("user_id", userIDInt))
-
-		groups, err := groupService.GetGroups(r.Context(), userIDInt)
+		groups, err := groupService.GetGroups(r.Context())
 		if err != nil {
-			log.Error("failed to get groups", zap.Int64("user_id", userIDInt), zap.Error(err))
+			log.Error("failed to get groups", zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("groups retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int("group_count", len(groups)))
+		log.Debug("groups retrieved successfully", zap.Int("group_count", len(groups)))
 
 		groupResponses := make([]dto.GroupResponseDTO, len(groups))
 		for i, group := range groups {

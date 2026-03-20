@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -10,7 +9,6 @@ import (
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
@@ -24,25 +22,21 @@ func getGroupMembersController(userGroupService service.IUserGroupService) gtk.C
 		log := logger.FromContext(r.Context())
 		log.Debug("get group members handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		vars := mux.Vars(r)
-		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
+		req, err := dto.NewGetGroupMembersDTO(r)
 		if err != nil {
-			log.Warn("invalid group id in get members request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return nil, &gtk.ValidationError{Message: "invalid group id"}
-		}
-
-		log.Debug("fetching group members", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
-
-		members, err := userGroupService.GetGroupMembers(r.Context(), groupID)
-		if err != nil {
-			log.Error("failed to get group members", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Error(err))
+			log.Warn("failed to parse get group members request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("group members retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Int("member_count", len(members)))
+		log.Debug("fetching group members", zap.Int64("group_id", req.GroupID))
+
+		members, err := userGroupService.GetGroupMembers(r.Context(), req)
+		if err != nil {
+			log.Error("failed to get group members", zap.Int64("group_id", req.GroupID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Debug("group members retrieved successfully", zap.Int64("group_id", req.GroupID), zap.Int("member_count", len(members)))
 
 		memberResponses := make([]dto.UserGroupResponseDTO, len(members))
 		for i, member := range members {

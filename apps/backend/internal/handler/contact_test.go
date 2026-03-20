@@ -13,7 +13,6 @@ import (
 
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
@@ -24,7 +23,7 @@ func TestContactHandler_AddContact(t *testing.T) {
 	tests := []struct {
 		name          string
 		userID        int64
-		requestBody   *dto.AddContactRequestDTO
+		requestBody   *dto.AddContactDTO
 		mockFunc      func() *mocks.MockContactService
 		expectedError error
 		validateResp  func(t *testing.T, contact *domain.Contact)
@@ -32,18 +31,18 @@ func TestContactHandler_AddContact(t *testing.T) {
 		{
 			name:   "successful add contact",
 			userID: 1,
-			requestBody: &dto.AddContactRequestDTO{
+			requestBody: &dto.AddContactDTO{
 				UserIDToAdd: 2,
 				Alias:       "Friend",
 			},
 			mockFunc: func() *mocks.MockContactService {
 				return &mocks.MockContactService{
-					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error) {
+					AddContactFunc: func(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error) {
 						return &domain.Contact{
 							ID:              1,
-							UserID:          userID,
-							UserIDInContact: userIDInContact,
-							Alias:           alias,
+							UserID:          1,
+							UserIDInContact: req.UserIDToAdd,
+							Alias:           req.Alias,
 						}, nil
 					},
 				}
@@ -58,12 +57,12 @@ func TestContactHandler_AddContact(t *testing.T) {
 		{
 			name:   "user not found error",
 			userID: 1,
-			requestBody: &dto.AddContactRequestDTO{
+			requestBody: &dto.AddContactDTO{
 				UserIDToAdd: 999,
 			},
 			mockFunc: func() *mocks.MockContactService {
 				return &mocks.MockContactService{
-					AddContactFunc: func(ctx context.Context, userID, userIDInContact int64, alias string) (*domain.Contact, error) {
+					AddContactFunc: func(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error) {
 						return nil, &gtk.NotFoundError{Message: "user not found"}
 					},
 				}
@@ -82,7 +81,7 @@ func TestContactHandler_AddContact(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodPost, "/api/contacts", bytes.NewBuffer(body))
 			// Add userID to context
-			ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+			ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 			req = req.WithContext(ctx)
 
 			w := httptest.NewRecorder()
@@ -119,7 +118,7 @@ func TestContactHandler_GetContacts(t *testing.T) {
 			userID: 1,
 			mockFunc: func() *mocks.MockContactService {
 				return &mocks.MockContactService{
-					GetContactsFunc: func(ctx context.Context, userID int64) ([]*repository.ContactWithUserInfo, error) {
+					GetContactsFunc: func(ctx context.Context) ([]*repository.ContactWithUserInfo, error) {
 						return []*repository.ContactWithUserInfo{}, nil
 					},
 				}
@@ -137,7 +136,7 @@ func TestContactHandler_GetContacts(t *testing.T) {
 			mockService := tt.mockFunc()
 
 			req := httptest.NewRequest(http.MethodGet, "/api/contacts", nil)
-			ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+			ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 			req = req.WithContext(ctx)
 
 			w := httptest.NewRecorder()

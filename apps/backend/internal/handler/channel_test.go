@@ -22,7 +22,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 	tests := []struct {
 		name          string
 		groupID       string
-		requestBody   *dto.CreateChannelRequestDTO
+		requestBody   *dto.CreateChannelDTO
 		mockFunc      func() *mocks.MockChannelService
 		expectedError error
 		validateResp  func(t *testing.T, channel *dto.ChannelResponseDTO)
@@ -30,16 +30,16 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		{
 			name:    "successful create channel",
 			groupID: "1",
-			requestBody: &dto.CreateChannelRequestDTO{
+			requestBody: &dto.CreateChannelDTO{
 				Name: "general",
 			},
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{
-					CreateChannelFunc: func(ctx context.Context, userID int64, name string, groupID int64) (*domain.Channel, error) {
+					CreateChannelFunc: func(ctx context.Context, req *dto.CreateChannelDTO) (*domain.Channel, error) {
 						return &domain.Channel{
 							ID:      1,
-							Name:    name,
-							GroupID: groupID,
+							Name:    req.Name,
+							GroupID: req.GroupID,
 						}, nil
 					},
 				}
@@ -54,7 +54,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		{
 			name:    "invalid group id",
 			groupID: "invalid",
-			requestBody: &dto.CreateChannelRequestDTO{
+			requestBody: &dto.CreateChannelDTO{
 				Name: "general",
 			},
 			mockFunc: func() *mocks.MockChannelService {
@@ -65,7 +65,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		{
 			name:    "empty channel name",
 			groupID: "1",
-			requestBody: &dto.CreateChannelRequestDTO{
+			requestBody: &dto.CreateChannelDTO{
 				Name: "",
 			},
 			mockFunc: func() *mocks.MockChannelService {
@@ -79,7 +79,7 @@ func TestChannelHandler_CreateChannel(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mockService := tt.mockFunc()
 
-			body, err := json.Marshal(tt.requestBody)
+			body, err := json.Marshal(map[string]interface{}{"name": tt.requestBody.Name})
 			require.NoError(t, err)
 
 			req := httptest.NewRequest(http.MethodPost, "/api/groups/"+tt.groupID+"/channels", bytes.NewBuffer(body))
@@ -120,17 +120,17 @@ func TestChannelHandler_GetGroupChannels(t *testing.T) {
 			groupID: "1",
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{
-					GetChannelsByGroupIDFunc: func(ctx context.Context, groupID int64) ([]*domain.Channel, error) {
+					GetChannelsByGroupIDFunc: func(ctx context.Context, req *dto.GetGroupChannelsDTO) ([]*domain.Channel, error) {
 						return []*domain.Channel{
 							{
 								ID:      1,
 								Name:    "general",
-								GroupID: groupID,
+								GroupID: req.GroupID,
 							},
 							{
 								ID:      2,
 								Name:    "random",
-								GroupID: groupID,
+								GroupID: req.GroupID,
 							},
 						}, nil
 					},
@@ -195,7 +195,7 @@ func TestChannelHandler_GetChannelInfo(t *testing.T) {
 			channelID: "1",
 			mockFunc: func() *mocks.MockChannelService {
 				return &mocks.MockChannelService{
-					GetChannelByIDFunc: func(ctx context.Context, channelID int64) (*domain.Channel, error) {
+					GetChannelByIDFunc: func(ctx context.Context, req *dto.GetChannelInfoDTO) (*domain.Channel, error) {
 						return &domain.Channel{
 							ID:      1,
 							Name:    "general",

@@ -2,14 +2,13 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
@@ -30,18 +29,13 @@ func getUserUnarchivedChatsController(chatService service.IChatService) gtk.Cont
 		log := logger.FromContext(r.Context())
 		log.Debug("get unarchived chats handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("fetching unarchived chats for user", zap.Int64("user_id", userIDInt))
-
-		chatsResponse, err := chatService.GetUserUnarchivedChats(r.Context(), userIDInt)
+		chatsResponse, err := chatService.GetUserUnarchivedChats(r.Context())
 		if err != nil {
-			log.Error("failed to get unarchived user chats", zap.Int64("user_id", userIDInt), zap.Error(err))
+			log.Error("failed to get unarchived user chats", zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("unarchived chats retrieved successfully", zap.Int64("user_id", userIDInt))
+		log.Debug("unarchived chats retrieved successfully")
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
@@ -55,18 +49,13 @@ func getUserArchivedChatsController(chatService service.IChatService) gtk.Contro
 		log := logger.FromContext(r.Context())
 		log.Debug("get archived chats handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("fetching archived chats for user", zap.Int64("user_id", userIDInt))
-
-		chatsResponse, err := chatService.GetUserArchivedChats(r.Context(), userIDInt)
+		chatsResponse, err := chatService.GetUserArchivedChats(r.Context())
 		if err != nil {
-			log.Error("failed to get archived user chats", zap.Int64("user_id", userIDInt), zap.Error(err))
+			log.Error("failed to get archived user chats", zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("archived chats retrieved successfully", zap.Int64("user_id", userIDInt))
+		log.Debug("archived chats retrieved successfully")
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
@@ -80,24 +69,20 @@ func pinChatController(chatService service.IChatService) gtk.ControllerFunc {
 		log := logger.FromContext(r.Context())
 		log.Debug("pin chat handler called")
 
-		vars := mux.Vars(r)
-		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
+		req, err := dto.NewPinChatDTO(r)
 		if err != nil {
-			log.Warn("invalid receiver id in pin chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("pinning chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
-
-		if err := chatService.PinChat(r.Context(), userIDInt, receiverID); err != nil {
-			log.Error("failed to pin chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
+			log.Warn("failed to parse pin chat request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("chat pinned successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
+		log.Debug("pinning chat", zap.Int64("receiver_id", req.ReceiverID))
+
+		if err := chatService.PinChat(r.Context(), req); err != nil {
+			log.Error("failed to pin chat", zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("chat pinned successfully", zap.Int64("receiver_id", req.ReceiverID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusNoContent,
@@ -111,24 +96,20 @@ func unpinChatController(chatService service.IChatService) gtk.ControllerFunc {
 		log := logger.FromContext(r.Context())
 		log.Debug("unpin chat handler called")
 
-		vars := mux.Vars(r)
-		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
+		req, err := dto.NewUnpinChatDTO(r)
 		if err != nil {
-			log.Warn("invalid receiver id in unpin chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("unpinning chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
-
-		if err := chatService.UnpinChat(r.Context(), userIDInt, receiverID); err != nil {
-			log.Error("failed to unpin chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
+			log.Warn("failed to parse unpin chat request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("chat unpinned successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
+		log.Debug("unpinning chat", zap.Int64("receiver_id", req.ReceiverID))
+
+		if err := chatService.UnpinChat(r.Context(), req); err != nil {
+			log.Error("failed to unpin chat", zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("chat unpinned successfully", zap.Int64("receiver_id", req.ReceiverID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusNoContent,
@@ -142,24 +123,20 @@ func archiveChatController(chatService service.IChatService) gtk.ControllerFunc 
 		log := logger.FromContext(r.Context())
 		log.Debug("archive chat handler called")
 
-		vars := mux.Vars(r)
-		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
+		req, err := dto.NewArchiveChatDTO(r)
 		if err != nil {
-			log.Warn("invalid receiver id in archive chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("archiving chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
-
-		if err := chatService.ArchiveChat(r.Context(), userIDInt, receiverID); err != nil {
-			log.Error("failed to archive chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
+			log.Warn("failed to parse archive chat request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("chat archived successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
+		log.Debug("archiving chat", zap.Int64("receiver_id", req.ReceiverID))
+
+		if err := chatService.ArchiveChat(r.Context(), req); err != nil {
+			log.Error("failed to archive chat", zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("chat archived successfully", zap.Int64("receiver_id", req.ReceiverID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusNoContent,
@@ -173,24 +150,20 @@ func unarchiveChatController(chatService service.IChatService) gtk.ControllerFun
 		log := logger.FromContext(r.Context())
 		log.Debug("unarchive chat handler called")
 
-		vars := mux.Vars(r)
-		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
+		req, err := dto.NewUnarchiveChatDTO(r)
 		if err != nil {
-			log.Warn("invalid receiver id in unarchive chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("unarchiving chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
-
-		if err := chatService.UnarchiveChat(r.Context(), userIDInt, receiverID); err != nil {
-			log.Error("failed to unarchive chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
+			log.Warn("failed to parse unarchive chat request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("chat unarchived successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
+		log.Debug("unarchiving chat", zap.Int64("receiver_id", req.ReceiverID))
+
+		if err := chatService.UnarchiveChat(r.Context(), req); err != nil {
+			log.Error("failed to unarchive chat", zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("chat unarchived successfully", zap.Int64("receiver_id", req.ReceiverID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusNoContent,
@@ -204,24 +177,20 @@ func clearChatController(chatService service.IChatService) gtk.ControllerFunc {
 		log := logger.FromContext(r.Context())
 		log.Debug("clear chat handler called")
 
-		vars := mux.Vars(r)
-		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
+		req, err := dto.NewClearChatDTO(r)
 		if err != nil {
-			log.Warn("invalid receiver id in clear chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("clearing chat history", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
-
-		if err := chatService.ClearChat(r.Context(), userIDInt, receiverID); err != nil {
-			log.Error("failed to clear chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
+			log.Warn("failed to parse clear chat request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("chat cleared successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
+		log.Debug("clearing chat history", zap.Int64("receiver_id", req.ReceiverID))
+
+		if err := chatService.ClearChat(r.Context(), req); err != nil {
+			log.Error("failed to clear chat", zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("chat cleared successfully", zap.Int64("receiver_id", req.ReceiverID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusNoContent,
@@ -235,24 +204,20 @@ func deleteChatController(chatService service.IChatService) gtk.ControllerFunc {
 		log := logger.FromContext(r.Context())
 		log.Debug("delete chat handler called")
 
-		vars := mux.Vars(r)
-		receiverID, err := strconv.ParseInt(vars["receiverID"], 10, 64)
+		req, err := dto.NewDeleteChatDTO(r)
 		if err != nil {
-			log.Warn("invalid receiver id in delete chat request", zap.String("receiver_id_str", vars["receiverID"]))
-			return nil, &gtk.ValidationError{Message: "invalid receiver id"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("deleting chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
-
-		if err := chatService.DeleteChat(r.Context(), userIDInt, receiverID); err != nil {
-			log.Error("failed to delete chat", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID), zap.Error(err))
+			log.Warn("failed to parse delete chat request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("chat deleted successfully", zap.Int64("user_id", userIDInt), zap.Int64("receiver_id", receiverID))
+		log.Debug("deleting chat", zap.Int64("receiver_id", req.ReceiverID))
+
+		if err := chatService.DeleteChat(r.Context(), req); err != nil {
+			log.Error("failed to delete chat", zap.Int64("receiver_id", req.ReceiverID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("chat deleted successfully", zap.Int64("receiver_id", req.ReceiverID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusNoContent,

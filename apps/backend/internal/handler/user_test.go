@@ -13,7 +13,7 @@ import (
 
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
@@ -31,9 +31,9 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 			userID: 1,
 			mockFunc: func() *mocks.MockUserService {
 				return &mocks.MockUserService{
-					GetUserProfileFunc: func(ctx context.Context, userID int64) (*domain.UserProfile, error) {
+					GetUserProfileFunc: func(ctx context.Context) (*domain.UserProfile, error) {
 						return &domain.UserProfile{
-							ID:         userID,
+							ID:         1,
 							GlobalName: "Test User",
 							Bio:        "Hello world",
 						}, nil
@@ -51,7 +51,7 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 			userID: 999,
 			mockFunc: func() *mocks.MockUserService {
 				return &mocks.MockUserService{
-					GetUserProfileFunc: func(ctx context.Context, userID int64) (*domain.UserProfile, error) {
+					GetUserProfileFunc: func(ctx context.Context) (*domain.UserProfile, error) {
 						return nil, &gtk.NotFoundError{Message: "user not found"}
 					},
 				}
@@ -65,7 +65,7 @@ func TestUserHandler_GetUserMe(t *testing.T) {
 			mockService := tt.mockFunc()
 
 			req := httptest.NewRequest(http.MethodGet, "/api/users/me", nil)
-			ctx := context.WithValue(req.Context(), middleware.AuthUserContextKey, &domain.AuthUser{
+			ctx := context.WithValue(req.Context(), utils.AuthUserContextKey, &domain.AuthUser{
 				UserID:   1,
 				Email:    "test@example.com",
 				Username: "testuser",
@@ -106,11 +106,14 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 			query: "test",
 			mockFunc: func() *mocks.MockUserService {
 				return &mocks.MockUserService{
-					SearchUserProfilesFunc: func(ctx context.Context, query string) ([]*domain.UserProfile, error) {
+					SearchUserProfilesFunc: func(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error) {
 						return []*domain.UserProfile{
 							{ID: 1, GlobalName: "test user 1"},
 							{ID: 2, GlobalName: "test user 2"},
 						}, nil
+					},
+					GetUserProfileWithContactFunc: func(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error) {
+						return &domain.UserProfile{ID: req.ID}, nil, nil
 					},
 				}
 			},
@@ -124,11 +127,7 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 			name:  "empty query returns empty",
 			query: "",
 			mockFunc: func() *mocks.MockUserService {
-				return &mocks.MockUserService{
-					SearchUserProfilesFunc: func(ctx context.Context, query string) ([]*domain.UserProfile, error) {
-						return []*domain.UserProfile{}, nil
-					},
-				}
+				return &mocks.MockUserService{}
 			},
 			expectedError: nil,
 			validateResp: func(t *testing.T, profiles []dto.UserProfileResponseDTO) {
@@ -142,7 +141,7 @@ func TestUserHandler_SearchUserProfiles(t *testing.T) {
 			mockService := tt.mockFunc()
 
 			req := httptest.NewRequest(http.MethodGet, "/api/users/search?q="+tt.query, nil)
-			ctx := context.WithValue(req.Context(), middleware.AuthUserContextKey, &domain.AuthUser{
+			ctx := context.WithValue(req.Context(), utils.AuthUserContextKey, &domain.AuthUser{
 				UserID:   1,
 				Email:    "test@example.com",
 				Username: "testuser",
@@ -173,7 +172,7 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 	tests := []struct {
 		name          string
 		userID        int64
-		requestBody   *dto.UpdateUserRequestDTO
+		requestBody   *dto.UpdateUserDTO
 		mockFunc      func() *mocks.MockUserService
 		expectedError error
 		validateResp  func(t *testing.T, profile *domain.UserProfile)
@@ -181,17 +180,17 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 		{
 			name:   "successful update all fields",
 			userID: 1,
-			requestBody: &dto.UpdateUserRequestDTO{
+			requestBody: &dto.UpdateUserDTO{
 				GlobalName: strPtr("Updated Name"),
 				Bio:        strPtr("Updated Bio"),
 			},
 			mockFunc: func() *mocks.MockUserService {
 				return &mocks.MockUserService{
-					UpdateUserProfileFunc: func(ctx context.Context, userID int64, globalName, bio, dp *string) (*domain.UserProfile, error) {
+					UpdateUserProfileFunc: func(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error) {
 						return &domain.UserProfile{
-							ID:         userID,
-							GlobalName: "Updated Name",
-							Bio:        "Updated Bio",
+							ID:         1,
+							GlobalName: *req.GlobalName,
+							Bio:        *req.Bio,
 						}, nil
 					},
 				}
@@ -212,7 +211,7 @@ func TestUserHandler_UpdateUserMe(t *testing.T) {
 			require.NoError(t, err)
 
 			req := httptest.NewRequest(http.MethodPut, "/api/users/me", bytes.NewBuffer(body))
-			ctx := context.WithValue(req.Context(), middleware.AuthUserContextKey, &domain.AuthUser{
+			ctx := context.WithValue(req.Context(), utils.AuthUserContextKey, &domain.AuthUser{
 				UserID:   1,
 				Email:    "test@example.com",
 				Username: "testuser",

@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,7 +9,6 @@ import (
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
@@ -27,21 +25,19 @@ func findInviteController(inviteService service.IInviteService) gtk.ControllerFu
 		log := logger.FromContext(r.Context())
 		log.Debug("find invite handler called")
 
-		vars := mux.Vars(r)
-		hash := vars["hash"]
-
-		if hash == "" {
-			log.Warn("hash parameter is empty in find invite request")
-			return nil, &gtk.ValidationError{Message: "hash parameter is required"}
+		req, err := dto.NewFindInviteDTO(r)
+		if err != nil {
+			log.Warn("failed to parse find invite request", zap.Error(err))
+			return nil, err
 		}
 
-		hashDisplay := hash
-		if len(hash) > 8 {
-			hashDisplay = hash[:8]
+		hashDisplay := req.Hash
+		if len(req.Hash) > 8 {
+			hashDisplay = req.Hash[:8]
 		}
-		log.Debug("finding invite", zap.String("hash", hashDisplay)) // Log only first 8 chars for privacy
+		log.Debug("finding invite", zap.String("hash", hashDisplay))
 
-		invite, err := inviteService.FindByHash(r.Context(), hash)
+		invite, err := inviteService.FindByHash(r.Context(), req)
 		if err != nil {
 			log.Warn("invite not found", zap.String("hash", hashDisplay), zap.Error(err))
 			return nil, err
@@ -72,34 +68,25 @@ func acceptInviteController(inviteService service.IInviteService) gtk.Controller
 		log := logger.FromContext(r.Context())
 		log.Debug("accept invite handler called")
 
-		vars := mux.Vars(r)
-		hash := vars["hash"]
-
-		if hash == "" {
-			log.Warn("hash parameter is empty in accept invite request")
-			return nil, &gtk.ValidationError{Message: "hash parameter is required"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		if userID == "" {
-			log.Warn("user not authenticated in accept invite request")
-			return nil, &gtk.ValidationError{Message: "user not authenticated"}
-		}
-
-		parsedUserID := parseUserID(userID)
-		hashDisplay := hash
-		if len(hash) > 8 {
-			hashDisplay = hash[:8]
-		}
-		log.Debug("accepting invite", zap.Int64("user_id", parsedUserID), zap.String("hash", hashDisplay))
-
-		result, err := inviteService.AcceptInvite(r.Context(), parsedUserID, hash)
+		req, err := dto.NewAcceptInviteDTO(r)
 		if err != nil {
-			log.Error("failed to accept invite", zap.Int64("user_id", parsedUserID), zap.Error(err))
+			log.Warn("failed to parse accept invite request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("invite accepted successfully", zap.Int64("user_id", parsedUserID), zap.Int64("group_id", result.GroupID))
+		hashDisplay := req.Hash
+		if len(req.Hash) > 8 {
+			hashDisplay = req.Hash[:8]
+		}
+		log.Debug("accepting invite", zap.String("hash", hashDisplay))
+
+		result, err := inviteService.AcceptInvite(r.Context(), &dto.AcceptInviteInput{InviteHash: req.Hash})
+		if err != nil {
+			log.Error("failed to accept invite", zap.String("hash", hashDisplay), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("invite accepted successfully", zap.Int64("group_id", result.GroupID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
@@ -113,26 +100,17 @@ func createInviteController(inviteService service.IInviteService) gtk.Controller
 		log := logger.FromContext(r.Context())
 		log.Debug("create invite handler called")
 
-		vars := mux.Vars(r)
-		groupID := parseGroupID(vars["groupId"])
-
-		if groupID == 0 {
-			log.Warn("group_id parameter is empty or invalid in create invite request", zap.String("group_id_str", vars["groupId"]))
-			return nil, &gtk.ValidationError{Message: "group_id parameter is required"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		if userID == "" {
-			log.Warn("user not authenticated in create invite request")
-			return nil, &gtk.ValidationError{Message: "user not authenticated"}
-		}
-
-		parsedUserID := parseUserID(userID)
-		log.Debug("creating invite", zap.Int64("inviter_id", parsedUserID), zap.Int64("group_id", groupID))
-
-		invite, err := inviteService.CreateInvite(r.Context(), parsedUserID, groupID)
+		req, err := dto.NewCreateInviteDTO(r)
 		if err != nil {
-			log.Error("failed to create invite", zap.Int64("inviter_id", parsedUserID), zap.Int64("group_id", groupID), zap.Error(err))
+			log.Warn("failed to parse create invite request", zap.Error(err))
+			return nil, err
+		}
+
+		log.Debug("creating invite", zap.Int64("group_id", req.GroupID))
+
+		invite, err := inviteService.CreateInvite(r.Context(), req)
+		if err != nil {
+			log.Error("failed to create invite", zap.Int64("group_id", req.GroupID), zap.Error(err))
 			return nil, err
 		}
 
@@ -140,7 +118,7 @@ func createInviteController(inviteService service.IInviteService) gtk.Controller
 		if len(invite.Hash) > 8 {
 			inviteHashDisplay = invite.Hash[:8]
 		}
-		log.Info("invite created successfully", zap.Int64("inviter_id", parsedUserID), zap.Int64("group_id", groupID), zap.String("invite_hash", inviteHashDisplay))
+		log.Info("invite created successfully", zap.Int64("group_id", req.GroupID), zap.String("invite_hash", inviteHashDisplay))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusCreated,
@@ -161,37 +139,29 @@ func joinGroupController(inviteService service.IInviteService) gtk.ControllerFun
 		log := logger.FromContext(r.Context())
 		log.Debug("join group handler called")
 
-		var req dto.JoinGroupDTO
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body in join group", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
+		req, err := dto.NewJoinGroupDTO(r)
+		if err != nil {
+			log.Warn("failed to parse join group request", zap.Error(err))
+			return nil, err
+		}
+		if err := req.Validate(); err != nil {
+			log.Warn("join group validation failed")
+			return nil, err
 		}
 
-		if req.InviteHash == "" {
-			log.Warn("inviteHash is empty in join group request")
-			return nil, &gtk.ValidationError{Message: "inviteHash is required"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		if userID == "" {
-			log.Warn("user not authenticated in join group request")
-			return nil, &gtk.ValidationError{Message: "user not authenticated"}
-		}
-
-		parsedUserID := parseUserID(userID)
 		hashDisplay := req.InviteHash
 		if len(req.InviteHash) > 8 {
 			hashDisplay = req.InviteHash[:8]
 		}
-		log.Debug("joining group", zap.Int64("user_id", parsedUserID), zap.String("invite_hash", hashDisplay))
+		log.Debug("joining group", zap.String("invite_hash", hashDisplay))
 
-		result, err := inviteService.AcceptInvite(r.Context(), parsedUserID, req.InviteHash)
+		result, err := inviteService.AcceptInvite(r.Context(), &dto.AcceptInviteInput{InviteHash: req.InviteHash})
 		if err != nil {
-			log.Error("failed to join group", zap.Int64("user_id", parsedUserID), zap.Error(err))
+			log.Error("failed to join group", zap.Error(err))
 			return nil, err
 		}
 
-		log.Info("user joined group successfully", zap.Int64("user_id", parsedUserID), zap.Int64("group_id", result.GroupID))
+		log.Info("user joined group successfully", zap.Int64("group_id", result.GroupID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,

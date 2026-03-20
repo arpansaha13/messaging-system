@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -12,7 +9,6 @@ import (
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
@@ -29,37 +25,32 @@ func addContactController(contactService service.IContactService) gtk.Controller
 		log := logger.FromContext(r.Context())
 		log.Debug("add contact handler called")
 
-		var req dto.AddContactRequestDTO
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body in add contact", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		if req.UserIDToAdd == 0 {
-			log.Warn("missing contact user id in add contact request")
-			return nil, &gtk.ValidationError{Message: "contact user id is required"}
-		}
-
-		log.Debug("adding contact", zap.Int64("user_id", userIDInt), zap.Int64("contact_user_id", req.UserIDToAdd))
-
-		contact, err := contactService.AddContact(r.Context(), userIDInt, req.UserIDToAdd, req.Alias)
+		req, err := dto.NewAddContactDTO(r)
 		if err != nil {
-			log.Error("failed to add contact", zap.Int64("user_id", userIDInt), zap.Int64("contact_user_id", req.UserIDToAdd), zap.Error(err))
+			log.Warn("failed to parse add contact request", zap.Error(err))
+			return nil, err
+		}
+		if err := req.Validate(); err != nil {
+			log.Warn("add contact validation failed")
 			return nil, err
 		}
 
-		log.Info("contact added successfully", zap.Int64("user_id", userIDInt), zap.Int64("contact_id", contact.ID))
+		log.Debug("adding contact", zap.Int64("contact_user_id", req.UserIDToAdd))
+
+		contact, err := contactService.AddContact(r.Context(), req)
+		if err != nil {
+			log.Error("failed to add contact", zap.Int64("contact_user_id", req.UserIDToAdd), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("contact added successfully", zap.Int64("contact_id", contact.ID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusCreated,
 			Body: dto.ContactResponseDTO{
 				ID:         contact.ID,
 				Alias:      contact.Alias,
-				GlobalName: "", // This would be populated when fetching contacts via GetContacts
+				GlobalName: "", // populated when fetching contacts via GetContacts
 				DP:         nil,
 				Bio:        "",
 				UserID:     contact.UserIDInContact,
@@ -73,18 +64,13 @@ func getContactsController(contactService service.IContactService) gtk.Controlle
 		log := logger.FromContext(r.Context())
 		log.Debug("get contacts handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		log.Debug("fetching contacts for user", zap.Int64("user_id", userIDInt))
-
-		contacts, err := contactService.GetContacts(r.Context(), userIDInt)
+		contacts, err := contactService.GetContacts(r.Context())
 		if err != nil {
-			log.Error("failed to get contacts", zap.Int64("user_id", userIDInt), zap.Error(err))
+			log.Error("failed to get contacts", zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("contacts retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int("contact_count", len(contacts)))
+		log.Debug("contacts retrieved successfully", zap.Int("contact_count", len(contacts)))
 
 		contactResponses := make([]dto.ContactResponseDTO, len(contacts))
 		for i, contact := range contacts {
@@ -110,30 +96,19 @@ func updateContactAliasController(contactService service.IContactService) gtk.Co
 		log := logger.FromContext(r.Context())
 		log.Debug("update contact alias handler called")
 
-		vars := mux.Vars(r)
-		contactID, err := strconv.ParseInt(vars["id"], 10, 64)
+		req, err := dto.NewUpdateContactAliasDTO(r)
 		if err != nil {
-			log.Warn("invalid contact id in update contact alias request", zap.String("contact_id_str", vars["id"]))
-			return nil, &gtk.ValidationError{Message: "invalid contact id"}
+			log.Warn("failed to parse update contact alias request", zap.Error(err))
+			return nil, err
+		}
+		if err := req.Validate(); err != nil {
+			log.Warn("update contact alias validation failed", zap.Int64("contact_id", req.ID))
+			return nil, err
 		}
 
-		var req dto.UpdateContactAliasRequestDTO
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body in update contact alias", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
-		}
-
-		newAlias := strings.TrimSpace(req.NewAlias)
-		if newAlias == "" {
-			return nil, &gtk.ValidationError{Message: "alias is required"}
-		}
-
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		contact, err := contactService.UpdateContactAlias(r.Context(), userIDInt, contactID, newAlias)
+		contact, err := contactService.UpdateContactAlias(r.Context(), req)
 		if err != nil {
-			log.Error("failed to update contact alias", zap.Int64("contact_id", contactID), zap.Error(err))
+			log.Error("failed to update contact alias", zap.Int64("contact_id", req.ID), zap.Error(err))
 			return nil, err
 		}
 
@@ -153,18 +128,14 @@ func deleteContactController(contactService service.IContactService) gtk.Control
 		log := logger.FromContext(r.Context())
 		log.Debug("delete contact handler called")
 
-		vars := mux.Vars(r)
-		contactID, err := strconv.ParseInt(vars["id"], 10, 64)
+		req, err := dto.NewDeleteContactDTO(r)
 		if err != nil {
-			log.Warn("invalid contact id in delete contact request", zap.String("contact_id_str", vars["id"]))
-			return nil, &gtk.ValidationError{Message: "invalid contact id"}
+			log.Warn("failed to parse delete contact request", zap.Error(err))
+			return nil, err
 		}
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		if err := contactService.DeleteContact(r.Context(), userIDInt, contactID); err != nil {
-			log.Error("failed to delete contact", zap.Int64("contact_id", contactID), zap.Error(err))
+		if err := contactService.DeleteContact(r.Context(), req); err != nil {
+			log.Error("failed to delete contact", zap.Int64("contact_id", req.ID), zap.Error(err))
 			return nil, err
 		}
 

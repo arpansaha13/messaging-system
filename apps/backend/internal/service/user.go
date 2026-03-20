@@ -7,7 +7,9 @@ import (
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -25,9 +27,10 @@ func NewUserService(userRepo repository.IUserRepository, contactRepo repository.
 	}
 }
 
-// GetUserProfile retrieves a user profile by ID
-func (s *UserService) GetUserProfile(ctx context.Context, userID int64) (*domain.UserProfile, error) {
+// GetUserProfile retrieves the authenticated user's profile
+func (s *UserService) GetUserProfile(ctx context.Context) (*domain.UserProfile, error) {
 	log := logger.FromContext(ctx)
+	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving user profile", zap.Int64("user_id", userID))
 
 	userProfile, err := s.userRepo.GetByID(ctx, userID)
@@ -41,72 +44,70 @@ func (s *UserService) GetUserProfile(ctx context.Context, userID int64) (*domain
 }
 
 // SearchUserProfiles searches for user profiles
-func (s *UserService) SearchUserProfiles(ctx context.Context, query string) ([]*domain.UserProfile, error) {
+func (s *UserService) SearchUserProfiles(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("searching user profiles", zap.String("query", query))
+	log.Debug("searching user profiles", zap.String("query", req.Q))
 
-	userProfiles, err := s.userRepo.Search(ctx, query, 20)
+	userProfiles, err := s.userRepo.Search(ctx, req.Q, 20)
 	if err != nil {
-		log.Error("failed to search user profiles", zap.String("query", query), zap.Error(err))
+		log.Error("failed to search user profiles", zap.String("query", req.Q), zap.Error(err))
 		return nil, err
 	}
 
-	log.Debug("user profiles search completed", zap.String("query", query), zap.Int("result_count", len(userProfiles)))
+	log.Debug("user profiles search completed", zap.String("query", req.Q), zap.Int("result_count", len(userProfiles)))
 	return userProfiles, nil
 }
 
 // GetUserProfileWithContact retrieves a user profile with contact info
-func (s *UserService) GetUserProfileWithContact(ctx context.Context, authUserID, userID int64) (*domain.UserProfile, *domain.Contact, error) {
+func (s *UserService) GetUserProfileWithContact(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("retrieving user profile with contact info", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", userID))
+	authUserID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("retrieving user profile with contact info", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID))
 
-	userProfile, err := s.userRepo.GetByID(ctx, userID)
+	userProfile, err := s.userRepo.GetByID(ctx, req.ID)
 	if err != nil {
-		log.Error("failed to retrieve user profile", zap.Int64("user_id", userID), zap.Error(err))
+		log.Error("failed to retrieve user profile", zap.Int64("user_id", req.ID), zap.Error(err))
 		return nil, nil, err
 	}
 
-	contact, err := s.contactRepo.GetContactByUserIds(ctx, authUserID, userID)
+	contact, err := s.contactRepo.GetContactByUserIds(ctx, authUserID, req.ID)
 	if err != nil {
-		// Only log at Debug if it's a not-found error; otherwise warn
 		if _, isNotFound := err.(*gotoolkit.NotFoundError); isNotFound {
-			log.Debug("contact not found between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", userID))
+			log.Debug("contact not found between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID))
 		} else {
-			log.Warn("failed to check contact status between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", userID), zap.Error(err))
+			log.Warn("failed to check contact status between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID), zap.Error(err))
 		}
 		return nil, nil, err
 	}
 
-	log.Debug("user profile with contact retrieved successfully", zap.Int64("user_id", userID), zap.Bool("has_contact", contact != nil))
+	log.Debug("user profile with contact retrieved successfully", zap.Int64("user_id", req.ID), zap.Bool("has_contact", contact != nil))
 	return userProfile, contact, nil
 }
 
-// UpdateUserProfile updates a user's profile information
-func (s *UserService) UpdateUserProfile(ctx context.Context, userID int64, globalName, bio *string, dp *string) (*domain.UserProfile, error) {
+// UpdateUserProfile updates the authenticated user's profile information
+func (s *UserService) UpdateUserProfile(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error) {
 	log := logger.FromContext(ctx)
+	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("updating user profile", zap.Int64("user_id", userID))
 
-	// Get existing profile
 	userProfile, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		log.Error("failed to retrieve user profile for update", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
 	}
 
-	// Update fields if provided
-	if globalName != nil {
-		log.Debug("updating global name", zap.String("new_global_name", *globalName))
-		userProfile.GlobalName = *globalName
+	if req.GlobalName != nil {
+		log.Debug("updating global name", zap.String("new_global_name", *req.GlobalName))
+		userProfile.GlobalName = *req.GlobalName
 	}
-	if bio != nil {
-		userProfile.Bio = *bio
+	if req.Bio != nil {
+		userProfile.Bio = *req.Bio
 	}
-	if dp != nil {
+	if req.DP != nil {
 		log.Debug("updating display picture")
-		userProfile.DP = dp
+		userProfile.DP = req.DP
 	}
 
-	// Save updated profile
 	if err := s.userRepo.Update(ctx, userProfile); err != nil {
 		log.Error("failed to save updated user profile", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err

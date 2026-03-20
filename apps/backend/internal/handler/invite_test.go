@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -24,9 +23,9 @@ func TestInviteHandler_FindByHash(t *testing.T) {
 	groupID := int64(1)
 	expiresAt := time.Now().Add(24 * time.Hour)
 	mockService := &mocks.MockInviteService{
-		FindByHashFunc: func(ctx context.Context, hash string) (*domain.Invite, error) {
+		FindByHashFunc: func(ctx context.Context, req *dto.FindInviteDTO) (*domain.Invite, error) {
 			return &domain.Invite{
-				Hash:      hash,
+				Hash:      req.Hash,
 				InviterID: 1,
 				GroupID:   &groupID,
 				ExpiresAt: &expiresAt,
@@ -51,7 +50,7 @@ func TestInviteHandler_FindByHash(t *testing.T) {
 
 func TestInviteHandler_AcceptInvite(t *testing.T) {
 	mockService := &mocks.MockInviteService{
-		AcceptInviteFunc: func(ctx context.Context, userID int64, inviteHash string) (*service.AcceptInviteResponseDTO, error) {
+		AcceptInviteFunc: func(ctx context.Context, input *dto.AcceptInviteInput) (*service.AcceptInviteResponseDTO, error) {
 			return &service.AcceptInviteResponseDTO{
 				GroupID:  1,
 				Channels: []int64{1, 2},
@@ -61,8 +60,6 @@ func TestInviteHandler_AcceptInvite(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/invites/abc123/accept", nil)
 	req = mux.SetURLVars(req, map[string]string{"hash": "abc123"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "2")
-	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
 
@@ -80,12 +77,12 @@ func TestInviteHandler_AcceptInvite(t *testing.T) {
 
 func TestInviteHandler_CreateInvite(t *testing.T) {
 	mockService := &mocks.MockInviteService{
-		CreateInviteFunc: func(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error) {
-			groupIDPtr := groupID
+		CreateInviteFunc: func(ctx context.Context, req *dto.CreateInviteDTO) (*domain.Invite, error) {
+			groupIDPtr := req.GroupID
 			expiresAt := time.Now().Add(24 * time.Hour)
 			return &domain.Invite{
 				Hash:      "newhash",
-				InviterID: inviterID,
+				InviterID: 1,
 				GroupID:   &groupIDPtr,
 				ExpiresAt: &expiresAt,
 			}, nil
@@ -94,8 +91,6 @@ func TestInviteHandler_CreateInvite(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/groups/1/invites", nil)
 	req = mux.SetURLVars(req, map[string]string{"groupId": "1"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
-	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
 
@@ -112,7 +107,7 @@ func TestInviteHandler_CreateInvite(t *testing.T) {
 
 func TestInviteHandler_JoinGroup(t *testing.T) {
 	mockService := &mocks.MockInviteService{
-		AcceptInviteFunc: func(ctx context.Context, userID int64, inviteHash string) (*service.AcceptInviteResponseDTO, error) {
+		AcceptInviteFunc: func(ctx context.Context, input *dto.AcceptInviteInput) (*service.AcceptInviteResponseDTO, error) {
 			return &service.AcceptInviteResponseDTO{
 				GroupID:  1,
 				Channels: []int64{1},
@@ -125,8 +120,6 @@ func TestInviteHandler_JoinGroup(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/groups/join", bytes.NewBuffer(body))
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "2")
-	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
 

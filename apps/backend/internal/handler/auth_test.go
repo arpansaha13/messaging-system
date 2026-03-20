@@ -22,14 +22,14 @@ import (
 func TestAuthHandler_Signup(t *testing.T) {
 	tests := []struct {
 		name          string
-		requestBody   *dto.SignupRequestDTO
+		requestBody   *dto.SignupDTO
 		mockFunc      func() service.IAuthServiceClient
 		expectedError error
 		validateResp  func(t *testing.T, resp *dto.SignupResponseDTO)
 	}{
 		{
 			name: "successful signup",
-			requestBody: &dto.SignupRequestDTO{
+			requestBody: &dto.SignupDTO{
 				Email:    "test@example.com",
 				Password: "password123",
 			},
@@ -51,7 +51,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 		},
 		{
 			name: "email already registered",
-			requestBody: &dto.SignupRequestDTO{
+			requestBody: &dto.SignupDTO{
 				Email:    "existing@example.com",
 				Password: "password123",
 			},
@@ -66,7 +66,7 @@ func TestAuthHandler_Signup(t *testing.T) {
 		},
 		{
 			name: "invalid email and password",
-			requestBody: &dto.SignupRequestDTO{
+			requestBody: &dto.SignupDTO{
 				Email:    "",
 				Password: "",
 			},
@@ -114,14 +114,14 @@ func TestAuthHandler_Signup(t *testing.T) {
 func TestAuthHandler_Login(t *testing.T) {
 	tests := []struct {
 		name          string
-		requestBody   *dto.LoginRequestDTO
+		requestBody   *dto.LoginDTO
 		mockFunc      func() service.IAuthServiceClient
 		expectedError error
 		validateResp  func(t *testing.T, resp *dto.LoginResponseDTO)
 	}{
 		{
 			name: "successful login",
-			requestBody: &dto.LoginRequestDTO{
+			requestBody: &dto.LoginDTO{
 				Email:    "test@example.com",
 				Password: "password123",
 			},
@@ -142,7 +142,7 @@ func TestAuthHandler_Login(t *testing.T) {
 		},
 		{
 			name: "invalid credentials",
-			requestBody: &dto.LoginRequestDTO{
+			requestBody: &dto.LoginDTO{
 				Email:    "test@example.com",
 				Password: "wrongpassword",
 			},
@@ -157,7 +157,7 @@ func TestAuthHandler_Login(t *testing.T) {
 		},
 		{
 			name: "missing email and password",
-			requestBody: &dto.LoginRequestDTO{
+			requestBody: &dto.LoginDTO{
 				Email:    "",
 				Password: "",
 			},

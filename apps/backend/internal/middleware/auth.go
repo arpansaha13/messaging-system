@@ -15,11 +15,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
-const (
-	UserIDContextKey   = "userID"
-	AuthUserContextKey = "authUser"
-)
-
 // AuthMiddleware validates JWT token with the auth service via gRPC and fetches user details
 func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -71,8 +66,8 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 
 			// Add user ID, auth user, and token to context
 			userIDStr := strconv.FormatInt(resp.UserId, 10)
-			ctx := context.WithValue(r.Context(), UserIDContextKey, userIDStr)
-			ctx = context.WithValue(ctx, AuthUserContextKey, authUser)
+			ctx := context.WithValue(r.Context(), utils.UserIDContextKey, userIDStr)
+			ctx = context.WithValue(ctx, utils.AuthUserContextKey, authUser)
 			ctx = utils.SetTokenInContext(ctx, token)
 
 			// Add user_id to logger context
@@ -85,7 +80,7 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 
 // GetUserIDFromContext extracts user ID from request context
 func GetUserIDFromContext(r *http.Request) string {
-	userID, ok := r.Context().Value(UserIDContextKey).(string)
+	userID, ok := r.Context().Value(utils.UserIDContextKey).(string)
 	if !ok {
 		return ""
 	}
@@ -94,7 +89,7 @@ func GetUserIDFromContext(r *http.Request) string {
 
 // GetAuthUserFromContext extracts auth user from request context
 func GetAuthUserFromContext(r *http.Request) *domain.AuthUser {
-	authUser, ok := r.Context().Value(AuthUserContextKey).(*domain.AuthUser)
+	authUser, ok := r.Context().Value(utils.AuthUserContextKey).(*domain.AuthUser)
 	if !ok {
 		return nil
 	}

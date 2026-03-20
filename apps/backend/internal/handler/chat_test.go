@@ -9,20 +9,21 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend/tests/mocks"
 )
 
 func TestChatHandler_GetUserUnarchivedChats(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		GetUserUnarchivedChatsFunc: func(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error) {
+		GetUserUnarchivedChatsFunc: func(ctx context.Context) ([]*service.ChatItemDTO, error) {
 			return []*service.ChatItemDTO{}, nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/chats", nil)
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -37,13 +38,13 @@ func TestChatHandler_GetUserUnarchivedChats(t *testing.T) {
 
 func TestChatHandler_GetUserArchivedChats(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		GetUserArchivedChatsFunc: func(ctx context.Context, userID int64) ([]*service.ChatItemDTO, error) {
+		GetUserArchivedChatsFunc: func(ctx context.Context) ([]*service.ChatItemDTO, error) {
 			return []*service.ChatItemDTO{}, nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/chats/archived", nil)
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -58,14 +59,14 @@ func TestChatHandler_GetUserArchivedChats(t *testing.T) {
 
 func TestChatHandler_PinChat(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		PinChatFunc: func(ctx context.Context, userID, receiverID int64) error {
+		PinChatFunc: func(ctx context.Context, req *dto.PinChatDTO) error {
 			return nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/chats/2/pin", nil)
 	req = mux.SetURLVars(req, map[string]string{"receiverID": "2"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -80,14 +81,14 @@ func TestChatHandler_PinChat(t *testing.T) {
 
 func TestChatHandler_UnpinChat(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		UnpinChatFunc: func(ctx context.Context, userID, receiverID int64) error {
+		UnpinChatFunc: func(ctx context.Context, req *dto.UnpinChatDTO) error {
 			return nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/chats/2/unpin", nil)
 	req = mux.SetURLVars(req, map[string]string{"receiverID": "2"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -102,14 +103,14 @@ func TestChatHandler_UnpinChat(t *testing.T) {
 
 func TestChatHandler_ArchiveChat(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		ArchiveChatFunc: func(ctx context.Context, userID, receiverID int64) error {
+		ArchiveChatFunc: func(ctx context.Context, req *dto.ArchiveChatDTO) error {
 			return nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/chats/2/archive", nil)
 	req = mux.SetURLVars(req, map[string]string{"receiverID": "2"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -124,14 +125,14 @@ func TestChatHandler_ArchiveChat(t *testing.T) {
 
 func TestChatHandler_UnarchiveChat(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		UnarchiveChatFunc: func(ctx context.Context, userID, receiverID int64) error {
+		UnarchiveChatFunc: func(ctx context.Context, req *dto.UnarchiveChatDTO) error {
 			return nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/chats/2/unarchive", nil)
 	req = mux.SetURLVars(req, map[string]string{"receiverID": "2"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -146,14 +147,14 @@ func TestChatHandler_UnarchiveChat(t *testing.T) {
 
 func TestChatHandler_ClearChat(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		ClearChatFunc: func(ctx context.Context, userID, receiverID int64) error {
+		ClearChatFunc: func(ctx context.Context, req *dto.ClearChatDTO) error {
 			return nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/chats/2/clear", nil)
 	req = mux.SetURLVars(req, map[string]string{"receiverID": "2"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -168,14 +169,14 @@ func TestChatHandler_ClearChat(t *testing.T) {
 
 func TestChatHandler_DeleteChat(t *testing.T) {
 	mockService := &mocks.MockChatService{
-		DeleteChatFunc: func(ctx context.Context, userID, receiverID int64) error {
+		DeleteChatFunc: func(ctx context.Context, req *dto.DeleteChatDTO) error {
 			return nil
 		},
 	}
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/chats/2/delete", nil)
 	req = mux.SetURLVars(req, map[string]string{"receiverID": "2"})
-	ctx := context.WithValue(req.Context(), middleware.UserIDContextKey, "1")
+	ctx := context.WithValue(req.Context(), utils.UserIDContextKey, "1")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()

@@ -8,9 +8,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/repository"
+	"github.com/arpansaha13/messaging-system/apps/backend/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
@@ -53,21 +55,22 @@ func (s *InviteService) generateHash() (string, error) {
 }
 
 // CreateInvite creates a new invite for a group
-func (s *InviteService) CreateInvite(ctx context.Context, inviterID, groupID int64) (*domain.Invite, error) {
+func (s *InviteService) CreateInvite(ctx context.Context, req *dto.CreateInviteDTO) (*domain.Invite, error) {
 	log := logger.FromContext(ctx)
-	log.Debug("creating invite", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", groupID))
+	inviterID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("creating invite", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID))
 
 	// Verify group exists
-	_, err := s.groupRepo.GetByID(ctx, groupID)
+	_, err := s.groupRepo.GetByID(ctx, req.GroupID)
 	if err != nil {
-		log.Error("failed to verify group existence", zap.Int64("group_id", groupID), zap.Error(err))
+		log.Error("failed to verify group existence", zap.Int64("group_id", req.GroupID), zap.Error(err))
 		return nil, err
 	}
 
 	// Generate unique hash
 	hash, err := s.generateHash()
 	if err != nil {
-		log.Error("failed to generate invite hash", zap.Int64("group_id", groupID), zap.Error(err))
+		log.Error("failed to generate invite hash", zap.Int64("group_id", req.GroupID), zap.Error(err))
 		return nil, &gotoolkit.InternalError{Message: "failed to generate invite", Err: err}
 	}
 
@@ -77,29 +80,28 @@ func (s *InviteService) CreateInvite(ctx context.Context, inviterID, groupID int
 	invite := &domain.Invite{
 		Hash:      hash,
 		InviterID: inviterID,
-		GroupID:   &groupID,
+		GroupID:   &req.GroupID,
 		ExpiresAt: &expiresAt,
 	}
 
 	if err := s.inviteRepo.Create(ctx, invite); err != nil {
-		log.Error("failed to create invite in repository", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", groupID), zap.Error(err))
+		log.Error("failed to create invite in repository", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID), zap.Error(err))
 		return nil, err
 	}
 
-	// Return invite with group info populated
 	invite.CreatedAt = time.Now()
 	invite.UpdatedAt = time.Now()
 
-	log.Info("invite created successfully", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", groupID), zap.String("invite_hash", hash[:min(8, len(hash))]))
+	log.Info("invite created successfully", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID), zap.String("invite_hash", hash[:min(8, len(hash))]))
 	return invite, nil
 }
 
 // FindByHash finds an invite by its hash
-func (s *InviteService) FindByHash(ctx context.Context, hash string) (*domain.Invite, error) {
+func (s *InviteService) FindByHash(ctx context.Context, req *dto.FindInviteDTO) (*domain.Invite, error) {
 	log := logger.FromContext(ctx)
 	log.Debug("finding invite by hash")
 
-	invite, err := s.inviteRepo.GetByHash(ctx, hash)
+	invite, err := s.inviteRepo.GetByHash(ctx, req.Hash)
 	if err != nil {
 		log.Warn("invite not found by hash", zap.Error(err))
 		return nil, err
@@ -109,13 +111,14 @@ func (s *InviteService) FindByHash(ctx context.Context, hash string) (*domain.In
 	return invite, nil
 }
 
-// AcceptInvite accepts an invite and adds the user to the group
-func (s *InviteService) AcceptInvite(ctx context.Context, userID int64, inviteHash string) (*AcceptInviteResponseDTO, error) {
+// AcceptInvite accepts an invite and adds the authenticated user to the group
+func (s *InviteService) AcceptInvite(ctx context.Context, input *dto.AcceptInviteInput) (*AcceptInviteResponseDTO, error) {
 	log := logger.FromContext(ctx)
+	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("accepting invite", zap.Int64("user_id", userID))
 
 	// Get invite with group info
-	invite, err := s.inviteRepo.GetByHashWithGroup(ctx, inviteHash)
+	invite, err := s.inviteRepo.GetByHashWithGroup(ctx, input.InviteHash)
 	if err != nil {
 		log.Error("failed to get invite", zap.Error(err))
 		return nil, err

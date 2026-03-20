@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -33,25 +32,20 @@ func signupController(authServiceClient service.IAuthServiceClient) gtk.Controll
 		log := logger.FromContext(r.Context())
 		log.Debug("signup request handler called")
 
-		var req dto.SignupRequestDTO
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body for signup", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
+		req, err := dto.NewSignupDTO(r)
+		if err != nil {
+			log.Warn("failed to parse signup request", zap.Error(err))
+			return nil, err
 		}
-
-		// Validate input
-		if req.Email == "" || req.Password == "" {
+		if err := req.Validate(); err != nil {
 			log.Warn("signup validation failed", zap.String("email", req.Email))
-			return nil, &gtk.ValidationError{Message: "email and password are required"}
+			return nil, err
 		}
 
 		log.Debug("signup validation passed", zap.String("email", req.Email))
 
-		// Call auth service to signup
 		signupResp, err := authServiceClient.Signup(r.Context(), req.Email, req.Password)
 		if err != nil {
-			// Check error message for specific error types
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "already exists") || strings.Contains(errMsg, "conflict") {
 				log.Warn("signup conflict", zap.String("email", req.Email))
@@ -82,22 +76,18 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 		log := logger.FromContext(r.Context())
 		log.Debug("login request handler called")
 
-		var req dto.LoginRequestDTO
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body for login", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
+		req, err := dto.NewLoginDTO(r)
+		if err != nil {
+			log.Warn("failed to parse login request", zap.Error(err))
+			return nil, err
 		}
-
-		// Validate input
-		if req.Email == "" || req.Password == "" {
+		if err := req.Validate(); err != nil {
 			log.Warn("login validation failed", zap.String("email", req.Email))
-			return nil, &gtk.ValidationError{Message: "email and password are required"}
+			return nil, err
 		}
 
 		log.Debug("login validation passed", zap.String("email", req.Email))
 
-		// Call auth service to login
 		loginResp, err := authServiceClient.Login(r.Context(), req.Email, req.Password)
 		if err != nil {
 			errMsg := err.Error()
@@ -115,17 +105,15 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 
 		log.Info("login successful", zap.String("email", req.Email))
 
-		// Calculate cookie max age in seconds
 		maxAge := 30 * 60 // 30 minutes default
 		if loginResp.ExpiresAt != nil {
 			expiresAtMs := loginResp.ExpiresAt.AsTime().UnixMilli()
-			nowMs := int64(0) // Will be set by system
+			nowMs := int64(0)
 			maxAge = max(int((expiresAtMs-nowMs)/1000), 0)
 		}
 
 		cfg, _ := config.Load()
 
-		// Set session token as HttpOnly Secure cookie
 		http.SetCookie(w, &http.Cookie{
 			Name:     cfg.AuthCookieName(),
 			Value:    loginResp.SessionToken,
@@ -133,7 +121,7 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 			MaxAge:   maxAge,
 			HttpOnly: true,
 			Secure:   cfg.Environment() == constants.EnvProduction,
-			SameSite: http.SameSiteLaxMode, // Using Lax instead of Strict for CORS compatibility
+			SameSite: http.SameSiteLaxMode,
 		})
 
 		return &gtk.ControllerResponse{
@@ -150,58 +138,50 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 		log := logger.FromContext(r.Context())
 		log.Debug("verify otp handler called")
 
-		vars := mux.Vars(r)
-		otpHash := vars["otpHash"]
-
-		var req dto.VerifyOTPRequestDTO
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body for verify otp", zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
+		req, err := dto.NewVerifyOTPDTO(r)
+		if err != nil {
+			log.Warn("failed to parse verify otp request", zap.Error(err))
+			return nil, err
+		}
+		if err := req.Validate(); err != nil {
+			log.Warn("verify otp validation failed", zap.String("otp_hash", req.OtpHash))
+			return nil, err
 		}
 
-		// Validate input
-		if otpHash == "" || req.Code == "" {
-			log.Warn("verify otp validation failed", zap.String("otp_hash", otpHash), zap.String("code", req.Code))
-			return nil, &gtk.ValidationError{Message: "otp hash and code are required"}
-		}
+		log.Debug("verifying otp", zap.String("otp_hash", req.OtpHash))
 
-		log.Debug("verifying otp", zap.String("otp_hash", otpHash))
-
-		// Call auth service to verify OTP
-		verifyResp, err := authServiceClient.VerifyOTP(r.Context(), otpHash, req.Code)
+		verifyResp, err := authServiceClient.VerifyOTP(r.Context(), req.OtpHash, req.Code)
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "expired") {
-				log.Warn("verify otp expired", zap.String("otp_hash", otpHash))
+				log.Warn("verify otp expired", zap.String("otp_hash", req.OtpHash))
 				return nil, &gtk.UnauthorizedError{Message: "otp expired"}
 			}
 			if strings.Contains(errMsg, "invalid") {
-				log.Warn("verify otp invalid", zap.String("otp_hash", otpHash))
+				log.Warn("verify otp invalid", zap.String("otp_hash", req.OtpHash))
 				return nil, &gtk.UnauthorizedError{Message: "invalid otp code"}
 			}
 			if strings.Contains(errMsg, "not found") {
-				log.Warn("verify otp not found", zap.String("otp_hash", otpHash))
+				log.Warn("verify otp not found", zap.String("otp_hash", req.OtpHash))
 				return nil, &gtk.NotFoundError{Message: "otp not found"}
 			}
 			if strings.Contains(errMsg, "validation") {
-				log.Warn("verify otp validation error", zap.String("otp_hash", otpHash), zap.Error(err))
+				log.Warn("verify otp validation error", zap.String("otp_hash", req.OtpHash), zap.Error(err))
 				return nil, &gtk.ValidationError{Message: errMsg}
 			}
-			log.Error("verify otp service failed", zap.String("otp_hash", otpHash), zap.Error(err))
+			log.Error("verify otp service failed", zap.String("otp_hash", req.OtpHash), zap.Error(err))
 			return nil, &gtk.InternalError{Message: "verification failed", Err: err}
 		}
 
-		log.Info("otp verified successfully", zap.String("otp_hash", otpHash))
+		log.Info("otp verified successfully", zap.String("otp_hash", req.OtpHash))
 
 		cfg, _ := config.Load()
 
-		// Set session token as HttpOnly Secure cookie
 		http.SetCookie(w, &http.Cookie{
 			Name:     cfg.AuthCookieName(),
 			Value:    verifyResp.SessionToken,
 			Path:     "/",
-			MaxAge:   30 * 60, // 30 minutes
+			MaxAge:   30 * 60,
 			HttpOnly: true,
 			Secure:   cfg.Environment() == constants.EnvProduction,
 			SameSite: http.SameSiteLaxMode,
@@ -221,7 +201,6 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 		log := logger.FromContext(r.Context())
 		log.Debug("logout handler called")
 
-		// Get the session token from the cookie
 		cfg, _ := config.Load()
 
 		cookie, err := r.Cookie(cfg.AuthCookieName())
@@ -240,7 +219,6 @@ func logoutController(authServiceClient service.IAuthServiceClient) gtk.Controll
 
 		log.Debug("logging out user")
 
-		// Call auth service to logout
 		_, err = authServiceClient.Logout(r.Context(), sessionToken)
 		if err != nil {
 			errMsg := err.Error()

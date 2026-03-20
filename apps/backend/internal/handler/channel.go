@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
@@ -11,7 +9,6 @@ import (
 	gtk "github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 )
 
@@ -27,37 +24,25 @@ func createChannelController(channelService service.IChannelService) gtk.Control
 		log := logger.FromContext(r.Context())
 		log.Debug("create channel handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		vars := mux.Vars(r)
-		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
+		req, err := dto.NewCreateChannelDTO(r)
 		if err != nil {
-			log.Warn("invalid group id in create channel request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return nil, &gtk.ValidationError{Message: "invalid group id"}
+			log.Warn("failed to parse create channel request", zap.Error(err))
+			return nil, err
 		}
-
-		var req dto.CreateChannelRequestDTO
-
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			log.Warn("invalid request body in create channel", zap.Int64("user_id", userIDInt), zap.Error(err))
-			return nil, &gtk.ValidationError{Message: "invalid request body"}
-		}
-
-		if req.Name == "" {
-			log.Warn("channel name is empty in create channel request", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
-			return nil, &gtk.ValidationError{Message: "channel name is required"}
-		}
-
-		log.Debug("creating channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name))
-
-		channel, err := channelService.CreateChannel(r.Context(), userIDInt, req.Name, groupID)
-		if err != nil {
-			log.Error("failed to create channel", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.String("channel_name", req.Name), zap.Error(err))
+		if err := req.Validate(); err != nil {
+			log.Warn("create channel validation failed", zap.Int64("group_id", req.GroupID))
 			return nil, err
 		}
 
-		log.Info("channel created successfully", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channel.ID), zap.String("channel_name", channel.Name), zap.Int64("group_id", groupID))
+		log.Debug("creating channel", zap.Int64("group_id", req.GroupID), zap.String("channel_name", req.Name))
+
+		channel, err := channelService.CreateChannel(r.Context(), req)
+		if err != nil {
+			log.Error("failed to create channel", zap.Int64("group_id", req.GroupID), zap.String("channel_name", req.Name), zap.Error(err))
+			return nil, err
+		}
+
+		log.Info("channel created successfully", zap.Int64("channel_id", channel.ID), zap.String("channel_name", channel.Name), zap.Int64("group_id", req.GroupID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusCreated,
@@ -77,21 +62,17 @@ func getGroupChannelsController(channelService service.IChannelService) gtk.Cont
 		log := logger.FromContext(r.Context())
 		log.Debug("get group channels handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		vars := mux.Vars(r)
-		groupID, err := strconv.ParseInt(vars["groupID"], 10, 64)
+		req, err := dto.NewGetGroupChannelsDTO(r)
 		if err != nil {
-			log.Warn("invalid group id in get channels request", zap.String("group_id_str", vars["groupID"]), zap.Int64("user_id", userIDInt))
-			return nil, &gtk.ValidationError{Message: "invalid group id"}
+			log.Warn("failed to parse get group channels request", zap.Error(err))
+			return nil, err
 		}
 
-		log.Debug("fetching channels for group", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID))
+		log.Debug("fetching channels for group", zap.Int64("group_id", req.GroupID))
 
-		channels, err := channelService.GetChannelsByGroupID(r.Context(), groupID)
+		channels, err := channelService.GetChannelsByGroupID(r.Context(), req)
 		if err != nil {
-			log.Error("failed to get channels for group", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Error(err))
+			log.Error("failed to get channels for group", zap.Int64("group_id", req.GroupID), zap.Error(err))
 			return nil, err
 		}
 
@@ -106,7 +87,7 @@ func getGroupChannelsController(channelService service.IChannelService) gtk.Cont
 			}
 		}
 
-		log.Debug("successfully fetched channels", zap.Int64("user_id", userIDInt), zap.Int64("group_id", groupID), zap.Int("channel_count", len(channels)))
+		log.Debug("successfully fetched channels", zap.Int64("group_id", req.GroupID), zap.Int("channel_count", len(channels)))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
@@ -120,25 +101,21 @@ func getChannelInfoController(channelService service.IChannelService) gtk.Contro
 		log := logger.FromContext(r.Context())
 		log.Debug("get channel info handler called")
 
-		userID := middleware.GetUserIDFromContext(r)
-		userIDInt, _ := strconv.ParseInt(userID, 10, 64)
-
-		vars := mux.Vars(r)
-		channelID, err := strconv.ParseInt(vars["channelID"], 10, 64)
+		req, err := dto.NewGetChannelInfoDTO(r)
 		if err != nil {
-			log.Warn("invalid channel id in get channel info request", zap.String("channel_id_str", vars["channelID"]), zap.Int64("user_id", userIDInt))
-			return nil, &gtk.ValidationError{Message: "invalid channel id"}
-		}
-
-		log.Debug("fetching channel info", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID))
-
-		channel, err := channelService.GetChannelByID(r.Context(), channelID)
-		if err != nil {
-			log.Error("failed to get channel info", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID), zap.Error(err))
+			log.Warn("failed to parse get channel info request", zap.Error(err))
 			return nil, err
 		}
 
-		log.Debug("channel info retrieved successfully", zap.Int64("user_id", userIDInt), zap.Int64("channel_id", channelID), zap.String("channel_name", channel.Name))
+		log.Debug("fetching channel info", zap.Int64("channel_id", req.ChannelID))
+
+		channel, err := channelService.GetChannelByID(r.Context(), req)
+		if err != nil {
+			log.Error("failed to get channel info", zap.Int64("channel_id", req.ChannelID), zap.Error(err))
+			return nil, err
+		}
+
+		log.Debug("channel info retrieved successfully", zap.Int64("channel_id", req.ChannelID), zap.String("channel_name", channel.Name))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
