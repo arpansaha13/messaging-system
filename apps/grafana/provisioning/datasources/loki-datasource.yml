@@ -12,8 +12,9 @@ datasources:
       derivedFields:
         - name: TraceID
           matcherRegex: '"trace_id"\s*:\s*"(.+?)"'
-          url: /explore
-          datasourceUid: prometheus
+          url: '${__value.raw}'
+          datasourceUid: tempo
+          urlDisplayLabel: View Trace
         - name: UserID
           matcherRegex: '"user_id"\s*:\s*"(.+?)"'
           url: /explore

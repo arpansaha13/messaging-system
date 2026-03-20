@@ -2,6 +2,10 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+storage:
+  exemplars:
+    max-exemplars: 100000
+
 scrape_configs:
   # Go HTTP metrics (runtime + process) — dashboard 21221
   - job_name: backend

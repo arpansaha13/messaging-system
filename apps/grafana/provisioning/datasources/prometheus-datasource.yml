@@ -10,3 +10,6 @@ datasources:
     editable: true
     jsonData:
       timeInterval: 15s
+      exemplarTraceIdDestinations:
+        - name: trace_id
+          datasourceUid: tempo
