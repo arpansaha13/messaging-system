@@ -13,6 +13,7 @@ import (
 // Config holds all application configuration. Fields are private; use getters to read them.
 type Config struct {
 	databaseURL             string
+	dbMaxConnections        int
 	grpcHost                string
 	grpcPort                string
 	metricsPort             int
@@ -35,6 +36,7 @@ type Config struct {
 }
 
 func (c *Config) DatabaseURL() string                { return c.databaseURL }
+func (c *Config) DatabaseMaxConnections() int        { return c.dbMaxConnections }
 func (c *Config) GRPCHost() string                   { return c.grpcHost }
 func (c *Config) GRPCPort() string                   { return c.grpcPort }
 func (c *Config) MetricsPort() int                   { return c.metricsPort }
@@ -83,6 +85,7 @@ func load() (*Config, error) {
 
 	cfg := &Config{
 		databaseURL:         getEnv("DATABASE_URL", ""),
+		dbMaxConnections:    getEnvInt("AUTH_DB_MAX_CONNECTIONS", 100),
 		grpcHost:            getEnv("GRPC_HOST", "0.0.0.0"),
 		grpcPort:            getEnv("GRPC_PORT", "50051"),
 		metricsPort:         getEnvInt("METRICS_PORT", 9090),
@@ -120,6 +123,9 @@ func load() (*Config, error) {
 func (c *Config) validate() error {
 	if c.environment != constants.EnvTest && c.databaseURL == "" {
 		return fmt.Errorf("DATABASE_URL is required")
+	}
+	if c.dbMaxConnections <= 0 {
+		return fmt.Errorf("DatabaseMaxConnections must be greater than 0")
 	}
 	if c.secretKey == "" {
 		return fmt.Errorf("SECRET_KEY is required")

@@ -20,5 +20,16 @@ func SetupPostgres(ctx context.Context, zapLogger *zap.Logger) (*gorm.DB, error)
 	gormCfg := gorm.Config{
 		Logger: gotoolkit.NewGormLogger(zapLogger, gormlogger.Warn),
 	}
-	return gotoolkit.ConnectPostgresWithBackoff(ctx, cfg.DatabaseURL(), &gormCfg)
+	db, err := gotoolkit.ConnectPostgresWithBackoff(ctx, cfg.DatabaseURL(), &gormCfg)
+	if err != nil {
+		return nil, err
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(cfg.DatabaseMaxConnections())
+
+	return db, nil
 }

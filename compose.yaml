@@ -8,9 +8,9 @@ services:
     environment:
       ENVIRONMENT: development
     ports:
-      - "7000:443"
-    volumes:
-      - ./data/certs-local:/etc/nginx/certs:ro
+      - "7000:80"
+    # volumes:
+    #   - ./data/certs-local:/etc/nginx/certs:ro
     depends_on:
       - backend
       - socket
@@ -30,6 +30,7 @@ services:
       POSTGRES_USER: ${AUTH_DB_USERNAME}
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
       POSTGRES_DB: ${AUTH_DB_NAME}
+    command: ["postgres", "-c", "max_connections=100"]
     ports:
       - "7010:5432"
     volumes:
@@ -50,6 +51,7 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
+    command: ["postgres", "-c", "max_connections=100"]
     ports:
       - "7020:5432"
     volumes:
@@ -85,6 +87,7 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      DB_MAX_CONNECTIONS: ${DB_MAX_CONNECTIONS}
       DB_LOGGING: "true"
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -99,6 +102,7 @@ services:
       OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
     ports:
       - "7030:4000"
+      - "9090:9090"
     depends_on:
       postgres:
         condition: service_healthy
@@ -205,6 +209,7 @@ services:
     environment:
       ENVIRONMENT: development
       DATABASE_URL: postgres://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@auth-db:5432/${AUTH_DB_NAME}
+      AUTH_DB_MAX_CONNECTIONS: ${AUTH_DB_MAX_CONNECTIONS}
       GRPC_HOST: ${GRPC_HOST}
       GRPC_PORT: ${GRPC_PORT}
       METRICS_PORT: 9090
@@ -543,14 +548,14 @@ services:
       - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - ./data/tempo:/tmp/tempo
     expose:
-      - "4317"  # OTLP gRPC — reachable by backend/auth as tempo:4317
-      - "3200"  # HTTP — reachable by Grafana as tempo:3200
+      - "4317" # OTLP gRPC — reachable by backend/auth as tempo:4317
+      - "3200" # HTTP — reachable by Grafana as tempo:3200
     networks:
       - messaging-network
-    develop:
-      watch:
-        - action: rebuild
-          path: ./apps/tempo/tempo.yaml
+    # develop:
+    #   watch:
+    #     - action: rebuild
+    #       path: ./apps/tempo/tempo.yaml
 
 networks:
   messaging-network:

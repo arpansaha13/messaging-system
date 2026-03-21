@@ -28,7 +28,7 @@ services:
       - e2e
       - load
     ports:
-      - '7500:80'
+      - "7500:80"
     volumes:
       - ${NGINX_CONF_PATH}:/etc/nginx/nginx.conf
     depends_on:
@@ -41,7 +41,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 256M
     develop:
       watch:
@@ -62,13 +62,14 @@ services:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: ${AUTH_DB_NAME}
+    command: ["postgres", "-c", "max_connections=100"]
     ports:
-      - '7511:5432'
+      - "7511:5432"
     volumes:
       - ./data/test/auth:/var/lib/postgresql/data
       - ./tests/init-auth-dbs.sh:/docker-entrypoint-initdb.d/init-auth-dbs.sh:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U testuser']
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -77,7 +78,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.00'
+          cpus: "1.00"
           memory: 1G
 
   # Messaging DB exposed on :7521 for test data verification if needed
@@ -91,13 +92,14 @@ services:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: ${DB_NAME}
+    command: ["postgres", "-c", "max_connections=100"]
     ports:
-      - '7521:5432'
+      - "7521:5432"
     volumes:
       - ./data/test/default:/var/lib/postgresql/data
       - ./tests/init-default-dbs.sh:/docker-entrypoint-initdb.d/init-default-dbs.sh:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U testuser']
+      test: ["CMD-SHELL", "pg_isready -U testuser"]
       interval: 10s
       timeout: 3s
       retries: 10
@@ -106,7 +108,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.00'
+          cpus: "1.00"
           memory: 1G
 
   # ---------------------------------------------------------------------------
@@ -120,7 +122,7 @@ services:
       - e2e
       - load
     ports:
-      - '7551:15672'
+      - "7551:15672"
     environment:
       RABBITMQ_USER: admin
       RABBITMQ_PASS: admin
@@ -133,7 +135,7 @@ services:
     volumes:
       - ./data/test/rabbitmq:/var/lib/rabbitmq
     healthcheck:
-      test: ['CMD-SHELL', 'rabbitmq-diagnostics -q ping']
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 20s
       timeout: 5s
       retries: 10
@@ -142,7 +144,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.00'
+          cpus: "1.00"
           memory: 1G
 
   # ---------------------------------------------------------------------------
@@ -159,7 +161,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 128M
 
   # ---------------------------------------------------------------------------
@@ -182,6 +184,7 @@ services:
     environment:
       ENVIRONMENT: test
       DATABASE_URL: postgres://testuser:testpass@auth-db:5432/${AUTH_DB_NAME}?sslmode=disable
+      AUTH_DB_MAX_CONNECTIONS: 80
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: 50051
       METRICS_PORT: 9090
@@ -191,8 +194,8 @@ services:
       JWT_SECRET: test-jwt-secret-key-for-e2e-tests
       SMTP_HOST: localhost
       SMTP_PORT: 1025
-      SMTP_USER: ''
-      SMTP_PASSWORD: ''
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
       EMAIL_FROM: noreply@test.local
       # Short OTP expiry enables expired-OTP test case (S-06)
       OTP_EXPIRY_MINUTES: 1
@@ -205,13 +208,13 @@ services:
       auth-db:
         condition: service_healthy
     expose:
-      - '50051'
+      - "50051"
     networks:
       - messaging-test-network
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 512M
 
   # ---------------------------------------------------------------------------
@@ -242,6 +245,7 @@ services:
       DB_USERNAME: testuser
       DB_PASSWORD: testpass
       DB_NAME: ${DB_NAME}
+      DB_MAX_CONNECTIONS: 80
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: backend
@@ -256,7 +260,7 @@ services:
       OTP_VALIDATION_SECONDS: 3600
       OTLP_ENDPOINT: tempo:4317
     ports:
-      - '7530:4000'
+      - "7530:4000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -269,7 +273,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.00'
+          cpus: "1.00"
           memory: 1G
 
   # ---------------------------------------------------------------------------
@@ -306,7 +310,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 512M
 
   # ---------------------------------------------------------------------------
@@ -346,7 +350,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 512M
 
   # ---------------------------------------------------------------------------
@@ -360,10 +364,10 @@ services:
     environment:
       ENVIRONMENT: test
       NUXT_AUTH_COOKIE_NAME: session
-      NUXT_CSRF_COOKIE_NAME: ''
+      NUXT_CSRF_COOKIE_NAME: ""
       NUXT_API_BASE_URL: ${NUXT_API_BASE_URL}
       NUXT_PUBLIC_AUTH_COOKIE_NAME: session
-      NUXT_PUBLIC_CSRF_COOKIE_NAME: ''
+      NUXT_PUBLIC_CSRF_COOKIE_NAME: ""
     depends_on:
       - backend
     networks:
@@ -371,7 +375,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 512M
 
   # ---------------------------------------------------------------------------
@@ -436,14 +440,14 @@ services:
       - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - ./data/test/tempo:/tmp/tempo
     expose:
-      - "4317"  # OTLP gRPC — reachable by backend/auth as tempo:4317
-      - "3200"  # HTTP — reachable by Grafana as tempo:3200
+      - "4317" # OTLP gRPC — reachable by backend/auth as tempo:4317
+      - "3200" # HTTP — reachable by Grafana as tempo:3200
     networks:
       - messaging-test-network
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 512M
 
   grafana:
@@ -505,7 +509,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.00'
+          cpus: "1.00"
           memory: 1G
 
   init-kafka:
@@ -543,7 +547,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.50'
+          cpus: "0.50"
           memory: 512M
 
   alloy:
@@ -562,7 +566,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 256M
 
   fluent-bit:
@@ -581,7 +585,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.25'
+          cpus: "0.25"
           memory: 128M
 
 networks:

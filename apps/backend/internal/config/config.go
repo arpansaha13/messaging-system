@@ -25,6 +25,7 @@ func (c rabbitMQCreds) url() string {
 // Config holds all application configuration. Fields are private; use getters to read them.
 type Config struct {
 	databaseURL    string
+	dbMaxConnections int
 	apiPort        int
 	metricsPort    int
 	authSystemHost string
@@ -37,6 +38,7 @@ type Config struct {
 }
 
 func (c *Config) DatabaseURL() string                { return c.databaseURL }
+func (c *Config) DatabaseMaxConnections() int        { return c.dbMaxConnections }
 func (c *Config) APIPort() int                       { return c.apiPort }
 func (c *Config) MetricsPort() int                   { return c.metricsPort }
 func (c *Config) AuthSystemHost() string             { return c.authSystemHost }
@@ -80,6 +82,7 @@ func load() (*Config, error) {
 		environment:    env,
 		logLevel:       getEnv("LOG_LEVEL", "info"),
 		otlpEndpoint:   getEnv("OTLP_ENDPOINT", ""),
+		dbMaxConnections: getEnvInt("DB_MAX_CONNECTIONS", 100),
 	}
 
 	databaseURL := os.Getenv("DATABASE_URL")
@@ -161,6 +164,9 @@ func load() (*Config, error) {
 func (c *Config) validate() error {
 	if c.databaseURL == "" {
 		return fmt.Errorf("DatabaseURL must be set")
+	}
+	if c.dbMaxConnections <= 0 {
+		return fmt.Errorf("DatabaseMaxConnections must be greater than 0")
 	}
 	if c.jwtSecret == "" {
 		return fmt.Errorf("JWTSecret must be set")
