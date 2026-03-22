@@ -49,7 +49,13 @@ func main() {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	grpcServer, emailPool := app.SetupGRPCServer(db, zapLogger, cbs)
+	// Setup memcached for session caching (optional; graceful degradation if unavailable)
+	memcachedClient, memcachedConnMgr, err := app.SetupMemcached(svcCtx, zapLogger)
+	if err != nil {
+		zapLogger.Warn("failed to setup memcached", zap.Error(err))
+	}
+
+	grpcServer, emailPool := app.SetupGRPCServer(db, zapLogger, cbs, memcachedClient)
 
 	grpcAddr := fmt.Sprintf("%s:%s", cfg.GRPCHost(), cfg.GRPCPort())
 	listener, err := net.Listen("tcp", grpcAddr)
@@ -99,6 +105,12 @@ func main() {
 
 	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
 		zapLogger.Error("metrics server shutdown error", zap.Error(err))
+	}
+
+	if memcachedConnMgr != nil {
+		if err := memcachedConnMgr.Stop(); err != nil {
+			zapLogger.Error("error stopping memcached connection manager", zap.Error(err))
+		}
 	}
 
 	shutdownTelemetry(shutdownCtx)

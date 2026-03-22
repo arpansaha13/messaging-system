@@ -68,8 +68,11 @@ services:
       OTP_LENGTH: ${OTP_LENGTH}
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+      MEMCACHED_HOST: auth-cache
+      MEMCACHED_PORT: 11211
     depends_on:
       - auth-db
+      - auth-cache
     networks:
       - messaging-network
 
@@ -118,6 +121,8 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${BACKEND_RABBITMQ_USER}
       RABBITMQ_PASS: ${BACKEND_RABBITMQ_PASS}
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
       JWT_SECRET: ${JWT_SECRET}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       SESSION_SECRET: ${SESSION_SECRET}
@@ -129,6 +134,7 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+      - memcached
       - auth
     networks:
       - messaging-network
@@ -176,6 +182,21 @@ services:
     container_name: memcached_prod
     networks:
       - messaging-network
+
+  auth-cache:
+    image: memcached:1.6.40-alpine
+    container_name: auth-cache_prod
+    networks:
+      - messaging-network
+
+  auth-cache-exporter:
+    image: prom/memcached-exporter:v0.15.0
+    container_name: auth-cache-exporter_prod
+    profiles: [metrics]
+    command: ["--memcached.address=localhost:11211"]
+    network_mode: "service:auth-cache"
+    depends_on:
+      - auth-cache
 
   rabbitmq:
     image: europe-north1-docker.pkg.dev/chat-application-13/rabbitmq/broker:0.1.0

@@ -72,6 +72,8 @@ services:
       OTP_LENGTH: ${OTP_LENGTH}
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+      MEMCACHED_HOST: auth-cache
+      MEMCACHED_PORT: 11211
     networks:
       - messaging-network
 
@@ -99,6 +101,8 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${BACKEND_RABBITMQ_USER}
       RABBITMQ_PASS: ${BACKEND_RABBITMQ_PASS}
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
       JWT_SECRET: ${JWT_SECRET}
       AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
       SESSION_SECRET: ${SESSION_SECRET}
@@ -109,6 +113,7 @@ services:
       - "7030:4000"
     depends_on:
       - rabbitmq
+      - memcached
       - auth
     networks:
       - messaging-network
@@ -154,6 +159,12 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached_prod
+    networks:
+      - messaging-network
+
+  auth-cache:
+    image: memcached:1.6.40-alpine
+    container_name: auth-cache_prod
     networks:
       - messaging-network
 

@@ -63,7 +63,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 	var createdAt time.Time
 
 	_, err := s.cb.Execute(func() (any, error) {
-		return nil, s.db.Transaction(func(tx *gorm.DB) error {
+		return nil, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			zero := time.Time{}
 
 			senderChat := &domain.Chat{SenderID: senderID, ReceiverID: req.ReceiverID, ClearedAt: &zero}
@@ -139,7 +139,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 	var createdAt time.Time
 
 	_, err := s.cb.Execute(func() (any, error) {
-		return nil, s.db.Transaction(func(tx *gorm.DB) error {
+		return nil, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			var channel domain.Channel
 			if err := tx.First(&channel, req.ChannelID).Error; err != nil {
 				return fmt.Errorf("channel not found: %w", err)

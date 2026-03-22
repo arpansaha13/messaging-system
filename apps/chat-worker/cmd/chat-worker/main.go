@@ -24,7 +24,7 @@ func main() {
 		panic(fmt.Sprintf("failed to load config: %v", err))
 	}
 
-	// Initialize logger (uptrace otelzap wrapping stdout JSON output)
+	// Initialize logger
 	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize logger: %v", err))

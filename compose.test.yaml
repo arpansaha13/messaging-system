@@ -164,8 +164,23 @@ services:
           cpus: "0.25"
           memory: 128M
 
+  # ---------------------------------------------------------------------------  # Auth cache — separate memcached for session caching
   # ---------------------------------------------------------------------------
-  # Auth gRPC service
+  auth-cache:
+    image: memcached:1.6.40-alpine
+    container_name: auth-cache_test
+    profiles:
+      - e2e
+      - load
+    networks:
+      - messaging-test-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  # ---------------------------------------------------------------------------  # Auth gRPC service
   # Uses MockEmailProvider (ENVIRONMENT != production) — OTP is stored in DB
   # only, not sent. global-setup.ts reads OTP from auth-db directly.
   # ---------------------------------------------------------------------------
@@ -202,11 +217,15 @@ services:
       OTP_LENGTH: 6
       EMAIL_WORKER_POOL_SIZE: 2
       EMAIL_TASK_QUEUE_SIZE: 10
+      MEMCACHED_HOST: auth-cache
+      MEMCACHED_PORT: 11211
       LOG_LEVEL: ${LOG_LEVEL}
       OTLP_ENDPOINT: tempo:4317
     depends_on:
       auth-db:
         condition: service_healthy
+      auth-cache:
+        condition: service_started
     expose:
       - "50051"
     networks:
@@ -254,6 +273,8 @@ services:
       # See docs/e2e-test-plan.md prerequisite P2.
       AUTH_COOKIE_NAME: session
       AUTH_SYSTEM_HOST: auth:50051
+      MEMCACHED_HOST: memcached
+      MEMCACHED_PORT: 11211
       JWT_SECRET: test-jwt-secret-key-for-e2e-tests
       SESSION_SECRET: test-session-secret-key-here
       JWT_TOKEN_VALIDITY_SECONDS: 86400
@@ -266,6 +287,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      memcached:
+        condition: service_started
       auth:
         condition: service_started
     networks:
@@ -412,6 +435,15 @@ services:
     network_mode: "service:memcached"
     depends_on:
       - memcached
+
+  auth-cache-exporter:
+    image: prom/memcached-exporter:v0.15.0
+    container_name: auth-cache-exporter_test
+    profiles: [metrics]
+    command: ["--memcached.address=localhost:11211"]
+    network_mode: "service:auth-cache"
+    depends_on:
+      - auth-cache
 
   prometheus:
     image: prom/prometheus:v3.4.2

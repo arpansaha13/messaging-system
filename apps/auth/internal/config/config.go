@@ -10,51 +10,67 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
-// Config holds all application configuration. Fields are private; use getters to read them.
-type Config struct {
-	databaseURL             string
-	dbMaxConnections        int
-	grpcHost                string
-	grpcPort                string
-	metricsPort             int
-	otlpEndpoint            string
-	secretKey               string
-	jwtSecret               string
-	smtpHost                string
-	smtpPort                int
-	smtpUser                string
-	smtpPassword            string
-	emailFrom               string
-	environment             constants.Environment
-	logLevel                string
-	otpExpiry               time.Duration
-	otpLength               int
-	emailWorkerPoolSize     int
-	emailTaskQueueSize      int
-	sessionTTL              time.Duration
-	sessionCleanupInterval  time.Duration
+// MemcachedCreds holds memcached connection credentials.
+type MemcachedCreds struct {
+	Host string
+	Port string
 }
 
-func (c *Config) DatabaseURL() string                { return c.databaseURL }
-func (c *Config) DatabaseMaxConnections() int        { return c.dbMaxConnections }
-func (c *Config) GRPCHost() string                   { return c.grpcHost }
-func (c *Config) GRPCPort() string                   { return c.grpcPort }
-func (c *Config) MetricsPort() int                   { return c.metricsPort }
-func (c *Config) OTLPEndpoint() string               { return c.otlpEndpoint }
-func (c *Config) SecretKey() string                  { return c.secretKey }
-func (c *Config) JWTSecret() string                  { return c.jwtSecret }
-func (c *Config) SMTPHost() string                   { return c.smtpHost }
-func (c *Config) SMTPPort() int                      { return c.smtpPort }
-func (c *Config) SMTPUser() string                   { return c.smtpUser }
-func (c *Config) SMTPPassword() string               { return c.smtpPassword }
-func (c *Config) EmailFrom() string                  { return c.emailFrom }
-func (c *Config) Environment() constants.Environment { return c.environment }
-func (c *Config) LogLevel() string                   { return c.logLevel }
-func (c *Config) OTPExpiry() time.Duration           { return c.otpExpiry }
-func (c *Config) OTPLength() int                     { return c.otpLength }
-func (c *Config) EmailWorkerPoolSize() int           { return c.emailWorkerPoolSize }
-func (c *Config) EmailTaskQueueSize() int            { return c.emailTaskQueueSize }
-func (c *Config) SessionTTL() time.Duration          { return c.sessionTTL }
+// GetUrl returns the memcached server address in "host:port" format.
+func (m *MemcachedCreds) GetUrl() string {
+	if m == nil {
+		return ""
+	}
+	return m.Host + ":" + m.Port
+}
+
+// Config holds all application configuration. Fields are private; use getters to read them.
+type Config struct {
+	databaseURL            string
+	dbMaxConnections       int
+	grpcHost               string
+	grpcPort               string
+	metricsPort            int
+	otlpEndpoint           string
+	secretKey              string
+	jwtSecret              string
+	smtpHost               string
+	smtpPort               int
+	smtpUser               string
+	smtpPassword           string
+	emailFrom              string
+	memcachedCreds         *MemcachedCreds
+	environment            constants.Environment
+	logLevel               string
+	otpExpiry              time.Duration
+	otpLength              int
+	emailWorkerPoolSize    int
+	emailTaskQueueSize     int
+	sessionTTL             time.Duration
+	sessionCleanupInterval time.Duration
+}
+
+func (c *Config) DatabaseURL() string                   { return c.databaseURL }
+func (c *Config) DatabaseMaxConnections() int           { return c.dbMaxConnections }
+func (c *Config) GRPCHost() string                      { return c.grpcHost }
+func (c *Config) GRPCPort() string                      { return c.grpcPort }
+func (c *Config) MetricsPort() int                      { return c.metricsPort }
+func (c *Config) OTLPEndpoint() string                  { return c.otlpEndpoint }
+func (c *Config) SecretKey() string                     { return c.secretKey }
+func (c *Config) JWTSecret() string                     { return c.jwtSecret }
+func (c *Config) SMTPHost() string                      { return c.smtpHost }
+func (c *Config) SMTPPort() int                         { return c.smtpPort }
+func (c *Config) SMTPUser() string                      { return c.smtpUser }
+func (c *Config) SMTPPassword() string                  { return c.smtpPassword }
+func (c *Config) EmailFrom() string                     { return c.emailFrom }
+func (c *Config) Memcached() *MemcachedCreds            { return c.memcachedCreds }
+func (c *Config) Environment() constants.Environment    { return c.environment }
+func (c *Config) LogLevel() string                      { return c.logLevel }
+func (c *Config) OTPExpiry() time.Duration              { return c.otpExpiry }
+func (c *Config) OTPLength() int                        { return c.otpLength }
+func (c *Config) EmailWorkerPoolSize() int              { return c.emailWorkerPoolSize }
+func (c *Config) EmailTaskQueueSize() int               { return c.emailTaskQueueSize }
+func (c *Config) SessionTTL() time.Duration             { return c.sessionTTL }
 func (c *Config) SessionCleanupInterval() time.Duration { return c.sessionCleanupInterval }
 
 var (
@@ -84,19 +100,23 @@ func load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		databaseURL:         getEnv("DATABASE_URL", ""),
-		dbMaxConnections:    getEnvInt("AUTH_DB_MAX_CONNECTIONS", 100),
-		grpcHost:            getEnv("GRPC_HOST", "0.0.0.0"),
-		grpcPort:            getEnv("GRPC_PORT", "50051"),
-		metricsPort:         getEnvInt("METRICS_PORT", 9090),
-		otlpEndpoint:        getEnv("OTLP_ENDPOINT", ""),
-		secretKey:           getEnv("SECRET_KEY", ""),
-		jwtSecret:           getEnv("JWT_SECRET", ""),
-		smtpHost:            getEnv("SMTP_HOST", "localhost"),
-		smtpPort:            getEnvInt("SMTP_PORT", 587),
-		smtpUser:            getEnv("SMTP_USER", ""),
-		smtpPassword:        getEnv("SMTP_PASSWORD", ""),
-		emailFrom:           getEnv("EMAIL_FROM", "noreply@example.com"),
+		databaseURL:      getEnv("DATABASE_URL", ""),
+		dbMaxConnections: getEnvInt("AUTH_DB_MAX_CONNECTIONS", 100),
+		grpcHost:         getEnv("GRPC_HOST", "0.0.0.0"),
+		grpcPort:         getEnv("GRPC_PORT", "50051"),
+		metricsPort:      getEnvInt("METRICS_PORT", 9090),
+		otlpEndpoint:     getEnv("OTLP_ENDPOINT", ""),
+		secretKey:        getEnv("SECRET_KEY", ""),
+		jwtSecret:        getEnv("JWT_SECRET", ""),
+		smtpHost:         getEnv("SMTP_HOST", "localhost"),
+		smtpPort:         getEnvInt("SMTP_PORT", 587),
+		smtpUser:         getEnv("SMTP_USER", ""),
+		smtpPassword:     getEnv("SMTP_PASSWORD", ""),
+		emailFrom:        getEnv("EMAIL_FROM", "noreply@example.com"),
+		memcachedCreds: &MemcachedCreds{
+			Host: getEnv("MEMCACHED_HOST", "memcached"),
+			Port: getEnv("MEMCACHED_PORT", "11211"),
+		},
 		environment:         env,
 		logLevel:            getEnv("LOG_LEVEL", "info"),
 		otpLength:           getEnvInt("OTP_LENGTH", 6),

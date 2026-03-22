@@ -8,9 +8,9 @@ services:
     environment:
       ENVIRONMENT: development
     ports:
-      - "7000:80"
-    # volumes:
-    #   - ./data/certs-local:/etc/nginx/certs:ro
+      - "7000:443"
+    volumes:
+      - ./data/certs-local:/etc/nginx/certs:ro
     depends_on:
       - backend
       - socket
@@ -102,7 +102,6 @@ services:
       OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
     ports:
       - "7030:4000"
-      - "9090:9090"
     depends_on:
       postgres:
         condition: service_healthy
@@ -227,12 +226,16 @@ services:
       OTP_LENGTH: ${OTP_LENGTH}
       EMAIL_WORKER_POOL_SIZE: ${EMAIL_WORKER_POOL_SIZE}
       EMAIL_TASK_QUEUE_SIZE: ${EMAIL_TASK_QUEUE_SIZE}
+      MEMCACHED_HOST: auth-cache
+      MEMCACHED_PORT: 11211
       OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
     # ports:
     #   - '7060:${GRPC_PORT:-50051}'
     depends_on:
       auth-db:
         condition: service_healthy
+      auth-cache:
+        condition: service_started
     networks:
       - messaging-network
     expose:
@@ -284,6 +287,13 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached
+    profiles: [app]
+    networks:
+      - messaging-network
+
+  auth-cache:
+    image: memcached:1.6.40-alpine
+    container_name: auth-cache
     profiles: [app]
     networks:
       - messaging-network
@@ -516,6 +526,16 @@ services:
     network_mode: "service:memcached"
     depends_on:
       - memcached
+
+  auth-cache-exporter:
+    image: prom/memcached-exporter:v0.15.0
+    container_name: auth-cache-exporter
+    profiles: [metrics]
+    command: ["--memcached.address=localhost:11211"]
+    # Sidecar: shares auth-cache network namespace; Prometheus scrapes auth-cache:9150
+    network_mode: "service:auth-cache"
+    depends_on:
+      - auth-cache
 
   prometheus:
     build:
