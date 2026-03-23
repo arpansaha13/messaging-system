@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: apps/nginx/Dockerfile
     container_name: nginx
-    profiles: [app]
+    profiles: [app, all]
     environment:
       ENVIRONMENT: development
     ports:
@@ -25,7 +25,7 @@ services:
   auth-db:
     image: postgres:16-alpine
     container_name: auth-db
-    profiles: [app]
+    profiles: [app, all]
     environment:
       POSTGRES_USER: ${AUTH_DB_USERNAME}
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
@@ -46,7 +46,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: postgres
-    profiles: [app]
+    profiles: [app, all]
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -69,7 +69,7 @@ services:
       context: .
       dockerfile: apps/backend/Dockerfile
     container_name: backend
-    profiles: [app]
+    profiles: [app, all]
     labels:
       service_name: "backend"
     logging:
@@ -129,7 +129,7 @@ services:
       context: .
       dockerfile: apps/socket/Dockerfile
     container_name: socket
-    profiles: [app]
+    profiles: [app, all]
     environment:
       ENVIRONMENT: development
       LOG_LEVEL: ${LOG_LEVEL}
@@ -167,7 +167,7 @@ services:
       context: .
       dockerfile: apps/rabbitmq/Dockerfile
     container_name: rabbitmq
-    profiles: [app]
+    profiles: [app, all]
     ports:
       - "7050:15672"
     environment:
@@ -198,7 +198,7 @@ services:
       context: .
       dockerfile: apps/auth/Dockerfile
     container_name: auth
-    profiles: [app]
+    profiles: [app, all]
     labels:
       service_name: "auth"
     logging:
@@ -256,7 +256,7 @@ services:
       context: .
       dockerfile: apps/frontend/Dockerfile.dev
     container_name: frontend
-    profiles: [app]
+    profiles: [app, all]
     environment:
       NUXT_ENVIRONMENT: development
       NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
@@ -287,14 +287,14 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached
-    profiles: [app]
+    profiles: [app, all]
     networks:
       - messaging-network
 
   auth-cache:
     image: memcached:1.6.40-alpine
     container_name: auth-cache
-    profiles: [app]
+    profiles: [app, all]
     networks:
       - messaging-network
 
@@ -303,7 +303,7 @@ services:
       context: .
       dockerfile: apps/chat-worker/Dockerfile
     container_name: chat-worker
-    profiles: [app]
+    profiles: [app, all]
     labels:
       service_name: "chat-worker"
     logging:
@@ -342,7 +342,7 @@ services:
   kafka:
     image: apache/kafka:3.9.2
     container_name: kafka
-    profiles: [logging]
+    profiles: [logging, all]
     # ports:
     #   - "7070:9092"
     environment:
@@ -373,7 +373,7 @@ services:
   init-kafka:
     image: apache/kafka:3.9.2
     container_name: init-kafka
-    profiles: [logging]
+    profiles: [logging, all]
     depends_on:
       - kafka
     entrypoint: ["/bin/sh", "-c"]
@@ -393,7 +393,7 @@ services:
       context: .
       dockerfile: apps/loki/Dockerfile
     container_name: loki
-    profiles: [logging]
+    profiles: [logging, all]
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
@@ -418,7 +418,7 @@ services:
       context: .
       dockerfile: apps/alloy/Dockerfile
     container_name: alloy
-    profiles: [logging]
+    profiles: [logging, all]
     depends_on:
       kafka:
         condition: service_healthy
@@ -440,7 +440,7 @@ services:
       context: .
       dockerfile: apps/grafana/Dockerfile
     container_name: grafana
-    profiles: [logging, metrics]
+    profiles: [logging, metrics, all]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_SECURITY_ADMIN_USER: admin
@@ -470,7 +470,7 @@ services:
       context: .
       dockerfile: apps/fluent-bit/Dockerfile
     container_name: fluent-bit
-    profiles: [logging]
+    profiles: [logging, all]
     volumes:
       - //var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:
@@ -496,7 +496,7 @@ services:
   postgres-exporter-auth:
     image: prometheuscommunity/postgres-exporter:v0.17.1
     container_name: postgres-exporter-auth
-    profiles: [metrics]
+    profiles: [metrics, all]
     environment:
       DATA_SOURCE_NAME: postgresql://${AUTH_DB_USERNAME}:${AUTH_DB_PASSWORD}@localhost:5432/${AUTH_DB_NAME}?sslmode=disable
     # Sidecar: shares auth-db network namespace; Prometheus scrapes auth-db:9187
@@ -508,7 +508,7 @@ services:
   postgres-exporter-messaging:
     image: prometheuscommunity/postgres-exporter:v0.17.1
     container_name: postgres-exporter-messaging
-    profiles: [metrics]
+    profiles: [metrics, all]
     environment:
       DATA_SOURCE_NAME: postgresql://${DB_USERNAME}:${DB_PASSWORD}@localhost:5432/${DB_NAME}?sslmode=disable
     # Sidecar: shares messaging postgres network namespace; Prometheus scrapes postgres:9187
@@ -520,7 +520,7 @@ services:
   memcached-exporter:
     image: prom/memcached-exporter:v0.15.0
     container_name: memcached-exporter
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["--memcached.address=localhost:11211"]
     # Sidecar: shares memcached network namespace; Prometheus scrapes memcached:9150
     network_mode: "service:memcached"
@@ -530,7 +530,7 @@ services:
   auth-cache-exporter:
     image: prom/memcached-exporter:v0.15.0
     container_name: auth-cache-exporter
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["--memcached.address=localhost:11211"]
     # Sidecar: shares auth-cache network namespace; Prometheus scrapes auth-cache:9150
     network_mode: "service:auth-cache"
@@ -542,7 +542,7 @@ services:
       context: .
       dockerfile: apps/prometheus/Dockerfile
     container_name: prometheus
-    profiles: [metrics]
+    profiles: [metrics, all]
     # ports:
     #   - "7100:9090"
     depends_on:
@@ -562,7 +562,7 @@ services:
   tempo:
     image: grafana/tempo:2.7.2
     container_name: tempo
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
       - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro

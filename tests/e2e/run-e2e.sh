@@ -24,7 +24,7 @@ UI_MODE=false
 SPEC_FILE=""
 
 # Path to goauthkit migrations — edit if goauthkit lives elsewhere
-GOAUTHKIT_MIGRATIONS_DIR="../../../../7. Libraries/goauthkit/migrations"
+GOAUTHKIT_MIGRATIONS_DIR="../../../goauthkit/migrations"
 
 AUTH_DB_URL="postgres://testuser:testpass@localhost:7511/auth_e2e_db?sslmode=disable"
 MESSAGING_DB_URL="postgres://testuser:testpass@localhost:7521/messaging_e2e_db?sslmode=disable"

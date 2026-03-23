@@ -6,7 +6,7 @@ const USERS = [TEST_USERS.alice, TEST_USERS.bob]
 const EMAILS = USERS.map(user => user.email)
 const AUTH_DB_URL = 'postgres://testuser:testpass@localhost:7511/auth_load_db?sslmode=disable'
 const MESSAGING_DB_URL = 'postgres://testuser:testpass@localhost:7521/messaging_load_db?sslmode=disable'
-const GOAUTHKIT_MIGRATIONS_DIR = process.env.GOAUTHKIT_MIGRATIONS_DIR || '../../../../7. Libraries/goauthkit/migrations'
+const GOAUTHKIT_MIGRATIONS_DIR = process.env.GOAUTHKIT_MIGRATIONS_DIR || '../../../goauthkit/migrations'
 const MESSAGING_MIGRATIONS_DIR = '../../apps/backend/migrations'
 
 function run(cmd, args) {

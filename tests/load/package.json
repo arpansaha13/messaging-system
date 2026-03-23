@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "pnpm run setup && pnpm run spec:personal && pnpm run spec:group",
-    "setup": "pnpm -w build && docker compose --env-file .env.test -f ../../compose.test.yaml --profile load up -d --remove-orphans",
+    "setup": "pnpm -w build && docker compose --env-file .env.test -f ../../compose.test.yaml --profile all up -d --remove-orphans",
     "spec:personal": "node specs/personal/run.js",
     "spec:group": "node specs/group/run.js"
   },

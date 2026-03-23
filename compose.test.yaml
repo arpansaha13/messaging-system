@@ -27,6 +27,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     ports:
       - "7500:80"
     volumes:
@@ -58,6 +59,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
@@ -88,6 +90,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     environment:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
@@ -121,6 +124,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     ports:
       - "7551:15672"
     environment:
@@ -156,6 +160,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     networks:
       - messaging-test-network
     deploy:
@@ -172,6 +177,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     networks:
       - messaging-test-network
     deploy:
@@ -190,6 +196,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     labels:
       service_name: "auth"
     logging:
@@ -247,6 +254,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     labels:
       service_name: "backend"
     logging:
@@ -308,6 +316,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     environment:
       ENVIRONMENT: test
       LOG_LEVEL: ${LOG_LEVEL}
@@ -345,6 +354,7 @@ services:
     profiles:
       - e2e
       - load
+      - all
     labels:
       service_name: "chat-worker"
     logging:
@@ -384,6 +394,7 @@ services:
     container_name: frontend_test
     profiles:
       - e2e
+      - all
     environment:
       ENVIRONMENT: test
       NUXT_AUTH_COOKIE_NAME: session
@@ -408,7 +419,7 @@ services:
   postgres-exporter-auth:
     image: prometheuscommunity/postgres-exporter:v0.17.1
     container_name: postgres-exporter-auth_test
-    profiles: [metrics]
+    profiles: [metrics, all]
     environment:
       DATA_SOURCE_NAME: postgresql://testuser:testpass@localhost:5432/${AUTH_DB_NAME}?sslmode=disable
     network_mode: "service:auth-db"
@@ -419,7 +430,7 @@ services:
   postgres-exporter-messaging:
     image: prometheuscommunity/postgres-exporter:v0.17.1
     container_name: postgres-exporter-messaging_test
-    profiles: [metrics]
+    profiles: [metrics, all]
     environment:
       DATA_SOURCE_NAME: postgresql://testuser:testpass@localhost:5432/${DB_NAME}?sslmode=disable
     network_mode: "service:postgres"
@@ -430,7 +441,7 @@ services:
   memcached-exporter:
     image: prom/memcached-exporter:v0.15.0
     container_name: memcached-exporter_test
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["--memcached.address=localhost:11211"]
     network_mode: "service:memcached"
     depends_on:
@@ -439,7 +450,7 @@ services:
   auth-cache-exporter:
     image: prom/memcached-exporter:v0.15.0
     container_name: auth-cache-exporter_test
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["--memcached.address=localhost:11211"]
     network_mode: "service:auth-cache"
     depends_on:
@@ -448,7 +459,7 @@ services:
   prometheus:
     image: prom/prometheus:v3.4.2
     container_name: prometheus_test
-    profiles: [metrics]
+    profiles: [metrics, all]
     volumes:
       - ./apps/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     # ports:
@@ -466,7 +477,7 @@ services:
   tempo:
     image: grafana/tempo:2.7.2
     container_name: tempo_test
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
       - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
@@ -485,7 +496,7 @@ services:
   grafana:
     image: grafana/grafana-oss:12.3.3
     container_name: grafana_test
-    profiles: [logging, metrics]
+    profiles: [logging, metrics, all]
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
@@ -513,7 +524,7 @@ services:
   kafka:
     image: apache/kafka:3.9.2
     container_name: kafka_test
-    profiles: [logging]
+    profiles: [logging, all]
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -547,7 +558,7 @@ services:
   init-kafka:
     image: apache/kafka:3.9.2
     container_name: init-kafka_test
-    profiles: [logging]
+    profiles: [logging, all]
     depends_on:
       - kafka
     entrypoint: ["/bin/sh", "-c"]
@@ -565,7 +576,7 @@ services:
   loki:
     image: europe-north1-docker.pkg.dev/chat-application-13/loki/server:0.1.0
     container_name: loki_test
-    profiles: [logging]
+    profiles: [logging, all]
     volumes:
       - ./data/test/loki:/tmp/loki
     healthcheck:
@@ -585,7 +596,7 @@ services:
   alloy:
     image: europe-north1-docker.pkg.dev/chat-application-13/alloy/server:0.1.0
     container_name: alloy_test
-    profiles: [logging]
+    profiles: [logging, all]
     depends_on:
       kafka:
         condition: service_healthy
@@ -604,7 +615,7 @@ services:
   fluent-bit:
     image: europe-north1-docker.pkg.dev/chat-application-13/fluent-bit/server:0.1.0
     container_name: fluent-bit_test
-    profiles: [logging]
+    profiles: [logging, all]
     volumes:
       - //var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:

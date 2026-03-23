@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: apps/nginx/Dockerfile
     container_name: nginx_prod
+    profiles: [all]
     environment:
       ENVIRONMENT: development
     ports:
@@ -20,6 +21,7 @@ services:
   auth-db:
     image: postgres:16-alpine
     container_name: auth-db_prod
+    profiles: [all]
     environment:
       POSTGRES_USER: ${AUTH_DB_USERNAME}
       POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
@@ -40,6 +42,7 @@ services:
   auth:
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
     container_name: auth_prod
+    profiles: [all]
     labels:
       service_name: "auth"
     logging:
@@ -79,6 +82,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: postgres_prod
+    profiles: [all]
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -99,6 +103,7 @@ services:
   backend:
     image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
     container_name: backend_prod
+    profiles: [all]
     labels:
       service_name: "backend"
     logging:
@@ -142,6 +147,7 @@ services:
   socket:
     image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
     container_name: socket_prod
+    profiles: [all]
     environment:
       ENVIRONMENT: production
       LOG_LEVEL: ${LOG_LEVEL}
@@ -165,6 +171,7 @@ services:
   frontend:
     image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
     container_name: frontend_prod
+    profiles: [all]
     environment:
       ENVIRONMENT: production
       NUXT_AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
@@ -180,19 +187,21 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached_prod
+    profiles: [all]
     networks:
       - messaging-network
 
   auth-cache:
     image: memcached:1.6.40-alpine
     container_name: auth-cache_prod
+    profiles: [all]
     networks:
       - messaging-network
 
   auth-cache-exporter:
     image: prom/memcached-exporter:v0.15.0
     container_name: auth-cache-exporter_prod
-    profiles: [metrics]
+    profiles: [metrics, all]
     command: ["--memcached.address=localhost:11211"]
     network_mode: "service:auth-cache"
     depends_on:
@@ -201,6 +210,7 @@ services:
   rabbitmq:
     image: europe-north1-docker.pkg.dev/chat-application-13/rabbitmq/broker:0.1.0
     container_name: rabbitmq_prod
+    profiles: [all]
     ports:
       - "15672:15672"
     environment:
@@ -223,6 +233,7 @@ services:
   chat-worker:
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
     container_name: chat_worker_go_prod
+    profiles: [all]
     labels:
       service_name: "chat-worker"
     logging:
@@ -251,6 +262,7 @@ services:
   kafka:
     image: apache/kafka:3.9.2
     container_name: kafka_prod
+    profiles: [all]
     # ports:
     #   - "7070:9092"
     environment:
@@ -281,6 +293,7 @@ services:
   init-kafka:
     image: apache/kafka:3.9.2
     container_name: init-kafka_prod
+    profiles: [all]
     depends_on:
       - kafka
     entrypoint: ["/bin/sh", "-c"]
@@ -300,6 +313,7 @@ services:
       context: .
       dockerfile: apps/loki/Dockerfile
     container_name: loki_prod
+    profiles: [all]
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
@@ -317,6 +331,7 @@ services:
       context: .
       dockerfile: apps/alloy/Dockerfile
     container_name: alloy_prod
+    profiles: [all]
     depends_on:
       - kafka
       - loki
@@ -328,6 +343,7 @@ services:
       context: .
       dockerfile: apps/grafana/Dockerfile
     container_name: grafana_prod
+    profiles: [all]
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
@@ -353,6 +369,7 @@ services:
       context: .
       dockerfile: apps/fluent-bit/Dockerfile
     container_name: fluent-bit_prod
+    profiles: [all]
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
     depends_on:

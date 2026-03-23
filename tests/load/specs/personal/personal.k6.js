@@ -6,14 +6,13 @@ import { TEST_USERS } from '../../fixtures/users.js'
 const BASE_URL = 'http://localhost:7500'
 
 export const options = {
-  // Stress ramp: 10 -> 100 VUs in 10m, then hold 2m.
   scenarios: {
     default: {
       executor: 'ramping-vus',
-      startVUs: 10,
+      startVUs: 20,
       stages: [
-        { duration: '10m', target: 350 },
-        { duration: '2m', target: 350 },
+        { duration: '10m', target: 1500 },
+        { duration: '2m', target: 1500 },
       ],
       gracefulRampDown: '30s',
       gracefulStop: '30s',
@@ -22,21 +21,15 @@ export const options = {
   thresholds: {
     // Guardrails for error rate and latency.
     http_req_failed: ['rate<0.01'],
-    http_req_duration: [
-      'p(90)<800',
-      'p(95)<1000',
-      'p(99)<1500',
-    ],
+    http_req_duration: ['p(90)<800', 'p(95)<1000', 'p(99)<1500'],
   },
 }
 
 function login(email, password) {
   // Authenticate and capture the session cookie token.
-  const res = http.post(
-    `${BASE_URL}/api/auth/login`,
-    JSON.stringify({ email, password }),
-    { headers: { 'Content-Type': 'application/json' } },
-  )
+  const res = http.post(`${BASE_URL}/api/auth/login`, JSON.stringify({ email, password }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
 
   if (res.status !== 200) {
     fail(`Login failed for ${email} (status ${res.status}). Ensure test users are seeded.`)
@@ -70,16 +63,12 @@ function getMe(sessionToken) {
 
 function ensureContact(sessionToken, userIdToAdd, alias) {
   // Ensure the users are in each other's contact list (idempotent).
-  const res = http.post(
-    `${BASE_URL}/api/contacts`,
-    JSON.stringify({ userIdToAdd, alias }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `session=${sessionToken}`,
-      },
+  const res = http.post(`${BASE_URL}/api/contacts`, JSON.stringify({ userIdToAdd, alias }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `session=${sessionToken}`,
     },
-  )
+  })
 
   if (res.status !== 201 && res.status !== 409) {
     // Allow already-exists conflicts, warn on anything else.
@@ -122,7 +111,7 @@ export default function personalFlow(data) {
     {
       headers: {
         'Content-Type': 'application/json',
-        Cookie: `session=${sender.token}`,
+        'Cookie': `session=${sender.token}`,
       },
       tags: { flow: 'personal', action: 'send' },
     },

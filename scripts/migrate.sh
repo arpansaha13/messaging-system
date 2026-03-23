@@ -28,7 +28,7 @@ if [ -f ".env" ]; then
 fi
 
 # Use DATABASE_URL from environment or default
-DB_URL="${DATABASE_URL:-postgres://user:password@localhost:5432/messaging}"
+DB_URL="${DATABASE_URL:-postgres://user:password@localhost:7020/messaging}"
 
 case "$COMMAND" in
     up)
