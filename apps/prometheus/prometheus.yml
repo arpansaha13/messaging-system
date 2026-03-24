@@ -2,6 +2,8 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+# Exemplars are experimental and need to be enabled via `--enable-feature=exemplar-storage`
+# https://prometheus.io/docs/prometheus/latest/configuration/configuration/#exemplars
 # storage:
 #   exemplars:
 #     max-exemplars: 100000
@@ -40,3 +42,8 @@ scrape_configs:
   - job_name: memcached
     static_configs:
       - targets: ['memcached:9150']
+
+  # auth-cache memcached_exporter sidecar — dashboard 11527
+  - job_name: auth-cache
+    static_configs:
+      - targets: ['auth-cache:9150']

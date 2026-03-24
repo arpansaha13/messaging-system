@@ -1,7 +1,8 @@
 // Kafka receiver for consuming application logs
 loki.source.kafka "application_logs" {
   brokers    = ["kafka:9092"]
-  topics     = ["application-logs"]// Forward consumed log entries to the Loki write component
+  topics     = ["application-logs"]
+  // Forward consumed log entries to the Loki write component
   forward_to = [loki.process.json_parse.receiver]
   group_id   = "alloy-consumer-group"
   labels = {
@@ -13,12 +14,22 @@ loki.source.kafka "application_logs" {
 loki.process "json_parse" {
   forward_to = [loki.write.default.receiver]
 
+  // Parse JSON log line and extract fields for downstream stages.
+  stage.json {
+    expressions = {
+      level        = "level",
+      service_name = "service_name",
+      trace_id     = "trace_id",
+    }
+  }
+
   // Extract fields as labels for querying
   stage.labels {
     values = {
-      level = "level",
-      method = "method",
+      level        = "level",
+      method       = "method",
       service_name = "service_name",
+      trace_id     = "trace_id",
     }
   }
 }
@@ -27,10 +38,5 @@ loki.process "json_parse" {
 loki.write "default" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
-  }
-
-  external_labels = {
-    environment = "development",
-    cluster = "default",
   }
 }

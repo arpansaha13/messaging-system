@@ -471,6 +471,7 @@ services:
       - postgres-exporter-auth
       - postgres-exporter-messaging
       - memcached-exporter
+      - auth-cache-exporter
     networks:
       - messaging-test-network
 
