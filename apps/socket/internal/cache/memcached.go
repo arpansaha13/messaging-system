@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/bradfitz/gomemcache/memcache"
+
+	"github.com/arpansaha13/gotoolkit"
 )
 
 // MemcachedService manages user online-status keys in Memcached.
@@ -16,32 +18,25 @@ import (
 // protocol, while gomemcache uses the text protocol. Both read and write the
 // same byte values on the server, so there is no data incompatibility.
 type MemcachedService struct {
-	client *memcache.Client
-	mu     sync.RWMutex
+	*gotoolkit.MemcachedClient
 }
 
 // NewMemcachedService creates an unconnected MemcachedService.
 // Call SetClient after a successful connection is established.
 func NewMemcachedService() *MemcachedService {
-	return &MemcachedService{}
+	return &MemcachedService{
+		MemcachedClient: gotoolkit.NewMemcachedClient(),
+	}
 }
 
-func (m *MemcachedService) SetClient(client *memcache.Client) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.client = client
-}
-
+// UnsetClient sets the client to nil (for graceful disconnect handling).
 func (m *MemcachedService) UnsetClient() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.client = nil
+	m.MemcachedClient.SetClient(nil)
 }
 
+// getClient safely retrieves the current memcached client.
 func (m *MemcachedService) getClient() *memcache.Client {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.client
+	return m.GetClient()
 }
 
 // SetOnline marks userId as online with the given TTL in seconds.

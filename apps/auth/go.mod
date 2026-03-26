@@ -3,10 +3,9 @@ module github.com/arpansaha13/messaging-system/apps/auth
 go 1.25.6
 
 require (
-	github.com/arpansaha13/goauthkit v0.3.1
-	github.com/arpansaha13/gotoolkit v0.9.1
+	github.com/arpansaha13/goauthkit v0.3.3
+	github.com/arpansaha13/gotoolkit v0.10.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
-	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/prometheus/client_golang v1.23.2
 	github.com/sony/gobreaker/v2 v2.4.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0
@@ -24,6 +23,7 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/ebitengine/purego v0.9.1 // indirect

@@ -18,7 +18,7 @@ import (
 // SetupGRPCServer wires repositories, email provider, auth service, and gRPC interceptors.
 // Creates sessionCache from memcachedClient if available.
 // Returns the server (for Serve/GracefulStop) and the email pool (for Stop on shutdown).
-func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *MemcachedClient) (*grpc.Server, *goauthkit.EmailWorkerPool) {
+func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *gotoolkit.MemcachedClient) (*grpc.Server, *goauthkit.EmailWorkerPool) {
 	cfg, _ := config.Load()
 
 	userRepo := goauthkit.NewUserRepository(db, cbs.Postgres)
@@ -50,7 +50,7 @@ func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits,
 	// Create sessionCache from memcachedClient if available
 	var sessionCache goauthkit.ISessionCache
 	if memcachedClient != nil && cbs.Cache != nil {
-		sessionCache = goauthkit.NewSessionCache(memcachedClient.client, cbs.Cache)
+		sessionCache = goauthkit.NewSessionCache(memcachedClient, cbs.Cache)
 	}
 
 	authService := goauthkit.NewAuthService(
