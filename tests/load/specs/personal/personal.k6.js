@@ -76,6 +76,45 @@ function ensureContact(sessionToken, userIdToAdd, alias) {
   }
 }
 
+function safeJson(res) {
+  try {
+    return res.json()
+  } catch (error) {
+    return null
+  }
+}
+
+function extractMessageIds(res) {
+  const body = safeJson(res)
+  if (!body || !Array.isArray(body.messages)) {
+    return []
+  }
+
+  return body.messages
+    .map(message => message?.id)
+    .filter(messageId => Number.isFinite(messageId))
+}
+
+function getMinMaxIds(ids) {
+  if (!ids.length) {
+    return { minId: null, maxId: null }
+  }
+
+  let minId = ids[0]
+  let maxId = ids[0]
+
+  for (const id of ids) {
+    if (id < minId) {
+      minId = id
+    }
+    if (id > maxId) {
+      maxId = id
+    }
+  }
+
+  return { minId, maxId }
+}
+
 export function setup() {
   // Seed auth context and ensure a contact relationship.
   const aliceToken = login(TEST_USERS.alice.email, TEST_USERS.alice.password)
@@ -121,6 +160,9 @@ export default function personalFlow(data) {
     'personal send status 201': r => r.status === 201,
   })
 
+  const sendBody = safeJson(sendRes)
+  const sentMessageId = Number.isFinite(sendBody?.id) ? sendBody.id : null
+
   // List the message history for the receiver.
   const listRes = http.get(`${BASE_URL}/api/messages/${receiver.id}`, {
     headers: { Cookie: `session=${sender.token}` },
@@ -130,6 +172,70 @@ export default function personalFlow(data) {
   check(listRes, {
     'personal list status 200': r => r.status === 200,
   })
+
+  const messageIds = extractMessageIds(listRes)
+  const { minId, maxId } = getMinMaxIds(messageIds)
+  const statusMessageId = sentMessageId ?? (messageIds.length ? messageIds[0] : null)
+
+  if (statusMessageId) {
+    const deliveredRes = http.post(
+      `${BASE_URL}/api/messages/status/delivered`,
+      JSON.stringify({ messageId: statusMessageId }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': `session=${receiver.token}`,
+        },
+        tags: { flow: 'personal', action: 'status_delivered' },
+      },
+    )
+
+    check(deliveredRes, {
+      'personal delivered status 200': r => r.status === 200,
+    })
+
+    const readRes = http.post(
+      `${BASE_URL}/api/messages/status/read`,
+      JSON.stringify({ messages: [{ messageId: statusMessageId }] }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': `session=${receiver.token}`,
+        },
+        tags: { flow: 'personal', action: 'status_read' },
+      },
+    )
+
+    check(readRes, {
+      'personal read status 200': r => r.status === 200,
+    })
+  }
+
+  if (minId !== null && maxId !== null) {
+    const beforeRes = http.get(
+      `${BASE_URL}/api/messages/${receiver.id}?before=${minId}`,
+      {
+        headers: { Cookie: `session=${sender.token}` },
+        tags: { flow: 'personal', action: 'list_before' },
+      },
+    )
+
+    check(beforeRes, {
+      'personal list before status 200': r => r.status === 200,
+    })
+
+    const afterRes = http.get(
+      `${BASE_URL}/api/messages/${receiver.id}?after=${maxId}`,
+      {
+        headers: { Cookie: `session=${sender.token}` },
+        tags: { flow: 'personal', action: 'list_after' },
+      },
+    )
+
+    check(afterRes, {
+      'personal list after status 200': r => r.status === 200,
+    })
+  }
 
   // Short think time to avoid unrealistically tight loops.
   sleep(1)

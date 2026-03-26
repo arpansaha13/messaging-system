@@ -161,6 +161,7 @@ services:
       - e2e
       - load
       - all
+    # command: ["-vv"]
     networks:
       - messaging-test-network
     deploy:
@@ -178,6 +179,7 @@ services:
       - e2e
       - load
       - all
+    # command: ["-vv"]
     networks:
       - messaging-test-network
     deploy:
@@ -399,7 +401,7 @@ services:
       ENVIRONMENT: test
       NUXT_AUTH_COOKIE_NAME: session
       NUXT_CSRF_COOKIE_NAME: ""
-      NUXT_API_BASE_URL: ${NUXT_API_BASE_URL}
+      NUXT_API_BASE_URL: "http://backend:4000"
       NUXT_PUBLIC_AUTH_COOKIE_NAME: session
       NUXT_PUBLIC_CSRF_COOKIE_NAME: ""
     depends_on:

@@ -12,8 +12,8 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 10,
       stages: [
-        { duration: '10m', target: 100 },
-        { duration: '2m', target: 100 },
+        { duration: '10m', target: 800 },
+        { duration: '2m', target: 800 },
       ],
       gracefulRampDown: '30s',
       gracefulStop: '30s',
@@ -22,21 +22,15 @@ export const options = {
   thresholds: {
     // Guardrails for error rate and latency.
     http_req_failed: ['rate<0.01'],
-    http_req_duration: [
-      'p(90)<800',
-      'p(95)<1000',
-      'p(99)<1500',
-    ],
+    http_req_duration: ['p(90)<800', 'p(95)<1000', 'p(99)<1500'],
   },
 }
 
 function login(email, password) {
   // Authenticate and capture the session cookie token.
-  const res = http.post(
-    `${BASE_URL}/api/auth/login`,
-    JSON.stringify({ email, password }),
-    { headers: { 'Content-Type': 'application/json' } },
-  )
+  const res = http.post(`${BASE_URL}/api/auth/login`, JSON.stringify({ email, password }), {
+    headers: { 'Content-Type': 'application/json' },
+  })
 
   if (res.status !== 200) {
     fail(`Login failed for ${email} (status ${res.status}). Ensure test users are seeded.`)
@@ -57,16 +51,12 @@ function login(email, password) {
 
 function createGroup(sessionToken, name) {
   // Create a group for the test run.
-  const res = http.post(
-    `${BASE_URL}/api/groups`,
-    JSON.stringify({ name }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `session=${sessionToken}`,
-      },
+  const res = http.post(`${BASE_URL}/api/groups`, JSON.stringify({ name }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `session=${sessionToken}`,
     },
-  )
+  })
 
   if (res.status !== 201) {
     fail(`Create group failed (status ${res.status}).`)
@@ -77,22 +67,55 @@ function createGroup(sessionToken, name) {
 
 function createChannel(sessionToken, groupId, name) {
   // Create a channel under the group.
-  const res = http.post(
-    `${BASE_URL}/api/groups/${groupId}/channels`,
-    JSON.stringify({ name }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: `session=${sessionToken}`,
-      },
+  const res = http.post(`${BASE_URL}/api/groups/${groupId}/channels`, JSON.stringify({ name }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cookie': `session=${sessionToken}`,
     },
-  )
+  })
 
   if (res.status !== 201) {
     fail(`Create channel failed (status ${res.status}).`)
   }
 
   return res.json()
+}
+
+function safeJson(res) {
+  try {
+    return res.json()
+  } catch (error) {
+    return null
+  }
+}
+
+function extractMessageIds(res) {
+  const body = safeJson(res)
+  if (!body || !Array.isArray(body.messages)) {
+    return []
+  }
+
+  return body.messages.map(message => message?.id).filter(messageId => Number.isFinite(messageId))
+}
+
+function getMinMaxIds(ids) {
+  if (!ids.length) {
+    return { minId: null, maxId: null }
+  }
+
+  let minId = ids[0]
+  let maxId = ids[0]
+
+  for (const id of ids) {
+    if (id < minId) {
+      minId = id
+    }
+    if (id > maxId) {
+      maxId = id
+    }
+  }
+
+  return { minId, maxId }
 }
 
 export function setup() {
@@ -123,7 +146,7 @@ export default function groupFlow(data) {
     {
       headers: {
         'Content-Type': 'application/json',
-        Cookie: `session=${data.alice.token}`,
+        'Cookie': `session=${data.alice.token}`,
       },
       tags: { flow: 'group', action: 'send' },
     },
@@ -142,6 +165,29 @@ export default function groupFlow(data) {
   check(listRes, {
     'group list status 200': r => r.status === 200,
   })
+
+  const messageIds = extractMessageIds(listRes)
+  const { minId, maxId } = getMinMaxIds(messageIds)
+
+  if (minId !== null && maxId !== null) {
+    const beforeRes = http.get(`${BASE_URL}/api/channels/${data.channelId}/messages?before=${minId}`, {
+      headers: { Cookie: `session=${data.alice.token}` },
+      tags: { flow: 'group', action: 'list_before' },
+    })
+
+    check(beforeRes, {
+      'group list before status 200': r => r.status === 200,
+    })
+
+    const afterRes = http.get(`${BASE_URL}/api/channels/${data.channelId}/messages?after=${maxId}`, {
+      headers: { Cookie: `session=${data.alice.token}` },
+      tags: { flow: 'group', action: 'list_after' },
+    })
+
+    check(afterRes, {
+      'group list after status 200': r => r.status === 200,
+    })
+  }
 
   // Short think time to avoid unrealistically tight loops.
   sleep(1)
