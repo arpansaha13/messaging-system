@@ -6,6 +6,8 @@ import (
 	"strconv"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/gotoolkit/logger"
@@ -33,7 +35,13 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			resp, err := authClient.ValidateSession(r.Context(), token)
 			if err != nil {
 				lgr.Error("failed to validate session with auth service", zap.Error(err))
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				// Check gRPC status code to distinguish between auth and infrastructure failures
+				st, ok := status.FromError(err)
+				if ok && st.Code() == codes.Unauthenticated {
+					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				} else {
+					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
+				}
 				return
 			}
 
@@ -46,7 +54,13 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			userResp, err := authClient.GetUser(r.Context(), resp.UserId, token)
 			if err != nil {
 				lgr.Error("failed to fetch user details from auth service", zap.Error(err))
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "failed to fetch user details"})
+				// Check gRPC status code to distinguish between auth and infrastructure failures
+				st, ok := status.FromError(err)
+				if ok && st.Code() == codes.Unauthenticated {
+					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				} else {
+					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
+				}
 				return
 			}
 

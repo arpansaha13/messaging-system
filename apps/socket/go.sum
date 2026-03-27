@@ -1,5 +1,5 @@
-github.com/arpansaha13/gotoolkit v0.10.0 h1:lpB0PVBq2jSkn+W51qoJLo87PEahmKkBJREuISxlgjc=
-github.com/arpansaha13/gotoolkit v0.10.0/go.mod h1:7eB0MXY5cApaD2/VZxdj4zG++ZxCqJR1vkE22Ss4L6I=
+github.com/arpansaha13/gotoolkit v0.11.0 h1:8ABYP5SEuO1dX3RLdIKefvBaiSpwCqsoS3Qng58EVjY=
+github.com/arpansaha13/gotoolkit v0.11.0/go.mod h1:7eB0MXY5cApaD2/VZxdj4zG++ZxCqJR1vkE22Ss4L6I=
 github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf h1:TqhNAT4zKbTdLa62d2HDBFdvgSbIGB3eJE8HqhgiL9I=
 github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf/go.mod h1:r5xuitiExdLAJ09PR7vBVENGvp4ZuTBeWTGtxuX3K+c=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
