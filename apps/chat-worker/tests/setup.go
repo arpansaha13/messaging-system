@@ -67,7 +67,7 @@ func (s *BaseTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	// Set DATABASE_URL with actual container host/port
-	databaseURL := fmt.Sprintf("host=%s port=%d user=test password=test dbname=messaging_test sslmode=disable",
+	databaseURL := fmt.Sprintf("host=%s port=%s user=test password=test dbname=messaging_test sslmode=disable",
 		host, port.Port())
 	os.Setenv("DATABASE_URL", databaseURL)
 

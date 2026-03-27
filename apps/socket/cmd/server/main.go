@@ -44,7 +44,7 @@ func main() {
 	// Initialize circuit breakers
 	cbs := circuits.New(log)
 
-	authService, err := app.SetupAuthService(cfg.AuthSystemHost, cbs)
+	authService, authConnMgr, err := app.SetupAuthService(rootCtx, cfg.AuthSystemHost, log, cbs)
 	if err != nil {
 		log.Fatal("failed to connect to auth service", zap.Error(err))
 	}
@@ -134,8 +134,8 @@ func main() {
 		log.Error("error stopping rabbitmq connection manager", zap.Error(err))
 	}
 
-	if err := authService.Close(); err != nil {
-		log.Error("error closing auth service connection", zap.Error(err))
+	if err := authConnMgr.Stop(); err != nil {
+		log.Error("error stopping auth connection manager", zap.Error(err))
 	}
 
 	log.Info("server stopped")

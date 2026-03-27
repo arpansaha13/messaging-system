@@ -54,6 +54,10 @@ service AuthService {
     // DeleteUser deletes a user and all associated data.
     // This is used when users close their accounts.
     rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+    // LiveZ is a liveness probe — returns immediately with no side effects.
+    // Used by health checks to confirm the gRPC server process is alive.
+    rpc LiveZ(LiveZRequest) returns (LiveZResponse);
 }
 
 // SignupRequest contains email and password for user registration.
@@ -182,3 +186,9 @@ message DeleteUserRequest {
 message DeleteUserResponse {
     string message = 1; // Confirmation message ("user deleted successfully")
 }
+
+// LiveZRequest is empty; no input needed for a liveness probe.
+message LiveZRequest {}
+
+// LiveZResponse is empty; a successful response indicates the server is alive.
+message LiveZResponse {}

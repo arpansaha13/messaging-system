@@ -2,10 +2,13 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
@@ -28,7 +31,11 @@ func SetupMemcached(
 		},
 		log,
 		func(connectCtx context.Context) error {
-			client, err := gotoolkit.ConnectMemcachedWithBackoff(connectCtx, creds.GetUrl())
+			client, err := gotoolkit.ConnectMemcachedWithBackoff(
+				connectCtx,
+				creds.GetUrl(),
+				gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+			)
 			if err != nil {
 				return fmt.Errorf("failed to connect to memcached: %w", err)
 			}
@@ -45,6 +52,28 @@ func SetupMemcached(
 	if err := memcachedConnMgr.Start(ctx); err != nil {
 		return nil, nil, fmt.Errorf("failed to start memcached connection manager: %w", err)
 	}
+
+	go func() {
+		ticker := time.NewTicker(15 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				client := memcachedService.GetClient()
+				if client == nil {
+					memcachedConnMgr.Signal()
+					continue
+				}
+				if _, err := client.Get("__health_probe__"); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
+					log.Warn("memcached heartbeat failed, triggering reconnect", zap.Error(err))
+					memcachedConnMgr.Signal()
+				}
+			}
+		}
+	}()
 
 	return memcachedService, memcachedConnMgr, nil
 }

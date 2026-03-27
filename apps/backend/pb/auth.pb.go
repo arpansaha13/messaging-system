@@ -1156,6 +1156,80 @@ func (x *DeleteUserResponse) GetMessage() string {
 	return ""
 }
 
+// LiveZRequest is empty; no input needed for a liveness probe.
+type LiveZRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LiveZRequest) Reset() {
+	*x = LiveZRequest{}
+	mi := &file_auth_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LiveZRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LiveZRequest) ProtoMessage() {}
+
+func (x *LiveZRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LiveZRequest.ProtoReflect.Descriptor instead.
+func (*LiveZRequest) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{23}
+}
+
+// LiveZResponse is empty; a successful response indicates the server is alive.
+type LiveZResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LiveZResponse) Reset() {
+	*x = LiveZResponse{}
+	mi := &file_auth_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LiveZResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LiveZResponse) ProtoMessage() {}
+
+func (x *LiveZResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LiveZResponse.ProtoReflect.Descriptor instead.
+func (*LiveZResponse) Descriptor() ([]byte, []int) {
+	return file_auth_proto_rawDescGZIP(), []int{24}
+}
+
 var File_auth_proto protoreflect.FileDescriptor
 
 const file_auth_proto_rawDesc = "" +
@@ -1221,7 +1295,9 @@ const file_auth_proto_rawDesc = "" +
 	"\x11DeleteUserRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\".\n" +
 	"\x12DeleteUserResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xf7\x05\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\"\x0e\n" +
+	"\fLiveZRequest\"\x0f\n" +
+	"\rLiveZResponse2\xab\x06\n" +
 	"\vAuthService\x125\n" +
 	"\x06Signup\x12\x14.proto.SignupRequest\x1a\x15.proto.SignupResponse\x12>\n" +
 	"\tVerifyOTP\x12\x17.proto.VerifyOTPRequest\x1a\x18.proto.VerifyOTPResponse\x122\n" +
@@ -1234,7 +1310,8 @@ const file_auth_proto_rawDesc = "" +
 	"\aGetUser\x12\x15.proto.GetUserRequest\x1a\x16.proto.GetUserResponse\x12M\n" +
 	"\x0eGetUserByEmail\x12\x1c.proto.GetUserByEmailRequest\x1a\x1d.proto.GetUserByEmailResponse\x12A\n" +
 	"\n" +
-	"DeleteUser\x12\x18.proto.DeleteUserRequest\x1a\x19.proto.DeleteUserResponseB\x06Z\x04./pbb\x06proto3"
+	"DeleteUser\x12\x18.proto.DeleteUserRequest\x1a\x19.proto.DeleteUserResponse\x122\n" +
+	"\x05LiveZ\x12\x13.proto.LiveZRequest\x1a\x14.proto.LiveZResponseB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_auth_proto_rawDescOnce sync.Once
@@ -1248,7 +1325,7 @@ func file_auth_proto_rawDescGZIP() []byte {
 	return file_auth_proto_rawDescData
 }
 
-var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_auth_proto_goTypes = []any{
 	(*SignupRequest)(nil),           // 0: proto.SignupRequest
 	(*SignupResponse)(nil),          // 1: proto.SignupResponse
@@ -1273,11 +1350,13 @@ var file_auth_proto_goTypes = []any{
 	(*GetUserByEmailResponse)(nil),  // 20: proto.GetUserByEmailResponse
 	(*DeleteUserRequest)(nil),       // 21: proto.DeleteUserRequest
 	(*DeleteUserResponse)(nil),      // 22: proto.DeleteUserResponse
-	(*timestamppb.Timestamp)(nil),   // 23: google.protobuf.Timestamp
+	(*LiveZRequest)(nil),            // 23: proto.LiveZRequest
+	(*LiveZResponse)(nil),           // 24: proto.LiveZResponse
+	(*timestamppb.Timestamp)(nil),   // 25: google.protobuf.Timestamp
 }
 var file_auth_proto_depIdxs = []int32{
-	23, // 0: proto.LoginResponse.expires_at:type_name -> google.protobuf.Timestamp
-	23, // 1: proto.UserData.created_at:type_name -> google.protobuf.Timestamp
+	25, // 0: proto.LoginResponse.expires_at:type_name -> google.protobuf.Timestamp
+	25, // 1: proto.UserData.created_at:type_name -> google.protobuf.Timestamp
 	17, // 2: proto.GetUserResponse.user:type_name -> proto.UserData
 	17, // 3: proto.GetUserByEmailResponse.user:type_name -> proto.UserData
 	0,  // 4: proto.AuthService.Signup:input_type -> proto.SignupRequest
@@ -1291,19 +1370,21 @@ var file_auth_proto_depIdxs = []int32{
 	16, // 12: proto.AuthService.GetUser:input_type -> proto.GetUserRequest
 	19, // 13: proto.AuthService.GetUserByEmail:input_type -> proto.GetUserByEmailRequest
 	21, // 14: proto.AuthService.DeleteUser:input_type -> proto.DeleteUserRequest
-	1,  // 15: proto.AuthService.Signup:output_type -> proto.SignupResponse
-	3,  // 16: proto.AuthService.VerifyOTP:output_type -> proto.VerifyOTPResponse
-	5,  // 17: proto.AuthService.Login:output_type -> proto.LoginResponse
-	7,  // 18: proto.AuthService.ValidateSession:output_type -> proto.ValidateSessionResponse
-	9,  // 19: proto.AuthService.RefreshSession:output_type -> proto.RefreshSessionResponse
-	11, // 20: proto.AuthService.Logout:output_type -> proto.LogoutResponse
-	13, // 21: proto.AuthService.ForgotPassword:output_type -> proto.ForgotPasswordResponse
-	15, // 22: proto.AuthService.ResetPassword:output_type -> proto.ResetPasswordResponse
-	18, // 23: proto.AuthService.GetUser:output_type -> proto.GetUserResponse
-	20, // 24: proto.AuthService.GetUserByEmail:output_type -> proto.GetUserByEmailResponse
-	22, // 25: proto.AuthService.DeleteUser:output_type -> proto.DeleteUserResponse
-	15, // [15:26] is the sub-list for method output_type
-	4,  // [4:15] is the sub-list for method input_type
+	23, // 15: proto.AuthService.LiveZ:input_type -> proto.LiveZRequest
+	1,  // 16: proto.AuthService.Signup:output_type -> proto.SignupResponse
+	3,  // 17: proto.AuthService.VerifyOTP:output_type -> proto.VerifyOTPResponse
+	5,  // 18: proto.AuthService.Login:output_type -> proto.LoginResponse
+	7,  // 19: proto.AuthService.ValidateSession:output_type -> proto.ValidateSessionResponse
+	9,  // 20: proto.AuthService.RefreshSession:output_type -> proto.RefreshSessionResponse
+	11, // 21: proto.AuthService.Logout:output_type -> proto.LogoutResponse
+	13, // 22: proto.AuthService.ForgotPassword:output_type -> proto.ForgotPasswordResponse
+	15, // 23: proto.AuthService.ResetPassword:output_type -> proto.ResetPasswordResponse
+	18, // 24: proto.AuthService.GetUser:output_type -> proto.GetUserResponse
+	20, // 25: proto.AuthService.GetUserByEmail:output_type -> proto.GetUserByEmailResponse
+	22, // 26: proto.AuthService.DeleteUser:output_type -> proto.DeleteUserResponse
+	24, // 27: proto.AuthService.LiveZ:output_type -> proto.LiveZResponse
+	16, // [16:28] is the sub-list for method output_type
+	4,  // [4:16] is the sub-list for method input_type
 	4,  // [4:4] is the sub-list for extension type_name
 	4,  // [4:4] is the sub-list for extension extendee
 	0,  // [0:4] is the sub-list for field type_name
@@ -1320,7 +1401,7 @@ func file_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_proto_rawDesc), len(file_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   23,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

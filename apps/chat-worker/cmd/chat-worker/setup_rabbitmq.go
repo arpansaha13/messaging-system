@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm"
 
 	"github.com/arpansaha13/gotoolkit"
@@ -28,6 +29,18 @@ func setupRabbitMQ(
 ) (*gotoolkit.ConnectionManager, error) {
 	// Initialize RabbitMQ broker
 	messageBroker := broker.NewRabbitMQBroker(creds.GetUrl(), cbs.RabbitMQ)
+	var rabbitMQConnMgr *gotoolkit.ConnectionManager
+
+	messageBroker.SetDisconnectHandler(func(err error) {
+		if err != nil {
+			logger.Warn("RabbitMQ connection closed, triggering reconnect", zap.Error(err))
+		} else {
+			logger.Warn("RabbitMQ connection closed, triggering reconnect")
+		}
+		if rabbitMQConnMgr != nil {
+			rabbitMQConnMgr.Signal()
+		}
+	})
 
 	// Initialize processors (persist across reconnects)
 	statusProcessor := processor.NewStatusProcessor(db, messageBroker, cbs.Postgres)
@@ -63,14 +76,17 @@ func setupRabbitMQ(
 		return nil
 	}
 
-	rabbitMQConnMgr := gotoolkit.NewConnectionManager(
+	rabbitMQConnMgr = gotoolkit.NewConnectionManager(
 		gotoolkit.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		logger,
 		func(connectCtx context.Context) error {
-			if err := messageBroker.Connect(connectCtx); err != nil {
+			if err := messageBroker.Connect(
+				connectCtx,
+				gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+			); err != nil {
 				return err
 			}
 			if err := setupConsumers(); err != nil {

@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from '@playwright/test'
 import { test, expect } from '../../fixtures/base.fixture'
 import { createAuthenticatedContext } from '../../helpers/session'
+import { waitForHydration } from '../../helpers/hydration'
 
 test.describe('Authentication — Logout', () => {
   let aliceContext: BrowserContext
@@ -23,12 +24,11 @@ test.describe('Authentication — Logout', () => {
   })
 
   test('LO-01 logout clears session and redirects to login', async () => {
-    await alicePage.goto('/')
-    await expect(alicePage).toHaveURL('/')
+    await alicePage.goto('/settings/profile')
+    await waitForHydration(alicePage)
 
-    // Trigger logout — the logout button is in the Navbar settings/profile area
-    // The app calls POST /api/auth/logout internally; trigger it via request
-    await alicePage.request.post('/api/auth/logout')
+    // Trigger logout via UI (settings sidebar)
+    await alicePage.getByText('Log out').click()
 
     // Navigate to home — should be redirected to login now that session is gone
     await alicePage.goto('/')

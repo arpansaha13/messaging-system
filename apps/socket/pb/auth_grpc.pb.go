@@ -30,6 +30,7 @@ const (
 	AuthService_GetUser_FullMethodName         = "/proto.AuthService/GetUser"
 	AuthService_GetUserByEmail_FullMethodName  = "/proto.AuthService/GetUserByEmail"
 	AuthService_DeleteUser_FullMethodName      = "/proto.AuthService/DeleteUser"
+	AuthService_LiveZ_FullMethodName           = "/proto.AuthService/LiveZ"
 )
 
 // AuthServiceClient is the client API for AuthService service.
@@ -75,6 +76,9 @@ type AuthServiceClient interface {
 	// DeleteUser deletes a user and all associated data.
 	// This is used when users close their accounts.
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
+	// LiveZ is a liveness probe — returns immediately with no side effects.
+	// Used by health checks to confirm the gRPC server process is alive.
+	LiveZ(ctx context.Context, in *LiveZRequest, opts ...grpc.CallOption) (*LiveZResponse, error)
 }
 
 type authServiceClient struct {
@@ -195,6 +199,16 @@ func (c *authServiceClient) DeleteUser(ctx context.Context, in *DeleteUserReques
 	return out, nil
 }
 
+func (c *authServiceClient) LiveZ(ctx context.Context, in *LiveZRequest, opts ...grpc.CallOption) (*LiveZResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LiveZResponse)
+	err := c.cc.Invoke(ctx, AuthService_LiveZ_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility.
@@ -238,6 +252,9 @@ type AuthServiceServer interface {
 	// DeleteUser deletes a user and all associated data.
 	// This is used when users close their accounts.
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
+	// LiveZ is a liveness probe — returns immediately with no side effects.
+	// Used by health checks to confirm the gRPC server process is alive.
+	LiveZ(context.Context, *LiveZRequest) (*LiveZResponse, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -280,6 +297,9 @@ func (UnimplementedAuthServiceServer) GetUserByEmail(context.Context, *GetUserBy
 }
 func (UnimplementedAuthServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
+}
+func (UnimplementedAuthServiceServer) LiveZ(context.Context, *LiveZRequest) (*LiveZResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LiveZ not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 func (UnimplementedAuthServiceServer) testEmbeddedByValue()                     {}
@@ -500,6 +520,24 @@ func _AuthService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_LiveZ_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LiveZRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).LiveZ(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AuthService_LiveZ_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).LiveZ(ctx, req.(*LiveZRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -550,6 +588,10 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteUser",
 			Handler:    _AuthService_DeleteUser_Handler,
+		},
+		{
+			MethodName: "LiveZ",
+			Handler:    _AuthService_LiveZ_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

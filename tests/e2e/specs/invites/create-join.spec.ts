@@ -71,17 +71,11 @@ test.describe('Invites — Create & Join', () => {
 
   })
 
-  test('I-03 expired invite shows error state', async () => {
-    alicePage = await aliceContext.newPage()
+  test('I-03 invalid invite shows error state', async () => {
     bobPage = await bobContext.newPage()
 
-    const groupRes = await alicePage.request.post('/api/groups', {
-      data: { name: `ExpGroup-${Date.now()}` },
-    })
-
-    // Note: default invite expiry may differ by environment. This test uses a
-    // non-existent/fake hash to simulate an expired/invalid invite.
-    await bobPage.goto('/invites/expired-hash-that-does-not-exist')
+    // Use a non-existent/fake hash to simulate an invalid invite.
+    await bobPage.goto('/invites/invalid-hash-that-does-not-exist')
     await waitForHydration(bobPage)
 
     await expect(bobPage.getByText(/expired|invalid|not found/i)).toBeVisible({ timeout: 10_000 })

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/rabbitmq/amqp091-go"
@@ -33,6 +34,8 @@ type RabbitMQBroker struct {
 	conn              *amqp091.Connection
 	channel           *amqp091.Channel
 	log               *zap.Logger
+	mu                sync.RWMutex
+	onDisconnect      func(err error)
 }
 
 // NewRabbitMQBroker creates a new, unconnected RabbitMQBroker.
@@ -48,8 +51,8 @@ func NewRabbitMQBroker(amqpURL, serverId string, log *zap.Logger) *RabbitMQBroke
 
 // Connect establishes the RabbitMQ connection with exponential backoff and
 // declares all exchanges and per-server exclusive queues.
-func (rb *RabbitMQBroker) Connect(ctx context.Context) error {
-	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL)
+func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error {
+	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL, opts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
@@ -63,6 +66,8 @@ func (rb *RabbitMQBroker) Connect(ctx context.Context) error {
 	rb.conn = conn
 	rb.channel = ch
 
+	rb.watchConnection(conn)
+
 	if err := rb.declareExchangesAndQueues(); err != nil {
 		ch.Close()
 		conn.Close()
@@ -74,6 +79,29 @@ func (rb *RabbitMQBroker) Connect(ctx context.Context) error {
 		zap.String("server_queue", rb.serverQueue),
 	)
 	return nil
+}
+
+// SetDisconnectHandler registers a callback invoked when the AMQP connection closes.
+func (rb *RabbitMQBroker) SetDisconnectHandler(handler func(err error)) {
+	rb.mu.Lock()
+	defer rb.mu.Unlock()
+	rb.onDisconnect = handler
+}
+
+func (rb *RabbitMQBroker) watchConnection(conn *amqp091.Connection) {
+	go func() {
+		err := <-conn.NotifyClose(make(chan *amqp091.Error, 1))
+		handler := rb.getDisconnectHandler()
+		if handler != nil {
+			handler(err)
+		}
+	}()
+}
+
+func (rb *RabbitMQBroker) getDisconnectHandler() func(err error) {
+	rb.mu.RLock()
+	defer rb.mu.RUnlock()
+	return rb.onDisconnect
 }
 
 func (rb *RabbitMQBroker) declareExchangesAndQueues() error {

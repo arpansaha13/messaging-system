@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/sony/gobreaker/v2"
@@ -21,15 +22,30 @@ type AuthService struct {
 	conn   *grpc.ClientConn
 	client pb.AuthServiceClient
 	cb     *gobreaker.CircuitBreaker[any]
+	mu     sync.RWMutex
 }
 
 // NewAuthService creates a new AuthService.
 func NewAuthService(conn *grpc.ClientConn, client pb.AuthServiceClient, cb *gobreaker.CircuitBreaker[any]) *AuthService {
-	return &AuthService{
-		conn:   conn,
-		client: client,
-		cb:     cb,
+	svc := &AuthService{
+		cb: cb,
 	}
+	svc.SetConnection(conn, client)
+	return svc
+}
+
+// SetConnection swaps the underlying gRPC connection and client.
+func (a *AuthService) SetConnection(conn *grpc.ClientConn, client pb.AuthServiceClient) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.conn = conn
+	a.client = client
+}
+
+func (a *AuthService) getClient() pb.AuthServiceClient {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.client
 }
 
 // ValidateSession validates a session token with the auth service.
@@ -41,6 +57,11 @@ func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.Va
 		return nil, fmt.Errorf("empty token")
 	}
 
+	client := a.getClient()
+	if client == nil {
+		return nil, fmt.Errorf("auth service client not connected")
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
@@ -48,7 +69,7 @@ func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.Va
 	req := &pb.ValidateSessionRequest{}
 
 	result, err := a.cb.Execute(func() (any, error) {
-		return a.client.ValidateSession(ctxWithMetadata, req)
+		return client.ValidateSession(ctxWithMetadata, req)
 	})
 
 	if err != nil {
@@ -66,6 +87,11 @@ func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (
 	log := logger.FromContext(ctx)
 	log.Debug("get user request received", zap.Int64("user_id", userID))
 
+	client := a.getClient()
+	if client == nil {
+		return nil, fmt.Errorf("auth service client not connected")
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
 	defer cancel()
 
@@ -73,7 +99,7 @@ func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (
 	ctxWithMetadata := utils.WithAuthMetadata(ctx, token)
 
 	result, err := a.cb.Execute(func() (any, error) {
-		return a.client.GetUser(ctxWithMetadata, req)
+		return client.GetUser(ctxWithMetadata, req)
 	})
 
 	if err != nil {
@@ -88,5 +114,28 @@ func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (
 
 // Close closes the underlying gRPC connection.
 func (a *AuthService) Close() error {
-	return a.conn.Close()
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.conn == nil {
+		a.client = nil
+		return nil
+	}
+	err := a.conn.Close()
+	a.conn = nil
+	a.client = nil
+	return err
+}
+
+// LiveZ probes the auth service for liveness.
+func (a *AuthService) LiveZ(ctx context.Context) error {
+	client := a.getClient()
+	if client == nil {
+		return fmt.Errorf("auth service client not connected")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if _, err := client.LiveZ(ctx, &pb.LiveZRequest{}); err != nil {
+		return fmt.Errorf("auth livez failed: %w", err)
+	}
+	return nil
 }

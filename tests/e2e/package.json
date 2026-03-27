@@ -1,6 +1,7 @@
 {
   "name": "e2e-tests",
   "private": true,
+  "type": "module",
   "scripts": {
     "test": "pnpm run setup && bash run-e2e.sh --no-teardown",
     "test:ui": "pnpm run setup && bash run-e2e.sh --ui --no-teardown",

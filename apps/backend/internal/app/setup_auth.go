@@ -1,31 +1,82 @@
 package app
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/pb"
 )
 
-// SetupAuthService establishes a gRPC connection to the auth service and returns a client.
-func SetupAuthService(cbs *circuits.Circuits) (service.IAuthServiceClient, error) {
+// SetupAuthService establishes a managed gRPC connection to the auth service.
+func SetupAuthService(
+	ctx context.Context,
+	log *zap.Logger,
+	cbs *circuits.Circuits,
+) (*service.AuthService, *gotoolkit.ConnectionManager, error) {
 	cfg, err := config.Load()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	conn, err := grpc.NewClient(
-		cfg.AuthSystemHost(),
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+
+	authService := service.NewAuthService(nil, nil, cbs.AuthGRPC)
+	var authConnMgr *gotoolkit.ConnectionManager
+
+	authConnMgr = gotoolkit.NewConnectionManager(
+		gotoolkit.ReconnectConfig{
+			ConnectTimeout:    10 * time.Second,
+			ReconnectInterval: 500 * time.Millisecond,
+		},
+		log,
+		func(connectCtx context.Context) error {
+			conn, err := grpc.NewClient(
+				cfg.AuthSystemHost(),
+				grpc.WithTransportCredentials(insecure.NewCredentials()),
+				grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+			)
+			if err != nil {
+				return fmt.Errorf("failed to connect to auth service: %w", err)
+			}
+			authService.SetConnection(conn, pb.NewAuthServiceClient(conn))
+			log.Info("auth service connected", zap.String("address", cfg.AuthSystemHost()))
+			return nil
+		},
+		func() {
+			if err := authService.Close(); err != nil {
+				log.Warn("auth service close error", zap.Error(err))
+			}
+		},
 	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to auth service: %w", err)
+
+	if err := authConnMgr.Start(ctx); err != nil {
+		return nil, nil, fmt.Errorf("failed to start auth connection manager: %w", err)
 	}
-	return service.NewAuthService(conn, pb.NewAuthServiceClient(conn), cbs.AuthGRPC), nil
+
+	go func() {
+		ticker := time.NewTicker(15 * time.Second)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := authService.LiveZ(ctx); err != nil {
+					log.Warn("auth livez failed, triggering reconnect", zap.Error(err))
+					authConnMgr.Signal()
+				}
+			}
+		}
+	}()
+
+	return authService, authConnMgr, nil
 }

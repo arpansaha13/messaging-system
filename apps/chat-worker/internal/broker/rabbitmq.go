@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
-	"github.com/sony/gobreaker/v2"
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/rabbitmq/amqp091-go"
+	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 )
 
@@ -22,10 +23,12 @@ const (
 
 // RabbitMQBroker implements the broker.MessageBroker interface using RabbitMQ
 type RabbitMQBroker struct {
-	amqpURL string
-	conn    *amqp091.Connection
-	channel *amqp091.Channel
-	cb      *gobreaker.CircuitBreaker[any]
+	amqpURL      string
+	conn         *amqp091.Connection
+	channel      *amqp091.Channel
+	cb           *gobreaker.CircuitBreaker[any]
+	mu           sync.RWMutex
+	onDisconnect func(err error)
 }
 
 // NewRabbitMQBroker creates a new RabbitMQ broker instance
@@ -49,6 +52,8 @@ func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gotoolkit.Backoff
 	rb.conn = conn
 	rb.channel = channel
 
+	rb.watchConnection(conn)
+
 	if err := rb.declareExchangesAndQueues(); err != nil {
 		channel.Close()
 		conn.Close()
@@ -57,6 +62,29 @@ func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gotoolkit.Backoff
 
 	zap.L().Info("connected to RabbitMQ")
 	return nil
+}
+
+// SetDisconnectHandler registers a callback invoked when the AMQP connection closes.
+func (rb *RabbitMQBroker) SetDisconnectHandler(handler func(err error)) {
+	rb.mu.Lock()
+	defer rb.mu.Unlock()
+	rb.onDisconnect = handler
+}
+
+func (rb *RabbitMQBroker) watchConnection(conn *amqp091.Connection) {
+	go func() {
+		err := <-conn.NotifyClose(make(chan *amqp091.Error, 1))
+		handler := rb.getDisconnectHandler()
+		if handler != nil {
+			handler(err)
+		}
+	}()
+}
+
+func (rb *RabbitMQBroker) getDisconnectHandler() func(err error) {
+	rb.mu.RLock()
+	defer rb.mu.RUnlock()
+	return rb.onDisconnect
 }
 
 // declareExchangesAndQueues sets up all exchanges and queue bindings

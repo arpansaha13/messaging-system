@@ -54,7 +54,7 @@ func main() {
 		zapLogger.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
-	authService, err := app.SetupAuthService(cbs)
+	authService, authConnMgr, err := app.SetupAuthService(svcCtx, zapLogger, cbs)
 	if err != nil {
 		log.Fatalf("failed to connect to auth service: %v", err)
 	}
@@ -113,8 +113,8 @@ func main() {
 
 	shutdownTelemetry(shutdownCtx)
 
-	if err := authService.Close(); err != nil {
-		zap.L().Error("auth service close error", zap.Error(err))
+	if err := authConnMgr.Stop(); err != nil {
+		zap.L().Error("auth connection manager stop error", zap.Error(err))
 	}
 
 	if err := rabbitMQConnMgr.Stop(); err != nil {

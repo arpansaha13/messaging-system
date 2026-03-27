@@ -84,23 +84,20 @@ test.describe('Groups — Create Channel', () => {
     await joinButton.click()
     await expect(bobPage.getByText(group.name)).toBeVisible({ timeout: 10_000 })
 
-    // Bob navigates to the group and tries to create a channel
+    // Bob navigates to the group
     await bobPage.goto(`/groups/${group.id}`)
     await waitForHydration(bobPage)
 
-    // The create channel button should not be visible or should be disabled for non-founders
-    const createBtn = bobPage.getByRole('button', { name: /create new channel/i })
-    const isVisible = await createBtn.isVisible()
+    // Non-founders should not see channel creation controls
+    await expect(bobPage.getByRole('button', { name: /create new channel/i })).toHaveCount(0)
 
-    // If not implemented: this test documents the expected behavior
-    if (isVisible) {
-      await createBtn.click()
-      // Should show an error or be blocked
-      await expect(bobPage.getByText(/not allowed|permission|forbidden/i)).toBeVisible({
-        timeout: 5_000,
-      })
-    } else {
-      expect(isVisible).toBe(false)
-    }
+    // API also rejects channel creation for non-founders
+    const createRes = await bobPage.request.post(`/api/groups/${group.id}/channels`, {
+      data: { name: `blocked-${Date.now()}` },
+    })
+    expect(createRes.ok()).toBe(false)
+    expect(createRes.status()).toBe(400)
+    const body = await createRes.json()
+    expect(body.message).toMatch(/not allowed/i)
   })
 })

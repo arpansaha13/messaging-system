@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
@@ -28,6 +29,18 @@ func SetupRabbitMQ(
 	groupHandlers *ws.GroupHandlers,
 ) (*broker.RabbitMQBroker, *gotoolkit.ConnectionManager, error) {
 	rabbitBroker := broker.NewRabbitMQBroker(creds.GetUrl(), serverId, log)
+	var rabbitMQConnMgr *gotoolkit.ConnectionManager
+
+	rabbitBroker.SetDisconnectHandler(func(err error) {
+		if err != nil {
+			log.Warn("RabbitMQ connection closed, triggering reconnect", zap.Error(err))
+		} else {
+			log.Warn("RabbitMQ connection closed, triggering reconnect")
+		}
+		if rabbitMQConnMgr != nil {
+			rabbitMQConnMgr.Signal()
+		}
+	})
 
 	setupConsumers := func() error {
 		// Server-queue consumer: route messages to the correct socket or room.
@@ -105,14 +118,17 @@ func SetupRabbitMQ(
 		return nil
 	}
 
-	rabbitMQConnMgr := gotoolkit.NewConnectionManager(
+	rabbitMQConnMgr = gotoolkit.NewConnectionManager(
 		gotoolkit.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		log,
 		func(connectCtx context.Context) error {
-			if err := rabbitBroker.Connect(connectCtx); err != nil {
+			if err := rabbitBroker.Connect(
+				connectCtx,
+				gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+			); err != nil {
 				return err
 			}
 			if err := setupConsumers(); err != nil {
