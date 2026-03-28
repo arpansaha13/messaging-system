@@ -476,7 +476,7 @@ services:
       - auth-cache
 
   prometheus:
-    image: prom/prometheus:v3.4.2
+    image: europe-north1-docker.pkg.dev/chat-application-13/prometheus/server:0.1.0
     container_name: prometheus_test
     profiles: [metrics, all]
     volumes:
@@ -495,12 +495,11 @@ services:
       - messaging-test-network
 
   tempo:
-    image: grafana/tempo:2.7.2
+    image: europe-north1-docker.pkg.dev/chat-application-13/tempo/server:0.1.0
     container_name: tempo_test
     profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
-      - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       - ./data/test/tempo:/tmp/tempo
     expose:
       - "4317" # OTLP gRPC — reachable by backend/auth as tempo:4317

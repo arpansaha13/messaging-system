@@ -10,7 +10,7 @@ services:
     ports:
       - "7000:443"
     volumes:
-      - ./data/certs-local:/etc/nginx/certs:ro
+      - ./data/dev/certs-local:/etc/nginx/certs:ro
     depends_on:
       - backend
       - socket
@@ -21,6 +21,8 @@ services:
       watch:
         - action: rebuild
           path: ./apps/nginx/nginx.conf
+        - action: rebuild
+          path: ./apps/nginx/Dockerfile
 
   auth-db:
     image: postgres:16-alpine
@@ -34,7 +36,7 @@ services:
     ports:
       - "7010:5432"
     volumes:
-      - ./data/auth:/var/lib/postgresql/data
+      - ./data/dev/auth:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -55,7 +57,7 @@ services:
     ports:
       - "7020:5432"
     volumes:
-      - ./data/default:/var/lib/postgresql/data
+      - ./data/dev/default:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -123,6 +125,8 @@ services:
           path: ./apps/backend/server/go.mod
         - action: rebuild
           path: ./apps/backend/server/go.sum
+        - action: rebuild
+          path: ./apps/backend/server/Dockerfile
 
   socket:
     build:
@@ -161,6 +165,8 @@ services:
           path: ./apps/socket/go.mod
         - action: rebuild
           path: ./apps/socket/go.sum
+        - action: rebuild
+          path: ./apps/socket/Dockerfile
 
   rabbitmq:
     build:
@@ -192,6 +198,8 @@ services:
           path: ./apps/rabbitmq/render-definitions.sh
         - action: rebuild
           path: ./apps/rabbitmq/definitions.json.tpl
+        - action: rebuild
+          path: ./apps/rabbitmq/Dockerfile
 
   auth:
     build:
@@ -250,6 +258,8 @@ services:
           path: ./apps/auth/server/go.mod
         - action: rebuild
           path: ./apps/auth/server/go.sum
+        - action: rebuild
+          path: ./apps/auth/server/Dockerfile
 
   frontend:
     build:
@@ -283,6 +293,8 @@ services:
         - action: sync
           path: ./apps/frontend/tsconfig.json
           target: /app/apps/frontend/tsconfig.json
+        - action: rebuild
+          path: ./apps/frontend/Dockerfile.dev
 
   memcached:
     image: memcached:1.6.40-alpine
@@ -338,6 +350,8 @@ services:
           path: ./apps/chat-worker/internal
         - action: rebuild
           path: ./apps/chat-worker/go.mod
+        - action: rebuild
+          path: ./apps/chat-worker/Dockerfile
 
   kafka:
     image: apache/kafka:3.9.2
@@ -397,7 +411,7 @@ services:
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
-      - ./data/loki:/tmp/loki
+      - ./data/dev/loki:/tmp/loki
     # ports:
     #   - "7080:3100"
     healthcheck:
@@ -412,6 +426,8 @@ services:
       watch:
         - action: rebuild
           path: ./apps/loki/loki-config.yml
+        - action: rebuild
+          path: ./apps/loki/Dockerfile
 
   alloy:
     build:
@@ -434,6 +450,8 @@ services:
       watch:
         - action: rebuild
           path: ./apps/alloy/alloy-config.alloy
+        - action: rebuild
+          path: ./apps/alloy/Dockerfile
 
   grafana:
     build:
@@ -448,7 +466,7 @@ services:
       GF_LOG_LEVEL: info
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./data/grafana:/var/lib/grafana
+      - ./data/dev/grafana:/var/lib/grafana
     ports:
       - "7090:3000"
     healthcheck:
@@ -464,6 +482,8 @@ services:
           path: ./apps/grafana/provisioning/datasources
         - action: rebuild
           path: ./apps/grafana/provisioning/dashboards
+        - action: rebuild
+          path: ./apps/grafana/Dockerfile
 
   fluent-bit:
     build:
@@ -486,6 +506,8 @@ services:
           path: ./apps/fluent-bit/fluent-bit.yaml
         - action: rebuild
           path: ./apps/fluent-bit/parsers.conf
+        - action: rebuild
+          path: ./apps/fluent-bit/Dockerfile
 
   # ---------------------------------------------------------------------------
   # Metrics stack (--profile metrics)
@@ -559,24 +581,29 @@ services:
       watch:
         - action: rebuild
           path: ./apps/prometheus/prometheus.yml
+        - action: rebuild
+          path: ./apps/prometheus/Dockerfile
 
   tempo:
-    image: grafana/tempo:2.7.2
+    build:
+      context: .
+      dockerfile: apps/tempo/Dockerfile
     container_name: tempo
     profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
-      - ./apps/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
-      - ./data/tempo:/tmp/tempo
+      - ./data/dev/tempo:/tmp/tempo
     expose:
       - "4317" # OTLP gRPC — reachable by backend/auth as tempo:4317
       - "3200" # HTTP — reachable by Grafana as tempo:3200
     networks:
       - messaging-network
-    # develop:
-    #   watch:
-    #     - action: rebuild
-    #       path: ./apps/tempo/tempo.yaml
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/tempo/tempo.yaml
+        - action: rebuild
+          path: ./apps/tempo/Dockerfile
 
 networks:
   messaging-network:

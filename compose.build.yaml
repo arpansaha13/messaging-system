@@ -59,6 +59,18 @@ services:
       dockerfile: apps/grafana/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/grafana/server:0.1.0
 
+  prometheus:
+    build:
+      context: .
+      dockerfile: apps/prometheus/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/prometheus/server:0.1.0
+
+  tempo:
+    build:
+      context: .
+      dockerfile: apps/tempo/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/tempo/server:0.1.0
+
   fluent-bit:
     build:
       context: .

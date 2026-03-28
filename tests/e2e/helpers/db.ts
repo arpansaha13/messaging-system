@@ -17,7 +17,7 @@ export interface SeedUserParams {
  * auth DB:      users (email, username, verified=true) + credentials (password_hash)
  * messaging DB: user_profiles (id, global_name)
  *
- * Mirrors the pattern in scripts/seed/src/users.mjs.
+ * Mirrors the pattern in tools/seed/src/users.mjs.
  * Returns the auth user ID, which is also the user_profiles FK.
  */
 export async function seedTestUser(params: SeedUserParams): Promise<number> {

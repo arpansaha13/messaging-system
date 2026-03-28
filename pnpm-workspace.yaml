@@ -1,6 +1,6 @@
 packages:
   - apps/frontend
-  - scripts/seed
+  - tools/seed
   - tests/e2e
   - tests/load
   - tests/resilience

@@ -84,7 +84,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4
 
-  scripts/seed:
+  tools/seed:
     devDependencies:
       '@faker-js/faker':
         specifier: ^10.1.0
