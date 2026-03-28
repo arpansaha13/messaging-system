@@ -59,6 +59,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     environment:
       POSTGRES_USER: testuser
@@ -90,6 +91,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     environment:
       POSTGRES_USER: testuser
@@ -124,6 +126,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     ports:
       - "7551:15672"
@@ -160,8 +163,11 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     # command: ["-vv"]
+    ports:
+      - "7542:11211"
     networks:
       - messaging-test-network
     deploy:
@@ -178,8 +184,11 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     # command: ["-vv"]
+    ports:
+      - "7543:11211"
     networks:
       - messaging-test-network
     deploy:
@@ -198,6 +207,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     labels:
       service_name: "auth"
@@ -237,6 +247,8 @@ services:
         condition: service_started
     expose:
       - "50051"
+    ports:
+      - "7541:50051"
     networks:
       - messaging-test-network
     deploy:
@@ -256,6 +268,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     labels:
       service_name: "backend"
@@ -318,6 +331,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     environment:
       ENVIRONMENT: test
@@ -339,6 +353,8 @@ services:
         condition: service_healthy
       memcached:
         condition: service_started
+    ports:
+      - "7540:4000"
     networks:
       - messaging-test-network
     deploy:
@@ -356,6 +372,7 @@ services:
     profiles:
       - e2e
       - load
+      - resilience
       - all
     labels:
       service_name: "chat-worker"

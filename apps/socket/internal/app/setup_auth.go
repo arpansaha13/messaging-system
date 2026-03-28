@@ -7,7 +7,9 @@ import (
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
@@ -64,6 +66,11 @@ func SetupAuthService(
 				return
 			case <-ticker.C:
 				if err := authService.LiveZ(ctx); err != nil {
+					if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
+						// Temporary compatibility: some auth deployments gate this RPC; reachability is still fine.
+						log.Debug("auth livez returned unauthenticated; skipping reconnect")
+						continue
+					}
 					log.Warn("auth livez failed, triggering reconnect", zap.Error(err))
 					authConnMgr.Signal()
 				}

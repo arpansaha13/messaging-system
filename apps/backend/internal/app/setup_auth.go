@@ -8,7 +8,9 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 
 	"github.com/arpansaha13/gotoolkit"
 	"github.com/arpansaha13/messaging-system/apps/backend/internal/circuits"
@@ -61,22 +63,34 @@ func SetupAuthService(
 		return nil, nil, fmt.Errorf("failed to start auth connection manager: %w", err)
 	}
 
-	go func() {
-		ticker := time.NewTicker(15 * time.Second)
-		defer ticker.Stop()
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-ticker.C:
-				if err := authService.LiveZ(ctx); err != nil {
-					log.Warn("auth livez failed, triggering reconnect", zap.Error(err))
-					authConnMgr.Signal()
-				}
-			}
-		}
-	}()
+	go runAuthLivezHeartbeat(ctx, authService, authConnMgr, log)
 
 	return authService, authConnMgr, nil
+}
+
+func runAuthLivezHeartbeat(
+	ctx context.Context,
+	authService *service.AuthService,
+	authConnMgr *gotoolkit.ConnectionManager,
+	log *zap.Logger,
+) {
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := authService.LiveZ(ctx); err != nil {
+				if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
+					// Temporary compatibility: some auth deployments gate this RPC; reachability is still fine.
+					log.Debug("auth livez returned unauthenticated; skipping reconnect")
+					continue
+				}
+				log.Warn("auth livez failed, triggering reconnect", zap.Error(err))
+				authConnMgr.Signal()
+			}
+		}
+	}
 }

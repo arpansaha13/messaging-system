@@ -1,8 +1,9 @@
 packages:
-  - apps/*
-  - scripts/*
+  - apps/frontend
+  - scripts/seed
   - tests/e2e
   - tests/load
+  - tests/resilience
 
 onlyBuiltDependencies:
   - '@arpansaha13/utils'

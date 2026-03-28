@@ -2,7 +2,7 @@
 set -e
 
 # List of databases you want to create
-databases=("messaging_e2e_db" "messaging_load_db")
+databases=("messaging_e2e_db" "messaging_load_db" "messaging_resilience_db")
 
 # Loop through and create each database
 for db in "${databases[@]}"; do
