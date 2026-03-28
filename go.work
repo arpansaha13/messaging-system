@@ -2,9 +2,9 @@ go 1.25.6
 
 use ./apps/common
 
-use ./apps/auth
+use ./apps/auth/server
 
-use ./apps/backend
+use ./apps/backend/server
 
 use ./apps/chat-worker
 

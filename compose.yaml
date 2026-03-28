@@ -67,7 +67,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
+      dockerfile: apps/backend/server/Dockerfile
     container_name: backend
     profiles: [app, all]
     labels:
@@ -114,15 +114,15 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/backend/cmd
+          path: ./apps/backend/server/cmd
         - action: rebuild
-          path: ./apps/backend/internal
+          path: ./apps/backend/server/internal
         - action: rebuild
-          path: ./apps/backend/pb
+          path: ./apps/backend/server/pb
         - action: rebuild
-          path: ./apps/backend/go.mod
+          path: ./apps/backend/server/go.mod
         - action: rebuild
-          path: ./apps/backend/go.sum
+          path: ./apps/backend/server/go.sum
 
   socket:
     build:
@@ -196,7 +196,7 @@ services:
   auth:
     build:
       context: .
-      dockerfile: apps/auth/Dockerfile
+      dockerfile: apps/auth/server/Dockerfile
     container_name: auth
     profiles: [app, all]
     labels:
@@ -243,13 +243,13 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/auth/cmd
+          path: ./apps/auth/server/cmd
         - action: rebuild
-          path: ./apps/auth/internal
+          path: ./apps/auth/server/internal
         - action: rebuild
-          path: ./apps/auth/go.mod
+          path: ./apps/auth/server/go.mod
         - action: rebuild
-          path: ./apps/auth/go.sum
+          path: ./apps/auth/server/go.sum
 
   frontend:
     build:

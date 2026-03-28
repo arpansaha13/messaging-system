@@ -8,13 +8,13 @@ services:
   auth:
     build:
       context: .
-      dockerfile: apps/auth/Dockerfile
+      dockerfile: apps/auth/server/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
 
   backend:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
+      dockerfile: apps/backend/server/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
 
   socket:

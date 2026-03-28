@@ -6,7 +6,7 @@ import { AUTH_GRPC_ADDRESS } from './config'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../../')
-const protoPath = path.join(repoRoot, 'apps/backend/proto/auth.proto')
+const protoPath = path.join(repoRoot, 'apps/backend/server/proto/auth.proto')
 
 const packageDef = protoLoader.loadSync(protoPath, {
   keepCase: true,

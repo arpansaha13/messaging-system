@@ -25,7 +25,7 @@ docker compose --profile app --profile metrics watch
 
 ### Per-service development
 
-**Backend (Go — from `apps/backend/`)**
+**Backend (Go — from `apps/backend/server/`)**
 
 ```bash
 go run ./cmd/server          # run directly
@@ -73,7 +73,7 @@ pnpm trace             # inspect traces from last run
 ./run-e2e.sh [--spec auth/login] [--skip-migrations] [--no-teardown] [--ui]
 ```
 
-> Requires `migrate` CLI. Auth-DB migrations from `goauthkit`, messaging-DB from `apps/backend/migrations`.
+> Requires `migrate` CLI. Auth-DB migrations from `goauthkit`, messaging-DB from `apps/backend/server/migrations`.
 
 ### Load tests (k6 — from `tests/load/`)
 
@@ -98,8 +98,8 @@ Copy `.env.example` to `.env` before starting. All secrets and connection string
 
 | Service                              | Language            | Purpose                                | Protocol          |
 | ------------------------------------ | ------------------- | -------------------------------------- | ----------------- |
-| `apps/auth`                          | Go                  | Auth microservice (sessions, OTP, JWT) | gRPC :50051       |
-| `apps/backend`                       | Go                  | REST API server                        | HTTP :4000        |
+| `apps/auth/server`                   | Go                  | Auth microservice (sessions, OTP, JWT) | gRPC :50051       |
+| `apps/backend/server`                | Go                  | REST API server                        | HTTP :4000        |
 | `apps/chat-worker`                   | Go                  | Status updates + presence worker       | RabbitMQ consumer |
 | `apps/socket`                        | Go                  | Real-time WebSocket server             | WebSocket :4000   |
 | `apps/frontend`                      | TypeScript (Nuxt 4) | SSR web client                         | HTTP :3000        |
@@ -110,7 +110,7 @@ Copy `.env.example` to `.env` before starting. All secrets and connection string
 
 ### Go workspace
 
-`go.work` links: `apps/common`, `apps/auth`, `apps/backend`, `apps/chat-worker`, `apps/socket`.
+`go.work` links: `apps/common`, `apps/auth/server`, `apps/backend/server`, `apps/chat-worker`, `apps/socket`.
 
 - `apps/common` — shared domain models (`domain.go`), broker interfaces, constants. Import it as `github.com/arpansaha13/messaging-system/apps/common/...`.
 - All Go services depend on the external library `github.com/arpansaha13/gotoolkit` (DB connection with backoff, HTTP/gRPC middleware, GORM logger). During local development the workspace resolves the `gotoolkit` module if its path is listed in `go.work`.
@@ -119,7 +119,7 @@ Copy `.env.example` to `.env` before starting. All secrets and connection string
 
 Workspace packages: `apps/frontend`, `tests/e2e`, `tests/load`. Enforce pnpm via `preinstall` hook — don't use npm/yarn. Constants and types that were previously in `packages/constants` and `packages/types` are now co-located in `apps/frontend/src/constants/` and `apps/frontend/src/types/`.
 
-### Backend internal layout (`apps/backend/internal/`)
+### Backend internal layout (`apps/backend/server/internal/`)
 
 Strict layered architecture — each layer only depends on the one below it:
 
@@ -152,7 +152,7 @@ handler → service → repository → database (GORM)
 
 ### Auth flow
 
-`apps/auth` is a standalone gRPC service backed by its own PostgreSQL instance. `apps/backend` connects to it via gRPC and uses it through the `IAuthServiceClient` interface. The backend validates sessions on every protected request via `middleware.AuthMiddleware`.
+`apps/auth/server` is a standalone gRPC service backed by its own PostgreSQL instance. `apps/backend/server` connects to it via gRPC and uses it through the `IAuthServiceClient` interface. The backend validates sessions on every protected request via `middleware.AuthMiddleware`.
 
 ### RabbitMQ event flow
 
@@ -203,7 +203,7 @@ Go services → structured JSON (zap + OTel) → stdout → Fluent-bit → Kafka
 
 ## Testing
 
-**Backend integration tests** (`apps/backend/tests/`) use testify suite + Testcontainers (spins up a real Postgres container). Tests are isolated via table truncation in `SetupTest`. The mock auth service is in `tests/mocks/`. Run with `make test` from `apps/backend/`.
+**Backend integration tests** (`apps/backend/server/tests/`) use testify suite + Testcontainers (spins up a real Postgres container). Tests are isolated via table truncation in `SetupTest`. The mock auth service is in `tests/mocks/`. Run with `make test` from `apps/backend/server/`.
 
 **Frontend unit tests** use Vitest with `@nuxt/test-utils` and `happy-dom`. Run with `pnpm test` from `apps/frontend/`.
 
