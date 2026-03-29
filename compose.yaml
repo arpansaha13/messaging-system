@@ -303,6 +303,7 @@ services:
   memcached:
     image: memcached:1.6.40-alpine
     container_name: memcached
+    # command: ["-vv"]
     profiles: [app, all]
     networks:
       - messaging-network
@@ -310,6 +311,7 @@ services:
   auth-cache:
     image: memcached:1.6.40-alpine
     container_name: auth-cache
+    # command: ["-vv"]
     profiles: [app, all]
     networks:
       - messaging-network
@@ -430,6 +432,8 @@ services:
       watch:
         - action: rebuild
           path: ./apps/observability/loki/loki-config.yml
+        - action: rebuild
+          path: ./apps/observability/loki/runtime-config.yml
         - action: rebuild
           path: ./apps/observability/loki/Dockerfile
 

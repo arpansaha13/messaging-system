@@ -10,9 +10,11 @@ datasources:
     jsonData:
       maxLines: 1000
       derivedFields:
+        # Link traces from the parsed trace_id label.
         - name: TraceID
-          matcherRegex: '"trace_id"\s*:\s*"(.+?)"'
-          url: '${__value.raw}'
+          matcherType: label
+          matcherRegex: trace_id
+          url: '$${__value.raw}'
           datasourceUid: tempo
           urlDisplayLabel: View Trace
         - name: UserID
