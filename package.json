@@ -6,9 +6,10 @@
   "type": "module",
   "private": true,
   "packageManager": "pnpm@10.26.2",
-  "license": "MIT",
   "scripts": {
-    "preinstall": "npx -y only-allow pnpm"
+    "preinstall": "npx -y only-allow pnpm",
+    "dev": "docker compose --profile app watch --prune",
+    "build": "docker compose -f compose.build.yaml build"
   },
   "engines": {
     "node": ">=22.0.0"

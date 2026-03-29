@@ -1,6 +1,5 @@
-import { SocketEvents } from '@shared/constants'
-import type { SocketEventPayloads } from '@shared/types'
-import type { IChannel } from '~/types'
+import { SocketEvents } from '~/constants'
+import type { SocketEventPayloads, IChannel  } from '~/types'
 
 export async function useGroupEventsSocketEvents() {
   if (!import.meta.client) {

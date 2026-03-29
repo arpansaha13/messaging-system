@@ -1,0 +1,15 @@
+{
+  "name": "load-tests",
+  "private": true,
+  "scripts": {
+    "test": "pnpm test:setup && pnpm run spec:personal && pnpm run spec:group && pnpm run spec:chats",
+    "test:setup": "pnpm -w build && docker compose --env-file .env.test -f ../../compose.test.yaml --profile all up -d --remove-orphans",
+    "spec:personal": "node specs/personal/run.js",
+    "spec:group": "node specs/group/run.js",
+    "spec:chats": "node specs/chats/run.js"
+  },
+  "devDependencies": {
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.20.0"
+  }
+}

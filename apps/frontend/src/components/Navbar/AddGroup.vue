@@ -8,7 +8,7 @@
 
       <template #body>
         <UFormField required label="Choose a name for your group">
-          <UInput id="group-name" v-model="groupName" autocomplete="off" required class="w-full" />
+          <UInput id="group-name" v-model="groupName" autocomplete="off" required class="w-full" data-testid="group-name-input" />
         </UFormField>
       </template>
 
@@ -16,7 +16,7 @@
         <div class="flex w-full gap-3">
           <UButton block variant="outline" color="neutral" @click="close"> Cancel </UButton>
 
-          <UButton block class="sm:col-start-2" :loading="loading" @click="handleCreateGroup(close)"> Create </UButton>
+          <UButton block class="sm:col-start-2" :loading="loading" data-testid="create-group-btn" @click="handleCreateGroup(close)"> Create </UButton>
         </div>
       </template>
     </UModal>

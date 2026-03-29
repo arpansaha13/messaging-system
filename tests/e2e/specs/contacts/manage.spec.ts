@@ -1,0 +1,90 @@
+import type { BrowserContext, Page } from '@playwright/test'
+import { test, expect } from '../../fixtures/base.fixture'
+import { loadUserIds } from '../../helpers/api'
+import { waitForHydration } from '../../helpers/hydration'
+import { createAuthenticatedContext } from '../../helpers/session'
+
+test.describe('Contacts — Manage', () => {
+  let userIds: ReturnType<typeof loadUserIds>
+  let aliceContext: BrowserContext
+  let alicePage: Page
+
+  test.beforeAll(async ({ browser }) => {
+    userIds = loadUserIds()
+    aliceContext = await createAuthenticatedContext(browser, 'alice')
+  })
+
+  test.afterAll(async () => {
+    await aliceContext?.close()
+  })
+
+  test.beforeEach(async () => {
+    alicePage = await aliceContext.newPage()
+    // Ensure Bob is Alice's contact before each test
+    const res = await alicePage.request.post('/api/contacts', {
+      data: { userIdToAdd: userIds.bob, alias: 'Bob' },
+    })
+    if (!res.ok()) {
+      const body = await res.text()
+      throw new Error(`Failed to add contact (${res.status}): ${body}`)
+    }
+  })
+
+  test.afterEach(async () => {
+    await alicePage?.close()
+  })
+
+  test('M-01 edit contact alias updates display name', async () => {
+    await alicePage.goto('/contacts')
+    await waitForHydration(alicePage)
+
+    // Hover to reveal edit icon — implementation may use hover or a menu
+    const contactItem = alicePage.getByText('Bob').first()
+    await contactItem.hover()
+
+    // Click the edit icon/button in the contact row
+    await alicePage.getByRole('button', { name: /edit/i }).first().click()
+
+    // Clear and fill new alias
+    await alicePage.getByTestId('edit-contact-alias').fill('Bobby')
+    await alicePage.getByTestId('edit-contact-save').click()
+
+    await expect(alicePage.getByText('Bobby')).toBeVisible({ timeout: 5_000 })
+
+    // Verify alias change persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByText('Bobby')).toBeVisible()
+  })
+
+  test('M-02 delete contact removes it from list', async () => {
+    await alicePage.goto('/contacts')
+    await waitForHydration(alicePage)
+
+    const contactItem = alicePage.getByText('Bob').first()
+    await contactItem.hover()
+    await alicePage.getByRole('button', { name: /delete/i }).first().click()
+
+    await alicePage.getByTestId('delete-contact-confirm').click()
+
+    await expect(alicePage.getByRole('heading', { name: 'No contacts' })).toBeVisible({ timeout: 5_000 })
+
+    // Verify deletion persists on reload
+    await alicePage.reload()
+    await waitForHydration(alicePage)
+    await expect(alicePage.getByRole('heading', { name: 'No contacts' })).toBeVisible()
+  })
+
+  test('M-03 cancel delete keeps contact in list', async () => {
+    await alicePage.goto('/contacts')
+    await waitForHydration(alicePage)
+
+    const contactItem = alicePage.getByText('Bob').first()
+    await contactItem.hover()
+    await alicePage.getByRole('button', { name: /delete/i }).first().click()
+
+    await alicePage.getByTestId('delete-contact-cancel').click()
+
+    await expect(contactItem).toBeVisible()
+  })
+})

@@ -5,6 +5,7 @@
         :to="{ query: { ...route.query, to: chatListItem.receiver.id } }"
         class="flex w-full items-center rounded px-3 py-3 text-left transition-colors"
         :class="linkClasses"
+        data-testid="chat-list-item"
       >
         <UAvatar
           :src="receiver.dp || undefined"

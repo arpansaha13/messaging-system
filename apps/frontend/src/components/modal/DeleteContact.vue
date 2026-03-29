@@ -24,8 +24,8 @@
 
     <template #footer>
       <div class="flex w-full gap-2">
-        <UButton block variant="outline" color="neutral" label="Cancel" @click="cancel" />
-        <UButton block label="Delete" color="error" :loading="loading" @click="handleDeleteContact" />
+        <UButton block variant="outline" color="neutral" label="Cancel" data-testid="delete-contact-cancel" @click="cancel" />
+        <UButton block label="Delete" color="error" :loading="loading" data-testid="delete-contact-confirm" @click="handleDeleteContact" />
       </div>
     </template>
   </UModal>

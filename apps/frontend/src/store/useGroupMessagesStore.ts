@@ -1,5 +1,4 @@
-import type { IChannel } from '~/types'
-import type { IGroupMessageSending } from '@shared/types'
+import type { IChannel, IGroupMessageSending  } from '~/types'
 
 type TempMessageMap = Map<string, IGroupMessageSending>
 

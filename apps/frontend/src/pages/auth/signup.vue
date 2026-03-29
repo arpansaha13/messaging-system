@@ -1,22 +1,21 @@
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
-    <UPageCard class="w-full max-w-md">
-      <UAuthForm
-        ref="authForm"
-        :schema="signupSchema"
-        :fields="signupFields"
-        :validate="validateSignup"
-        title="Create Account"
-        icon="i-lucide-user-plus"
-        :loading="isLoading"
-        @submit="onSignup"
-      >
-        <template #description>
-          Already have an account? <ULink to="/auth/login" class="font-medium">Login</ULink>.
-        </template>
-      </UAuthForm>
-    </UPageCard>
-  </div>
+  <UPageCard class="w-full max-w-md">
+    <UAuthForm
+      ref="authForm"
+	  data-testid="signup-form"
+      :schema="signupSchema"
+      :fields="signupFields"
+      :validate="validateSignup"
+      title="Create Account"
+      icon="i-lucide-user-plus"
+      :loading="isLoading"
+      @submit="onSignup"
+    >
+      <template #description>
+        Already have an account? <ULink to="/auth/login" class="font-medium">Login</ULink>.
+      </template>
+    </UAuthForm>
+  </UPageCard>
 </template>
 
 <script setup lang="ts">
@@ -62,7 +61,6 @@ const signupFields: AuthFormField[] = [
     placeholder: 'Enter your name',
     required: true,
     minlength: 1,
-    maxlength: 20,
   },
   {
     name: 'password',

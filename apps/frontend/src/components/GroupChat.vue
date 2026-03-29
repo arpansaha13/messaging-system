@@ -1,5 +1,5 @@
 <template>
-  <ChatWindow v-if="channel">
+  <ChatWindow v-if="channel" ref="chatWindowRef">
     <template #header>
       <ChatHeader :title="channel.name" />
     </template>
@@ -25,9 +25,8 @@
 </template>
 
 <script setup lang="ts">
-import type { IChannel } from '~/types'
-import { MessageStatus } from '@shared/constants'
-import type { IGroupMessage, IGroupMessageSending } from '@shared/types'
+import type { IChannel, IGroupMessage, IGroupMessageSending  } from '~/types'
+import { MessageStatus } from '~/constants'
 import { sendGroupMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()
@@ -66,13 +65,10 @@ const groupId = computed(() => {
 
 // Fetch channel data
 const { data: channel, pending: channelLoading } = await useAsyncData(
-  `channel-${channelId.value}`,
+  () => `channel:${channelId.value}`,
   () => {
     if (!channelId.value) return Promise.resolve(null)
     return $fetch<IChannel>(`/api/channels/${channelId.value}`)
-  },
-  {
-    watch: [channelId],
   },
 )
 
@@ -87,8 +83,16 @@ const tempMessages = computed(() => {
   return groupMessages.getTempGroupMessages(channelId.value as number)
 })
 
-// Fetch messages using useAsyncData
-const { data: messagesData, pending: messagesLoading } = await useFetchGroupMessages(channelId)
+// Setup scroll element ref and computed
+const chatWindowRef = useTemplateRef('chatWindowRef')
+const scrollEl = computed(() => {
+  if (!chatWindowRef.value) return null
+
+  const el = chatWindowRef.value.$el as HTMLDivElement
+  return el.children[1] as HTMLDivElement // UCard body
+})
+
+const { data: messagesData, pending: messagesLoading } = useFetchGroupMessages(channelId, scrollEl)
 
 // Convert fetched messages array to Map for ChatBody component
 const messagesAsMap = computed(() => {
@@ -117,8 +121,17 @@ const sendMessage = async (message: string) => {
     // Add temp message to UI
     groupMessages.upsertTempGroupMessages(channelId.value as number, [newMessage])
 
-    // Send message via HTTP API instead of socket
-    await sendGroupMessage(groupId.value, channelId.value, newMessage.content, newMessage.hash)
+    // Send message via HTTP API — 201 means message is persisted; replace temp with real IGroupMessage
+    const realMessage = await sendGroupMessage(groupId.value, channelId.value, newMessage.content, newMessage.hash)
+    groupMessages.deleteTempGroupMessage(channelId.value as number, newMessage.hash)
+    upsertGroupMessages(channelId.value as number, [{
+      id: realMessage.id,
+      content: realMessage.content,
+      senderId: realMessage.senderId,
+      channelId: realMessage.channelId,
+      createdAt: realMessage.createdAt,
+      status: realMessage.status,
+    }])
   } catch (error) {
     console.error('Error sending message:', error)
   }

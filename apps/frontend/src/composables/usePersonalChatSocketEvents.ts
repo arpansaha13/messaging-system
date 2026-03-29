@@ -1,6 +1,5 @@
-import { MessageStatus, SocketEvents } from '@shared/constants'
-import type { IMessage, SocketEventPayloads } from '@shared/types'
-import type { IUser } from '~/types'
+import { MessageStatus, SocketEvents } from '~/constants'
+import type { IMessage, SocketEventPayloads, IUser  } from '~/types'
 import { handleDelivered, handleRead } from '~/utils/mutations/messages'
 
 export async function usePersonalChatSocketEvents() {
@@ -11,7 +10,6 @@ export async function usePersonalChatSocketEvents() {
   const route = useRoute()
   const { socket } = await useSocket()
   const { data: authUser } = await useFetchAuthUser()
-  const tempMessages = usePersonalMessagesStore()
   const { setTyping } = useTypingStore()
 
   const currentReceiverId = computed(() => {
@@ -47,34 +45,12 @@ export async function usePersonalChatSocketEvents() {
 
       // Notify server that message was delivered via HTTP API
       try {
-        await handleDelivered(message.id, user.id, payload.senderId)
+        await handleDelivered(message.id)
       } catch (error) {
         console.error('Error sending delivered status:', error)
       }
 
       pushMessage(payload.senderId, message)
-    }
-
-    const handleStatusSent = async (payload: SocketEventPayloads.Personal.OnSent) => {
-      const tempMessage = tempMessages.getTempMessage(payload.receiverId, payload.hash)
-      if (!tempMessage) return
-
-      const message: IMessage = {
-        id: payload.messageId,
-        senderId: user.id,
-        status: payload.status,
-        content: tempMessage.content,
-        createdAt: payload.createdAt,
-      }
-
-      const chatExists = Boolean(findConversation(payload.receiverId))
-      if (!chatExists) {
-        await initializeNewChat(payload.receiverId)
-      }
-
-      tempMessages.deleteTempMessage(payload.receiverId, tempMessage.hash)
-      updateLatestMessageInChatList(payload.receiverId, message)
-      pushMessage(payload.receiverId, message)
     }
 
     const handleStatusDelivered = (payload: SocketEventPayloads.Personal.OnDelivered) => {
@@ -94,14 +70,12 @@ export async function usePersonalChatSocketEvents() {
     }
 
     connection.on(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
-    connection.on(SocketEvents.PERSONAL.STATUS_SENT, handleStatusSent)
     connection.on(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
     connection.on(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
     connection.on(SocketEvents.PERSONAL.TYPING, handleTyping)
 
     onCleanup(() => {
       connection.off(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
-      connection.off(SocketEvents.PERSONAL.STATUS_SENT, handleStatusSent)
       connection.off(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
       connection.off(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
       connection.off(SocketEvents.PERSONAL.TYPING, handleTyping)
@@ -124,26 +98,22 @@ export async function usePersonalChatSocketEvents() {
     const { data: messages } = useNuxtData<IMessage[]>(asyncKeys.messages(receiverId))
     if (!messages.value) return
 
-    const payloads: SocketEventPayloads.Personal.EmitRead[] = []
+    const messageIds: IMessage['id'][] = []
 
     messages.value.forEach(message => {
       if (message.senderId === user.id || message.status === MessageStatus.READ) {
         return
       }
 
-      payloads.push({
-        messageId: message.id,
-        senderId: receiverId,
-        receiverId: user.id,
-      })
+      messageIds.push(message.id)
 
       updateLatestMessageStatusInChatList(receiverId, message.id, MessageStatus.READ)
       updateMessageStatus(receiverId, message.id, MessageStatus.READ)
     })
 
-    if (payloads.length > 0) {
+    if (messageIds.length > 0) {
       // Send read status via HTTP API
-      handleRead(payloads).catch(error => {
+      handleRead(messageIds).catch(error => {
         console.error('Error sending read status:', error)
       })
     }
@@ -151,20 +121,20 @@ export async function usePersonalChatSocketEvents() {
 }
 
 function findConversation(receiverId: number) {
-  const chatListData = getChatListData()
-  if (!chatListData.value) return null
+  const unarchivedChats = getUnarchivedChatListData()
+  const archivedChats = getArchivedChatListData()
 
   return (
-    chatListData.value.unarchived.find(item => item.receiver.id === receiverId) ??
-    chatListData.value.archived.find(item => item.receiver.id === receiverId) ??
+    unarchivedChats.value?.find(item => item.receiver.id === receiverId) ??
+    archivedChats.value?.find(item => item.receiver.id === receiverId) ??
     null
   )
 }
 
 function isConversationArchived(receiverId: number) {
-  const chatListData = getChatListData()
-  if (!chatListData.value) return false
-  return chatListData.value.archived.some(item => item.receiver.id === receiverId)
+  const archivedChats = getArchivedChatListData()
+  if (!archivedChats.value) return false
+  return archivedChats.value.some(item => item.receiver.id === receiverId)
 }
 
 function pushMessage(receiverId: IUser['id'], message: IMessage) {

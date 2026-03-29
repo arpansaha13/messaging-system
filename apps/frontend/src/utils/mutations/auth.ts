@@ -17,7 +17,7 @@ interface SignupResoonse {
 
 interface VerificationBody {
   hash: string
-  otp: string
+  code: string
 }
 
 export function login(body: LoginBody) {
@@ -38,9 +38,9 @@ export function signup(body: SignupBody) {
 
 export function verifySignup(body: VerificationBody) {
   const { $api } = useNuxtApp()
-  return $api(`/api/auth/verification/${body.hash}`, {
+  return $api(`/api/auth/verify/${body.hash}`, {
     method: 'POST',
-    body: { otp: body.otp },
+    body: { code: body.code },
   })
 }
 

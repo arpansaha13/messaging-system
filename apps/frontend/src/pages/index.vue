@@ -1,17 +1,23 @@
 <template>
   <NuxtLayout name="window">
     <template #left>
-      <UCard :ui="{ root: 'h-full', body: 'p-1.5 sm:p-1.5' }">
-        <ul class="space-y-1">
-          <li>
-            <ChatListItem
-              v-for="chatListItem in chatList?.unarchived"
-              :key="chatListItem.receiver.id"
-              :chat-list-item="chatListItem"
-              @delete="handleDelete"
-            />
+      <UCard :ui="{ root: 'h-full', body: 'p-1.5 sm:p-1.5 overflow-y-auto' }">
+        <template #header>
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Messages</h2>
+        </template>
+
+        <ul v-if="chatList && chatList.length > 0" class="space-y-1">
+          <li v-for="chatListItem in chatList" :key="chatListItem.receiver.id">
+            <ChatListItem :chat-list-item="chatListItem" @delete="handleDelete" />
           </li>
         </ul>
+
+        <UEmpty
+          v-else
+          icon="i-heroicons-envelope"
+          title="No messages yet"
+          description="Your messages will appear here"
+        />
       </UCard>
     </template>
   </NuxtLayout>
@@ -25,7 +31,7 @@ const toast = useToast()
 const overlay = useOverlay()
 const deleteModal = overlay.create(DeleteChatModal)
 
-const { data: chatList } = await useFetchChats()
+const { data: chatList } = await useFetchUnarchivedChats()
 
 async function handleDelete(deleteTarget: IChatListItem) {
   const instance = deleteModal.open({ deleteTarget })

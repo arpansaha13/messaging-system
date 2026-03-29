@@ -1,32 +1,78 @@
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: apps/nginx/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/nginx/server:0.1.0
+
   auth:
     build:
-      context: ../auth-system
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/auth/server/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
 
   backend:
     build:
       context: .
-      dockerfile: apps/backend/Dockerfile
+      dockerfile: apps/backend/server/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/backend/api:0.1.0
 
   socket:
     build:
       context: .
-      dockerfile: apps/socket/Dockerfile.prod
+      dockerfile: apps/socket/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/socket/ws:0.1.0
 
   frontend:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile.prod
-      args:
-        AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
     image: europe-north1-docker.pkg.dev/chat-application-13/frontend/app:0.1.0
 
   chat-worker:
     build:
       context: .
-      dockerfile: apps/chat-worker/Dockerfile.prod
+      dockerfile: apps/chat-worker/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/chat-worker/app:0.1.0
+
+  rabbitmq:
+    build:
+      context: .
+      dockerfile: apps/rabbitmq/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/rabbitmq/broker:0.1.0
+
+  loki:
+    build:
+      context: .
+      dockerfile: apps/observability/loki/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/loki/server:0.1.0
+
+  alloy:
+    build:
+      context: .
+      dockerfile: apps/observability/alloy/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/alloy/server:0.1.0
+
+  grafana:
+    build:
+      context: .
+      dockerfile: apps/observability/grafana/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/grafana/server:0.1.0
+
+  prometheus:
+    build:
+      context: .
+      dockerfile: apps/observability/prometheus/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/prometheus/server:0.1.0
+
+  tempo:
+    build:
+      context: .
+      dockerfile: apps/observability/tempo/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/tempo/server:0.1.0
+
+  fluent-bit:
+    build:
+      context: .
+      dockerfile: apps/observability/fluent-bit/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/fluent-bit/server:0.1.0

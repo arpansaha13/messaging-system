@@ -1,5 +1,4 @@
-import type { IChannel, IUser } from '~/types'
-import type { IGroupMessage, IMessage } from '@shared/types'
+import type { IChannel, IUser, IGroupMessage, IMessage  } from '~/types'
 
 export function fetchMessages(receiverId: IUser['id']) {
   const { $api } = useNuxtApp()
@@ -13,7 +12,7 @@ export function fetchGroupMessages(channelId: IChannel['id']) {
 
 export async function sendPersonalMessage(receiverId: IUser['id'], content: string, hash: string) {
   const { $api } = useNuxtApp()
-  return $api('/api/messages/send/personal', {
+  return $api<IMessage & { hash: string }>('/api/messages/send/personal', {
     method: 'POST',
     body: {
       receiverId,
@@ -25,7 +24,7 @@ export async function sendPersonalMessage(receiverId: IUser['id'], content: stri
 
 export async function sendGroupMessage(groupId: number, channelId: IChannel['id'], content: string, hash: string) {
   const { $api } = useNuxtApp()
-  return $api('/api/messages/send/group', {
+  return $api<IGroupMessage & { hash: string }>('/api/messages/send/group', {
     method: 'POST',
     body: {
       groupId,
@@ -36,30 +35,22 @@ export async function sendGroupMessage(groupId: number, channelId: IChannel['id'
   })
 }
 
-export async function handleDelivered(messageId: IMessage['id'], receiverId: IUser['id'], senderId: IUser['id']) {
+export async function handleDelivered(messageId: IMessage['id']) {
   const { $api } = useNuxtApp()
   return $api('/api/messages/status/delivered', {
     method: 'POST',
     body: {
       messageId,
-      receiverId,
-      senderId,
     },
   })
 }
 
-export async function handleRead(
-  messages: Array<{
-    messageId: IMessage['id']
-    senderId: IUser['id']
-    receiverId: IUser['id']
-  }>,
-) {
+export async function handleRead(messageIds: IMessage['id'][]) {
   const { $api } = useNuxtApp()
   return $api('/api/messages/status/read', {
     method: 'POST',
     body: {
-      messages,
+      messages: messageIds.map(id => ({ messageId: id })),
     },
   })
 }

@@ -1,5 +1,5 @@
-import type { IUser } from '~/types'
-import type { IMessageSending } from '@shared/types'
+import type { IUser, IMessageSending  } from '~/types'
+import type { MessageStatus } from '~/constants'
 
 type TempMessageMap = Map<string, IMessageSending>
 
@@ -35,10 +35,20 @@ export function usePersonalMessagesStore() {
     return tempMessagesMap.value.get(receiverId)?.get(hash) ?? null
   }
 
+  function updateTempMessageStatus(receiverId: IUser['id'], hash: string, status: MessageStatus.SENT) {
+    const existing = tempMessagesMap.value.get(receiverId)
+    if (!existing?.has(hash)) return
+    const next = cloneTempMessages()
+    const msg = next.get(receiverId)!.get(hash)!
+    next.get(receiverId)!.set(hash, { ...msg, status })
+    tempMessagesMap.value = next
+  }
+
   return {
     upsertTempMessages,
     deleteTempMessage,
     getTempMessages,
     getTempMessage,
+    updateTempMessageStatus,
   }
 }

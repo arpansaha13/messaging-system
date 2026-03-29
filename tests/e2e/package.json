@@ -1,0 +1,19 @@
+{
+  "name": "e2e-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "pnpm run setup && bash run-e2e.sh --no-teardown",
+    "test:ui": "pnpm run setup && bash run-e2e.sh --ui --no-teardown",
+    "setup": "pnpm -w build && docker compose --env-file .env.test -f ../../compose.test.yaml --profile e2e up -d --remove-orphans",
+    "report": "playwright show-report test-report",
+    "trace": "playwright show-trace test-results/**/*.zip"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/pg": "^8.11.0",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.20.0"
+  }
+}

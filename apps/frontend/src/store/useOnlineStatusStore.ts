@@ -1,6 +1,5 @@
-import type { IUser, IContact, IChatsResponse } from '~/types'
-import { SocketEvents } from '@shared/constants'
-import type { SocketEventPayloads } from '@shared/types'
+import type { IChatListItem, IContact, IUser, SocketEventPayloads  } from '~/types'
+import { SocketEvents } from '~/constants'
 
 export function useOnlineStatusStore() {
   const onlineStatusState = useState<Map<IUser['id'], boolean>>('onlineStatus', () => new Map())
@@ -91,19 +90,20 @@ function initializePeriodicFetching() {
 
     const path = route.path
 
-    const { data: chatList } = useNuxtData<IChatsResponse>(asyncKeys.chatList)
+    const { data: unarchivedChats } = useNuxtData<IChatListItem[]>(asyncKeys.chatListUnarchived)
+    const { data: archivedChats } = useNuxtData<IChatListItem[]>(asyncKeys.chatListArchived)
     const { data: contacts } = useNuxtData<Record<string, IContact[]>>(asyncKeys.contacts)
 
     // Extract userIds based on route
     if (path === '/') {
-      if (chatList.value?.unarchived) {
-        chatList.value.unarchived.forEach(item => {
+      if (unarchivedChats.value) {
+        unarchivedChats.value.forEach(item => {
           userIds.add(item.receiver.id)
         })
       }
     } else if (path === '/archived') {
-      if (chatList.value?.archived) {
-        chatList.value.archived.forEach(item => {
+      if (archivedChats.value) {
+        archivedChats.value.forEach(item => {
           userIds.add(item.receiver.id)
         })
       }

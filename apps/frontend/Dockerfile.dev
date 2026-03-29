@@ -7,21 +7,11 @@ RUN npm i -g --force corepack && corepack enable
 
 # Copy root workspace and package manifests (for layer caching)
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json .npmrc ./
-COPY packages/constants/package.json ./packages/constants/package.json
-COPY packages/types/package.json ./packages/types/package.json
 COPY apps/frontend/package.json ./apps/frontend/
 
 # Install dependencies
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
-
-# Copy shared packages
-COPY packages/constants ./packages/constants
-COPY packages/types ./packages/types
-
-# Build shared packages
-RUN cd /app/packages/constants && pnpm build
-RUN cd /app/packages/types && pnpm build
+	pnpm install --frozen-lockfile
 
 # Copy frontend app source
 COPY apps/frontend ./apps/frontend

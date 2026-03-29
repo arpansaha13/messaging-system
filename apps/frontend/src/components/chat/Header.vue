@@ -6,10 +6,10 @@
 
     <div>
       <div class="flex flex-col">
-        <h2 class="font-semibold">
+        <h2 class="font-semibold" data-testid="chat-header-title">
           {{ title }}
         </h2>
-        <p v-if="subtitle" class="text-xs text-gray-500 dark:text-gray-400">
+        <p v-if="subtitle" class="text-xs text-gray-500 dark:text-gray-400" data-testid="chat-header-subtitle">
           {{ subtitle }}
         </p>
       </div>

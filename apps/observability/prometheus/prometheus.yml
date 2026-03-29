@@ -1,0 +1,49 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Exemplars are experimental and need to be enabled via `--enable-feature=exemplar-storage`
+# https://prometheus.io/docs/prometheus/latest/configuration/configuration/#exemplars
+# storage:
+#   exemplars:
+#     max-exemplars: 100000
+
+scrape_configs:
+  # Go HTTP metrics (runtime + process) — dashboard 21221
+  - job_name: backend
+    static_configs:
+      - targets: ['backend:9090']
+
+  # Go gRPC server metrics — dashboard 14765
+  - job_name: auth
+    static_configs:
+      - targets: ['auth:9090']
+
+  # RabbitMQ native prometheus plugin (port 15692) — dashboard 10991
+  - job_name: rabbitmq
+    static_configs:
+      - targets: ['rabbitmq:15692']
+
+  # postgres_exporter sidecar shares auth-db network namespace — dashboard 9628
+  - job_name: postgres-auth-db
+    static_configs:
+      - targets: ['auth-db:9187']
+        labels:
+          db: auth-db
+
+  # postgres_exporter sidecar shares backend-db postgres network namespace — dashboard 9628
+  - job_name: postgres-backend-db
+    static_configs:
+      - targets: ['postgres:9187']
+        labels:
+          db: messaging
+
+  # memcached_exporter sidecar shares memcached network namespace — dashboard 11527
+  - job_name: memcached
+    static_configs:
+      - targets: ['memcached:9150']
+
+  # auth-cache memcached_exporter sidecar — dashboard 11527
+  - job_name: auth-cache
+    static_configs:
+      - targets: ['auth-cache:9150']

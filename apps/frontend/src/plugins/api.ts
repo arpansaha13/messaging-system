@@ -8,13 +8,9 @@ export default defineNuxtPlugin(nuxtApp => {
       if (import.meta.client) {
         options.credentials = 'include'
       } else {
+        // Environment variables are validated at startup, so these are guaranteed to exist
+        options.baseURL = runtimeConfig.apiBaseUrl
         const authCookieName = runtimeConfig.authCookieName
-        if (!authCookieName) return
-
-        const baseURL = runtimeConfig.apiBaseUrl
-        if (baseURL) {
-          options.baseURL = baseURL
-        }
 
         const headers = new Headers(options.headers)
         const token = useCookie<string | null>(authCookieName)
@@ -42,7 +38,13 @@ export default defineNuxtPlugin(nuxtApp => {
         // Not a JSON response
       }
 
-      if (response.status === 401) {
+      /**
+       * `/api/auth/verify/:hash` returns 401 for invalid or expired OTPs.
+       * Skip redirection to login page when on verification page.
+       */
+      const isAuthVerification = response.url?.includes('/api/auth/verify/')
+
+      if (response.status === 401 && !isAuthVerification) {
         await nuxtApp.runWithContext(() => navigateTo('/auth/login'))
       }
     },

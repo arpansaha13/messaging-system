@@ -9,7 +9,7 @@
         <UAvatar :src="authUser?.dp || undefined" :alt="authUser?.globalName" size="3xl" />
       </div>
 
-      <UForm :schema="schema" :state="formState" class="mt-4 space-y-4" @submit="onSubmit">
+      <UForm :schema="schema" :state="formState" class="mt-4 space-y-4" data-testid="profile-form" @submit="onSubmit">
         <!-- Global Name Field -->
         <UFormField label="Full Name" name="globalName">
           <UInput
@@ -17,18 +17,19 @@
             placeholder="Enter your full name"
             icon="i-heroicons-user"
             class="w-64"
+            data-testid="profile-name-input"
           />
         </UFormField>
 
         <!-- Bio Field -->
         <UFormField label="Bio" name="bio">
-          <UTextarea v-model="formState.bio" placeholder="Tell us about yourself" :rows="4" class="w-full" />
+          <UTextarea v-model="formState.bio" placeholder="Tell us about yourself" :rows="4" class="w-full" data-testid="profile-bio-textarea" />
         </UFormField>
 
         <!-- Submit Buttons -->
         <div class="flex gap-3 pt-4">
-          <UButton type="submit" :loading="savePending"> Save Changes </UButton>
-          <UButton color="neutral" variant="outline" @click="resetForm"> Cancel </UButton>
+          <UButton type="submit" :loading="savePending" data-testid="profile-save-btn"> Save Changes </UButton>
+          <UButton color="neutral" variant="outline" data-testid="profile-cancel-btn" @click="resetForm"> Cancel </UButton>
         </div>
 
         <!-- Success Message -->
@@ -40,6 +41,7 @@
             title="Success"
             description="Your profile has been updated successfully."
             :closable="true"
+            data-testid="profile-success-alert"
             @close="saveSuccess = false"
           />
         </transition>

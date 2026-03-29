@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4">
+  <div class="flex flex-col items-center justify-center gap-4 p-4" data-testid="verification-page">
     <UPageCard class="w-full max-w-md">
-      <div v-if="verificationStatus === 'verifying'" class="space-y-6 text-center">
+      <div v-if="verificationStatus === 'verifying'" class="space-y-6 text-center" data-testid="verification-verifying">
         <h2 class="text-2xl font-semibold">Verify your account</h2>
         <p class="text-muted">Enter the OTP sent to your email to verify your account.</p>
         <UAuthForm
@@ -13,19 +13,19 @@
           @submit="onVerify"
         />
       </div>
-      <div v-else-if="verificationStatus === 'verified'" class="space-y-4 text-center">
+      <div v-else-if="verificationStatus === 'verified'" class="space-y-4 text-center" data-testid="verification-verified">
         <UIcon name="i-lucide-check-circle" class="text-success mx-auto size-12" />
         <h2 class="text-2xl font-semibold">Verification successful!</h2>
         <p class="text-muted">Your account has been verified. You can now login.</p>
         <UButton to="/auth/login" class="w-full">Go to login</UButton>
       </div>
-      <div v-else-if="verificationStatus === 'expired'" class="space-y-4 text-center">
+      <div v-else-if="verificationStatus === 'expired'" class="space-y-4 text-center" data-testid="verification-expired">
         <UIcon name="i-lucide-alert-circle" class="text-error mx-auto size-12" />
         <h2 class="text-2xl font-semibold">Link Expired</h2>
         <p class="text-muted">The verification link has expired. Please request a new one.</p>
         <UButton to="/auth/login" class="w-full">Back to login</UButton>
       </div>
-      <div v-else-if="verificationStatus === 'error'" class="space-y-4 text-center">
+      <div v-else-if="verificationStatus === 'error'" class="space-y-4 text-center" data-testid="verification-error">
         <UIcon name="i-lucide-x-circle" class="text-error mx-auto size-12" />
         <h2 class="text-2xl font-semibold">Verification failed</h2>
         <p class="text-muted">{{ errorMessage }}</p>
@@ -53,14 +53,14 @@ const verificationStatus = ref<VerificationStatus>('verifying')
 const errorMessage = ref('')
 
 const verificationSchema = z.object({
-  otp: z.string().min(1, 'OTP is required'),
+  code: z.string().min(1, 'OTP is required'),
 })
 
 type VerificationSchema = z.output<typeof verificationSchema>
 
 const verificationFields = [
   {
-    name: 'otp',
+    name: 'code',
     type: 'text',
     label: 'OTP',
     placeholder: 'Enter the OTP',
@@ -74,7 +74,7 @@ async function onVerify(event: FormSubmitEvent<VerificationSchema>) {
   try {
     await verifySignup({
       hash: route.params.hash as string,
-      otp: event.data.otp,
+      code: event.data.code,
     })
     verificationStatus.value = 'verified'
     toast.add({

@@ -1,0 +1,11 @@
+go 1.25.6
+
+use ./apps/common
+
+use ./apps/auth/server
+
+use ./apps/backend/server
+
+use ./apps/chat-worker
+
+use ./apps/socket

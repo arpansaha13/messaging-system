@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { MessageStatus } from '@shared/constants'
+import { MessageStatus } from '~/constants'
 
 const props = defineProps<{
   status: MessageStatus

@@ -8,12 +8,13 @@
       placeholder="Type a message..."
       variant="subtle"
       class="grow"
-      @change="emit('change')"
+      data-testid="message-input"
+      @update:model-value="emit('change')"
       @keydown="handleKeydown"
       @compositionstart="handleCompositionStart"
       @compositionend="handleCompositionEnd"
     />
-    <UButton icon="i-lucide-send" color="primary" @click="handleSend" />
+    <UButton icon="i-lucide-send" color="primary" data-testid="send-btn" @click="handleSend" />
   </div>
 </template>
 

@@ -1,0 +1,3 @@
+overrides:
+  fake:
+    deletion_mode: filter-and-delete

@@ -22,8 +22,8 @@
 
     <template #footer>
       <div class="w-full sm:flex sm:flex-row-reverse sm:gap-3">
-        <UButton block color="error" :loading="loading" @click="handleDeleteChat"> Delete </UButton>
-        <UButton block variant="outline" color="neutral" class="mt-3 sm:mt-0" @click="cancel"> Cancel </UButton>
+        <UButton block color="error" :loading="loading" data-testid="delete-chat-confirm" @click="handleDeleteChat"> Delete </UButton>
+        <UButton block variant="outline" color="neutral" class="mt-3 sm:mt-0" data-testid="delete-chat-cancel" @click="cancel"> Cancel </UButton>
       </div>
     </template>
   </UModal>

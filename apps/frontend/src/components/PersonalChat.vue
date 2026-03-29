@@ -1,5 +1,5 @@
 <template>
-  <ChatWindow v-if="receiver">
+  <ChatWindow v-if="receiver" ref="chatWindowRef">
     <template #header>
       <ChatHeader
         :title="receiver.contact?.alias ?? receiver.globalName"
@@ -23,8 +23,8 @@
 </template>
 
 <script setup lang="ts">
-import type { IMessage, IMessageSending } from '@shared/types'
-import { MessageStatus, SocketEvents } from '@shared/constants'
+import type { IMessage, IMessageSending } from '~/types'
+import { MessageStatus, SocketEvents } from '~/constants'
 import { sendPersonalMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()
@@ -45,8 +45,16 @@ const receiverId = computed(() => {
 // Fetch receiver user data using useAsyncData with computed key
 const { data: receiver } = await useFetchUser(receiverId)
 
-// Fetch messages using useAsyncData
-const { data: messagesData, pending: messagesLoading } = await useFetchPersonalMessages(receiverId)
+// Setup scroll element ref and computed
+const chatWindowRef = useTemplateRef('chatWindowRef')
+const scrollEl = computed(() => {
+  if (!chatWindowRef.value) return null
+
+  const el = chatWindowRef.value.$el as HTMLDivElement
+  return el.children[1] as HTMLDivElement // UCard body
+})
+
+const { data: messagesData, pending: messagesLoading } = useFetchPersonalMessages(receiverId, scrollEl)
 
 // Convert fetched messages array to Map for ChatBody component
 const messagesAsMap = computed(() => {
@@ -117,8 +125,13 @@ const sendMessage = async (message: string) => {
     inputValue.value = ''
     if (typingTimeout) clearTimeout(typingTimeout)
 
-    // Send message via HTTP API instead of socket
-    await sendPersonalMessage(receiverId.value, newMessage.content, newMessage.hash)
+    // Send message via HTTP API — 201 means message is persisted; replace temp with real IMessage
+    const { hash, ...realMessage } = await sendPersonalMessage(receiverId.value, newMessage.content, newMessage.hash)
+    personalMessages.deleteTempMessage(receiverId.value, newMessage.hash)
+    updateLatestMessageInChatList(receiverId.value, realMessage)
+    if (messagesData.value) {
+      messagesData.value.push(realMessage)
+    }
   } catch (error) {
     console.error('Error sending message:', error)
   }
@@ -144,5 +157,13 @@ watchEffect(() => {
   }
 
   prevReceiverId.value = currentReceiverId
+})
+
+// Cleanup on component unmount
+onBeforeUnmount(() => {
+  if (typingTimeout) {
+    clearTimeout(typingTimeout)
+    typingTimeout = null
+  }
 })
 </script>

@@ -21,7 +21,7 @@
         class="block w-full border-none bg-gray-200 py-2 pr-8 pl-12 text-sm text-gray-600 placeholder-gray-500 shadow focus:border-none focus:ring-0 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:placeholder-gray-400 dark:shadow-gray-950/40"
         :value="modelValue"
         @input="onInput"
-      />
+      >
 
       <div v-if="modelValue" class="absolute inset-y-0 right-0 flex items-center pr-2">
         <button type="button" @click="clear">

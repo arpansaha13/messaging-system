@@ -6,7 +6,6 @@ export async function addContact(body: { userIdToAdd: IUser['id']; alias: IConta
     method: 'POST',
     body: { userIdToAdd: body.userIdToAdd, alias: body.alias },
   })
-  await refreshNuxtData(asyncKeys.contacts)
 }
 
 /**

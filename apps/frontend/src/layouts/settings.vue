@@ -1,13 +1,19 @@
 <template>
-  <div class="mx-auto flex h-full max-w-6xl gap-2 py-4">
-    <section class="w-60 shrink-0 space-y-4 rounded">
-      <UNavigationMenu :items="navigationItems" orientation="vertical" highlight class="px-3 py-4" />
-    </section>
+  <UPage :ui="{ root: ' p-2' }">
+    <!-- Sidebar Navigation -->
+    <template #left>
+      <UPageCard variant="ghost">
+        <UNavigationMenu :items="navigationItems" orientation="vertical" highlight class="px-1 py-2" />
+      </UPageCard>
+    </template>
 
-    <section class="h-full grow overflow-auto">
-      <slot />
-    </section>
-  </div>
+    <!-- Main Content -->
+    <UPageBody class="mt-0">
+      <main>
+        <slot />
+      </main>
+    </UPageBody>
+  </UPage>
 </template>
 
 <script setup lang="ts">
