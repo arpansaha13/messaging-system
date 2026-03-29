@@ -1,7 +1,6 @@
 FROM grafana/alloy:v1.13.1
 
-# Copy alloy configuration
-COPY apps/alloy/alloy-config.alloy /etc/alloy/alloy-config.alloy
+COPY apps/observability/alloy/alloy-config.alloy /etc/alloy/alloy-config.alloy
 
 EXPOSE 12345
 

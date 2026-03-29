@@ -104,9 +104,9 @@ Copy `.env.example` to `.env` before starting. All secrets and connection string
 | `apps/socket`                        | Go                  | Real-time WebSocket server             | WebSocket :4000   |
 | `apps/frontend`                      | TypeScript (Nuxt 4) | SSR web client                         | HTTP :3000        |
 | `apps/nginx`                         | —                   | Reverse proxy + TLS                    | HTTPS :7000       |
-| `apps/loki/alloy/grafana/fluent-bit` | —                   | Centralized logging stack              | —                 |
-| `apps/prometheus`                    | —                   | Metrics scraping (metrics profile)     | HTTP :9090        |
-| `apps/tempo`                         | —                   | Distributed trace backend              | gRPC :4317        |
+| `apps/observability/loki/alloy/grafana/fluent-bit` | —       | Centralized logging stack              | —                 |
+| `apps/observability/prometheus`                     | —       | Metrics scraping (metrics profile)     | HTTP :9090        |
+| `apps/observability/tempo`                          | —       | Distributed trace backend              | gRPC :4317        |
 
 ### Go workspace
 
@@ -193,7 +193,7 @@ Socket server tracks pings in-memory (`chats_store.go`) and flushes them to Memc
 - Metrics are bridged into the default Prometheus registry via `exporters/prometheus`. `otelhttp` (backend HTTP handler) and `otelgrpc` (auth gRPC server handler) emit OTel-native metrics automatically once MeterProvider is set.
 - Auth gRPC uses `otelgrpc.NewServerHandler()` (stats handler, not interceptor). Metric names follow semconv v1.39.0: `rpc_server_call_duration_seconds`, labels `rpc_system_name`, `rpc_method`, `rpc_response_status_code`.
 - Tracing is off when `OTLP_ENDPOINT` is unset (no-op TracerProvider). Set to `tempo:4317` in compose.yaml under the metrics profile.
-- Grafana dashboards are provisioned from `apps/grafana/provisioning/dashboards/`. Dashboard variables use `job` label to identify targets; DB dashboards hardcode `job` as a hidden constant (`postgres-auth-db` / `postgres-backend-db`).
+- Grafana dashboards are provisioned from `apps/observability/grafana/provisioning/dashboards/`. Dashboard variables use `job` label to identify targets; DB dashboards hardcode `job` as a hidden constant (`postgres-auth-db` / `postgres-backend-db`).
 
 ### Logging pipeline
 

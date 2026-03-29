@@ -25,7 +25,9 @@ services:
           path: ./apps/nginx/Dockerfile
 
   auth-db:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: apps/auth/postgres/Dockerfile
     container_name: auth-db
     profiles: [app, all]
     environment:
@@ -46,7 +48,9 @@ services:
       - messaging-network
 
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: apps/backend/postgres/Dockerfile
     container_name: postgres
     profiles: [app, all]
     environment:
@@ -405,7 +409,7 @@ services:
   loki:
     build:
       context: .
-      dockerfile: apps/loki/Dockerfile
+      dockerfile: apps/observability/loki/Dockerfile
     container_name: loki
     profiles: [logging, all]
     environment:
@@ -425,14 +429,14 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/loki/loki-config.yml
+          path: ./apps/observability/loki/loki-config.yml
         - action: rebuild
-          path: ./apps/loki/Dockerfile
+          path: ./apps/observability/loki/Dockerfile
 
   alloy:
     build:
       context: .
-      dockerfile: apps/alloy/Dockerfile
+      dockerfile: apps/observability/alloy/Dockerfile
     container_name: alloy
     profiles: [logging, all]
     depends_on:
@@ -449,14 +453,14 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/alloy/alloy-config.alloy
+          path: ./apps/observability/alloy/alloy-config.alloy
         - action: rebuild
-          path: ./apps/alloy/Dockerfile
+          path: ./apps/observability/alloy/Dockerfile
 
   grafana:
     build:
       context: .
-      dockerfile: apps/grafana/Dockerfile
+      dockerfile: apps/observability/grafana/Dockerfile
     container_name: grafana
     profiles: [logging, metrics, all]
     environment:
@@ -479,16 +483,16 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/grafana/provisioning/datasources
+          path: ./apps/observability/grafana/provisioning/datasources
         - action: rebuild
-          path: ./apps/grafana/provisioning/dashboards
+          path: ./apps/observability/grafana/provisioning/dashboards
         - action: rebuild
-          path: ./apps/grafana/Dockerfile
+          path: ./apps/observability/grafana/Dockerfile
 
   fluent-bit:
     build:
       context: .
-      dockerfile: apps/fluent-bit/Dockerfile
+      dockerfile: apps/observability/fluent-bit/Dockerfile
     container_name: fluent-bit
     profiles: [logging, all]
     volumes:
@@ -503,11 +507,11 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/fluent-bit/fluent-bit.yaml
+          path: ./apps/observability/fluent-bit/fluent-bit.yaml
         - action: rebuild
-          path: ./apps/fluent-bit/parsers.conf
+          path: ./apps/observability/fluent-bit/parsers.conf
         - action: rebuild
-          path: ./apps/fluent-bit/Dockerfile
+          path: ./apps/observability/fluent-bit/Dockerfile
 
   # ---------------------------------------------------------------------------
   # Metrics stack (--profile metrics)
@@ -562,7 +566,7 @@ services:
   prometheus:
     build:
       context: .
-      dockerfile: apps/prometheus/Dockerfile
+      dockerfile: apps/observability/prometheus/Dockerfile
     container_name: prometheus
     profiles: [metrics, all]
     # ports:
@@ -580,14 +584,14 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/prometheus/prometheus.yml
+          path: ./apps/observability/prometheus/prometheus.yml
         - action: rebuild
-          path: ./apps/prometheus/Dockerfile
+          path: ./apps/observability/prometheus/Dockerfile
 
   tempo:
     build:
       context: .
-      dockerfile: apps/tempo/Dockerfile
+      dockerfile: apps/observability/tempo/Dockerfile
     container_name: tempo
     profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
@@ -601,9 +605,9 @@ services:
     develop:
       watch:
         - action: rebuild
-          path: ./apps/tempo/tempo.yaml
+          path: ./apps/observability/tempo/tempo.yaml
         - action: rebuild
-          path: ./apps/tempo/Dockerfile
+          path: ./apps/observability/tempo/Dockerfile
 
 networks:
   messaging-network:

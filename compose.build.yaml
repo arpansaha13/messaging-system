@@ -44,35 +44,35 @@ services:
   loki:
     build:
       context: .
-      dockerfile: apps/loki/Dockerfile
+      dockerfile: apps/observability/loki/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/loki/server:0.1.0
 
   alloy:
     build:
       context: .
-      dockerfile: apps/alloy/Dockerfile
+      dockerfile: apps/observability/alloy/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/alloy/server:0.1.0
 
   grafana:
     build:
       context: .
-      dockerfile: apps/grafana/Dockerfile
+      dockerfile: apps/observability/grafana/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/grafana/server:0.1.0
 
   prometheus:
     build:
       context: .
-      dockerfile: apps/prometheus/Dockerfile
+      dockerfile: apps/observability/prometheus/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/prometheus/server:0.1.0
 
   tempo:
     build:
       context: .
-      dockerfile: apps/tempo/Dockerfile
+      dockerfile: apps/observability/tempo/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/tempo/server:0.1.0
 
   fluent-bit:
     build:
       context: .
-      dockerfile: apps/fluent-bit/Dockerfile
+      dockerfile: apps/observability/fluent-bit/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/fluent-bit/server:0.1.0

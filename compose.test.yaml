@@ -54,7 +54,9 @@ services:
   # Exposed on :7511 so global-setup.ts can query OTP codes directly
   # ---------------------------------------------------------------------------
   auth-db:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: apps/auth/postgres/Dockerfile
     container_name: auth-db_test
     profiles:
       - e2e
@@ -86,7 +88,9 @@ services:
 
   # Messaging DB exposed on :7521 for test data verification if needed
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: apps/backend/postgres/Dockerfile
     container_name: postgres_test
     profiles:
       - e2e
@@ -480,7 +484,7 @@ services:
     container_name: prometheus_test
     profiles: [metrics, all]
     volumes:
-      - ./apps/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./apps/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     # ports:
     #   - "7100:9090"
     depends_on:
@@ -524,8 +528,8 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
       - ./data/test/grafana:/var/lib/grafana
-      - ./apps/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./apps/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./apps/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./apps/observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
     ports:
       - "7090:3000"
     healthcheck:

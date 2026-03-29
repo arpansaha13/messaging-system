@@ -1,7 +1,6 @@
 FROM grafana/loki:3.6
 
-# Copy loki configuration
-COPY apps/loki/loki-config.yml /etc/loki/loki-config.yml
+COPY apps/observability/loki/loki-config.yml /etc/loki/loki-config.yml
 
 EXPOSE 3100
 

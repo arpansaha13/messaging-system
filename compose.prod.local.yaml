@@ -19,7 +19,9 @@ services:
       - messaging-network
 
   auth-db:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: apps/auth/postgres/Dockerfile
     container_name: auth-db_prod
     profiles: [all]
     environment:
@@ -80,7 +82,9 @@ services:
       - messaging-network
 
   postgres:
-    image: postgres:16-alpine
+    build:
+      context: .
+      dockerfile: apps/backend/postgres/Dockerfile
     container_name: postgres_prod
     profiles: [all]
     environment:
@@ -311,7 +315,7 @@ services:
   loki:
     build:
       context: .
-      dockerfile: apps/loki/Dockerfile
+      dockerfile: apps/observability/loki/Dockerfile
     container_name: loki_prod
     profiles: [all]
     environment:
@@ -329,7 +333,7 @@ services:
   alloy:
     build:
       context: .
-      dockerfile: apps/alloy/Dockerfile
+      dockerfile: apps/observability/alloy/Dockerfile
     container_name: alloy_prod
     profiles: [all]
     depends_on:
@@ -341,7 +345,7 @@ services:
   grafana:
     build:
       context: .
-      dockerfile: apps/grafana/Dockerfile
+      dockerfile: apps/observability/grafana/Dockerfile
     container_name: grafana_prod
     profiles: [all]
     environment:
@@ -367,7 +371,7 @@ services:
   fluent-bit:
     build:
       context: .
-      dockerfile: apps/fluent-bit/Dockerfile
+      dockerfile: apps/observability/fluent-bit/Dockerfile
     container_name: fluent-bit_prod
     profiles: [all]
     volumes:
