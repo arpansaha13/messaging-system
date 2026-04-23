@@ -28,7 +28,7 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := getToken(r)
 			if token == "" {
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "missing authorization token"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "missing authorization token"})
 				return
 			}
 
@@ -37,25 +37,25 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			resp, err := authClient.ValidateSession(r.Context(), token)
 			if err != nil {
 				lgr.Error("failed to validate session with auth service", zap.Error(err))
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
 			if !resp.Valid {
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
 			userResp, err := authClient.GetUser(r.Context(), resp.UserId, token)
 			if err != nil {
 				lgr.Error("failed to fetch user details from auth service", zap.Error(err))
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "failed to fetch user details"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "failed to fetch user details"})
 				return
 			}
 
 			if userResp.User == nil {
 				lgr.Error("user details not found in auth service response")
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "user not found"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "user not found"})
 				return
 			}
 

@@ -3,7 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/socket
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.11.0
+	github.com/arpansaha13/gotoolkit v0.11.1
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/google/uuid v1.6.0

@@ -24,7 +24,7 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			// Get token from Authorization header or cookie
 			token := getToken(r)
 			if token == "" {
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "missing authorization token"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "missing authorization token"})
 				return
 			}
 
@@ -38,15 +38,15 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 				// Check gRPC status code to distinguish between auth and infrastructure failures
 				st, ok := status.FromError(err)
 				if ok && st.Code() == codes.Unauthenticated {
-					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
 				} else {
-					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
+					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
 				}
 				return
 			}
 
 			if !resp.Valid {
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
@@ -57,16 +57,16 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 				// Check gRPC status code to distinguish between auth and infrastructure failures
 				st, ok := status.FromError(err)
 				if ok && st.Code() == codes.Unauthenticated {
-					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
 				} else {
-					gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
+					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
 				}
 				return
 			}
 
 			if userResp.User == nil {
 				lgr.Error("user details not found in auth service response")
-				gotoolkit.HttpWriteErrorWithContext(w, r.Context(), &gotoolkit.UnauthorizedError{Message: "user not found"})
+				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "user not found"})
 				return
 			}
 
