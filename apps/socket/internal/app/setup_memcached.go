@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 	"github.com/bradfitz/gomemcache/memcache"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 )
 
 // setupMemcached creates a MemcachedService and a ConnectionManager with auto-reconnect.
@@ -21,20 +20,20 @@ func SetupMemcached(
 	ctx context.Context,
 	creds config.MemcachedCreds,
 	log *zap.Logger,
-) (*cache.MemcachedService, *gotoolkit.ConnectionManager, error) {
+) (*cache.MemcachedService, *gtk.ConnectionManager, error) {
 	memcachedService := cache.NewMemcachedService()
 
-	memcachedConnMgr := gotoolkit.NewConnectionManager(
-		gotoolkit.ReconnectConfig{
+	memcachedConnMgr := gtk.NewConnectionManager(
+		gtk.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		log,
 		func(connectCtx context.Context) error {
-			client, err := gotoolkit.ConnectMemcachedWithBackoff(
+			client, err := gtk.ConnectMemcachedWithBackoff(
 				connectCtx,
 				creds.GetUrl(),
-				gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+				gtk.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
 			)
 			if err != nil {
 				return fmt.Errorf("failed to connect to memcached: %w", err)

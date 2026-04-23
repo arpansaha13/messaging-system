@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 // UserService handles user profile business logic
@@ -29,7 +27,7 @@ func NewUserService(userRepo repository.IUserRepository, contactRepo repository.
 
 // GetUserProfile retrieves the authenticated user's profile
 func (s *UserService) GetUserProfile(ctx context.Context) (*domain.UserProfile, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving user profile", zap.Int64("user_id", userID))
 
@@ -45,7 +43,7 @@ func (s *UserService) GetUserProfile(ctx context.Context) (*domain.UserProfile, 
 
 // SearchUserProfiles searches for user profiles
 func (s *UserService) SearchUserProfiles(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("searching user profiles", zap.String("query", req.Q))
 
 	userProfiles, err := s.userRepo.Search(ctx, req.Q, 20)
@@ -60,7 +58,7 @@ func (s *UserService) SearchUserProfiles(ctx context.Context, req *dto.SearchUse
 
 // GetUserProfileWithContact retrieves a user profile with contact info
 func (s *UserService) GetUserProfileWithContact(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	authUserID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving user profile with contact info", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID))
 
@@ -72,7 +70,7 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, req *dto.Ge
 
 	contact, err := s.contactRepo.GetContactByUserIds(ctx, authUserID, req.ID)
 	if err != nil {
-		if _, isNotFound := err.(*gotoolkit.NotFoundError); isNotFound {
+		if _, isNotFound := err.(*gtk.NotFoundError); isNotFound {
 			log.Debug("contact not found between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID))
 		} else {
 			log.Warn("failed to check contact status between users", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID), zap.Error(err))
@@ -86,7 +84,7 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, req *dto.Ge
 
 // UpdateUserProfile updates the authenticated user's profile information
 func (s *UserService) UpdateUserProfile(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("updating user profile", zap.Int64("user_id", userID))
 

@@ -6,13 +6,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-
-	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
 )
 
 // defaultTimeout is the default timeout for service operations
@@ -51,7 +50,7 @@ func (a *AuthService) getClient() pb.AuthServiceClient {
 
 // ValidateSession validates a session token with the auth service
 func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 
 	if token == "" {
 		log.Warn("validate session called with empty token")
@@ -89,7 +88,7 @@ func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.Va
 
 // Signup registers a new user with the auth service
 func (a *AuthService) Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("signup request received", zap.String("email", email))
 
 	client := a.getClient()
@@ -121,7 +120,7 @@ func (a *AuthService) Signup(ctx context.Context, email, password string) (*pb.S
 
 // Login authenticates a user with the auth service
 func (a *AuthService) Login(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("login request received", zap.String("email", email))
 
 	client := a.getClient()
@@ -153,7 +152,7 @@ func (a *AuthService) Login(ctx context.Context, email, password string) (*pb.Lo
 
 // VerifyOTP verifies an OTP code with the auth service
 func (a *AuthService) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("verify OTP request received")
 
 	client := a.getClient()
@@ -185,7 +184,7 @@ func (a *AuthService) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.
 
 // Logout logs out a user session with the auth service
 func (a *AuthService) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 
 	if token == "" {
 		log.Warn("logout called with empty token")
@@ -223,7 +222,7 @@ func (a *AuthService) Logout(ctx context.Context, token string) (*pb.LogoutRespo
 
 // GetUser retrieves user information from the auth service
 func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("get user request received", zap.Int64("user_id", userID))
 
 	client := a.getClient()

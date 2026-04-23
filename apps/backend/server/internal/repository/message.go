@@ -5,11 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // MessageWithStatus holds message data with delivery status from message_recipient
@@ -54,7 +53,7 @@ func (r *MessageRepository) Create(ctx context.Context, message *domain.Message)
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create message", Err: err}
+		return &gtk.InternalError{Message: "failed to create message", Err: err}
 	}
 	return nil
 }
@@ -72,9 +71,9 @@ func (r *MessageRepository) GetByID(ctx context.Context, messageID int64) (*doma
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "message not found"}
+			return nil, &gtk.NotFoundError{Message: "message not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get message", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get message", Err: err}
 	}
 
 	return result.(*domain.Message), nil
@@ -183,7 +182,7 @@ func (r *MessageRepository) GetMessagesByUserId(ctx context.Context, senderID, r
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get messages", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get messages", Err: err}
 	}
 
 	return result.(*MessagePage), nil
@@ -196,7 +195,7 @@ func (r *MessageRepository) Delete(ctx context.Context, messageID int64) error {
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete message", Err: err}
+		return &gtk.InternalError{Message: "failed to delete message", Err: err}
 	}
 	return nil
 }
@@ -208,7 +207,7 @@ func (r *MessageRepository) Update(ctx context.Context, message *domain.Message)
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update message", Err: err}
+		return &gtk.InternalError{Message: "failed to update message", Err: err}
 	}
 	return nil
 }
@@ -244,7 +243,7 @@ func (r *MessageRepository) GetLatestMessageByUsersInChat(ctx context.Context, u
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // No message found
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get latest message", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get latest message", Err: err}
 	}
 
 	return result.(*MessageWithStatus), nil
@@ -344,7 +343,7 @@ func (r *MessageRepository) GetMessagesByChannelID(ctx context.Context, channelI
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get channel messages", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get channel messages", Err: err}
 	}
 
 	return result.(*ChannelMessagePage), nil
@@ -362,7 +361,7 @@ func (r *MessageRepository) GetByIDs(ctx context.Context, ids []int64) ([]*domai
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get messages by IDs", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get messages by IDs", Err: err}
 	}
 
 	return result.([]*domain.Message), nil

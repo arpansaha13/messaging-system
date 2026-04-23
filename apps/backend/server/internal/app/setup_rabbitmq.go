@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	amqp "github.com/rabbitmq/amqp091-go"
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	amqp "github.com/rabbitmq/amqp091-go"
+	"go.uber.org/zap"
 )
 
 // SetupRabbitMQ creates a RabbitMQService and a ConnectionManager with auto-reconnect.
@@ -20,7 +19,7 @@ func SetupRabbitMQ(
 	ctx context.Context,
 	zapLogger *zap.Logger,
 	cbs *circuits.Circuits,
-) (*service.RabbitMQService, *gotoolkit.ConnectionManager, error) {
+) (*service.RabbitMQService, *gtk.ConnectionManager, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, nil, err
@@ -28,16 +27,16 @@ func SetupRabbitMQ(
 
 	rabbitmqService := service.NewRabbitMQService(zapLogger, cbs.RabbitMQ)
 
-	var rabbitMQConnMgr *gotoolkit.ConnectionManager
+	var rabbitMQConnMgr *gtk.ConnectionManager
 
-	rabbitMQConnMgr = gotoolkit.NewConnectionManager(
-		gotoolkit.ReconnectConfig{
+	rabbitMQConnMgr = gtk.NewConnectionManager(
+		gtk.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		zapLogger,
 		func(connectCtx context.Context) error {
-			amqpConn, err := gotoolkit.ConnectRabbitMQWithBackoff(connectCtx, cfg.RabbitMQURL())
+			amqpConn, err := gtk.ConnectRabbitMQWithBackoff(connectCtx, cfg.RabbitMQURL())
 			if err != nil {
 				return err
 			}

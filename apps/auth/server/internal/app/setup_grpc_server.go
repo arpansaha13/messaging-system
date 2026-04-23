@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -8,8 +9,6 @@ import (
 
 	"github.com/arpansaha13/goauthkit/pb"
 	goauthkit "github.com/arpansaha13/goauthkit/pkg"
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
@@ -18,7 +17,7 @@ import (
 // SetupGRPCServer wires repositories, email provider, auth service, and gRPC interceptors.
 // Creates sessionCache from memcachedClient if available.
 // Returns the server (for Serve/GracefulStop) and the email pool (for Stop on shutdown).
-func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *gotoolkit.MemcachedClient) (*grpc.Server, *goauthkit.EmailWorkerPool) {
+func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *gtk.MemcachedClient) (*grpc.Server, *goauthkit.EmailWorkerPool) {
 	cfg, _ := config.Load()
 
 	userRepo := goauthkit.NewUserRepository(db, cbs.Postgres)
@@ -73,9 +72,9 @@ func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits,
 		// is present when GrpcInterceptor reads trace_id/span_id.
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			gotoolkit.GrpcRecoveryInterceptor(),
-			logger.GrpcInterceptor(zapLogger),
-			gotoolkit.GrpcErrorInterceptor(),
+			gtk.GrpcRecoveryInterceptor(),
+			gtk.GrpcLoggerInterceptor(zapLogger),
+			gtk.GrpcErrorInterceptor(),
 			goauthkit.AuthorizationInterceptor(),
 		),
 	}

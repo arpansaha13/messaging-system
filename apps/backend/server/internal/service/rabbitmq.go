@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/json"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
@@ -132,7 +132,7 @@ func (r *RabbitMQService) UnsetConnection() {
 func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) error {
 	_, err := r.cb.Execute(func() (any, error) {
 		if r.channel == nil {
-			return nil, &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
+			return nil, &gtk.InternalError{Message: "RabbitMQ channel not initialized"}
 		}
 
 		messageBytes, err := json.Marshal(message)
@@ -168,7 +168,7 @@ func (r *RabbitMQService) PublishToIncoming(routingKey string, message any) erro
 func (r *RabbitMQService) PublishToOutgoing(routingKey string, message any) error {
 	_, err := r.cb.Execute(func() (any, error) {
 		if r.channel == nil {
-			return nil, &gotoolkit.InternalError{Message: "RabbitMQ channel not initialized"}
+			return nil, &gtk.InternalError{Message: "RabbitMQ channel not initialized"}
 		}
 
 		messageBytes, err := json.Marshal(message)

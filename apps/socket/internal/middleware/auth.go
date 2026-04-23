@@ -6,14 +6,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/utils"
+	"go.uber.org/zap"
 )
 
 const (
@@ -28,34 +26,34 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := getToken(r)
 			if token == "" {
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "missing authorization token"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "missing authorization token"})
 				return
 			}
 
-			lgr := logger.FromContext(r.Context())
+			lgr := gtk.LoggerFromContext(r.Context())
 
 			resp, err := authClient.ValidateSession(r.Context(), token)
 			if err != nil {
 				lgr.Error("failed to validate session with auth service", zap.Error(err))
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
 			if !resp.Valid {
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
 			userResp, err := authClient.GetUser(r.Context(), resp.UserId, token)
 			if err != nil {
 				lgr.Error("failed to fetch user details from auth service", zap.Error(err))
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "failed to fetch user details"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "failed to fetch user details"})
 				return
 			}
 
 			if userResp.User == nil {
 				lgr.Error("user details not found in auth service response")
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "user not found"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "user not found"})
 				return
 			}
 
@@ -70,7 +68,7 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			ctx := context.WithValue(r.Context(), UserIDContextKey, userIDStr)
 			ctx = context.WithValue(ctx, AuthUserContextKey, authUser)
 			ctx = utils.SetTokenInContext(ctx, token)
-			ctx = logger.WithFields(ctx, zap.String("user_id", userIDStr))
+			ctx = gtk.LoggerWithFields(ctx, zap.String("user_id", userIDStr))
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

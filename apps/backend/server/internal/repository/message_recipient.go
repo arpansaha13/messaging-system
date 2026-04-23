@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // MessageRecipientRepository handles message recipient-related database operations
@@ -29,7 +28,7 @@ func (r *MessageRecipientRepository) Create(ctx context.Context, recipient *doma
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create message recipient", Err: err}
+		return &gtk.InternalError{Message: "failed to create message recipient", Err: err}
 	}
 	return nil
 }
@@ -47,9 +46,9 @@ func (r *MessageRecipientRepository) GetByID(ctx context.Context, recipientID in
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "message recipient not found"}
+			return nil, &gtk.NotFoundError{Message: "message recipient not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get message recipient", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get message recipient", Err: err}
 	}
 
 	return result.(*domain.MessageRecipient), nil
@@ -70,9 +69,9 @@ func (r *MessageRecipientRepository) GetByMessageAndReceiver(ctx context.Context
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "message recipient not found"}
+			return nil, &gtk.NotFoundError{Message: "message recipient not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get message recipient", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get message recipient", Err: err}
 	}
 
 	return result.(*domain.MessageRecipient), nil
@@ -92,7 +91,7 @@ func (r *MessageRecipientRepository) GetByMessageID(ctx context.Context, message
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get message recipients", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get message recipients", Err: err}
 	}
 
 	return result.([]*domain.MessageRecipient), nil
@@ -108,7 +107,7 @@ func (r *MessageRecipientRepository) UpdateStatus(ctx context.Context, recipient
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update message recipient status", Err: err}
+		return &gtk.InternalError{Message: "failed to update message recipient status", Err: err}
 	}
 	return nil
 }
@@ -123,7 +122,7 @@ func (r *MessageRecipientRepository) UpdateStatusByMessageAndReceiver(ctx contex
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update message recipient status", Err: err}
+		return &gtk.InternalError{Message: "failed to update message recipient status", Err: err}
 	}
 	return nil
 }
@@ -135,7 +134,7 @@ func (r *MessageRecipientRepository) Delete(ctx context.Context, recipientID int
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete message recipient", Err: err}
+		return &gtk.InternalError{Message: "failed to delete message recipient", Err: err}
 	}
 	return nil
 }
@@ -154,7 +153,7 @@ func (r *MessageRecipientRepository) GetByMessageIDsAndReceiver(ctx context.Cont
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get message recipients by message IDs and receiver", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get message recipients by message IDs and receiver", Err: err}
 	}
 
 	return result.([]*domain.MessageRecipient), nil

@@ -6,16 +6,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sony/gobreaker/v2"
-	"go.uber.org/zap"
-	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/sony/gobreaker/v2"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // MessageService handles message business logic
@@ -50,13 +48,13 @@ func NewMessageService(
 // SendPersonalMessage persists a personal message and enqueues it for delivery to the recipient.
 // Returns the persisted message ID and creation timestamp so the caller can echo them back to the sender.
 func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendPersonalMessageDTO) (int64, time.Time, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	senderID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("sending personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Int("content_length", len(req.Content)))
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for personal message send", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID))
-		return 0, time.Time{}, &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
+		return 0, time.Time{}, &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	var messageID int64
@@ -126,13 +124,13 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 // SendGroupMessage persists a group message and enqueues it for delivery to the channel.
 // Returns the persisted message ID and creation timestamp so the caller can echo them back to the sender.
 func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGroupMessageDTO) (int64, time.Time, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	senderID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("sending group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID), zap.Int("content_length", len(req.Content)))
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
-		return 0, time.Time{}, &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
+		return 0, time.Time{}, &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	var messageID int64
@@ -204,7 +202,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 
 // GetMessages retrieves messages between the authenticated user and a receiver using cursor-based pagination
 func (s *MessageService) GetMessages(ctx context.Context, req *dto.GetMessagesDTO) (*repository.MessagePage, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving messages", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -221,19 +219,19 @@ func (s *MessageService) GetMessages(ctx context.Context, req *dto.GetMessagesDT
 // MarkMessageAsDelivered verifies the authenticated receiver owns the recipient record,
 // derives senderID from the DB, then publishes a delivered status update to RabbitMQ.
 func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, req *dto.HandleDeliveredDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	receiverID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("marking message as delivered", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID))
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for delivered status", zap.Int64("message_id", req.MessageID))
-		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
+		return &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	if _, err := s.messageRecipientRepo.GetByMessageAndReceiver(ctx, req.MessageID, receiverID); err != nil {
-		if gotoolkit.IsNotFound(err) {
+		if gtk.IsNotFound(err) {
 			log.Warn("delivered status rejected: caller is not the recipient", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID))
-			return &gotoolkit.ForbiddenError{Message: "not a recipient of this message"}
+			return &gtk.ForbiddenError{Message: "not a recipient of this message"}
 		}
 		log.Error("failed to verify message recipient for delivered status", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID), zap.Error(err))
 		return err
@@ -269,13 +267,13 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, req *dto.Ha
 // derives senderIDs from the DB, then publishes read status updates to RabbitMQ.
 // Messages that cannot be verified (stale frontend state) are silently dropped.
 func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleReadMultipleDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	receiverID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("marking messages as read", zap.Int("message_count", len(req.Messages)))
 
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for read status")
-		return &gotoolkit.InternalError{Message: "RabbitMQ not connected"}
+		return &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
 
 	if len(req.Messages) == 0 {
@@ -354,7 +352,7 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleR
 
 // GetChannelMessages retrieves messages for a channel using cursor-based pagination
 func (s *MessageService) GetChannelMessages(ctx context.Context, req *dto.GetChannelMessagesDTO) (*repository.ChannelMessagePage, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("retrieving channel messages", zap.Int64("channel_id", req.ChannelID))
 
 	page, err := s.messageRepo.GetMessagesByChannelID(ctx, req.ChannelID, req.Before, req.After)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 )
 
@@ -35,7 +35,7 @@ func NewMockBroker() *MockBroker {
 }
 
 // Connect marks the broker as connected
-func (m *MockBroker) Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error {
+func (m *MockBroker) Connect(ctx context.Context, opts ...gtk.BackoffOption) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.connected = true

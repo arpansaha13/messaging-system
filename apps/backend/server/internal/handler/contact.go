@@ -3,13 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupContactRoutes sets up contact routes
@@ -22,7 +20,7 @@ func SetupContactRoutes(router *mux.Router, protectedRouter *mux.Router, contact
 
 func addContactController(contactService service.IContactService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("add contact handler called")
 
 		req, err := dto.NewAddContactDTO(r)
@@ -61,7 +59,7 @@ func addContactController(contactService service.IContactService) gtk.Controller
 
 func getContactsController(contactService service.IContactService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get contacts handler called")
 
 		contacts, err := contactService.GetContacts(r.Context())
@@ -93,7 +91,7 @@ func getContactsController(contactService service.IContactService) gtk.Controlle
 
 func updateContactAliasController(contactService service.IContactService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("update contact alias handler called")
 
 		req, err := dto.NewUpdateContactAliasDTO(r)
@@ -125,7 +123,7 @@ func updateContactAliasController(contactService service.IContactService) gtk.Co
 
 func deleteContactController(contactService service.IContactService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("delete contact handler called")
 
 		req, err := dto.NewDeleteContactDTO(r)

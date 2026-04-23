@@ -3,13 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupChatRoutes sets up chat routes
@@ -26,7 +24,7 @@ func SetupChatRoutes(router *mux.Router, protectedRouter *mux.Router, chatServic
 
 func getUserUnarchivedChatsController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get unarchived chats handler called")
 
 		chatsResponse, err := chatService.GetUserUnarchivedChats(r.Context())
@@ -46,7 +44,7 @@ func getUserUnarchivedChatsController(chatService service.IChatService) gtk.Cont
 
 func getUserArchivedChatsController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get archived chats handler called")
 
 		chatsResponse, err := chatService.GetUserArchivedChats(r.Context())
@@ -66,7 +64,7 @@ func getUserArchivedChatsController(chatService service.IChatService) gtk.Contro
 
 func pinChatController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("pin chat handler called")
 
 		req, err := dto.NewPinChatDTO(r)
@@ -93,7 +91,7 @@ func pinChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 func unpinChatController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("unpin chat handler called")
 
 		req, err := dto.NewUnpinChatDTO(r)
@@ -120,7 +118,7 @@ func unpinChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 func archiveChatController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("archive chat handler called")
 
 		req, err := dto.NewArchiveChatDTO(r)
@@ -147,7 +145,7 @@ func archiveChatController(chatService service.IChatService) gtk.ControllerFunc 
 
 func unarchiveChatController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("unarchive chat handler called")
 
 		req, err := dto.NewUnarchiveChatDTO(r)
@@ -174,7 +172,7 @@ func unarchiveChatController(chatService service.IChatService) gtk.ControllerFun
 
 func clearChatController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("clear chat handler called")
 
 		req, err := dto.NewClearChatDTO(r)
@@ -201,7 +199,7 @@ func clearChatController(chatService service.IChatService) gtk.ControllerFunc {
 
 func deleteChatController(chatService service.IChatService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("delete chat handler called")
 
 		req, err := dto.NewDeleteChatDTO(r)

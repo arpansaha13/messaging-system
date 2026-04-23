@@ -3,7 +3,7 @@ package broker
 import (
 	"context"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 )
 
 // MessagePayload represents the base structure for messages in RabbitMQ
@@ -60,7 +60,7 @@ type MessageBroker interface {
 	PublishToSubscription(serverId string, message any) error
 
 	// Lifecycle
-	Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error
+	Connect(ctx context.Context, opts ...gtk.BackoffOption) error
 	Disconnect() error
 	IsConnected() bool
 }

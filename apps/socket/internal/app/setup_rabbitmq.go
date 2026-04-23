@@ -6,15 +6,14 @@ import (
 	"strconv"
 	"time"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // setupRabbitMQ creates a RabbitMQBroker and a ConnectionManager with auto-reconnect.
@@ -27,9 +26,9 @@ func SetupRabbitMQ(
 	hub *ws.Hub,
 	chatsStore *store.ChatsStore,
 	groupHandlers *ws.GroupHandlers,
-) (*broker.RabbitMQBroker, *gotoolkit.ConnectionManager, error) {
+) (*broker.RabbitMQBroker, *gtk.ConnectionManager, error) {
 	rabbitBroker := broker.NewRabbitMQBroker(creds.GetUrl(), serverId, log)
-	var rabbitMQConnMgr *gotoolkit.ConnectionManager
+	var rabbitMQConnMgr *gtk.ConnectionManager
 
 	rabbitBroker.SetDisconnectHandler(func(err error) {
 		if err != nil {
@@ -118,8 +117,8 @@ func SetupRabbitMQ(
 		return nil
 	}
 
-	rabbitMQConnMgr = gotoolkit.NewConnectionManager(
-		gotoolkit.ReconnectConfig{
+	rabbitMQConnMgr = gtk.NewConnectionManager(
+		gtk.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
@@ -127,7 +126,7 @@ func SetupRabbitMQ(
 		func(connectCtx context.Context) error {
 			if err := rabbitBroker.Connect(
 				connectCtx,
-				gotoolkit.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
+				gtk.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
 			); err != nil {
 				return err
 			}

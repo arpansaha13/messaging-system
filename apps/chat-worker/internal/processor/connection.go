@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sony/gobreaker/v2"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -30,7 +30,7 @@ func NewConnectionProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobrea
 
 // ProcessUserConnection handles user connection events
 func (cp *ConnectionProcessor) ProcessUserConnection(ctx context.Context, payload *broker.UserConnectionPayload) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("processing user connection", zap.Int64("user_id", payload.UserId), zap.String("server_id", payload.ServerId))
 
 	_, err := cp.cb.Execute(func() (any, error) {

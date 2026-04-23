@@ -4,15 +4,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupAuthRoutes sets up authentication routes (public, no auth required)
@@ -29,7 +27,7 @@ func SetupAuthProtectedRoutes(protectedRouter *mux.Router, authServiceClient ser
 
 func signupController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("signup request handler called")
 
 		req, err := dto.NewSignupDTO(r)
@@ -73,7 +71,7 @@ func signupController(authServiceClient service.IAuthServiceClient) gtk.Controll
 
 func loginController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("login request handler called")
 
 		req, err := dto.NewLoginDTO(r)
@@ -135,7 +133,7 @@ func loginController(authServiceClient service.IAuthServiceClient) gtk.Controlle
 
 func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("verify otp handler called")
 
 		req, err := dto.NewVerifyOTPDTO(r)
@@ -198,7 +196,7 @@ func verifyOTPController(authServiceClient service.IAuthServiceClient) gtk.Contr
 
 func logoutController(authServiceClient service.IAuthServiceClient) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("logout handler called")
 
 		cfg, _ := config.Load()

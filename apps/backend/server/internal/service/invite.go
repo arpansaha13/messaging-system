@@ -6,14 +6,12 @@ import (
 	"encoding/hex"
 	"time"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 // AcceptInviteResponseDTO represents the response when accepting an invite
@@ -56,7 +54,7 @@ func (s *InviteService) generateHash() (string, error) {
 
 // CreateInvite creates a new invite for a group
 func (s *InviteService) CreateInvite(ctx context.Context, req *dto.CreateInviteDTO) (*domain.Invite, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	inviterID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("creating invite", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID))
 
@@ -71,7 +69,7 @@ func (s *InviteService) CreateInvite(ctx context.Context, req *dto.CreateInviteD
 	hash, err := s.generateHash()
 	if err != nil {
 		log.Error("failed to generate invite hash", zap.Int64("group_id", req.GroupID), zap.Error(err))
-		return nil, &gotoolkit.InternalError{Message: "failed to generate invite", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to generate invite", Err: err}
 	}
 
 	// Set expiration to 24 hours from now
@@ -98,7 +96,7 @@ func (s *InviteService) CreateInvite(ctx context.Context, req *dto.CreateInviteD
 
 // FindByHash finds an invite by its hash
 func (s *InviteService) FindByHash(ctx context.Context, req *dto.FindInviteDTO) (*domain.Invite, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("finding invite by hash")
 
 	invite, err := s.inviteRepo.GetByHash(ctx, req.Hash)
@@ -113,7 +111,7 @@ func (s *InviteService) FindByHash(ctx context.Context, req *dto.FindInviteDTO) 
 
 // AcceptInvite accepts an invite and adds the authenticated user to the group
 func (s *InviteService) AcceptInvite(ctx context.Context, input *dto.AcceptInviteInput) (*AcceptInviteResponseDTO, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("accepting invite", zap.Int64("user_id", userID))
 
@@ -127,13 +125,13 @@ func (s *InviteService) AcceptInvite(ctx context.Context, input *dto.AcceptInvit
 	// Check if invite is expired
 	if invite.ExpiresAt != nil && time.Now().After(*invite.ExpiresAt) {
 		log.Warn("invite expired for user", zap.Int64("user_id", userID))
-		return nil, &gotoolkit.ValidationError{Message: "This invite link is either invalid or expired."}
+		return nil, &gtk.ValidationError{Message: "This invite link is either invalid or expired."}
 	}
 
 	// Check if group exists
 	if invite.GroupID == nil {
 		log.Warn("invite does not have associated group")
-		return nil, &gotoolkit.ValidationError{Message: "invite does not have an associated group"}
+		return nil, &gtk.ValidationError{Message: "invite does not have an associated group"}
 	}
 
 	// Check if user already in group
@@ -144,7 +142,7 @@ func (s *InviteService) AcceptInvite(ctx context.Context, input *dto.AcceptInvit
 	}
 	if exists {
 		log.Warn("user already in group", zap.Int64("user_id", userID), zap.Int64("group_id", *invite.GroupID))
-		return nil, &gotoolkit.ValidationError{Message: "User has already joined group"}
+		return nil, &gtk.ValidationError{Message: "User has already joined group"}
 	}
 
 	// Add user to group

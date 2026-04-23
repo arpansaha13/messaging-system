@@ -191,4 +191,3 @@ func (c *MockAuthServiceClient) Logout(ctx context.Context, token string) (*pb.L
 func (c *MockAuthServiceClient) Close() error {
 	return nil
 }
-

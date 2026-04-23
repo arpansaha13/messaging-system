@@ -3,12 +3,11 @@ package app
 import (
 	"context"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 )
 
 // SetupPostgres connects to Postgres with exponential backoff and returns the GORM DB instance.
@@ -18,9 +17,9 @@ func SetupPostgres(ctx context.Context, zapLogger *zap.Logger) (*gorm.DB, error)
 		return nil, err
 	}
 	gormCfg := gorm.Config{
-		Logger: gotoolkit.NewGormLogger(zapLogger, gormlogger.Warn),
+		Logger: gtk.NewGormLogger(zapLogger, gormlogger.Warn),
 	}
-	db, err := gotoolkit.ConnectPostgresWithBackoff(ctx, cfg.DatabaseURL(), &gormCfg)
+	db, err := gtk.ConnectPostgresWithBackoff(ctx, cfg.DatabaseURL(), &gormCfg)
 	if err != nil {
 		return nil, err
 	}

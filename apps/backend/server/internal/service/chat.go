@@ -4,14 +4,12 @@ import (
 	"context"
 	"sort"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 // ChatItemDTO represents a chat with its latest message and receiver info
@@ -50,7 +48,7 @@ func NewChatService(chatRepo repository.IChatRepository, messageRepo repository.
 
 // CreateChat creates a new chat between the authenticated user and another user
 func (s *ChatService) CreateChat(ctx context.Context, req *dto.CreateChatDTO) (*domain.Chat, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("creating chat", zap.Int64("user_1_id", userID), zap.Int64("user_2_id", req.ReceiverID))
 
@@ -91,7 +89,7 @@ func (s *ChatService) GetUserArchivedChats(ctx context.Context) ([]*ChatItemDTO,
 }
 
 func (s *ChatService) getUserChatsByArchivedStatus(ctx context.Context, archived bool) ([]*ChatItemDTO, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving user chats", zap.Int64("user_id", userID), zap.Bool("archived", archived))
 
@@ -124,7 +122,7 @@ func (s *ChatService) getUserChatsByArchivedStatus(ctx context.Context, archived
 	for _, chat := range chats {
 		latestMsg, err := s.messageRepo.GetLatestMessageByUsersInChat(ctx, userID, chat.ReceiverID, chat.ClearedAt)
 		if err != nil {
-			if _, isNotFound := err.(*gotoolkit.NotFoundError); isNotFound {
+			if _, isNotFound := err.(*gtk.NotFoundError); isNotFound {
 				log.Debug("no latest message found for chat", zap.Int64("chat_id", chat.ID))
 			} else {
 				log.Warn("failed to get latest message for chat", zap.Int64("chat_id", chat.ID), zap.Error(err))
@@ -186,7 +184,7 @@ func sortChats(items []*ChatItemDTO) {
 
 // PinChat pins a chat for the authenticated user
 func (s *ChatService) PinChat(ctx context.Context, req *dto.PinChatDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("pinning chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -198,7 +196,7 @@ func (s *ChatService) PinChat(ctx context.Context, req *dto.PinChatDTO) error {
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
-		return &gotoolkit.NotFoundError{Message: "chat not found"}
+		return &gtk.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Pinned = true
@@ -215,7 +213,7 @@ func (s *ChatService) PinChat(ctx context.Context, req *dto.PinChatDTO) error {
 
 // UnpinChat unpins a chat for the authenticated user
 func (s *ChatService) UnpinChat(ctx context.Context, req *dto.UnpinChatDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("unpinning chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -227,7 +225,7 @@ func (s *ChatService) UnpinChat(ctx context.Context, req *dto.UnpinChatDTO) erro
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
-		return &gotoolkit.NotFoundError{Message: "chat not found"}
+		return &gtk.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Pinned = false
@@ -243,7 +241,7 @@ func (s *ChatService) UnpinChat(ctx context.Context, req *dto.UnpinChatDTO) erro
 
 // ArchiveChat archives a chat for the authenticated user
 func (s *ChatService) ArchiveChat(ctx context.Context, req *dto.ArchiveChatDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("archiving chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -255,7 +253,7 @@ func (s *ChatService) ArchiveChat(ctx context.Context, req *dto.ArchiveChatDTO) 
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
-		return &gotoolkit.NotFoundError{Message: "chat not found"}
+		return &gtk.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Archived = true
@@ -272,7 +270,7 @@ func (s *ChatService) ArchiveChat(ctx context.Context, req *dto.ArchiveChatDTO) 
 
 // UnarchiveChat unarchives a chat for the authenticated user
 func (s *ChatService) UnarchiveChat(ctx context.Context, req *dto.UnarchiveChatDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("unarchiving chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -284,7 +282,7 @@ func (s *ChatService) UnarchiveChat(ctx context.Context, req *dto.UnarchiveChatD
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
-		return &gotoolkit.NotFoundError{Message: "chat not found"}
+		return &gtk.NotFoundError{Message: "chat not found"}
 	}
 
 	chat.Archived = false
@@ -300,7 +298,7 @@ func (s *ChatService) UnarchiveChat(ctx context.Context, req *dto.UnarchiveChatD
 
 // ClearChat clears message history for a chat
 func (s *ChatService) ClearChat(ctx context.Context, req *dto.ClearChatDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("clearing chat history", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -312,7 +310,7 @@ func (s *ChatService) ClearChat(ctx context.Context, req *dto.ClearChatDTO) erro
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
-		return &gotoolkit.NotFoundError{Message: "chat not found"}
+		return &gtk.NotFoundError{Message: "chat not found"}
 	}
 
 	now := domain.Now()
@@ -329,7 +327,7 @@ func (s *ChatService) ClearChat(ctx context.Context, req *dto.ClearChatDTO) erro
 
 // DeleteChat deletes a chat
 func (s *ChatService) DeleteChat(ctx context.Context, req *dto.DeleteChatDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("deleting chat", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
 
@@ -341,7 +339,7 @@ func (s *ChatService) DeleteChat(ctx context.Context, req *dto.DeleteChatDTO) er
 
 	if chat == nil {
 		log.Warn("chat not found", zap.Int64("user_id", userID), zap.Int64("receiver_id", req.ReceiverID))
-		return &gotoolkit.NotFoundError{Message: "chat not found"}
+		return &gtk.NotFoundError{Message: "chat not found"}
 	}
 
 	if err := s.chatRepo.Delete(ctx, chat.ID); err != nil {

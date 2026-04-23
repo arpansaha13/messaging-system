@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // UserGroupRepository handles user group membership operations
@@ -28,7 +27,7 @@ func (r *UserGroupRepository) Create(ctx context.Context, userGroup *domain.User
 		return nil, r.db.WithContext(ctx).Create(userGroup).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create user group", Err: err}
+		return &gtk.InternalError{Message: "failed to create user group", Err: err}
 	}
 	return nil
 }
@@ -46,9 +45,9 @@ func (r *UserGroupRepository) GetByID(ctx context.Context, userGroupID int64) (*
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "user group not found"}
+			return nil, &gtk.NotFoundError{Message: "user group not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get user group", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get user group", Err: err}
 	}
 	return result.(*domain.UserGroup), nil
 }
@@ -65,7 +64,7 @@ func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, groupID int64
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get group members", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get group members", Err: err}
 	}
 	return result.([]*domain.UserGroup), nil
 }
@@ -82,7 +81,7 @@ func (r *UserGroupRepository) GetUserGroups(ctx context.Context, userID int64) (
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get user groups", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get user groups", Err: err}
 	}
 	return result.([]*domain.UserGroup), nil
 }
@@ -102,7 +101,7 @@ func (r *UserGroupRepository) Exists(ctx context.Context, userID, groupID int64)
 	})
 
 	if err != nil {
-		return false, &gotoolkit.InternalError{Message: "failed to check user group", Err: err}
+		return false, &gtk.InternalError{Message: "failed to check user group", Err: err}
 	}
 	return result.(bool), nil
 }
@@ -113,7 +112,7 @@ func (r *UserGroupRepository) Delete(ctx context.Context, userGroupID int64) err
 		return nil, r.db.WithContext(ctx).Delete(&domain.UserGroup{}, userGroupID).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete user group", Err: err}
+		return &gtk.InternalError{Message: "failed to delete user group", Err: err}
 	}
 	return nil
 }
@@ -124,7 +123,7 @@ func (r *UserGroupRepository) Update(ctx context.Context, userGroup *domain.User
 		return nil, r.db.WithContext(ctx).Save(userGroup).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update user group", Err: err}
+		return &gtk.InternalError{Message: "failed to update user group", Err: err}
 	}
 	return nil
 }

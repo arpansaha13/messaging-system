@@ -6,9 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/gorilla/mux"
-
-	gtk "github.com/arpansaha13/gotoolkit"
 )
 
 // ── Auth DTOs ─────────────────────────────────────────────────────────────────

@@ -3,12 +3,11 @@ package service
 import (
 	"context"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 // UserGroupService handles user group membership logic
@@ -29,7 +28,7 @@ func NewUserGroupService(userGroupRepo repository.IUserGroupRepository, userRepo
 
 // GetGroupMembers retrieves all members of a group
 func (s *UserGroupService) GetGroupMembers(ctx context.Context, req *dto.GetGroupMembersDTO) ([]*domain.UserGroup, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("retrieving group members", zap.Int64("group_id", req.GroupID))
 
 	members, err := s.userGroupRepo.GetGroupMembers(ctx, req.GroupID)

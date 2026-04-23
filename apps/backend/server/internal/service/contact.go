@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 // ContactService handles contact business logic
@@ -29,7 +27,7 @@ func NewContactService(contactRepo repository.IContactRepository, userRepo repos
 
 // AddContact adds a user to contacts
 func (s *ContactService) AddContact(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("adding contact", zap.Int64("user_id", userID), zap.Int64("contact_user_id", req.UserIDToAdd))
 
@@ -78,7 +76,7 @@ func (s *ContactService) AddContact(ctx context.Context, req *dto.AddContactDTO)
 
 // GetContacts retrieves the authenticated user's contacts
 func (s *ContactService) GetContacts(ctx context.Context) ([]*repository.ContactWithUserInfo, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving contacts", zap.Int64("user_id", userID))
 
@@ -94,7 +92,7 @@ func (s *ContactService) GetContacts(ctx context.Context) ([]*repository.Contact
 
 // UpdateContactAlias updates a contact alias for the authenticated user
 func (s *ContactService) UpdateContactAlias(ctx context.Context, req *dto.UpdateContactAliasDTO) (*domain.Contact, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("updating contact alias", zap.Int64("user_id", userID), zap.Int64("contact_id", req.ID))
 
@@ -104,7 +102,7 @@ func (s *ContactService) UpdateContactAlias(ctx context.Context, req *dto.Update
 		return nil, err
 	}
 	if contact.UserID != userID {
-		return nil, &gotoolkit.NotFoundError{Message: "contact not found"}
+		return nil, &gtk.NotFoundError{Message: "contact not found"}
 	}
 
 	if err := s.contactRepo.UpdateAlias(ctx, req.ID, req.NewAlias); err != nil {
@@ -118,7 +116,7 @@ func (s *ContactService) UpdateContactAlias(ctx context.Context, req *dto.Update
 
 // DeleteContact deletes a contact for the authenticated user
 func (s *ContactService) DeleteContact(ctx context.Context, req *dto.DeleteContactDTO) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("deleting contact", zap.Int64("user_id", userID), zap.Int64("contact_id", req.ID))
 
@@ -128,7 +126,7 @@ func (s *ContactService) DeleteContact(ctx context.Context, req *dto.DeleteConta
 		return err
 	}
 	if contact.UserID != userID {
-		return &gotoolkit.NotFoundError{Message: "contact not found"}
+		return &gtk.NotFoundError{Message: "contact not found"}
 	}
 
 	if err := s.contactRepo.Delete(ctx, req.ID); err != nil {

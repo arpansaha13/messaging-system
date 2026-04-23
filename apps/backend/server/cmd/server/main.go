@@ -10,14 +10,13 @@ import (
 	"syscall"
 	"time"
 
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const serviceName string = "backend"
@@ -28,7 +27,7 @@ func main() {
 		log.Fatalf("failed to load config: %v", err)
 	}
 
-	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel()))
+	zapLogger, err := gtk.NewZapLogger(parseLogLevel(cfg.LogLevel()))
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
@@ -42,7 +41,7 @@ func main() {
 
 	cbs := circuits.New(zapLogger)
 
-	svcCtx := logger.WithContext(context.Background(), zapLogger)
+	svcCtx := gtk.LoggerWithContext(context.Background(), zapLogger)
 
 	db, err := app.SetupPostgres(svcCtx, zapLogger)
 	if err != nil {

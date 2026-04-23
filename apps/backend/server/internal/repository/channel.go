@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // ChannelRepository handles channel-related database operations
@@ -29,7 +28,7 @@ func (r *ChannelRepository) Create(ctx context.Context, channel *domain.Channel)
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create channel", Err: err}
+		return &gtk.InternalError{Message: "failed to create channel", Err: err}
 	}
 	return nil
 }
@@ -47,9 +46,9 @@ func (r *ChannelRepository) GetByID(ctx context.Context, channelID int64) (*doma
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "channel not found"}
+			return nil, &gtk.NotFoundError{Message: "channel not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get channel", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get channel", Err: err}
 	}
 
 	return result.(*domain.Channel), nil
@@ -67,7 +66,7 @@ func (r *ChannelRepository) GetAll(ctx context.Context) ([]*domain.Channel, erro
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get channels", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get channels", Err: err}
 	}
 
 	return result.([]*domain.Channel), nil
@@ -85,7 +84,7 @@ func (r *ChannelRepository) GetByGroupID(ctx context.Context, groupID int64) ([]
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get group channels", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get group channels", Err: err}
 	}
 
 	return result.([]*domain.Channel), nil
@@ -98,7 +97,7 @@ func (r *ChannelRepository) Delete(ctx context.Context, channelID int64) error {
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete channel", Err: err}
+		return &gtk.InternalError{Message: "failed to delete channel", Err: err}
 	}
 	return nil
 }
@@ -110,7 +109,7 @@ func (r *ChannelRepository) Update(ctx context.Context, channel *domain.Channel)
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update channel", Err: err}
+		return &gtk.InternalError{Message: "failed to update channel", Err: err}
 	}
 	return nil
 }

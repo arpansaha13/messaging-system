@@ -11,13 +11,12 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
@@ -26,7 +25,7 @@ func main() {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel()))
+	zapLogger, err := gtk.NewZapLogger(parseLogLevel(cfg.LogLevel()))
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %v", err)
 	}
@@ -42,7 +41,7 @@ func main() {
 
 	cbs := circuits.New(zapLogger)
 
-	svcCtx := logger.WithContext(context.Background(), zapLogger)
+	svcCtx := gtk.LoggerWithContext(context.Background(), zapLogger)
 
 	db, err := app.SetupPostgres(svcCtx, zapLogger)
 	if err != nil {

@@ -7,15 +7,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/circuits"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/config"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/circuits"
-	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/config"
 )
 
 func main() {
@@ -25,7 +23,7 @@ func main() {
 	}
 
 	// Initialize logger
-	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
+	zapLogger, err := gtk.NewZapLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize logger: %v", err))
 	}
@@ -38,13 +36,13 @@ func main() {
 	cbs := circuits.New(zapLogger)
 
 	// Root context with logger injected
-	rootCtx := logger.WithContext(context.Background(), zapLogger)
+	rootCtx := gtk.LoggerWithContext(context.Background(), zapLogger)
 
 	// Initialize database
 	gormCfg := gorm.Config{
-		Logger: gotoolkit.NewGormLogger(zapLogger, gormlogger.Warn),
+		Logger: gtk.NewGormLogger(zapLogger, gormlogger.Warn),
 	}
-	database, err := gotoolkit.ConnectPostgresWithBackoff(rootCtx, cfg.DatabaseURL, &gormCfg)
+	database, err := gtk.ConnectPostgresWithBackoff(rootCtx, cfg.DatabaseURL, &gormCfg)
 	if err != nil {
 		log.Fatal("failed to connect to postgres", zap.Error(err))
 	}

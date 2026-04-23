@@ -6,13 +6,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-
-	"github.com/arpansaha13/gotoolkit/logger"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/utils"
-	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 )
 
 const defaultTimeout = 10 * time.Second
@@ -50,7 +49,7 @@ func (a *AuthService) getClient() pb.AuthServiceClient {
 
 // ValidateSession validates a session token with the auth service.
 func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 
 	if token == "" {
 		log.Warn("validate session called with empty token")
@@ -84,7 +83,7 @@ func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.Va
 
 // GetUser retrieves user details from the auth service.
 func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("get user request received", zap.Int64("user_id", userID))
 
 	client := a.getClient()

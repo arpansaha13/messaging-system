@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // GroupRepository handles group-related database operations
@@ -28,7 +27,7 @@ func (r *GroupRepository) Create(ctx context.Context, group *domain.Group) error
 		return nil, r.db.WithContext(ctx).Create(group).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create group", Err: err}
+		return &gtk.InternalError{Message: "failed to create group", Err: err}
 	}
 	return nil
 }
@@ -46,9 +45,9 @@ func (r *GroupRepository) GetByID(ctx context.Context, groupID int64) (*domain.G
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "group not found"}
+			return nil, &gtk.NotFoundError{Message: "group not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get group", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get group", Err: err}
 	}
 	return result.(*domain.Group), nil
 }
@@ -65,7 +64,7 @@ func (r *GroupRepository) GetAll(ctx context.Context) ([]*domain.Group, error) {
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get groups", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get groups", Err: err}
 	}
 	return result.([]*domain.Group), nil
 }
@@ -76,7 +75,7 @@ func (r *GroupRepository) Delete(ctx context.Context, groupID int64) error {
 		return nil, r.db.WithContext(ctx).Delete(&domain.Group{}, groupID).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete group", Err: err}
+		return &gtk.InternalError{Message: "failed to delete group", Err: err}
 	}
 	return nil
 }
@@ -87,7 +86,7 @@ func (r *GroupRepository) Update(ctx context.Context, group *domain.Group) error
 		return nil, r.db.WithContext(ctx).Save(group).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update group", Err: err}
+		return &gtk.InternalError{Message: "failed to update group", Err: err}
 	}
 	return nil
 }

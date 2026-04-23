@@ -24,17 +24,17 @@ func (c rabbitMQCreds) url() string {
 
 // Config holds all application configuration. Fields are private; use getters to read them.
 type Config struct {
-	databaseURL    string
+	databaseURL      string
 	dbMaxConnections int
-	apiPort        int
-	metricsPort    int
-	authSystemHost string
-	otlpEndpoint   string
-	jwtSecret      string
-	authCookieName string
-	environment    constants.Environment
-	logLevel       string
-	rabbitMQ       rabbitMQCreds
+	apiPort          int
+	metricsPort      int
+	authSystemHost   string
+	otlpEndpoint     string
+	jwtSecret        string
+	authCookieName   string
+	environment      constants.Environment
+	logLevel         string
+	rabbitMQ         rabbitMQCreds
 }
 
 func (c *Config) DatabaseURL() string                { return c.databaseURL }
@@ -76,12 +76,12 @@ func load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		apiPort:        getEnvInt("API_PORT", 4000),
-		metricsPort:    getEnvInt("METRICS_PORT", 9090),
-		authCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
-		environment:    env,
-		logLevel:       getEnv("LOG_LEVEL", "info"),
-		otlpEndpoint:   getEnv("OTLP_ENDPOINT", ""),
+		apiPort:          getEnvInt("API_PORT", 4000),
+		metricsPort:      getEnvInt("METRICS_PORT", 9090),
+		authCookieName:   getEnv("AUTH_COOKIE_NAME", "auth_token"),
+		environment:      env,
+		logLevel:         getEnv("LOG_LEVEL", "info"),
+		otlpEndpoint:     getEnv("OTLP_ENDPOINT", ""),
 		dbMaxConnections: getEnvInt("DB_MAX_CONNECTIONS", 100),
 	}
 

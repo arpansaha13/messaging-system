@@ -24,8 +24,8 @@ type WsMessage struct {
 // of a single socket-server instance, a single RWMutex has negligible contention.
 type Hub struct {
 	mu      sync.RWMutex
-	clients map[string]*Client               // socketId → Client
-	rooms   map[string]map[string]struct{}   // roomId   → set of socketIds
+	clients map[string]*Client             // socketId → Client
+	rooms   map[string]map[string]struct{} // roomId   → set of socketIds
 	log     *zap.Logger
 }
 

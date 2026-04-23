@@ -3,17 +3,15 @@ package app
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // Deps contains all dependencies needed to assemble the socket server.
@@ -52,9 +50,9 @@ func SetupRouter(deps Deps) *mux.Router {
 	router := mux.NewRouter()
 
 	// Apply middlewares
-	router.Use(gotoolkit.HttpRecoveryMiddleware)
-	router.Use(logger.HttpMiddleware(log))
-	router.Use(gotoolkit.HttpErrorMiddleware)
+	router.Use(gtk.HttpRecoveryMiddleware)
+	router.Use(gtk.HttpLoggerMiddleware(log))
+	router.Use(gtk.HttpErrorMiddleware)
 
 	// All socket routes are under the /ws prefix
 	wsRouter := router.PathPrefix("/ws").Subrouter()

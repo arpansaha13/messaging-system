@@ -3,8 +3,8 @@ module github.com/arpansaha13/messaging-system/apps/auth/server
 go 1.25.6
 
 require (
-	github.com/arpansaha13/goauthkit v0.3.3
-	github.com/arpansaha13/gotoolkit v0.11.0
+	github.com/arpansaha13/goauthkit v0.3.4
+	github.com/arpansaha13/gotoolkit v0.12.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/prometheus/client_golang v1.23.2

@@ -3,15 +3,13 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupMessageRoutes sets up message routes
@@ -26,7 +24,7 @@ func SetupMessageRoutes(router *mux.Router, protectedRouter *mux.Router, message
 
 func sendPersonalMessageController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("send personal message handler called")
 
 		req, err := dto.NewSendPersonalMessageDTO(r)
@@ -66,7 +64,7 @@ func sendPersonalMessageController(messageService service.IMessageService) gtk.C
 
 func sendGroupMessageController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("send group message handler called")
 
 		req, err := dto.NewSendGroupMessageDTO(r)
@@ -107,7 +105,7 @@ func sendGroupMessageController(messageService service.IMessageService) gtk.Cont
 
 func getMessagesController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get messages handler called")
 
 		req, err := dto.NewGetMessagesDTO(r)
@@ -155,7 +153,7 @@ func getMessagesController(messageService service.IMessageService) gtk.Controlle
 
 func handleDeliveredController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("handle delivered handler called")
 
 		req, err := dto.NewHandleDeliveredDTO(r)
@@ -182,7 +180,7 @@ func handleDeliveredController(messageService service.IMessageService) gtk.Contr
 
 func handleReadController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("handle read handler called")
 
 		req, err := dto.NewHandleReadMultipleDTO(r)
@@ -209,7 +207,7 @@ func handleReadController(messageService service.IMessageService) gtk.Controller
 
 func getChannelMessagesController(messageService service.IMessageService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get channel messages handler called")
 
 		req, err := dto.NewGetChannelMessagesDTO(r)

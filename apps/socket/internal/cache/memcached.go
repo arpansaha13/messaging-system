@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/bradfitz/gomemcache/memcache"
-
-	"github.com/arpansaha13/gotoolkit"
 )
 
 // MemcachedService manages user online-status keys in Memcached.
@@ -18,14 +17,14 @@ import (
 // protocol, while gomemcache uses the text protocol. Both read and write the
 // same byte values on the server, so there is no data incompatibility.
 type MemcachedService struct {
-	*gotoolkit.MemcachedClient
+	*gtk.MemcachedClient
 }
 
 // NewMemcachedService creates an unconnected MemcachedService.
 // Call SetClient after a successful connection is established.
 func NewMemcachedService() *MemcachedService {
 	return &MemcachedService{
-		MemcachedClient: gotoolkit.NewMemcachedClient(),
+		MemcachedClient: gtk.NewMemcachedClient(),
 	}
 }
 

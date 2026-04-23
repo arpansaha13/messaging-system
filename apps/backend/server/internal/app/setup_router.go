@@ -3,17 +3,15 @@ package app
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // Deps contains all dependencies needed to assemble the server
@@ -52,9 +50,9 @@ func SetupRouter(deps Deps) *mux.Router {
 	router := mux.NewRouter()
 
 	// Apply middlewares
-	router.Use(gotoolkit.HttpRecoveryMiddleware)
-	router.Use(logger.HttpMiddleware(deps.Logger))
-	router.Use(gotoolkit.HttpErrorMiddleware)
+	router.Use(gtk.HttpRecoveryMiddleware)
+	router.Use(gtk.HttpLoggerMiddleware(deps.Logger))
+	router.Use(gtk.HttpErrorMiddleware)
 
 	// All backend routes are under the /api prefix
 	apiRouter := router.PathPrefix("/api").Subrouter()

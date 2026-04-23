@@ -5,11 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // ContactWithUserInfo holds contact data with user profile info
@@ -42,7 +41,7 @@ func (r *ContactRepository) Create(ctx context.Context, contact *domain.Contact)
 		return nil, r.db.WithContext(ctx).Create(contact).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create contact", Err: err}
+		return &gtk.InternalError{Message: "failed to create contact", Err: err}
 	}
 	return nil
 }
@@ -60,9 +59,9 @@ func (r *ContactRepository) GetByID(ctx context.Context, contactID int64) (*doma
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "contact not found"}
+			return nil, &gtk.NotFoundError{Message: "contact not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get contact", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get contact", Err: err}
 	}
 	return result.(*domain.Contact), nil
 }
@@ -84,7 +83,7 @@ func (r *ContactRepository) GetUserContacts(ctx context.Context, userID int64) (
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get contacts", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get contacts", Err: err}
 	}
 	return result.([]*ContactWithUserInfo), nil
 }
@@ -104,7 +103,7 @@ func (r *ContactRepository) Exists(ctx context.Context, userID, contactID int64)
 	})
 
 	if err != nil {
-		return false, &gotoolkit.InternalError{Message: "failed to check contact", Err: err}
+		return false, &gtk.InternalError{Message: "failed to check contact", Err: err}
 	}
 	return result.(bool), nil
 }
@@ -126,9 +125,9 @@ func (r *ContactRepository) UpdateAlias(ctx context.Context, contactID int64, al
 	})
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &gotoolkit.NotFoundError{Message: "contact not found"}
+			return &gtk.NotFoundError{Message: "contact not found"}
 		}
-		return &gotoolkit.InternalError{Message: "failed to update contact alias", Err: err}
+		return &gtk.InternalError{Message: "failed to update contact alias", Err: err}
 	}
 	return nil
 }
@@ -139,7 +138,7 @@ func (r *ContactRepository) Delete(ctx context.Context, contactID int64) error {
 		return nil, r.db.WithContext(ctx).Delete(&domain.Contact{}, contactID).Error
 	})
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete contact", Err: err}
+		return &gtk.InternalError{Message: "failed to delete contact", Err: err}
 	}
 	return nil
 }
@@ -161,7 +160,7 @@ func (r *ContactRepository) GetContactByUserIds(ctx context.Context, userID, con
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get contact", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get contact", Err: err}
 	}
 	if result == nil {
 		return nil, nil

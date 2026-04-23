@@ -5,16 +5,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // AuthMiddleware validates JWT token with the auth service via gRPC and fetches user details
@@ -24,12 +22,12 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			// Get token from Authorization header or cookie
 			token := getToken(r)
 			if token == "" {
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "missing authorization token"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "missing authorization token"})
 				return
 			}
 
 			// Get logger from context
-			lgr := logger.FromContext(r.Context())
+			lgr := gtk.LoggerFromContext(r.Context())
 
 			// Validate token with auth service
 			resp, err := authClient.ValidateSession(r.Context(), token)
@@ -38,15 +36,15 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 				// Check gRPC status code to distinguish between auth and infrastructure failures
 				st, ok := status.FromError(err)
 				if ok && st.Code() == codes.Unauthenticated {
-					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+					gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "invalid or expired token"})
 				} else {
-					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
+					gtk.HttpWriteErrorWithContext(w, r, &gtk.ServiceUnavailableError{Message: "auth service unavailable"})
 				}
 				return
 			}
 
 			if !resp.Valid {
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "invalid or expired token"})
 				return
 			}
 
@@ -57,16 +55,16 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 				// Check gRPC status code to distinguish between auth and infrastructure failures
 				st, ok := status.FromError(err)
 				if ok && st.Code() == codes.Unauthenticated {
-					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "invalid or expired token"})
+					gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "invalid or expired token"})
 				} else {
-					gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.ServiceUnavailableError{Message: "auth service unavailable"})
+					gtk.HttpWriteErrorWithContext(w, r, &gtk.ServiceUnavailableError{Message: "auth service unavailable"})
 				}
 				return
 			}
 
 			if userResp.User == nil {
 				lgr.Error("user details not found in auth service response")
-				gotoolkit.HttpWriteErrorWithContext(w, r, &gotoolkit.UnauthorizedError{Message: "user not found"})
+				gtk.HttpWriteErrorWithContext(w, r, &gtk.UnauthorizedError{Message: "user not found"})
 				return
 			}
 
@@ -85,7 +83,7 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 			ctx = utils.SetTokenInContext(ctx, token)
 
 			// Add user_id to logger context
-			ctx = logger.WithFields(ctx, zap.String("user_id", userIDStr))
+			ctx = gtk.LoggerWithFields(ctx, zap.String("user_id", userIDStr))
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

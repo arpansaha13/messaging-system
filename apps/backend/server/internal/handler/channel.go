@@ -3,13 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupChannelRoutes sets up channel routes
@@ -21,7 +19,7 @@ func SetupChannelRoutes(router *mux.Router, protectedRouter *mux.Router, channel
 
 func createChannelController(channelService service.IChannelService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("create channel handler called")
 
 		req, err := dto.NewCreateChannelDTO(r)
@@ -59,7 +57,7 @@ func createChannelController(channelService service.IChannelService) gtk.Control
 
 func getGroupChannelsController(channelService service.IChannelService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get group channels handler called")
 
 		req, err := dto.NewGetGroupChannelsDTO(r)
@@ -98,7 +96,7 @@ func getGroupChannelsController(channelService service.IChannelService) gtk.Cont
 
 func getChannelInfoController(channelService service.IChannelService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get channel info handler called")
 
 		req, err := dto.NewGetChannelInfoDTO(r)

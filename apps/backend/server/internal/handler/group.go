@@ -3,13 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupGroupRoutes sets up group routes
@@ -20,7 +18,7 @@ func SetupGroupRoutes(router *mux.Router, protectedRouter *mux.Router, groupServ
 
 func createGroupController(groupService service.IGroupService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("create group handler called")
 
 		req, err := dto.NewCreateGroupDTO(r)
@@ -58,7 +56,7 @@ func createGroupController(groupService service.IGroupService) gtk.ControllerFun
 
 func getGroupsController(groupService service.IGroupService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get groups handler called")
 
 		groups, err := groupService.GetGroups(r.Context())

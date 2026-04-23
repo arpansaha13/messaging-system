@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/rabbitmq/amqp091-go"
 	"github.com/sony/gobreaker/v2"
@@ -37,8 +37,8 @@ func NewRabbitMQBroker(amqpURL string, cb *gobreaker.CircuitBreaker[any]) *Rabbi
 }
 
 // Connect establishes connection to RabbitMQ and sets up exchanges and queues
-func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error {
-	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL, opts...)
+func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gtk.BackoffOption) error {
+	conn, err := gtk.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL, opts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}

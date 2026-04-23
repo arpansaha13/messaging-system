@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 )
@@ -51,8 +51,8 @@ func NewRabbitMQBroker(amqpURL, serverId string, log *zap.Logger) *RabbitMQBroke
 
 // Connect establishes the RabbitMQ connection with exponential backoff and
 // declares all exchanges and per-server exclusive queues.
-func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error {
-	conn, err := gotoolkit.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL, opts...)
+func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gtk.BackoffOption) error {
+	conn, err := gtk.ConnectRabbitMQWithBackoff(ctx, rb.amqpURL, opts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}

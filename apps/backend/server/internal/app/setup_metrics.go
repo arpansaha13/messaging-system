@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // SetupMetricsServer returns an HTTP server that exposes Prometheus metrics on /metrics.

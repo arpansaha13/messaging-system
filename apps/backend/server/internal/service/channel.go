@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 
-	"go.uber.org/zap"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"go.uber.org/zap"
 )
 
 // ChannelService handles channel business logic
@@ -29,7 +27,7 @@ func NewChannelService(channelRepo repository.IChannelRepository, groupRepo repo
 
 // CreateChannel creates a new channel within a group
 func (s *ChannelService) CreateChannel(ctx context.Context, req *dto.CreateChannelDTO) (*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("creating channel", zap.String("channel_name", req.Name), zap.Int64("group_id", req.GroupID), zap.Int64("user_id", userID))
 
@@ -42,7 +40,7 @@ func (s *ChannelService) CreateChannel(ctx context.Context, req *dto.CreateChann
 
 	if group.FounderID != userID {
 		log.Warn("user not allowed to create channel", zap.Int64("user_id", userID), zap.Int64("group_id", req.GroupID))
-		return nil, &gotoolkit.ValidationError{Message: "not allowed to create channels"}
+		return nil, &gtk.ValidationError{Message: "not allowed to create channels"}
 	}
 
 	channel := &domain.Channel{
@@ -61,7 +59,7 @@ func (s *ChannelService) CreateChannel(ctx context.Context, req *dto.CreateChann
 
 // GetChannels retrieves all channels
 func (s *ChannelService) GetChannels(ctx context.Context) ([]*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("retrieving all channels")
 
 	channels, err := s.channelRepo.GetAll(ctx)
@@ -76,7 +74,7 @@ func (s *ChannelService) GetChannels(ctx context.Context) ([]*domain.Channel, er
 
 // GetChannelsByGroupID retrieves channels in a specific group
 func (s *ChannelService) GetChannelsByGroupID(ctx context.Context, req *dto.GetGroupChannelsDTO) ([]*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("retrieving channels for group", zap.Int64("group_id", req.GroupID))
 
 	channels, err := s.channelRepo.GetByGroupID(ctx, req.GroupID)
@@ -91,7 +89,7 @@ func (s *ChannelService) GetChannelsByGroupID(ctx context.Context, req *dto.GetG
 
 // GetChannelByID retrieves a channel by its ID
 func (s *ChannelService) GetChannelByID(ctx context.Context, req *dto.GetChannelInfoDTO) (*domain.Channel, error) {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("retrieving channel by id", zap.Int64("channel_id", req.ChannelID))
 
 	channel, err := s.channelRepo.GetByID(ctx, req.ChannelID)

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 )
 
 // Validator provides validation utilities
@@ -19,7 +19,7 @@ func NewValidator() *Validator {
 func (v *Validator) ValidateEmail(email string) error {
 	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
 	if match, _ := regexp.MatchString(pattern, email); !match {
-		return &gotoolkit.ValidationError{Message: "invalid email format", Field: "email"}
+		return &gtk.ValidationError{Message: "invalid email format", Field: "email"}
 	}
 	return nil
 }
@@ -27,11 +27,11 @@ func (v *Validator) ValidateEmail(email string) error {
 // ValidateUsername validates username format
 func (v *Validator) ValidateUsername(username string) error {
 	if len(username) < 3 || len(username) > 50 {
-		return &gotoolkit.ValidationError{Message: "username must be between 3 and 50 characters", Field: "username"}
+		return &gtk.ValidationError{Message: "username must be between 3 and 50 characters", Field: "username"}
 	}
 	pattern := `^[a-zA-Z0-9_-]+$`
 	if match, _ := regexp.MatchString(pattern, username); !match {
-		return &gotoolkit.ValidationError{Message: "username can only contain alphanumeric characters, underscores, and hyphens", Field: "username"}
+		return &gtk.ValidationError{Message: "username can only contain alphanumeric characters, underscores, and hyphens", Field: "username"}
 	}
 	return nil
 }
@@ -39,10 +39,10 @@ func (v *Validator) ValidateUsername(username string) error {
 // ValidatePassword validates password strength
 func (v *Validator) ValidatePassword(password string) error {
 	if len(password) < 8 {
-		return &gotoolkit.ValidationError{Message: "password must be at least 8 characters", Field: "password"}
+		return &gtk.ValidationError{Message: "password must be at least 8 characters", Field: "password"}
 	}
 	if len(password) > 128 {
-		return &gotoolkit.ValidationError{Message: "password must not exceed 128 characters", Field: "password"}
+		return &gtk.ValidationError{Message: "password must not exceed 128 characters", Field: "password"}
 	}
 	return nil
 }
@@ -50,7 +50,7 @@ func (v *Validator) ValidatePassword(password string) error {
 // ValidateNotEmpty validates that a string is not empty
 func (v *Validator) ValidateNotEmpty(field, value string) error {
 	if value == "" {
-		return &gotoolkit.ValidationError{Message: fmt.Sprintf("%s is required", field), Field: field}
+		return &gtk.ValidationError{Message: fmt.Sprintf("%s is required", field), Field: field}
 	}
 	return nil
 }
@@ -58,10 +58,10 @@ func (v *Validator) ValidateNotEmpty(field, value string) error {
 // ValidateChatMessage validates a chat message
 func (v *Validator) ValidateChatMessage(content string) error {
 	if content == "" {
-		return &gotoolkit.ValidationError{Message: "message content is required", Field: "content"}
+		return &gtk.ValidationError{Message: "message content is required", Field: "content"}
 	}
 	if len(content) > 5000 {
-		return &gotoolkit.ValidationError{Message: "message content exceeds maximum length", Field: "content"}
+		return &gtk.ValidationError{Message: "message content exceeds maximum length", Field: "content"}
 	}
 	return nil
 }

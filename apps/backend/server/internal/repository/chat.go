@@ -5,11 +5,10 @@ import (
 	"errors"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // ChatWithReceiverInfo holds chat data with receiver user profile info
@@ -47,7 +46,7 @@ func (r *ChatRepository) Create(ctx context.Context, chat *domain.Chat) error {
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create chat", Err: err}
+		return &gtk.InternalError{Message: "failed to create chat", Err: err}
 	}
 	return nil
 }
@@ -65,9 +64,9 @@ func (r *ChatRepository) GetByID(ctx context.Context, chatID int64) (*domain.Cha
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "chat not found"}
+			return nil, &gtk.NotFoundError{Message: "chat not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get chat", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get chat", Err: err}
 	}
 
 	return result.(*domain.Chat), nil
@@ -91,7 +90,7 @@ func (r *ChatRepository) GetByUsers(ctx context.Context, user1ID, user2ID int64)
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get chat", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get chat", Err: err}
 	}
 
 	// If result is nil (chat doesn't exist), return nil
@@ -119,7 +118,7 @@ func (r *ChatRepository) GetUserChatsByArchived(ctx context.Context, userID int6
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to get chats", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get chats", Err: err}
 	}
 
 	return result.([]*ChatWithReceiverInfo), nil
@@ -132,7 +131,7 @@ func (r *ChatRepository) Delete(ctx context.Context, chatID int64) error {
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete chat", Err: err}
+		return &gtk.InternalError{Message: "failed to delete chat", Err: err}
 	}
 	return nil
 }
@@ -144,7 +143,7 @@ func (r *ChatRepository) Update(ctx context.Context, chat *domain.Chat) error {
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update chat", Err: err}
+		return &gtk.InternalError{Message: "failed to update chat", Err: err}
 	}
 	return nil
 }

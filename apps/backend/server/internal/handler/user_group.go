@@ -3,13 +3,11 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupUserGroupRoutes sets up user group routes
@@ -19,7 +17,7 @@ func SetupUserGroupRoutes(router *mux.Router, protectedRouter *mux.Router, userG
 
 func getGroupMembersController(userGroupService service.IUserGroupService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get group members handler called")
 
 		req, err := dto.NewGetGroupMembersDTO(r)

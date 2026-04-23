@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
+	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 )
 
 // SetupAuthService establishes a managed gRPC connection to the auth service.
@@ -23,12 +22,12 @@ func SetupAuthService(
 	authSystemHost string,
 	log *zap.Logger,
 	cbs *circuits.Circuits,
-) (*service.AuthService, *gotoolkit.ConnectionManager, error) {
+) (*service.AuthService, *gtk.ConnectionManager, error) {
 	authService := service.NewAuthService(nil, nil, cbs.AuthGRPC)
-	var authConnMgr *gotoolkit.ConnectionManager
+	var authConnMgr *gtk.ConnectionManager
 
-	authConnMgr = gotoolkit.NewConnectionManager(
-		gotoolkit.ReconnectConfig{
+	authConnMgr = gtk.NewConnectionManager(
+		gtk.ReconnectConfig{
 			ConnectTimeout:    10 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},

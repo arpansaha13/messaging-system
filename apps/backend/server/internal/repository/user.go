@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
-
-	"github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
 // UserRepository handles user profile-related database operations
@@ -35,9 +34,9 @@ func (r *UserRepository) GetByID(ctx context.Context, userID int64) (*domain.Use
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gotoolkit.NotFoundError{Message: "user profile not found"}
+			return nil, &gtk.NotFoundError{Message: "user profile not found"}
 		}
-		return nil, &gotoolkit.InternalError{Message: "failed to get user profile", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to get user profile", Err: err}
 	}
 
 	return result.(*domain.UserProfile), nil
@@ -50,7 +49,7 @@ func (r *UserRepository) Create(ctx context.Context, userProfile *domain.UserPro
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to create user profile", Err: err}
+		return &gtk.InternalError{Message: "failed to create user profile", Err: err}
 	}
 	return nil
 }
@@ -62,7 +61,7 @@ func (r *UserRepository) Update(ctx context.Context, userProfile *domain.UserPro
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to update user profile", Err: err}
+		return &gtk.InternalError{Message: "failed to update user profile", Err: err}
 	}
 	return nil
 }
@@ -74,7 +73,7 @@ func (r *UserRepository) Delete(ctx context.Context, userID int64) error {
 	})
 
 	if err != nil {
-		return &gotoolkit.InternalError{Message: "failed to delete user profile", Err: err}
+		return &gtk.InternalError{Message: "failed to delete user profile", Err: err}
 	}
 	return nil
 }
@@ -94,7 +93,7 @@ func (r *UserRepository) Search(ctx context.Context, query string, limit int) ([
 	})
 
 	if err != nil {
-		return nil, &gotoolkit.InternalError{Message: "failed to search user profiles", Err: err}
+		return nil, &gtk.InternalError{Message: "failed to search user profiles", Err: err}
 	}
 
 	return result.([]*domain.UserProfile), nil

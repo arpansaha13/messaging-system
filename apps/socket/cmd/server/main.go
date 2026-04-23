@@ -9,15 +9,14 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 const (
@@ -31,7 +30,7 @@ func main() {
 		panic(fmt.Sprintf("failed to load config: %v", err))
 	}
 
-	zapLogger, err := logger.InitLogger(parseLogLevel(cfg.LogLevel))
+	zapLogger, err := gtk.NewZapLogger(parseLogLevel(cfg.LogLevel))
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize logger: %v", err))
 	}
@@ -39,7 +38,7 @@ func main() {
 	defer zapLogger.Sync()
 
 	log := zap.L()
-	rootCtx := logger.WithContext(context.Background(), zapLogger)
+	rootCtx := gtk.LoggerWithContext(context.Background(), zapLogger)
 
 	// Initialize circuit breakers
 	cbs := circuits.New(log)

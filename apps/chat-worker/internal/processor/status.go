@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/sony/gobreaker/v2"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -31,7 +31,7 @@ func NewStatusProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobreaker.
 
 // ProcessDelivered handles message delivered status updates
 func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker.DeliveredPayload) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("processing delivered status", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId), zap.Int64("sender_id", payload.SenderId))
 
 	_, err := sp.cb.Execute(func() (any, error) {
@@ -72,7 +72,7 @@ func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker
 
 // ProcessRead handles message read status updates
 func (sp *StatusProcessor) ProcessRead(ctx context.Context, payloads []broker.ReadPayload) error {
-	log := logger.FromContext(ctx)
+	log := gtk.LoggerFromContext(ctx)
 	log.Debug("processing read status", zap.Int("payload_count", len(payloads)))
 
 	if len(payloads) == 0 {

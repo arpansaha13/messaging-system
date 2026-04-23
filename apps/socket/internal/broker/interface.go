@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/arpansaha13/gotoolkit"
+	"github.com/arpansaha13/gotoolkit/gtk"
 )
 
 // ServerQueueMessage is the envelope published to the outgoing exchange
@@ -34,7 +34,7 @@ type UserConnectionPayload struct {
 // SocketBroker defines the interface for the socket server's message broker.
 // It manages per-server exclusive queues with dynamic AMQP routing key binding.
 type SocketBroker interface {
-	Connect(ctx context.Context, opts ...gotoolkit.BackoffOption) error
+	Connect(ctx context.Context, opts ...gtk.BackoffOption) error
 	Disconnect() error
 
 	// Dynamic queue binding — called on connect/disconnect and subscription

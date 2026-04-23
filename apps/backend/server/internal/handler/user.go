@@ -3,14 +3,12 @@ package handler
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-	"go.uber.org/zap"
-
-	gtk "github.com/arpansaha13/gotoolkit"
-	"github.com/arpansaha13/gotoolkit/logger"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 // SetupUserRoutes sets up user routes
@@ -24,7 +22,7 @@ func SetupUserRoutes(router *mux.Router, protectedRouter *mux.Router, userServic
 // getUserMeController returns the authenticated user's auth details
 func getUserMeController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get user me handler called")
 
 		authUser := middleware.GetAuthUserFromContext(r)
@@ -60,7 +58,7 @@ func getUserMeController(userService service.IUserService) gtk.ControllerFunc {
 // updateUserMeController updates the authenticated user's profile
 func updateUserMeController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("update user me handler called")
 
 		authUser := middleware.GetAuthUserFromContext(r)
@@ -105,7 +103,7 @@ func updateUserMeController(userService service.IUserService) gtk.ControllerFunc
 // searchUserProfilesController searches for user profiles
 func searchUserProfilesController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("search user profiles handler called")
 
 		req, _ := dto.NewSearchUsersDTO(r)
@@ -170,7 +168,7 @@ func searchUserProfilesController(userService service.IUserService) gtk.Controll
 // getUserProfileByIDController retrieves a user profile by ID
 func getUserProfileByIDController(userService service.IUserService) gtk.ControllerFunc {
 	return func(w http.ResponseWriter, r *http.Request) (*gtk.ControllerResponse, error) {
-		log := logger.FromContext(r.Context())
+		log := gtk.LoggerFromContext(r.Context())
 		log.Debug("get user profile by id handler called")
 
 		req, err := dto.NewGetUserByIDDTO(r)

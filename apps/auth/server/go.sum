@@ -1,7 +1,7 @@
-github.com/arpansaha13/goauthkit v0.3.3 h1:5wh/7W180R0TnJCNV6PXHgLsDNSInr2Bckf2rXgyBXI=
-github.com/arpansaha13/goauthkit v0.3.3/go.mod h1:DQWYK1sDgQD0V/MxFB+xWqyfQnDKxNQMXKbq1h6a7j0=
-github.com/arpansaha13/gotoolkit v0.11.0 h1:8ABYP5SEuO1dX3RLdIKefvBaiSpwCqsoS3Qng58EVjY=
-github.com/arpansaha13/gotoolkit v0.11.0/go.mod h1:7eB0MXY5cApaD2/VZxdj4zG++ZxCqJR1vkE22Ss4L6I=
+github.com/arpansaha13/goauthkit v0.3.4 h1:uNcXOHAcudWFY+JRnZjwYVhskdOjJai+ypLpC6/sk5o=
+github.com/arpansaha13/goauthkit v0.3.4/go.mod h1:TFNWC2QRgQqbaK9CMfa+tqi0fJgHr23mDn3KSW6Stow=
+github.com/arpansaha13/gotoolkit v0.12.0 h1:ndGrKBKVs/aJiuTZnNbUuzwBFfmlBNiHh3PBRr1g48c=
+github.com/arpansaha13/gotoolkit v0.12.0/go.mod h1:7eB0MXY5cApaD2/VZxdj4zG++ZxCqJR1vkE22Ss4L6I=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf h1:TqhNAT4zKbTdLa62d2HDBFdvgSbIGB3eJE8HqhgiL9I=
