@@ -41,12 +41,10 @@ export type SocketEventPayloads = {
     EmitTyping: {
       senderId: UserId
       receiverId: UserId
-      isTyping: boolean
     }
     OnTyping: {
       senderId: UserId
       receiverId: UserId
-      isTyping: boolean
     }
     EmitCheckOnline: {
       userIds: UserId[]

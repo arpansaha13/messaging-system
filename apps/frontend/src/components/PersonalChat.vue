@@ -65,7 +65,7 @@ const messagesAsMap = computed(() => {
 // Input state
 const inputValue = ref('')
 const prevReceiverId = ref<number | null>(null)
-let typingTimeout: NodeJS.Timeout | null = null
+let lastTypingEmit = 0
 
 // Computed properties
 const authUserId = computed(() => authUser.value?.id)
@@ -78,27 +78,17 @@ const tempMessages = computed(() => {
 })
 
 const notifyTyping = () => {
-  // Clear existing typing timeout
-  if (typingTimeout) clearTimeout(typingTimeout)
-
-  // Emit typing event
   if (socketState.socket.ready.value && receiverId.value && authUser.value) {
-    socketState.socket.emit(SocketEvents.PERSONAL.TYPING, {
-      senderId: authUser.value.id,
-      receiverId: receiverId.value,
-      isTyping: true,
-    })
-
-    // Stop typing after 1 second of inactivity
-    typingTimeout = setTimeout(() => {
-      if (socketState.socket.ready.value && receiverId.value && authUser.value) {
-        socketState.socket.emit(SocketEvents.PERSONAL.TYPING, {
-          senderId: authUser.value.id,
-          receiverId: receiverId.value,
-          isTyping: false,
-        })
-      }
-    }, 1000)
+    const now = Date.now()
+    const jitter = Math.random() * 1000 - 500 // -500 to +500 ms
+    const interval = 5000 + jitter
+    if (now - lastTypingEmit > interval) {
+      lastTypingEmit = now
+      socketState.socket.emit(SocketEvents.PERSONAL.TYPING, {
+        senderId: authUser.value.id,
+        receiverId: receiverId.value,
+      })
+    }
   }
 }
 
@@ -123,7 +113,7 @@ const sendMessage = async (message: string) => {
 
     // Clear input and typing state
     inputValue.value = ''
-    if (typingTimeout) clearTimeout(typingTimeout)
+    lastTypingEmit = 0
 
     // Send message via HTTP API — 201 means message is persisted; replace temp with real IMessage
     const { hash, ...realMessage } = await sendPersonalMessage(receiverId.value, newMessage.content, newMessage.hash)
@@ -161,9 +151,6 @@ watchEffect(() => {
 
 // Cleanup on component unmount
 onBeforeUnmount(() => {
-  if (typingTimeout) {
-    clearTimeout(typingTimeout)
-    typingTimeout = null
-  }
+  lastTypingEmit = 0
 })
 </script>

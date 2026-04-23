@@ -67,7 +67,7 @@ export function usePersonalChatSocketEvents() {
     }
 
     const handleTyping = (payload: SocketEventPayloads['Personal']['OnTyping']) => {
-      setTyping(payload.senderId, payload.isTyping)
+      setTyping(payload.senderId)
     }
 
     socketState.socket.on(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
