@@ -29,11 +29,11 @@ import { sendPersonalMessage } from '~/utils/mutations/messages'
 
 const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
-const { socket } = await useSocket()
+const socketState = useSocket()
 const { getTyping } = useTypingStore()
-const { getOnlineStatus } = useOnlineStatusStore()
 const draftsState = useDraftsStore()
 const personalMessages = usePersonalMessagesStore()
+const logger = useLogger('PersonalChat')
 
 // Get receiver ID from route query param
 const receiverId = computed(() => {
@@ -70,7 +70,7 @@ let typingTimeout: NodeJS.Timeout | null = null
 // Computed properties
 const authUserId = computed(() => authUser.value?.id)
 const isTyping = computed(() => getTyping(receiverId.value ?? undefined) ?? false)
-const onlineStatus = computed(() => getOnlineStatus(receiverId.value ?? undefined) ?? false)
+const onlineStatus = computed(() => socketState.onlineStore.getOnlineStatus(receiverId.value ?? undefined) ?? false)
 
 const tempMessages = computed(() => {
   if (!receiverId.value) return new Map<string, IMessageSending>()
@@ -82,8 +82,8 @@ const notifyTyping = () => {
   if (typingTimeout) clearTimeout(typingTimeout)
 
   // Emit typing event
-  if (socket.value && receiverId.value && authUser.value) {
-    socket.value.emit(SocketEvents.PERSONAL.TYPING, {
+  if (socketState.socket.ready.value && receiverId.value && authUser.value) {
+    socketState.socket.emit(SocketEvents.PERSONAL.TYPING, {
       senderId: authUser.value.id,
       receiverId: receiverId.value,
       isTyping: true,
@@ -91,8 +91,8 @@ const notifyTyping = () => {
 
     // Stop typing after 1 second of inactivity
     typingTimeout = setTimeout(() => {
-      if (socket.value && receiverId.value && authUser.value) {
-        socket.value.emit(SocketEvents.PERSONAL.TYPING, {
+      if (socketState.socket.ready.value && receiverId.value && authUser.value) {
+        socketState.socket.emit(SocketEvents.PERSONAL.TYPING, {
           senderId: authUser.value.id,
           receiverId: receiverId.value,
           isTyping: false,
@@ -133,7 +133,7 @@ const sendMessage = async (message: string) => {
       messagesData.value.push(realMessage)
     }
   } catch (error) {
-    console.error('Error sending message:', error)
+    logger.error('Error sending message:', error)
   }
 }
 

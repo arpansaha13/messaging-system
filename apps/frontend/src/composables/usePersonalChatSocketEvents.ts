@@ -1,16 +1,18 @@
 import { MessageStatus, SocketEvents } from '~/constants'
-import type { IMessage, SocketEventPayloads, IUser  } from '~/types'
+import type { IMessage, SocketEventPayloads, IUser } from '~/types'
 import { handleDelivered, handleRead } from '~/utils/mutations/messages'
+import { useSocket } from './useSocket'
 
-export async function usePersonalChatSocketEvents() {
+export function usePersonalChatSocketEvents() {
+  const socketState = useSocket()
   if (!import.meta.client) {
     return
   }
 
   const route = useRoute()
-  const { socket } = await useSocket()
-  const { data: authUser } = await useFetchAuthUser()
+  const { data: authUser } = useNuxtData<IUser>('authUser')
   const { setTyping } = useTypingStore()
+  const logger = useLogger('usePersonalChatSocketEvents')
 
   const currentReceiverId = computed(() => {
     const to = route.query.to
@@ -19,13 +21,12 @@ export async function usePersonalChatSocketEvents() {
   })
 
   watchEffect(onCleanup => {
-    const connection = socket.value
     const user = authUser.value
-    if (!connection || !user) {
+    if (!socketState.socket.ready.value || !user) {
       return
     }
 
-    const handleMessageReceive = async (payload: SocketEventPayloads.Personal.OnMessage) => {
+    const handleMessageReceive = async (payload: SocketEventPayloads['Personal']['OnMessage']) => {
       const message: IMessage = {
         id: payload.messageId,
         content: payload.content,
@@ -47,46 +48,45 @@ export async function usePersonalChatSocketEvents() {
       try {
         await handleDelivered(message.id)
       } catch (error) {
-        console.error('Error sending delivered status:', error)
+        logger.error('Error sending delivered status:', error)
       }
 
       pushMessage(payload.senderId, message)
     }
 
-    const handleStatusDelivered = (payload: SocketEventPayloads.Personal.OnDelivered) => {
+    const handleStatusDelivered = (payload: SocketEventPayloads['Personal']['OnDelivered']) => {
       updateLatestMessageStatusInChatList(payload.receiverId, payload.messageId, payload.status)
       updateMessageStatus(payload.receiverId, payload.messageId, payload.status)
     }
 
-    const handleStatusRead = (payloadArray: SocketEventPayloads.Personal.OnRead[]) => {
+    const handleStatusRead = (payloadArray: SocketEventPayloads['Personal']['OnRead'][]) => {
       payloadArray.forEach(p => {
         updateLatestMessageStatusInChatList(p.receiverId, p.messageId, p.status)
         updateMessageStatus(p.receiverId, p.messageId, p.status)
       })
     }
 
-    const handleTyping = (payload: SocketEventPayloads.Personal.OnTyping) => {
+    const handleTyping = (payload: SocketEventPayloads['Personal']['OnTyping']) => {
       setTyping(payload.senderId, payload.isTyping)
     }
 
-    connection.on(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
-    connection.on(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
-    connection.on(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
-    connection.on(SocketEvents.PERSONAL.TYPING, handleTyping)
+    socketState.socket.on(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
+    socketState.socket.on(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
+    socketState.socket.on(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
+    socketState.socket.on(SocketEvents.PERSONAL.TYPING, handleTyping)
 
     onCleanup(() => {
-      connection.off(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
-      connection.off(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
-      connection.off(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
-      connection.off(SocketEvents.PERSONAL.TYPING, handleTyping)
+      socketState.socket.off(SocketEvents.PERSONAL.MESSAGE_RECEIVE, handleMessageReceive)
+      socketState.socket.off(SocketEvents.PERSONAL.STATUS_DELIVERED, handleStatusDelivered)
+      socketState.socket.off(SocketEvents.PERSONAL.STATUS_READ, handleStatusRead)
+      socketState.socket.off(SocketEvents.PERSONAL.TYPING, handleTyping)
     })
   })
 
   watchEffect(() => {
-    const connection = socket.value
     const user = authUser.value
     const receiverId = currentReceiverId.value
-    if (!connection || !user || !receiverId) {
+    if (!socketState.socket.ready.value || !user || !receiverId) {
       return
     }
 
@@ -114,7 +114,7 @@ export async function usePersonalChatSocketEvents() {
     if (messageIds.length > 0) {
       // Send read status via HTTP API
       handleRead(messageIds).catch(error => {
-        console.error('Error sending read status:', error)
+        logger.error('Error sending read status:', error)
       })
     }
   })

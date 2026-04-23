@@ -1,13 +1,14 @@
 import { SocketEvents } from '~/constants'
 import type { SocketEventPayloads, IChannel  } from '~/types'
 
-export async function useGroupEventsSocketEvents() {
+import { useSocket } from './useSocket'
+
+export function useGroupEventsSocketEvents() {
   if (!import.meta.client) {
     return
   }
 
   const route = useRoute()
-  const { socket } = await useSocket()
 
   const currentGroupId = computed(() => {
     const group = route.params.groupId
@@ -15,13 +16,15 @@ export async function useGroupEventsSocketEvents() {
     return Number(Array.isArray(group) ? group[0] : group)
   })
 
+  const socketState = useSocket()
+  const logger = useLogger('useGroupEventsSocketEvents')
+
   watchEffect(onCleanup => {
-    const connection = socket.value
-    if (!connection) {
+    if (!socketState.socket.ready.value) {
       return
     }
 
-    const handleNewChannel = (payload: SocketEventPayloads.Group.OnNewChannel) => {
+    const handleNewChannel = (payload: SocketEventPayloads['Group']['OnNewChannel']) => {
       const { id, name, groupId } = payload
       // Only process if we're in the same group
       if (!currentGroupId.value || groupId !== currentGroupId.value) {
@@ -42,13 +45,13 @@ export async function useGroupEventsSocketEvents() {
         }
       }
 
-      console.log(`New channel created: ${name} (${id}) in group ${groupId}`)
+      logger.info(`New channel created: ${name} (${id}) in group ${groupId}`)
     }
 
-    connection.on(SocketEvents.GROUP.NEW_CHANNEL, handleNewChannel)
+    socketState.socket.on(SocketEvents.GROUP.NEW_CHANNEL, handleNewChannel)
 
     onCleanup(() => {
-      connection.off(SocketEvents.GROUP.NEW_CHANNEL, handleNewChannel)
+      socketState.socket.off(SocketEvents.GROUP.NEW_CHANNEL, handleNewChannel)
     })
   })
 }

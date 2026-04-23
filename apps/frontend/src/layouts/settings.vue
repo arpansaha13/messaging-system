@@ -20,6 +20,7 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
+const logger = useLogger('settings_layout')
 
 const navigationItems = computed<NavigationMenuItem[][]>(() => [
   [
@@ -42,7 +43,7 @@ const navigationItems = computed<NavigationMenuItem[][]>(() => [
           await logout()
           await navigateTo('/')
         } catch (error: any) {
-          console.error('Logout failed:', error)
+          logger.error('Logout failed:', error)
         }
       },
     },

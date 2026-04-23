@@ -32,6 +32,7 @@ import { sendGroupMessage } from '~/utils/mutations/messages'
 const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
 const groupMessages = useGroupMessagesStore()
+const logger = useLogger('GroupChat')
 
 // Get channel ID from route params
 const channelId = computed(() => {
@@ -133,7 +134,7 @@ const sendMessage = async (message: string) => {
       status: realMessage.status,
     }])
   } catch (error) {
-    console.error('Error sending message:', error)
+    logger.error('Error sending message:', error)
   }
 }
 </script>

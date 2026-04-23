@@ -18,7 +18,7 @@
               ? 'border-primary bg-gray-50 dark:bg-transparent'
               : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600',
           ]"
-          @click="colorMode.preference = option.value"
+          @click="(colorMode as any).preference = option.value"
         >
           <div class="shrink-0">
             <div class="flex h-12 w-12 items-center justify-center rounded-lg" :class="option.iconBg">
@@ -66,6 +66,7 @@ const themeOptions = [
 ] as const
 
 function isActive(value: string) {
-  return value === 'system' ? colorMode.preference === 'system' : colorMode.value === value
+  const mode = colorMode as any
+  return value === 'system' ? mode.preference === 'system' : mode.value === value
 }
 </script>

@@ -1,22 +1,23 @@
 import { MessageStatus, SocketEvents } from '~/constants'
-import type { IGroupMessage, SocketEventPayloads } from '~/types'
+import type { IGroupMessage, SocketEventPayloads, IUser } from '~/types'
 
-export async function useGroupChatSocketEvents() {
+import { useSocket } from './useSocket'
+
+export function useGroupChatSocketEvents() {
   if (!import.meta.client) {
     return
   }
 
-  const { socket } = await useSocket()
-  const { data: authUser } = await useFetchAuthUser()
+  const { data: authUser } = useNuxtData<IUser>('authUser')
+  const socketState = useSocket()
 
   watchEffect(onCleanup => {
-    const connection = socket.value
     const user = authUser.value
-    if (!connection || !user) {
+    if (!socketState.socket.ready.value || !user) {
       return
     }
 
-    const handleMessageReceive = (payload: SocketEventPayloads.Group.OnMessage) => {
+    const handleMessageReceive = (payload: SocketEventPayloads['Group']['OnMessage']) => {
       const message: IGroupMessage = {
         id: payload.messageId,
         content: payload.content,
@@ -34,10 +35,10 @@ export async function useGroupChatSocketEvents() {
       upsertGroupMessages(payload.channelId, [message])
     }
 
-    connection.on(SocketEvents.GROUP.MESSAGE_RECEIVE, handleMessageReceive)
+    socketState.socket.on(SocketEvents.GROUP.MESSAGE_RECEIVE, handleMessageReceive)
 
     onCleanup(() => {
-      connection.off(SocketEvents.GROUP.MESSAGE_RECEIVE, handleMessageReceive)
+      socketState.socket.off(SocketEvents.GROUP.MESSAGE_RECEIVE, handleMessageReceive)
     })
   })
 }

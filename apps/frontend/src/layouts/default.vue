@@ -9,7 +9,3 @@
     </div>
   </SocketProvider>
 </template>
-
-<script setup lang="ts">
-useSocket()
-</script>

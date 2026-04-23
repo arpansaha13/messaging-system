@@ -34,7 +34,7 @@
                       :alt="contact.alias"
                       size="md"
                       :chip="
-                        getOnlineStatus(contact.userId) && {
+                        socketState.onlineStore.getOnlineStatus(contact.userId) && {
                           position: 'bottom-right',
                         }
                       "
@@ -88,7 +88,7 @@ const route = useRoute()
 const toast = useToast()
 
 const { data: contacts } = await useFetchContacts()
-const { getOnlineStatus } = useOnlineStatusStore()
+const socketState = useSocket()
 
 const overlay = useOverlay()
 const editContactModal = overlay.create(EditContactModal)

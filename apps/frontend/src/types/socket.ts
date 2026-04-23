@@ -26,7 +26,7 @@ export type SocketEventPayloads = {
     OnRead: {
       messageId: IMessage['id']
       receiverId: UserId
-      status: MessageStatus.DELIVERED
+      status: MessageStatus.READ
     }
     EmitDelivered: {
       messageId: IMessage['id']
@@ -39,12 +39,12 @@ export type SocketEventPayloads = {
       receiverId: UserId
     }
     EmitTyping: {
-      senderId: IMessage['id']
+      senderId: UserId
       receiverId: UserId
       isTyping: boolean
     }
     OnTyping: {
-      senderId: IMessage['id']
+      senderId: UserId
       receiverId: UserId
       isTyping: boolean
     }

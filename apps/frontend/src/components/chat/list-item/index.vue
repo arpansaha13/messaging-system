@@ -12,7 +12,7 @@
           :alt="receiver.contact?.alias ?? receiver.globalName"
           size="md"
           :chip="
-            getOnlineStatus(receiver.id) && {
+            socketState.onlineStore.getOnlineStatus(receiver.id) && {
               position: 'bottom-right',
             }
           "
@@ -64,7 +64,7 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const { data: authUser } = await useFetchAuthUser()
-const { getOnlineStatus } = useOnlineStatusStore()
+const socketState = useSocket()
 
 const receiver = computed(() => props.chatListItem.receiver)
 const latestMsg = computed(() => props.chatListItem.latestMsg)
