@@ -64,20 +64,17 @@ type IMessageRecipientRepository interface {
 // ChannelRepository defines the interface for channel repository operations
 type IChannelRepository interface {
 	Create(ctx context.Context, channel *domain.Channel) error
-	GetByID(ctx context.Context, channelID int64) (*domain.Channel, error)
-	GetAll(ctx context.Context) ([]*domain.Channel, error)
-	GetByGroupID(ctx context.Context, groupID int64) ([]*domain.Channel, error)
-	Delete(ctx context.Context, channelID int64) error
-	Update(ctx context.Context, channel *domain.Channel) error
+	GetByID(ctx context.Context, userID, channelID int64) (*domain.Channel, error)
+	GetAll(ctx context.Context, userID int64) ([]*domain.Channel, error)
+	GetByGroupID(ctx context.Context, userID, groupID int64) ([]*domain.Channel, error)
 }
 
 // GroupRepository defines the interface for group repository operations
 type IGroupRepository interface {
 	Create(ctx context.Context, group *domain.Group) error
-	GetByID(ctx context.Context, groupID int64) (*domain.Group, error)
-	GetAll(ctx context.Context) ([]*domain.Group, error)
-	Delete(ctx context.Context, groupID int64) error
-	Update(ctx context.Context, group *domain.Group) error
+	GetByIDUnscoped(ctx context.Context, groupID int64) (*domain.Group, error)
+	GetByID(ctx context.Context, userID, groupID int64) (*domain.Group, error)
+	GetAll(ctx context.Context, userID int64) ([]*domain.Group, error)
 }
 
 // InviteRepository defines the interface for invite repository operations
@@ -92,10 +89,6 @@ type IInviteRepository interface {
 // UserGroupRepository defines the interface for user group repository operations
 type IUserGroupRepository interface {
 	Create(ctx context.Context, userGroup *domain.UserGroup) error
-	GetByID(ctx context.Context, userGroupID int64) (*domain.UserGroup, error)
-	GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error)
-	GetUserGroups(ctx context.Context, userID int64) ([]*domain.UserGroup, error)
+	GetGroupMembers(ctx context.Context, userID, groupID int64) ([]*domain.UserGroup, error)
 	Exists(ctx context.Context, userID, groupID int64) (bool, error)
-	Delete(ctx context.Context, userGroupID int64) error
-	Update(ctx context.Context, userGroup *domain.UserGroup) error
 }

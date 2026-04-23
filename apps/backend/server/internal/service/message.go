@@ -21,6 +21,7 @@ type MessageService struct {
 	messageRepo          repository.IMessageRepository
 	messageRecipientRepo repository.IMessageRecipientRepository
 	chatRepo             repository.IChatRepository
+	userGroupRepo        repository.IUserGroupRepository
 	rabbitmqService      *RabbitMQService
 	db                   *gorm.DB
 	cb                   *gobreaker.CircuitBreaker[any]
@@ -31,6 +32,7 @@ func NewMessageService(
 	messageRepo repository.IMessageRepository,
 	messageRecipientRepo repository.IMessageRecipientRepository,
 	chatRepo repository.IChatRepository,
+	userGroupRepo repository.IUserGroupRepository,
 	rabbitmqService *RabbitMQService,
 	db *gorm.DB,
 	cb *gobreaker.CircuitBreaker[any],
@@ -39,6 +41,7 @@ func NewMessageService(
 		messageRepo:          messageRepo,
 		messageRecipientRepo: messageRecipientRepo,
 		chatRepo:             chatRepo,
+		userGroupRepo:        userGroupRepo,
 		rabbitmqService:      rabbitmqService,
 		db:                   db,
 		cb:                   cb,
@@ -128,6 +131,16 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 	senderID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("sending group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID), zap.Int("content_length", len(req.Content)))
 
+	isMember, err := s.userGroupRepo.Exists(ctx, senderID, req.GroupID)
+	if err != nil {
+		log.Error("failed to verify sender membership for group message", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Error(err))
+		return 0, time.Time{}, err
+	}
+	if !isMember {
+		log.Warn("group message send forbidden for non-member", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID))
+		return 0, time.Time{}, &gtk.ForbiddenError{Message: "not a member of this group"}
+	}
+
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
 		return 0, time.Time{}, &gtk.InternalError{Message: "RabbitMQ not connected"}
@@ -136,7 +149,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 	var messageID int64
 	var createdAt time.Time
 
-	_, err := s.cb.Execute(func() (any, error) {
+	_, err = s.cb.Execute(func() (any, error) {
 		return nil, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 			var channel domain.Channel
 			if err := tx.First(&channel, req.ChannelID).Error; err != nil {

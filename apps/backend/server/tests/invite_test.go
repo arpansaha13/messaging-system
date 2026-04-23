@@ -275,6 +275,37 @@ func (s *InviteTestSuite) TestCreateInvite() {
 			ExpectError: false,
 		},
 		{
+			Name: "Create invite as non-member returns forbidden",
+			Setup: func(f *TestFixture) error {
+				founderID := int64(4052)
+				outsiderID := int64(4053)
+				f.SetUserID(outsiderID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(founderID, "Founder 10"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(outsiderID, "Outsider 10"); err != nil {
+					return err
+				}
+
+				_, err := f.TestDB.CreateTestGroup("Invite Protected Group", founderID)
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				var group domain.Group
+				if err := f.DB.Where("name = ?", "Invite Protected Group").First(&group).Error; err != nil {
+					return err
+				}
+
+				resp, err := f.HTTPClient.POST("/api/groups/"+fmt.Sprintf("%d", group.ID)+"/invites", nil)
+				s.Require().NoError(err)
+				s.Require().Equal(403, resp.StatusCode, "expected 403 for non-member invite creation")
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
 			Name: "Create invite for non-existent group returns 404",
 			Setup: func(f *TestFixture) error {
 				userID := int64(4051)

@@ -134,6 +134,41 @@ func (s *GroupTestSuite) TestGetGroups() {
 			ExpectError: false,
 		},
 		{
+			Name: "Get groups returns only memberships of authenticated user",
+			Setup: func(f *TestFixture) error {
+				userA := int64(1505)
+				userB := int64(1506)
+				f.SetUserID(userA)
+
+				if _, err := f.TestDB.CreateTestUserProfile(userA, "User A"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(userB, "User B"); err != nil {
+					return err
+				}
+
+				if _, err := f.TestDB.CreateTestGroup("Group A", userA); err != nil {
+					return err
+				}
+				_, err := f.TestDB.CreateTestGroup("Group B", userB)
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				resp, err := f.HTTPClient.GET("/api/groups")
+				s.Require().NoError(err)
+				s.Require().Equal(200, resp.StatusCode)
+
+				var result []map[string]any
+				err = ReadResponseBody(resp, &result)
+				s.Require().NoError(err)
+				s.Require().Len(result, 1, "expected only one visible group for user")
+				s.Require().Equal("Group A", result[0]["name"])
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
 			Name: "Get groups returns empty array when no groups",
 			Setup: func(f *TestFixture) error {
 				userID := int64(1504)

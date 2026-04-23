@@ -63,20 +63,10 @@ func (s *GroupService) GetGroups(ctx context.Context) ([]*domain.Group, error) {
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving groups for user", zap.Int64("user_id", userID))
 
-	userGroups, err := s.userGroupRepo.GetUserGroups(ctx, userID)
+	groups, err := s.groupRepo.GetAll(ctx, userID)
 	if err != nil {
-		log.Error("failed to retrieve user groups from repository", zap.Int64("user_id", userID), zap.Error(err))
+		log.Error("failed to retrieve groups from repository", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, err
-	}
-
-	groups := make([]*domain.Group, len(userGroups))
-	for i, ug := range userGroups {
-		group, err := s.groupRepo.GetByID(ctx, ug.GroupID)
-		if err != nil {
-			log.Error("failed to retrieve group details", zap.Int64("group_id", ug.GroupID), zap.Error(err))
-			return nil, err
-		}
-		groups[i] = group
 	}
 
 	log.Debug("groups retrieved successfully", zap.Int64("user_id", userID), zap.Int("group_count", len(groups)))

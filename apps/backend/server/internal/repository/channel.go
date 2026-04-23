@@ -16,12 +16,18 @@ type ChannelRepository struct {
 	cb *gobreaker.CircuitBreaker[any]
 }
 
+const joinUserGroupsByChannelGroup = "JOIN user_groups ON user_groups.group_id = channels.group_id"
+
 // NewChannelRepository creates a new channel repository
 func NewChannelRepository(db *gorm.DB, cb *gobreaker.CircuitBreaker[any]) *ChannelRepository {
 	return &ChannelRepository{db: db, cb: cb}
 }
 
-// Create creates a new channel
+// Create creates a new channel.
+//
+// This method is intentionally persistence-only and does not enforce
+// membership/authorization checks; callers should validate isMember in the
+// service layer via userGroupRepo.Exists before invoking it.
 func (r *ChannelRepository) Create(ctx context.Context, channel *domain.Channel) error {
 	_, err := r.cb.Execute(func() (any, error) {
 		return nil, r.db.WithContext(ctx).Create(channel).Error
@@ -33,11 +39,15 @@ func (r *ChannelRepository) Create(ctx context.Context, channel *domain.Channel)
 	return nil
 }
 
-// GetByID retrieves a channel by ID
-func (r *ChannelRepository) GetByID(ctx context.Context, channelID int64) (*domain.Channel, error) {
+// GetByID retrieves a channel by ID only if the user is a member of its group
+func (r *ChannelRepository) GetByID(ctx context.Context, userID, channelID int64) (*domain.Channel, error) {
 	result, err := r.cb.Execute(func() (any, error) {
 		var channel domain.Channel
-		err := r.db.WithContext(ctx).Where("id = ?", channelID).First(&channel).Error
+		err := r.db.WithContext(ctx).
+			Model(&domain.Channel{}).
+			Joins(joinUserGroupsByChannelGroup).
+			Where("channels.id = ? AND user_groups.user_id = ?", channelID, userID).
+			First(&channel).Error
 		if err != nil {
 			return nil, err
 		}
@@ -54,11 +64,16 @@ func (r *ChannelRepository) GetByID(ctx context.Context, channelID int64) (*doma
 	return result.(*domain.Channel), nil
 }
 
-// GetAll retrieves all channels
-func (r *ChannelRepository) GetAll(ctx context.Context) ([]*domain.Channel, error) {
+// GetAll retrieves all channels where the user belongs to the parent group
+func (r *ChannelRepository) GetAll(ctx context.Context, userID int64) ([]*domain.Channel, error) {
 	result, err := r.cb.Execute(func() (any, error) {
 		var channels []*domain.Channel
-		err := r.db.WithContext(ctx).Find(&channels).Error
+		err := r.db.WithContext(ctx).
+			Model(&domain.Channel{}).
+			Select("DISTINCT channels.*").
+			Joins(joinUserGroupsByChannelGroup).
+			Where("user_groups.user_id = ?", userID).
+			Find(&channels).Error
 		if err != nil {
 			return nil, err
 		}
@@ -72,11 +87,16 @@ func (r *ChannelRepository) GetAll(ctx context.Context) ([]*domain.Channel, erro
 	return result.([]*domain.Channel), nil
 }
 
-// GetByGroupID retrieves channels within a specific group
-func (r *ChannelRepository) GetByGroupID(ctx context.Context, groupID int64) ([]*domain.Channel, error) {
+// GetByGroupID retrieves channels in a group only if the user is a member of that group
+func (r *ChannelRepository) GetByGroupID(ctx context.Context, userID, groupID int64) ([]*domain.Channel, error) {
 	result, err := r.cb.Execute(func() (any, error) {
 		var channels []*domain.Channel
-		err := r.db.WithContext(ctx).Where("group_id = ?", groupID).Find(&channels).Error
+		err := r.db.WithContext(ctx).
+			Model(&domain.Channel{}).
+			Select("DISTINCT channels.*").
+			Joins(joinUserGroupsByChannelGroup).
+			Where("channels.group_id = ? AND user_groups.user_id = ?", groupID, userID).
+			Find(&channels).Error
 		if err != nil {
 			return nil, err
 		}
@@ -88,30 +108,6 @@ func (r *ChannelRepository) GetByGroupID(ctx context.Context, groupID int64) ([]
 	}
 
 	return result.([]*domain.Channel), nil
-}
-
-// Delete deletes a channel
-func (r *ChannelRepository) Delete(ctx context.Context, channelID int64) error {
-	_, err := r.cb.Execute(func() (any, error) {
-		return nil, r.db.WithContext(ctx).Delete(&domain.Channel{}, channelID).Error
-	})
-
-	if err != nil {
-		return &gtk.InternalError{Message: "failed to delete channel", Err: err}
-	}
-	return nil
-}
-
-// Update updates a channel
-func (r *ChannelRepository) Update(ctx context.Context, channel *domain.Channel) error {
-	_, err := r.cb.Execute(func() (any, error) {
-		return nil, r.db.WithContext(ctx).Save(channel).Error
-	})
-
-	if err != nil {
-		return &gtk.InternalError{Message: "failed to update channel", Err: err}
-	}
-	return nil
 }
 
 var _ IChannelRepository = (*ChannelRepository)(nil)

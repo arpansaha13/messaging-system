@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"errors"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -32,31 +31,17 @@ func (r *UserGroupRepository) Create(ctx context.Context, userGroup *domain.User
 	return nil
 }
 
-// GetByID retrieves a user group by ID
-func (r *UserGroupRepository) GetByID(ctx context.Context, userGroupID int64) (*domain.UserGroup, error) {
-	result, err := r.cb.Execute(func() (any, error) {
-		var userGroup domain.UserGroup
-		err := r.db.WithContext(ctx).Where("id = ?", userGroupID).First(&userGroup).Error
-		if err != nil {
-			return nil, err
-		}
-		return &userGroup, nil
-	})
-
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gtk.NotFoundError{Message: "user group not found"}
-		}
-		return nil, &gtk.InternalError{Message: "failed to get user group", Err: err}
-	}
-	return result.(*domain.UserGroup), nil
-}
-
-// GetGroupMembers retrieves all members of a group with user data
-func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, groupID int64) ([]*domain.UserGroup, error) {
+// GetGroupMembers retrieves all members of a group only if requester belongs to the same group
+func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, userID, groupID int64) ([]*domain.UserGroup, error) {
 	result, err := r.cb.Execute(func() (any, error) {
 		var members []*domain.UserGroup
-		err := r.db.WithContext(ctx).Preload("User").Where("group_id = ?", groupID).Find(&members).Error
+		err := r.db.WithContext(ctx).
+			Model(&domain.UserGroup{}).
+			Select("DISTINCT user_groups.*").
+			Joins("JOIN user_groups AS requester_membership ON requester_membership.group_id = user_groups.group_id").
+			Where("user_groups.group_id = ? AND requester_membership.user_id = ?", groupID, userID).
+			Preload("User").
+			Find(&members).Error
 		if err != nil {
 			return nil, err
 		}
@@ -66,23 +51,7 @@ func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, groupID int64
 	if err != nil {
 		return nil, &gtk.InternalError{Message: "failed to get group members", Err: err}
 	}
-	return result.([]*domain.UserGroup), nil
-}
 
-// GetUserGroups retrieves all groups a user belongs to
-func (r *UserGroupRepository) GetUserGroups(ctx context.Context, userID int64) ([]*domain.UserGroup, error) {
-	result, err := r.cb.Execute(func() (any, error) {
-		var groups []*domain.UserGroup
-		err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&groups).Error
-		if err != nil {
-			return nil, err
-		}
-		return groups, nil
-	})
-
-	if err != nil {
-		return nil, &gtk.InternalError{Message: "failed to get user groups", Err: err}
-	}
 	return result.([]*domain.UserGroup), nil
 }
 
@@ -104,28 +73,6 @@ func (r *UserGroupRepository) Exists(ctx context.Context, userID, groupID int64)
 		return false, &gtk.InternalError{Message: "failed to check user group", Err: err}
 	}
 	return result.(bool), nil
-}
-
-// Delete deletes a user group membership
-func (r *UserGroupRepository) Delete(ctx context.Context, userGroupID int64) error {
-	_, err := r.cb.Execute(func() (any, error) {
-		return nil, r.db.WithContext(ctx).Delete(&domain.UserGroup{}, userGroupID).Error
-	})
-	if err != nil {
-		return &gtk.InternalError{Message: "failed to delete user group", Err: err}
-	}
-	return nil
-}
-
-// Update updates a user group membership
-func (r *UserGroupRepository) Update(ctx context.Context, userGroup *domain.UserGroup) error {
-	_, err := r.cb.Execute(func() (any, error) {
-		return nil, r.db.WithContext(ctx).Save(userGroup).Error
-	})
-	if err != nil {
-		return &gtk.InternalError{Message: "failed to update user group", Err: err}
-	}
-	return nil
 }
 
 var _ IUserGroupRepository = (*UserGroupRepository)(nil)

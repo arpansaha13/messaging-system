@@ -59,10 +59,20 @@ func (s *InviteService) CreateInvite(ctx context.Context, req *dto.CreateInviteD
 	log.Debug("creating invite", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID))
 
 	// Verify group exists
-	_, err := s.groupRepo.GetByID(ctx, req.GroupID)
+	_, err := s.groupRepo.GetByIDUnscoped(ctx, req.GroupID)
 	if err != nil {
 		log.Error("failed to verify group existence", zap.Int64("group_id", req.GroupID), zap.Error(err))
 		return nil, err
+	}
+
+	isMember, err := s.userGroupRepo.Exists(ctx, inviterID, req.GroupID)
+	if err != nil {
+		log.Error("failed to verify inviter membership", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID), zap.Error(err))
+		return nil, err
+	}
+	if !isMember {
+		log.Warn("invite creation forbidden for non-member", zap.Int64("inviter_id", inviterID), zap.Int64("group_id", req.GroupID))
+		return nil, &gtk.ForbiddenError{Message: "not a member of this group"}
 	}
 
 	// Generate unique hash
@@ -158,7 +168,7 @@ func (s *InviteService) AcceptInvite(ctx context.Context, input *dto.AcceptInvit
 	log.Debug("user added to group", zap.Int64("user_id", userID), zap.Int64("group_id", *invite.GroupID))
 
 	// Get channels for the group
-	channels, err := s.channelRepo.GetByGroupID(ctx, *invite.GroupID)
+	channels, err := s.channelRepo.GetByGroupID(ctx, userID, *invite.GroupID)
 	if err != nil {
 		log.Error("failed to get channels for group", zap.Int64("group_id", *invite.GroupID), zap.Error(err))
 		return nil, err

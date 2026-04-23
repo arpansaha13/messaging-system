@@ -22,7 +22,11 @@ func NewInviteRepository(db *gorm.DB, cb *gobreaker.CircuitBreaker[any]) *Invite
 	return &InviteRepository{db: db, cb: cb}
 }
 
-// Create creates a new invite
+// Create creates a new invite.
+//
+// This method does not perform membership checks; callers should verify
+// isMember in the service layer via userGroupRepo.Exists before creating
+// group-scoped invites.
 func (r *InviteRepository) Create(ctx context.Context, invite *domain.Invite) error {
 	_, err := r.cb.Execute(func() (any, error) {
 		return nil, r.db.WithContext(ctx).Create(invite).Error

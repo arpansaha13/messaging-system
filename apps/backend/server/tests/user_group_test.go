@@ -111,6 +111,41 @@ func (s *UserGroupTestSuite) TestGetMembers() {
 			ExpectError: false,
 		},
 		{
+			Name: "Get group members as non-member returns forbidden",
+			Setup: func(f *TestFixture) error {
+				ownerID := int64(6016)
+				outsiderID := int64(6017)
+				f.SetUserID(outsiderID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(ownerID, "Owner User"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(outsiderID, "Outsider User"); err != nil {
+					return err
+				}
+
+				group, err := f.TestDB.CreateTestGroup("Members Hidden Group", ownerID)
+				if err != nil {
+					return err
+				}
+				_ = group
+				return nil
+			},
+			Test: func(f *TestFixture) error {
+				var group domain.Group
+				if err := f.DB.Where("name = ?", "Members Hidden Group").First(&group).Error; err != nil {
+					return err
+				}
+
+				resp, err := f.HTTPClient.GET(fmt.Sprintf("/api/groups/%d/members", group.ID))
+				s.Require().NoError(err)
+				s.Require().Equal(403, resp.StatusCode)
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
 			Name: "Get members of non-existent group returns error",
 			Setup: func(f *TestFixture) error {
 				userID := int64(6015)

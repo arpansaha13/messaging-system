@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -85,6 +86,41 @@ func (s *ChannelTestSuite) TestCreateChannel() {
 
 				// Accept any error status
 				s.Require().True(resp.StatusCode < 200 || resp.StatusCode >= 300, "expected error status")
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "Create channel as non-member returns forbidden",
+			Setup: func(f *TestFixture) error {
+				founderID := int64(1607)
+				outsiderID := int64(1608)
+				f.SetUserID(outsiderID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(founderID, "Founder User"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(outsiderID, "Outsider User"); err != nil {
+					return err
+				}
+
+				_, err := f.TestDB.CreateTestGroup("Member Only Group", founderID)
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				var group domain.Group
+				if err := f.DB.Where("name = ?", "Member Only Group").First(&group).Error; err != nil {
+					return err
+				}
+
+				req := map[string]any{
+					"name": "Blocked Channel",
+				}
+
+				resp, err := f.HTTPClient.POST("/api/groups/"+strconv.FormatInt(group.ID, 10)+"/channels", req)
+				s.Require().NoError(err)
+				s.Require().Equal(403, resp.StatusCode)
 
 				return nil
 			},
@@ -200,6 +236,42 @@ func (s *ChannelTestSuite) TestGetChannels() {
 				s.Require().NoError(err)
 
 				s.Require().NotEmpty(channels, "expected channels in response")
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "Get channels by group ID as non-member returns forbidden",
+			Setup: func(f *TestFixture) error {
+				founderID := int64(1615)
+				outsiderID := int64(1616)
+				f.SetUserID(outsiderID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(founderID, "Founder User"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(outsiderID, "Outsider User"); err != nil {
+					return err
+				}
+
+				group, err := f.TestDB.CreateTestGroup("Private Group", founderID)
+				if err != nil {
+					return err
+				}
+
+				_, err = f.TestDB.CreateTestChannel(group.ID, "Private Channel")
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				var group domain.Group
+				if err := f.DB.Where("name = ?", "Private Group").First(&group).Error; err != nil {
+					return err
+				}
+
+				resp, err := f.HTTPClient.GET("/api/groups/" + strconv.FormatInt(group.ID, 10) + "/channels")
+				s.Require().NoError(err)
+				s.Require().Equal(403, resp.StatusCode)
 
 				return nil
 			},
@@ -338,6 +410,42 @@ func (s *ChannelTestSuite) TestGetChannelInfo() {
 				s.Require().NoError(err)
 
 				s.Require().Equal("Test Channel", result["name"])
+
+				return nil
+			},
+			ExpectError: false,
+		},
+		{
+			Name: "Get channel info as non-member returns not found",
+			Setup: func(f *TestFixture) error {
+				founderID := int64(1607)
+				outsiderID := int64(1608)
+				f.SetUserID(outsiderID)
+
+				if _, err := f.TestDB.CreateTestUserProfile(founderID, "Founder User"); err != nil {
+					return err
+				}
+				if _, err := f.TestDB.CreateTestUserProfile(outsiderID, "Outsider User"); err != nil {
+					return err
+				}
+
+				group, err := f.TestDB.CreateTestGroup("Hidden Group", founderID)
+				if err != nil {
+					return err
+				}
+
+				_, err = f.TestDB.CreateTestChannel(group.ID, "Hidden Channel")
+				return err
+			},
+			Test: func(f *TestFixture) error {
+				var channel domain.Channel
+				if err := f.DB.Where("name = ?", "Hidden Channel").First(&channel).Error; err != nil {
+					return err
+				}
+
+				resp, err := f.HTTPClient.GET("/api/channels/" + strconv.FormatInt(channel.ID, 10))
+				s.Require().NoError(err)
+				s.Require().Equal(404, resp.StatusCode)
 
 				return nil
 			},
