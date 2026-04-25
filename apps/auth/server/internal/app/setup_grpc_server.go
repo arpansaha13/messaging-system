@@ -14,11 +14,12 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
 )
 
-// SetupGRPCServer wires repositories, email provider, auth service, and gRPC interceptors.
-// Creates sessionCache from memcachedClient if available.
-// Returns the server (for Serve/GracefulStop) and the email pool (for Stop on shutdown).
-func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *gtk.MemcachedClient) (*grpc.Server, *goauthkit.EmailWorkerPool) {
-	cfg, _ := config.Load()
+// SetupDependencies wires repositories, email provider, and the auth service.
+func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *gtk.MemcachedClient) *Dependencies {
+	cfg, err := config.Load()
+	if err != nil {
+		zapLogger.Fatal("failed to load configuration", zap.Error(err))
+	}
 
 	userRepo := goauthkit.NewUserRepository(db, cbs.Postgres)
 	otpRepo := goauthkit.NewOTPRepository(db, cbs.Postgres)
@@ -67,6 +68,17 @@ func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits,
 		},
 	)
 
+	return &Dependencies{
+		AuthService:   authService,
+		Validator:     validator,
+		EmailPool:     emailPool,
+		EmailProvider: emailProvider,
+	}
+}
+
+// SetupGRPCServer configures the gRPC server using the provided dependencies.
+func SetupGRPCServer(deps *Dependencies, zapLogger *zap.Logger) *grpc.Server {
+
 	opts := []grpc.ServerOption{
 		// otelgrpc stats handler must run before interceptors so span context
 		// is present when GrpcInterceptor reads trace_id/span_id.
@@ -80,8 +92,8 @@ func SetupGRPCServer(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits,
 	}
 	grpcServer := grpc.NewServer(opts...)
 
-	authController := goauthkit.NewAuthServiceImpl(authService, validator)
+	authController := goauthkit.NewAuthServiceImpl(deps.AuthService, deps.Validator)
 	pb.RegisterAuthServiceServer(grpcServer, authController)
 
-	return grpcServer, emailPool
+	return grpcServer
 }

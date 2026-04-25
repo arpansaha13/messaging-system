@@ -68,8 +68,6 @@ func SetupRouter(deps Deps) *mux.Router {
 
 	// Setup routes - user group routes must be registered before user routes
 	// to ensure /users/groups matches before /users/{id}
-	handler.SetupAuthRoutes(apiRouter, deps.AuthClient)
-	handler.SetupAuthProtectedRoutes(protectedRouter, deps.AuthClient)
 	handler.SetupUserGroupRoutes(apiRouter, protectedRouter, userGroupService)
 	handler.SetupUserRoutes(apiRouter, protectedRouter, userService)
 	handler.SetupMessageRoutes(apiRouter, protectedRouter, messageService)

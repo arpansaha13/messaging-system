@@ -54,7 +54,9 @@ func main() {
 		zapLogger.Warn("failed to setup memcached", zap.Error(err))
 	}
 
-	grpcServer, emailPool := app.SetupGRPCServer(db, zapLogger, cbs, memcachedClient)
+	deps := app.SetupDependencies(db, zapLogger, cbs, memcachedClient)
+	grpcServer := app.SetupGRPCServer(deps, zapLogger)
+	httpServer := app.SetupHTTPServer(deps, zapLogger)
 
 	grpcAddr := fmt.Sprintf("%s:%s", cfg.GRPCHost(), cfg.GRPCPort())
 	listener, err := net.Listen("tcp", grpcAddr)
@@ -77,6 +79,13 @@ func main() {
 		zapLogger.Info("starting auth gRPC server", zap.String("address", grpcAddr))
 		if err := grpcServer.Serve(listener); err != nil {
 			zapLogger.Fatal("gRPC server error", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		zapLogger.Info("starting auth HTTP server", zap.String("port", cfg.HTTPPort()))
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			zapLogger.Fatal("HTTP server error", zap.Error(err))
 		}
 	}()
 
@@ -106,6 +115,10 @@ func main() {
 		zapLogger.Error("metrics server shutdown error", zap.Error(err))
 	}
 
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
+		zapLogger.Error("HTTP server shutdown error", zap.Error(err))
+	}
+
 	if memcachedConnMgr != nil {
 		if err := memcachedConnMgr.Stop(); err != nil {
 			zapLogger.Error("error stopping memcached connection manager", zap.Error(err))
@@ -114,7 +127,7 @@ func main() {
 
 	shutdownTelemetry(shutdownCtx)
 
-	emailPool.Stop()
+	deps.EmailPool.Stop()
 
 	sqlDB, err := db.DB()
 	if err == nil {

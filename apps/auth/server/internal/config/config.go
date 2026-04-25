@@ -30,6 +30,8 @@ type Config struct {
 	dbMaxConnections       int
 	grpcHost               string
 	grpcPort               string
+	httpPort               string
+	authCookieName         string
 	metricsPort            int
 	otlpEndpoint           string
 	secretKey              string
@@ -54,6 +56,8 @@ func (c *Config) DatabaseURL() string                   { return c.databaseURL }
 func (c *Config) DatabaseMaxConnections() int           { return c.dbMaxConnections }
 func (c *Config) GRPCHost() string                      { return c.grpcHost }
 func (c *Config) GRPCPort() string                      { return c.grpcPort }
+func (c *Config) HTTPPort() string                      { return c.httpPort }
+func (c *Config) AuthCookieName() string                { return c.authCookieName }
 func (c *Config) MetricsPort() int                      { return c.metricsPort }
 func (c *Config) OTLPEndpoint() string                  { return c.otlpEndpoint }
 func (c *Config) SecretKey() string                     { return c.secretKey }
@@ -104,6 +108,8 @@ func load() (*Config, error) {
 		dbMaxConnections: getEnvInt("AUTH_DB_MAX_CONNECTIONS", 100),
 		grpcHost:         getEnv("GRPC_HOST", "0.0.0.0"),
 		grpcPort:         getEnv("GRPC_PORT", "50051"),
+		httpPort:         getEnv("HTTP_PORT", "4000"),
+		authCookieName:   getEnv("AUTH_COOKIE_NAME", ""),
 		metricsPort:      getEnvInt("METRICS_PORT", 9090),
 		otlpEndpoint:     getEnv("OTLP_ENDPOINT", ""),
 		secretKey:        getEnv("SECRET_KEY", ""),
@@ -155,6 +161,9 @@ func (c *Config) validate() error {
 	}
 	if c.jwtSecret == "" {
 		return fmt.Errorf("JWT_SECRET is required")
+	}
+	if c.authCookieName == "" {
+		return fmt.Errorf("AUTH_COOKIE_NAME is required")
 	}
 	return nil
 }

@@ -229,6 +229,7 @@ services:
       SESSION_TTL_MINUTES: 30
       SESSION_CLEANUP_INTERVAL_MINUTES: 5
       SECRET_KEY: test-secret-key-32-chars-minimum!
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME:-session}
       JWT_SECRET: test-jwt-secret-key-for-e2e-tests
       SMTP_HOST: localhost
       SMTP_PORT: 1025
