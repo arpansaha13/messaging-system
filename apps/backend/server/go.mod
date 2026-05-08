@@ -3,7 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/backend/server
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.12.0
+	github.com/arpansaha13/gotoolkit v0.12.1
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/gorilla/mux v1.8.1
 	github.com/prometheus/client_golang v1.23.2

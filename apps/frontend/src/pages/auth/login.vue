@@ -1,13 +1,14 @@
 <template>
   <UPageCard class="w-full max-w-md">
     <UAuthForm
-	  ref="authForm"
+      ref="authForm"
       data-testid="login-form"
       :schema="loginSchema"
       :fields="loginFields"
       title="Welcome Back"
       icon="i-lucide-lock"
       :loading="isLoading"
+      :providers="providers"
       @submit="onLogin"
     >
       <template #description>
@@ -52,6 +53,29 @@ const loginFields: AuthFormField[] = [
     required: true,
   },
 ]
+
+const providers = [
+  {
+    label: 'Google',
+    icon: 'i-simple-icons-google',
+    color: 'neutral' as const,
+    onClick: () => {
+      window.location.href = window.location.origin + '/api/auth/google'
+    },
+  },
+]
+
+const route = useRoute()
+onMounted(() => {
+  if (route.query.error === 'account_exists') {
+    toast.add({
+      title: 'Account exists',
+      description:
+        'An account with this email already exists. Please login with your password and link your Google account in settings.',
+      color: 'warning',
+    })
+  }
+})
 
 async function onLogin(e: FormSubmitEvent<LoginSchema>) {
   e.preventDefault()

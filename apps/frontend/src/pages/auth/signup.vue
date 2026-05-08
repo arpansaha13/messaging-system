@@ -2,13 +2,14 @@
   <UPageCard class="w-full max-w-md">
     <UAuthForm
       ref="authForm"
-	  data-testid="signup-form"
+      data-testid="signup-form"
       :schema="signupSchema"
       :fields="signupFields"
       :validate="validateSignup"
       title="Create Account"
       icon="i-lucide-user-plus"
       :loading="isLoading"
+      :providers="providers"
       @submit="onSignup"
     >
       <template #description>
@@ -79,6 +80,17 @@ const signupFields: AuthFormField[] = [
     required: true,
     minlength: 8,
     maxlength: 30,
+  },
+]
+
+const providers = [
+  {
+    label: 'Google',
+    icon: 'i-simple-icons-google',
+    color: 'neutral' as const,
+    onClick: () => {
+      window.location.href = window.location.origin + '/api/auth/google'
+    },
   },
 ]
 

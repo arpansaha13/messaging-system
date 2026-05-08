@@ -244,6 +244,9 @@ services:
       MEMCACHED_HOST: auth-cache
       MEMCACHED_PORT: 11211
       LOG_LEVEL: ${LOG_LEVEL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
       OTLP_ENDPOINT: tempo:4317
     depends_on:
       auth-db:

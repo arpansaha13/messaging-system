@@ -24,6 +24,7 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 	userRepo := goauthkit.NewUserRepository(db, cbs.Postgres)
 	otpRepo := goauthkit.NewOTPRepository(db, cbs.Postgres)
 	sessionRepo := goauthkit.NewSessionRepository(db, cbs.Postgres)
+	providerRepo := goauthkit.NewProviderRepository(db, cbs.Postgres)
 
 	var emailProvider goauthkit.EmailProvider
 	if cfg.Environment() == constants.EnvProduction {
@@ -57,6 +58,7 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 		userRepo,
 		otpRepo,
 		sessionRepo,
+		providerRepo,
 		sessionCache,
 		hasher,
 		goauthkit.AuthServiceConfig{

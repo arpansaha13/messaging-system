@@ -50,6 +50,9 @@ type Config struct {
 	emailTaskQueueSize     int
 	sessionTTL             time.Duration
 	sessionCleanupInterval time.Duration
+	googleClientID         string
+	googleClientSecret     string
+	googleRedirectURI      string
 }
 
 func (c *Config) DatabaseURL() string                   { return c.databaseURL }
@@ -76,6 +79,9 @@ func (c *Config) EmailWorkerPoolSize() int              { return c.emailWorkerPo
 func (c *Config) EmailTaskQueueSize() int               { return c.emailTaskQueueSize }
 func (c *Config) SessionTTL() time.Duration             { return c.sessionTTL }
 func (c *Config) SessionCleanupInterval() time.Duration { return c.sessionCleanupInterval }
+func (c *Config) GoogleClientID() string                { return c.googleClientID }
+func (c *Config) GoogleClientSecret() string            { return c.googleClientSecret }
+func (c *Config) GoogleRedirectURI() string             { return c.googleRedirectURI }
 
 var (
 	instance *Config
@@ -128,6 +134,9 @@ func load() (*Config, error) {
 		otpLength:           getEnvInt("OTP_LENGTH", 6),
 		emailWorkerPoolSize: getEnvInt("EMAIL_WORKER_POOL_SIZE", 5),
 		emailTaskQueueSize:  getEnvInt("EMAIL_TASK_QUEUE_SIZE", 100),
+		googleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
+		googleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
+		googleRedirectURI:   getEnv("GOOGLE_REDIRECT_URI", ""),
 	}
 
 	sessionTTLMins := getEnvInt("SESSION_TTL_MINUTES", 30)

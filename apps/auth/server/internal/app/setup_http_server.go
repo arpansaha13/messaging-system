@@ -3,8 +3,8 @@ package app
 import (
 	"net/http"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
 	goauthkit "github.com/arpansaha13/goauthkit/pkg"
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
 	"github.com/gorilla/mux"
@@ -17,15 +17,12 @@ func SetupHTTPServer(deps *Dependencies, zapLogger *zap.Logger) *http.Server {
 
 	router := mux.NewRouter()
 
-	// 1. Root middlewares (Same as backend)
 	router.Use(gtk.HttpRecoveryMiddleware)
 	router.Use(gtk.HttpLoggerMiddleware(zapLogger))
 	router.Use(gtk.HttpErrorMiddleware)
 
-	// 2. API subrouter
 	apiRouter := router.PathPrefix("/api").Subrouter()
 
-	// 3. Auth subrouter
 	authRouter := apiRouter.PathPrefix("/auth").Subrouter()
 
 	cookieConfig := goauthkit.CookieConfig{
@@ -36,12 +33,25 @@ func SetupHTTPServer(deps *Dependencies, zapLogger *zap.Logger) *http.Server {
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	// 4. Public routes
+	// Public routes
 	authRouter.HandleFunc("/signup", gtk.HttpControllerAdaptor(goauthkit.NewSignupController(deps.AuthService, deps.Validator))).Methods("POST")
 	authRouter.HandleFunc("/login", gtk.HttpControllerAdaptor(goauthkit.NewLoginController(deps.AuthService, deps.Validator, cookieConfig))).Methods("POST")
 	authRouter.HandleFunc("/verify/{otpHash}", gtk.HttpControllerAdaptor(goauthkit.NewVerifyOTPController(deps.AuthService, deps.Validator, cookieConfig))).Methods("POST")
 
-	// 5. Protected routes (using Logout as example)
+	// Google OAuth routes
+	googleProviderCfg := goauthkit.ProviderConfig{
+		ID:           goauthkit.ProviderTypeGoogle,
+		ClientID:     cfg.GoogleClientID(),
+		ClientSecret: cfg.GoogleClientSecret(),
+		RedirectURI:  cfg.GoogleRedirectURI(),
+		Scopes:       []string{"openid", "profile", "email"},
+		Issuer:       "https://accounts.google.com",
+	}
+
+	authRouter.HandleFunc("/google", gtk.HttpControllerAdaptor(goauthkit.NewOAuthLoginController(googleProviderCfg))).Methods("GET")
+	authRouter.HandleFunc("/google/callback", gtk.HttpControllerAdaptor(goauthkit.NewOAuthCallbackController(deps.AuthService, googleProviderCfg, cookieConfig))).Methods("GET")
+
+	// 5. Protected routes
 	protectedAuthRouter := authRouter.NewRoute().Subrouter()
 	protectedAuthRouter.Use(goauthkit.NewAuthMiddleware(deps.AuthService, cfg.AuthCookieName()))
 	protectedAuthRouter.HandleFunc("/logout", gtk.HttpControllerAdaptor(goauthkit.NewLogoutController(deps.AuthService, cookieConfig))).Methods("POST")
