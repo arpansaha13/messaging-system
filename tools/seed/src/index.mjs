@@ -25,6 +25,11 @@ const requiredEnvVars = [
   'AUTH_DB_USERNAME',
   'AUTH_DB_NAME',
   'AUTH_DB_PASSWORD',
+  'USER_DB_HOST',
+  'USER_DB_PORT',
+  'USER_DB_USERNAME',
+  'USER_DB_NAME',
+  'USER_DB_PASSWORD',
 ]
 
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
@@ -56,9 +61,20 @@ const authClient = new pg.Client({
   ssl: process.env.ENVIRONMENT === 'production',
 })
 
+// User System Database Connection
+const userClient = new pg.Client({
+  host: process.env.USER_DB_HOST,
+  port: Number.parseInt(process.env.USER_DB_PORT),
+  user: process.env.USER_DB_USERNAME,
+  database: process.env.USER_DB_NAME,
+  password: process.env.USER_DB_PASSWORD,
+  ssl: process.env.ENVIRONMENT === 'development' ? false : { rejectUnauthorized: false },
+})
+
 async function seed() {
   await client.connect()
   await authClient.connect()
+  await userClient.connect()
 
   console.group('Clearing existing data in Messaging System Database')
 
@@ -67,9 +83,6 @@ async function seed() {
 
   await client.query('DELETE FROM messages')
   console.log('deleted messages')
-
-  await client.query('DELETE FROM contacts')
-  console.log('deleted contacts')
 
   await client.query('DELETE FROM chats')
   console.log('deleted chats')
@@ -85,9 +98,6 @@ async function seed() {
 
   await client.query('DELETE FROM groups')
   console.log('deleted groups')
-
-  await client.query('DELETE FROM user_profiles')
-  console.log('deleted user_profiles')
 
   console.groupEnd()
   console.log()
@@ -109,6 +119,17 @@ async function seed() {
   console.groupEnd()
   console.log()
 
+  console.group('Clearing existing data in User System Database')
+
+  await userClient.query('DELETE FROM contacts')
+  console.log('deleted contacts')
+
+  await userClient.query('DELETE FROM user_profiles')
+  console.log('deleted user_profiles')
+
+  console.groupEnd()
+  console.log()
+
   async function run(fn) {
     console.time(fn.name)
     const count = await fn()
@@ -119,20 +140,22 @@ async function seed() {
   async function printDatabaseSizes() {
     const messagingResult = await client.query(`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`)
     const authResult = await authClient.query(`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`)
+    const userResult = await userClient.query(`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`)
     console.log(`Messaging System Database size: ${messagingResult.rows[0].size}`)
     console.log(`Auth System Database size: ${authResult.rows[0].size}`)
+    console.log(`User System Database size: ${userResult.rows[0].size}`)
   }
 
   console.time('Seeding completed in')
 
   console.log('Inserting users to databases...')
-  const users = await run(insertUsers.bind(this, client, authClient))
+  const users = await run(insertUsers.bind(this, userClient, authClient))
 
   console.log('Inserting chats...')
   const chats = await run(insertChats.bind(this, client, users.data))
 
   console.log('Inserting contacts...')
-  await run(insertContacts.bind(this, client, users.data))
+  await run(insertContacts.bind(this, userClient, users.data))
 
   console.log('Inserting groups...')
   const groups = await run(insertGroups.bind(this, client, users.data))
@@ -154,6 +177,7 @@ async function seed() {
 
   await client.end()
   await authClient.end()
+  await userClient.end()
 }
 
 seed().catch(e => {

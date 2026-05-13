@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 
-export async function insertContacts(client, users) {
+export async function insertContacts(userClient, users) {
   const contactEntries = []
   const maxContacts = 50
   let contactsInsertCount = 0
@@ -55,6 +55,6 @@ export async function insertContacts(client, users) {
       VALUES ${placeholders}
     `
 
-    await client.query(query, values)
+    await userClient.query(query, values)
   }
 }

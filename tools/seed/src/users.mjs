@@ -89,7 +89,7 @@ const users = [
   },
 ]
 
-export async function insertUsers(messagingClient, authClient) {
+export async function insertUsers(userClient, authClient) {
   // Insert into auth service: only email and username (from email prefix)
   const authValues = []
   const authPlaceholders = users
@@ -126,23 +126,23 @@ export async function insertUsers(messagingClient, authClient) {
 
   await authClient.query(credentialsQuery, credentialValues)
 
-  // Insert into messaging-system: user_id (FK), global_name, dp, bio
-  const messagingValues = []
-  const messagingPlaceholders = users
+  // Insert into user_db: user_id (FK), global_name, dp, bio
+  const userValues = []
+  const userPlaceholders = users
     .map((user, i) => {
       const index = i * 4
-      messagingValues.push(authResult.rows[i].id, user.global_name, user.dp, user.bio)
+      userValues.push(authResult.rows[i].id, user.global_name, user.dp, user.bio)
       return `($${index + 1}, $${index + 2}, $${index + 3}, $${index + 4})`
     })
     .join(', ')
 
-  const messagingQuery = `
+  const userQuery = `
     INSERT INTO user_profiles (id, global_name, dp, bio)
-    VALUES ${messagingPlaceholders}
+    VALUES ${userPlaceholders}
     RETURNING id
   `
 
-  await messagingClient.query(messagingQuery, messagingValues)
+  await userClient.query(userQuery, userValues)
 
   // Combine results for other seeds that need user data
   const combinedUsers = users.map((user, i) => ({
