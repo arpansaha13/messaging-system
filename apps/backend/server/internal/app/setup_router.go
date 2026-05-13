@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/middleware"
@@ -17,7 +18,7 @@ import (
 // Deps contains all dependencies needed to assemble the server
 type Deps struct {
 	DB         *gorm.DB
-	RabbitMQ   *service.RabbitMQService
+	ChatBroker broker.ChatBroker
 	AuthClient service.IAuthServiceClient
 	Circuits   *circuits.Circuits
 	Logger     *zap.Logger
@@ -39,7 +40,7 @@ func SetupRouter(deps Deps) *mux.Router {
 	// Initialize services
 	userService := service.NewUserService(userRepo, contactRepo)
 	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, userGroupRepo, deps.RabbitMQ, deps.DB, deps.Circuits.Postgres)
+	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, userGroupRepo, deps.ChatBroker, deps.DB, deps.Circuits.Postgres)
 	channelService := service.NewChannelService(channelRepo, groupRepo, userGroupRepo)
 	contactService := service.NewContactService(contactRepo, userRepo)
 	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)

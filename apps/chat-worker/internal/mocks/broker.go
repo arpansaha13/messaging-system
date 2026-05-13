@@ -5,16 +5,17 @@ import (
 	"sync"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
-	"github.com/arpansaha13/messaging-system/apps/common/broker"
+	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 )
 
-// MockBroker is an in-memory implementation of the MessageBroker interface
+// MockBroker is an in-memory implementation of the ChatBroker interface
 type MockBroker struct {
 	mu                   sync.RWMutex
 	connected            bool
 	publishedMessages    []PublishedMessage
-	outgoingMessageQueue chan broker.MessagePayload
-	connectionEventQueue chan broker.UserConnectionPayload
+	outgoingMessageQueue chan commonbr.MessagePayload
+	connectionEventQueue chan commonbr.UserConnectionPayload
+	onDisconnect         func(err error)
 }
 
 // PublishedMessage represents a published message for verification in tests
@@ -29,8 +30,8 @@ func NewMockBroker() *MockBroker {
 	return &MockBroker{
 		connected:            false,
 		publishedMessages:    make([]PublishedMessage, 0),
-		outgoingMessageQueue: make(chan broker.MessagePayload, 100),
-		connectionEventQueue: make(chan broker.UserConnectionPayload, 100),
+		outgoingMessageQueue: make(chan commonbr.MessagePayload, 100),
+		connectionEventQueue: make(chan commonbr.UserConnectionPayload, 100),
 	}
 }
 
@@ -52,6 +53,13 @@ func (m *MockBroker) Disconnect() error {
 	return nil
 }
 
+// SetDisconnectHandler sets the disconnect handler
+func (m *MockBroker) SetDisconnectHandler(handler func(err error)) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.onDisconnect = handler
+}
+
 // IsConnected returns the connection status
 func (m *MockBroker) IsConnected() bool {
 	m.mu.RLock()
@@ -60,7 +68,7 @@ func (m *MockBroker) IsConnected() bool {
 }
 
 // ConsumeWorkerQueue consumes messages from the worker queue (simulated)
-func (m *MockBroker) ConsumeWorkerQueue(onMessage func(*broker.MessagePayload, func()) error) error {
+func (m *MockBroker) ConsumeWorkerQueue(onMessage func(*commonbr.MessagePayload, func()) error) error {
 	go func() {
 		for msg := range m.outgoingMessageQueue {
 			// In a real test, we'd call onMessage with test payloads
@@ -72,7 +80,7 @@ func (m *MockBroker) ConsumeWorkerQueue(onMessage func(*broker.MessagePayload, f
 }
 
 // ConsumeConnectionQueue consumes messages from the connection queue (simulated)
-func (m *MockBroker) ConsumeConnectionQueue(onMessage func(*broker.UserConnectionPayload, func()) error) error {
+func (m *MockBroker) ConsumeConnectionQueue(onMessage func(*commonbr.UserConnectionPayload, func()) error) error {
 	go func() {
 		for msg := range m.connectionEventQueue {
 			msgCopy := msg

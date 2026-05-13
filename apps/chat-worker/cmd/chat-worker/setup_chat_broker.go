@@ -17,33 +17,33 @@ import (
 	"gorm.io/gorm"
 )
 
-// setupRabbitMQ initializes the RabbitMQ connection manager with auto-reconnect support.
+// setupChatBroker initializes the ChatBroker connection manager with auto-reconnect support.
 // Returns the manager for graceful shutdown in main.
-func setupRabbitMQ(
+func setupChatBroker(
 	ctx context.Context,
 	creds config.RabbitMQCreds,
 	logger *zap.Logger,
 	db *gorm.DB,
 	cbs *circuits.Circuits,
 ) (*gtk.ConnectionManager, error) {
-	// Initialize RabbitMQ broker
-	messageBroker := broker.NewRabbitMQBroker(creds.GetUrl(), cbs.RabbitMQ)
-	var rabbitMQConnMgr *gtk.ConnectionManager
+	// Initialize ChatBroker
+	chatBroker := broker.NewRabbitMQBroker(creds.GetUrl(), cbs.RabbitMQ)
+	var chatBrokerConnMgr *gtk.ConnectionManager
 
-	messageBroker.SetDisconnectHandler(func(err error) {
+	chatBroker.SetDisconnectHandler(func(err error) {
 		if err != nil {
-			logger.Warn("RabbitMQ connection closed, triggering reconnect", zap.Error(err))
+			logger.Warn("ChatBroker connection closed, triggering reconnect", zap.Error(err))
 		} else {
-			logger.Warn("RabbitMQ connection closed, triggering reconnect")
+			logger.Warn("ChatBroker connection closed, triggering reconnect")
 		}
-		if rabbitMQConnMgr != nil {
-			rabbitMQConnMgr.Signal()
+		if chatBrokerConnMgr != nil {
+			chatBrokerConnMgr.Signal()
 		}
 	})
 
 	// Initialize processors (persist across reconnects)
-	statusProcessor := processor.NewStatusProcessor(db, messageBroker, cbs.Postgres)
-	connectionProcessor := processor.NewConnectionProcessor(db, messageBroker, cbs.Postgres)
+	statusProcessor := processor.NewStatusProcessor(db, chatBroker, cbs.Postgres)
+	connectionProcessor := processor.NewConnectionProcessor(db, chatBroker, cbs.Postgres)
 
 	// Initialize event controller with dependency injection (persist across reconnects)
 	eventController := controller.NewEventController(statusProcessor, connectionProcessor)
@@ -51,7 +51,7 @@ func setupRabbitMQ(
 	// Helper function to setup consumers
 	setupConsumers := func() error {
 		// Setup worker queue consumer
-		if err := messageBroker.ConsumeWorkerQueue(func(msg *commonbr.MessagePayload, ack func()) error {
+		if err := chatBroker.ConsumeWorkerQueue(func(msg *commonbr.MessagePayload, ack func()) error {
 			if err := eventController.HandleWorkerQueueEvent(ctx, msg); err != nil {
 				logger.Error("error handling worker queue event", zap.Error(err))
 			}
@@ -62,7 +62,7 @@ func setupRabbitMQ(
 		}
 
 		// Setup connection queue consumer
-		if err := messageBroker.ConsumeConnectionQueue(func(msg *commonbr.UserConnectionPayload, ack func()) error {
+		if err := chatBroker.ConsumeConnectionQueue(func(msg *commonbr.UserConnectionPayload, ack func()) error {
 			if err := eventController.HandleConnectionQueueEvent(ctx, msg); err != nil {
 				logger.Error("error handling connection queue event", zap.Error(err))
 			}
@@ -75,33 +75,33 @@ func setupRabbitMQ(
 		return nil
 	}
 
-	rabbitMQConnMgr = gtk.NewConnectionManager(
+	chatBrokerConnMgr = gtk.NewConnectionManager(
 		gtk.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		logger,
 		func(connectCtx context.Context) error {
-			if err := messageBroker.Connect(
+			if err := chatBroker.Connect(
 				connectCtx,
 				gtk.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
 			); err != nil {
 				return err
 			}
 			if err := setupConsumers(); err != nil {
-				messageBroker.Disconnect()
+				chatBroker.Disconnect()
 				return err
 			}
 			return nil
 		},
 		func() {
-			messageBroker.Disconnect()
+			chatBroker.Disconnect()
 		},
 	)
 
-	if err := rabbitMQConnMgr.Start(ctx); err != nil {
-		return nil, fmt.Errorf("failed to start rabbitmq connection manager: %w", err)
+	if err := chatBrokerConnMgr.Start(ctx); err != nil {
+		return nil, fmt.Errorf("failed to start chat broker connection manager: %w", err)
 	}
 
-	return rabbitMQConnMgr, nil
+	return chatBrokerConnMgr, nil
 }

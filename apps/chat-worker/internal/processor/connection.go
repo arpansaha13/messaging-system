@@ -5,7 +5,8 @@ import (
 	"fmt"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
-	"github.com/arpansaha13/messaging-system/apps/common/broker"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
+	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
@@ -15,12 +16,12 @@ import (
 // ConnectionProcessor handles user connection events and subscription data
 type ConnectionProcessor struct {
 	db     *gorm.DB
-	broker broker.MessageBroker
+	broker broker.ChatBroker
 	cb     *gobreaker.CircuitBreaker[any]
 }
 
 // NewConnectionProcessor creates a new connection processor
-func NewConnectionProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobreaker.CircuitBreaker[any]) *ConnectionProcessor {
+func NewConnectionProcessor(db *gorm.DB, broker broker.ChatBroker, cb *gobreaker.CircuitBreaker[any]) *ConnectionProcessor {
 	return &ConnectionProcessor{
 		db:     db,
 		broker: broker,
@@ -29,7 +30,7 @@ func NewConnectionProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobrea
 }
 
 // ProcessUserConnection handles user connection events
-func (cp *ConnectionProcessor) ProcessUserConnection(ctx context.Context, payload *broker.UserConnectionPayload) error {
+func (cp *ConnectionProcessor) ProcessUserConnection(ctx context.Context, payload *commonbr.UserConnectionPayload) error {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("processing user connection", zap.Int64("user_id", payload.UserId), zap.String("server_id", payload.ServerId))
 

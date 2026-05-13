@@ -10,13 +10,14 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/constants"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
+	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 )
 
 // PersonalHandlers handles all events related to 1-to-1 personal chats.
 type PersonalHandlers struct {
 	store  *store.ChatsStore
 	cache  *cache.MemcachedService
-	broker broker.SocketBroker
+	broker broker.ChatBroker
 	hub    *Hub
 	log    *zap.Logger
 }
@@ -25,7 +26,7 @@ type PersonalHandlers struct {
 func NewPersonalHandlers(
 	st *store.ChatsStore,
 	mc *cache.MemcachedService,
-	br broker.SocketBroker,
+	br broker.ChatBroker,
 	hub *Hub,
 	log *zap.Logger,
 ) *PersonalHandlers {
@@ -38,7 +39,7 @@ func NewPersonalHandlers(
 func (p *PersonalHandlers) HandleConnect(client *Client) {
 	p.store.SetClient(client.userId, client.id)
 
-	if err := p.broker.PublishToIncoming("connection.user", broker.UserConnectionPayload{
+	if err := p.broker.PublishToIncoming("connection.user", commonbr.UserConnectionPayload{
 		UserId:   client.userId,
 		ServerId: p.broker.GetServerId(),
 	}); err != nil {

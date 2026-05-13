@@ -17,8 +17,8 @@ import (
 	gormlogger "gorm.io/gorm/logger"
 
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/app"
+	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -163,9 +163,8 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	testLogger := zap.NewNop()
 	cbs := circuits.New(testLogger)
 
-	// Create test RabbitMQ service with nil connection (simulates unavailability)
 	// This ensures tests get proper error handling when publishing messages
-	testRabbitMQ := service.NewRabbitMQService(testLogger, cbs.RabbitMQ)
+	testChatBroker := broker.NewRabbitMQBroker("amqp://localhost", testLogger, cbs.RabbitMQ)
 
 	// Create listener for test server
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -178,7 +177,7 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 	// Assemble HTTP server with all components
 	router := app.SetupRouter(app.Deps{
 		DB:         db,
-		RabbitMQ:   testRabbitMQ,
+		ChatBroker: testChatBroker,
 		AuthClient: mockAuthClient,
 		Circuits:   cbs,
 		Logger:     testLogger,

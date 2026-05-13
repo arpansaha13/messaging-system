@@ -25,15 +25,9 @@ type SubscriptionMessage struct {
 	ChannelIds []int64 `json:"channelIds"`
 }
 
-// UserConnectionPayload is published to the incoming exchange on user connect.
-type UserConnectionPayload struct {
-	UserId   int64  `json:"userId"`
-	ServerId string `json:"serverId"`
-}
-
-// SocketBroker defines the interface for the socket server's message broker.
+// ChatBroker defines the interface for the socket server's message broker.
 // It manages per-server exclusive queues with dynamic AMQP routing key binding.
-type SocketBroker interface {
+type ChatBroker interface {
 	Connect(ctx context.Context, opts ...gtk.BackoffOption) error
 	Disconnect() error
 

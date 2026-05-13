@@ -18,10 +18,10 @@ import (
 type Deps struct {
 	Logger           *zap.Logger
 	Hub              *ws.Hub
-	RabbitBroker     *broker.RabbitMQBroker
+	ChatBroker       broker.ChatBroker
 	ChatsStore       *store.ChatsStore
 	MemcachedService *cache.MemcachedService
-	// GroupHandlers is created in main before SetupRabbitMQ (consumer callbacks need it).
+	// GroupHandlers is created in main before SetupChatBroker (consumer callbacks need it).
 	GroupHandlers *ws.GroupHandlers
 	AuthClient    service.IAuthServiceClient
 	ClientDomain  string
@@ -38,7 +38,7 @@ func SetupRouter(deps Deps) *mux.Router {
 	personalHandlers := ws.NewPersonalHandlers(
 		deps.ChatsStore,
 		deps.MemcachedService,
-		deps.RabbitBroker,
+		deps.ChatBroker,
 		deps.Hub,
 		log,
 	)
