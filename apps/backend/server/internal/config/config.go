@@ -29,6 +29,7 @@ type Config struct {
 	apiPort          int
 	metricsPort      int
 	authSystemHost   string
+	userServiceHost  string
 	otlpEndpoint     string
 	jwtSecret        string
 	authCookieName   string
@@ -42,6 +43,7 @@ func (c *Config) DatabaseMaxConnections() int        { return c.dbMaxConnections
 func (c *Config) APIPort() int                       { return c.apiPort }
 func (c *Config) MetricsPort() int                   { return c.metricsPort }
 func (c *Config) AuthSystemHost() string             { return c.authSystemHost }
+func (c *Config) UserServiceHost() string            { return c.userServiceHost }
 func (c *Config) OTLPEndpoint() string               { return c.otlpEndpoint }
 func (c *Config) JWTSecret() string                  { return c.jwtSecret }
 func (c *Config) AuthCookieName() string             { return c.authCookieName }
@@ -142,11 +144,8 @@ func load() (*Config, error) {
 		pass: rabbitmqPass,
 	}
 
-	authSystemHost := os.Getenv("AUTH_SYSTEM_HOST")
-	if authSystemHost == "" {
-		authSystemHost = "auth:50051"
-	}
-	cfg.authSystemHost = authSystemHost
+	cfg.authSystemHost = getEnv("AUTH_SYSTEM_HOST", "auth:50051")
+	cfg.userServiceHost = getEnv("USER_SERVICE_HOST", "user:50051")
 
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {

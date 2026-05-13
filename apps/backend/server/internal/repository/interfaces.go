@@ -7,32 +7,12 @@ import (
 	domain "github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
-// UserRepository defines the interface for user repository operations
-type IUserRepository interface {
-	GetByID(ctx context.Context, userID int64) (*domain.UserProfile, error)
-	Create(ctx context.Context, userProfile *domain.UserProfile) error
-	Update(ctx context.Context, userProfile *domain.UserProfile) error
-	Delete(ctx context.Context, userID int64) error
-	Search(ctx context.Context, query string, limit int) ([]*domain.UserProfile, error)
-}
-
-// ContactRepository defines the interface for contact repository operations
-type IContactRepository interface {
-	Create(ctx context.Context, contact *domain.Contact) error
-	GetByID(ctx context.Context, contactID int64) (*domain.Contact, error)
-	GetUserContacts(ctx context.Context, userID int64) ([]*ContactWithUserInfo, error)
-	Exists(ctx context.Context, userID, contactID int64) (bool, error)
-	UpdateAlias(ctx context.Context, contactID int64, alias string) error
-	Delete(ctx context.Context, contactID int64) error
-	GetContactByUserIds(ctx context.Context, userID, contactUserID int64) (*domain.Contact, error)
-}
-
 // ChatRepository defines the interface for chat repository operations
 type IChatRepository interface {
 	Create(ctx context.Context, chat *domain.Chat) error
 	GetByID(ctx context.Context, chatID int64) (*domain.Chat, error)
 	GetByUsers(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
-	GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*ChatWithReceiverInfo, error)
+	GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*domain.Chat, error)
 	Delete(ctx context.Context, chatID int64) error
 	Update(ctx context.Context, chat *domain.Chat) error
 }

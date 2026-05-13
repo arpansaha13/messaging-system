@@ -53,15 +53,21 @@ func main() {
 		zapLogger.Fatal("failed to setup rabbitmq", zap.Error(err))
 	}
 
-	authService, authConnMgr, err := app.SetupAuthService(svcCtx, zapLogger, cbs)
+	authClient, authConnMgr, err := app.SetupAuthService(svcCtx, zapLogger, cbs)
 	if err != nil {
 		log.Fatalf("failed to connect to auth service: %v", err)
+	}
+
+	userClient, userConnMgr, err := app.SetupUserService(svcCtx, zapLogger, cbs)
+	if err != nil {
+		log.Fatalf("failed to connect to user service: %v", err)
 	}
 
 	router := app.SetupRouter(app.Deps{
 		DB:         db,
 		RabbitMQ:   rabbitmqService,
-		AuthClient: authService,
+		AuthClient: authClient,
+		UserClient: userClient,
 		Circuits:   cbs,
 		Logger:     zapLogger,
 	})
@@ -114,6 +120,10 @@ func main() {
 
 	if err := authConnMgr.Stop(); err != nil {
 		zap.L().Error("auth connection manager stop error", zap.Error(err))
+	}
+
+	if err := userConnMgr.Stop(); err != nil {
+		zap.L().Error("user connection manager stop error", zap.Error(err))
 	}
 
 	if err := rabbitMQConnMgr.Stop(); err != nil {

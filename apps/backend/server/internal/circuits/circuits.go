@@ -13,15 +13,17 @@ type Circuits struct {
 	Postgres *gobreaker.CircuitBreaker[any]
 	RabbitMQ *gobreaker.CircuitBreaker[any]
 	AuthGRPC *gobreaker.CircuitBreaker[any]
+	UserGRPC *gobreaker.CircuitBreaker[any]
 }
 
 // New creates and returns a new Circuits instance with initialized circuit breakers
-// for Postgres, RabbitMQ, and Auth gRPC services.
+// for Postgres, RabbitMQ, Auth, and User gRPC services.
 func New(logger *zap.Logger) *Circuits {
 	return &Circuits{
 		Postgres: newPostgresCB(logger),
 		RabbitMQ: newRabbitMQCB(logger),
 		AuthGRPC: newAuthGRPCCB(logger),
+		UserGRPC: newUserGRPCCB(logger),
 	}
 }
 
@@ -58,6 +60,11 @@ func newRabbitMQCB(logger *zap.Logger) *gobreaker.CircuitBreaker[any] {
 // newAuthGRPCCB creates a circuit breaker for Auth gRPC service calls.
 func newAuthGRPCCB(logger *zap.Logger) *gobreaker.CircuitBreaker[any] {
 	return newCB("auth-grpc", logger)
+}
+
+// newUserGRPCCB creates a circuit breaker for User gRPC service calls.
+func newUserGRPCCB(logger *zap.Logger) *gobreaker.CircuitBreaker[any] {
+	return newCB("user-grpc", logger)
 }
 
 // newCB creates a circuit breaker with default settings and state-change logging.

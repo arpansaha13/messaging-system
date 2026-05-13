@@ -73,7 +73,6 @@ func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) ht
 				UserID:   resp.UserId,
 				Email:    userResp.User.Email,
 				Username: userResp.User.Username,
-				Name:     userResp.User.Name,
 				Verified: userResp.User.Verified,
 			}
 

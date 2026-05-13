@@ -53,7 +53,10 @@ type Config struct {
 	googleClientID         string
 	googleClientSecret     string
 	googleRedirectURI      string
+	userServiceGRPCAddr    string
 }
+
+func (c *Config) UserServiceGRPCAddr() string { return c.userServiceGRPCAddr }
 
 func (c *Config) DatabaseURL() string                   { return c.databaseURL }
 func (c *Config) DatabaseMaxConnections() int           { return c.dbMaxConnections }
@@ -137,6 +140,7 @@ func load() (*Config, error) {
 		googleClientID:      getEnv("GOOGLE_CLIENT_ID", ""),
 		googleClientSecret:  getEnv("GOOGLE_CLIENT_SECRET", ""),
 		googleRedirectURI:   getEnv("GOOGLE_REDIRECT_URI", ""),
+		userServiceGRPCAddr: getEnv("USER_SERVICE_GRPC_ADDR", "user:50051"),
 	}
 
 	sessionTTLMins := getEnvInt("SESSION_TTL_MINUTES", 30)

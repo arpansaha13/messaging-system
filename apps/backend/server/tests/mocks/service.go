@@ -10,42 +10,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 )
 
-// MockContactService is a mock implementation of IContactService
-type MockContactService struct {
-	AddContactFunc         func(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error)
-	GetContactsFunc        func(ctx context.Context) ([]*repository.ContactWithUserInfo, error)
-	UpdateContactAliasFunc func(ctx context.Context, req *dto.UpdateContactAliasDTO) (*domain.Contact, error)
-	DeleteContactFunc      func(ctx context.Context, req *dto.DeleteContactDTO) error
-}
-
-func (m *MockContactService) AddContact(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error) {
-	if m.AddContactFunc != nil {
-		return m.AddContactFunc(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockContactService) GetContacts(ctx context.Context) ([]*repository.ContactWithUserInfo, error) {
-	if m.GetContactsFunc != nil {
-		return m.GetContactsFunc(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockContactService) UpdateContactAlias(ctx context.Context, req *dto.UpdateContactAliasDTO) (*domain.Contact, error) {
-	if m.UpdateContactAliasFunc != nil {
-		return m.UpdateContactAliasFunc(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockContactService) DeleteContact(ctx context.Context, req *dto.DeleteContactDTO) error {
-	if m.DeleteContactFunc != nil {
-		return m.DeleteContactFunc(ctx, req)
-	}
-	return nil
-}
-
 // MockGroupService is a mock implementation of IGroupService
 type MockGroupService struct {
 	CreateGroupFunc func(ctx context.Context, req *dto.CreateGroupDTO) (*domain.Group, error)
@@ -270,38 +234,3 @@ func (m *MockUserGroupService) GetGroupMembers(ctx context.Context, req *dto.Get
 	return nil, nil
 }
 
-// MockUserService is a mock implementation of IUserService for testing
-type MockUserService struct {
-	GetUserProfileFunc            func(ctx context.Context) (*domain.UserProfile, error)
-	SearchUserProfilesFunc        func(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error)
-	GetUserProfileWithContactFunc func(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error)
-	UpdateUserProfileFunc         func(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error)
-}
-
-func (m *MockUserService) GetUserProfile(ctx context.Context) (*domain.UserProfile, error) {
-	if m.GetUserProfileFunc != nil {
-		return m.GetUserProfileFunc(ctx)
-	}
-	return nil, nil
-}
-
-func (m *MockUserService) SearchUserProfiles(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error) {
-	if m.SearchUserProfilesFunc != nil {
-		return m.SearchUserProfilesFunc(ctx, req)
-	}
-	return nil, nil
-}
-
-func (m *MockUserService) GetUserProfileWithContact(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error) {
-	if m.GetUserProfileWithContactFunc != nil {
-		return m.GetUserProfileWithContactFunc(ctx, req)
-	}
-	return nil, nil, nil
-}
-
-func (m *MockUserService) UpdateUserProfile(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error) {
-	if m.UpdateUserProfileFunc != nil {
-		return m.UpdateUserProfileFunc(ctx, req)
-	}
-	return nil, nil
-}

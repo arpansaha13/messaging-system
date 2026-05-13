@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
@@ -11,17 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-// ContactWithUserInfo holds contact data with user profile info
-type ContactWithUserInfo struct {
-	ID              int64
-	UserID          int64
-	UserIDInContact int64
-	Alias           string
-	GlobalName      string
-	DP              *string
-	Bio             string
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+// IContactRepository defines the interface for contact repository operations
+type IContactRepository interface {
+	Create(ctx context.Context, contact *domain.Contact) error
+	GetByID(ctx context.Context, contactID int64) (*domain.Contact, error)
+	GetUserContacts(ctx context.Context, userID int64) ([]*domain.Contact, error)
+	Exists(ctx context.Context, userID, contactID int64) (bool, error)
+	UpdateAlias(ctx context.Context, contactID int64, alias string) error
+	Delete(ctx context.Context, contactID int64) error
+	GetContactByUserIds(ctx context.Context, userID, contactUserID int64) (*domain.Contact, error)
 }
 
 // ContactRepository handles contact-related database operations
@@ -66,15 +63,12 @@ func (r *ContactRepository) GetByID(ctx context.Context, contactID int64) (*doma
 	return result.(*domain.Contact), nil
 }
 
-// GetUserContacts retrieves all contacts for a user with their profile info
-func (r *ContactRepository) GetUserContacts(ctx context.Context, userID int64) ([]*ContactWithUserInfo, error) {
+// GetUserContacts retrieves all contacts for a user
+func (r *ContactRepository) GetUserContacts(ctx context.Context, userID int64) ([]*domain.Contact, error) {
 	result, err := r.cb.Execute(func() (any, error) {
-		var contacts []*ContactWithUserInfo
+		var contacts []*domain.Contact
 		err := r.db.WithContext(ctx).
-			Table("contacts").
-			Select("contacts.id, contacts.user_id, contacts.user_id_in_contact, contacts.alias, user_profiles.global_name, user_profiles.dp, user_profiles.bio, contacts.created_at, contacts.updated_at").
-			Joins("INNER JOIN user_profiles ON user_profiles.id = contacts.user_id_in_contact").
-			Where("contacts.user_id = ?", userID).
+			Where("user_id = ?", userID).
 			Find(&contacts).Error
 		if err != nil {
 			return nil, err
@@ -85,7 +79,7 @@ func (r *ContactRepository) GetUserContacts(ctx context.Context, userID int64) (
 	if err != nil {
 		return nil, &gtk.InternalError{Message: "failed to get contacts", Err: err}
 	}
-	return result.([]*ContactWithUserInfo), nil
+	return result.([]*domain.Contact), nil
 }
 
 // Exists checks if a contact exists

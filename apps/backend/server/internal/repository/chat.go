@@ -100,28 +100,25 @@ func (r *ChatRepository) GetByUsers(ctx context.Context, user1ID, user2ID int64)
 	return result.(*domain.Chat), nil
 }
 
-// GetUserChatsByArchived retrieves chats for a user with receiver info filtered by archived status
-func (r *ChatRepository) GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*ChatWithReceiverInfo, error) {
+// GetUserChatsByArchived retrieves chats for a user filtered by archived status
+func (r *ChatRepository) GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*domain.Chat, error) {
 	result, err := r.cb.Execute(func() (any, error) {
-		var chats []*ChatWithReceiverInfo
+		var chats []*domain.Chat
 		err := r.db.WithContext(ctx).
-			Model(domain.Chat{}).
-			Select("chats.id, chats.sender_id, chats.receiver_id, chats.muted, chats.pinned, chats.archived, chats.cleared_at, chats.created_at, chats.updated_at, user_profiles.id as receiver_id_pk, user_profiles.dp as receiver_dp, user_profiles.bio as receiver_bio, user_profiles.global_name as receiver_global_name").
-			Joins("INNER JOIN user_profiles ON user_profiles.id = chats.receiver_id").
-			Where("chats.sender_id = ? AND chats.archived = ?", userID, archived).
-			Order("chats.created_at DESC").
+			Where("sender_id = ? AND archived = ?", userID, archived).
+			Order("created_at DESC").
 			Find(&chats).Error
 		if err != nil {
 			return nil, err
 		}
 		return chats, nil
 	})
-
+ 
 	if err != nil {
 		return nil, &gtk.InternalError{Message: "failed to get chats", Err: err}
 	}
-
-	return result.([]*ChatWithReceiverInfo), nil
+ 
+	return result.([]*domain.Chat), nil
 }
 
 // Delete deletes a chat

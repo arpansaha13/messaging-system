@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -22,6 +23,7 @@ type MessageService struct {
 	messageRecipientRepo repository.IMessageRecipientRepository
 	chatRepo             repository.IChatRepository
 	userGroupRepo        repository.IUserGroupRepository
+	userClient           IUserServiceClient
 	rabbitmqService      *RabbitMQService
 	db                   *gorm.DB
 	cb                   *gobreaker.CircuitBreaker[any]
@@ -33,6 +35,7 @@ func NewMessageService(
 	messageRecipientRepo repository.IMessageRecipientRepository,
 	chatRepo repository.IChatRepository,
 	userGroupRepo repository.IUserGroupRepository,
+	userClient IUserServiceClient,
 	rabbitmqService *RabbitMQService,
 	db *gorm.DB,
 	cb *gobreaker.CircuitBreaker[any],
@@ -42,6 +45,7 @@ func NewMessageService(
 		messageRecipientRepo: messageRecipientRepo,
 		chatRepo:             chatRepo,
 		userGroupRepo:        userGroupRepo,
+		userClient:           userClient,
 		rabbitmqService:      rabbitmqService,
 		db:                   db,
 		cb:                   cb,
@@ -141,6 +145,22 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 		return 0, time.Time{}, &gtk.ForbiddenError{Message: "not a member of this group"}
 	}
 
+	var channel domain.Channel
+	if err := s.db.WithContext(ctx).First(&channel, req.ChannelID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, time.Time{}, &gtk.NotFoundError{Message: "channel not found"}
+		}
+		return 0, time.Time{}, fmt.Errorf("failed to fetch channel: %w", err)
+	}
+
+	if channel.GroupID != req.GroupID {
+		log.Warn("group message send rejected: channel does not belong to group",
+			zap.Int64("channel_id", req.ChannelID),
+			zap.Int64("req_group_id", req.GroupID),
+			zap.Int64("actual_group_id", channel.GroupID))
+		return 0, time.Time{}, &gtk.ForbiddenError{Message: "channel does not belong to the specified group"}
+	}
+
 	if !s.rabbitmqService.IsConnected() {
 		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
 		return 0, time.Time{}, &gtk.InternalError{Message: "RabbitMQ not connected"}
@@ -151,11 +171,6 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 
 	_, err = s.cb.Execute(func() (any, error) {
 		return nil, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-			var channel domain.Channel
-			if err := tx.First(&channel, req.ChannelID).Error; err != nil {
-				return fmt.Errorf("channel not found: %w", err)
-			}
-
 			var userGroups []domain.UserGroup
 			if err := tx.Where("group_id = ? AND user_id != ?", req.GroupID, senderID).Find(&userGroups).Error; err != nil {
 				return fmt.Errorf("failed to fetch group members: %w", err)
@@ -366,7 +381,26 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleR
 // GetChannelMessages retrieves messages for a channel using cursor-based pagination
 func (s *MessageService) GetChannelMessages(ctx context.Context, req *dto.GetChannelMessagesDTO) (*repository.ChannelMessagePage, error) {
 	log := gtk.LoggerFromContext(ctx)
-	log.Debug("retrieving channel messages", zap.Int64("channel_id", req.ChannelID))
+	userID := utils.GetUserIDFromCtx(ctx)
+	log.Debug("retrieving channel messages", zap.Int64("channel_id", req.ChannelID), zap.Int64("user_id", userID))
+
+	// Verify membership
+	var channel domain.Channel
+	if err := s.db.WithContext(ctx).First(&channel, req.ChannelID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, &gtk.NotFoundError{Message: "channel not found"}
+		}
+		return nil, fmt.Errorf("failed to fetch channel: %w", err)
+	}
+
+	isMember, err := s.userGroupRepo.Exists(ctx, userID, channel.GroupID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify membership: %w", err)
+	}
+	if !isMember {
+		log.Warn("channel messages retrieval forbidden for non-member", zap.Int64("user_id", userID), zap.Int64("channel_id", req.ChannelID))
+		return nil, &gtk.ForbiddenError{Message: "not a member of the group owning this channel"}
+	}
 
 	page, err := s.messageRepo.GetMessagesByChannelID(ctx, req.ChannelID, req.Before, req.After)
 	if err != nil {
@@ -374,7 +408,32 @@ func (s *MessageService) GetChannelMessages(ctx context.Context, req *dto.GetCha
 		return nil, err
 	}
 
-	log.Debug("channel messages retrieved successfully", zap.Int64("channel_id", req.ChannelID), zap.Int("message_count", len(page.Messages)))
+	if len(page.Messages) > 0 {
+		// Hydrate senders
+		senderIDsMap := make(map[int64]struct{})
+		for _, m := range page.Messages {
+			senderIDsMap[m.SenderID] = struct{}{}
+		}
+
+		senderIDs := make([]int64, 0, len(senderIDsMap))
+		for id := range senderIDsMap {
+			senderIDs = append(senderIDs, id)
+		}
+
+		profiles, err := s.userClient.GetDomainProfiles(ctx, senderIDs)
+		if err != nil {
+			log.Warn("failed to fetch sender profiles for channel messages", zap.Error(err))
+			// Continue with unpopulated senders
+		} else {
+			for _, m := range page.Messages {
+				if p, ok := profiles[m.SenderID]; ok {
+					m.Sender = p
+				}
+			}
+		}
+	}
+
+	log.Debug("channel messages retrieved and hydrated successfully", zap.Int64("channel_id", req.ChannelID), zap.Int("message_count", len(page.Messages)))
 	return page, nil
 }
 

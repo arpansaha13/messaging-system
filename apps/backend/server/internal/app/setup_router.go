@@ -19,6 +19,7 @@ type Deps struct {
 	DB         *gorm.DB
 	RabbitMQ   *service.RabbitMQService
 	AuthClient service.IAuthServiceClient
+	UserClient service.IUserServiceClient
 	Circuits   *circuits.Circuits
 	Logger     *zap.Logger
 }
@@ -26,25 +27,21 @@ type Deps struct {
 // SetupRouter assembles all components and returns a configured router.
 func SetupRouter(deps Deps) *mux.Router {
 	// Initialize repositories
-	userRepo := repository.NewUserRepository(deps.DB, deps.Circuits.Postgres)
 	messageRepo := repository.NewMessageRepository(deps.DB, deps.Circuits.Postgres)
 	chatRepo := repository.NewChatRepository(deps.DB, deps.Circuits.Postgres)
 	channelRepo := repository.NewChannelRepository(deps.DB, deps.Circuits.Postgres)
-	contactRepo := repository.NewContactRepository(deps.DB, deps.Circuits.Postgres)
 	groupRepo := repository.NewGroupRepository(deps.DB, deps.Circuits.Postgres)
 	inviteRepo := repository.NewInviteRepository(deps.DB, deps.Circuits.Postgres)
 	userGroupRepo := repository.NewUserGroupRepository(deps.DB, deps.Circuits.Postgres)
 	messageRecipientRepo := repository.NewMessageRecipientRepository(deps.DB, deps.Circuits.Postgres)
 
 	// Initialize services
-	userService := service.NewUserService(userRepo, contactRepo)
-	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, userGroupRepo, deps.RabbitMQ, deps.DB, deps.Circuits.Postgres)
+	chatService := service.NewChatService(chatRepo, messageRepo, deps.UserClient)
+	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, userGroupRepo, deps.UserClient, deps.RabbitMQ, deps.DB, deps.Circuits.Postgres)
 	channelService := service.NewChannelService(channelRepo, groupRepo, userGroupRepo)
-	contactService := service.NewContactService(contactRepo, userRepo)
-	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)
+	groupService := service.NewGroupService(groupRepo, userGroupRepo, deps.UserClient)
 	inviteService := service.NewInviteService(inviteRepo, groupRepo, userGroupRepo, channelRepo)
-	userGroupService := service.NewUserGroupService(userGroupRepo, userRepo, groupRepo)
+	userGroupService := service.NewUserGroupService(userGroupRepo, deps.UserClient, groupRepo)
 
 	// Setup HTTP router
 	router := mux.NewRouter()
@@ -69,11 +66,9 @@ func SetupRouter(deps Deps) *mux.Router {
 	// Setup routes - user group routes must be registered before user routes
 	// to ensure /users/groups matches before /users/{id}
 	handler.SetupUserGroupRoutes(apiRouter, protectedRouter, userGroupService)
-	handler.SetupUserRoutes(apiRouter, protectedRouter, userService)
 	handler.SetupMessageRoutes(apiRouter, protectedRouter, messageService)
 	handler.SetupChatRoutes(apiRouter, protectedRouter, chatService)
 	handler.SetupChannelRoutes(apiRouter, protectedRouter, channelService)
-	handler.SetupContactRoutes(apiRouter, protectedRouter, contactService)
 	handler.SetupGroupRoutes(apiRouter, protectedRouter, groupService)
 	handler.SetupInviteRoutes(apiRouter, protectedRouter, inviteService)
 

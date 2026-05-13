@@ -17,6 +17,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 
 // TestFixture represents a common test fixture for all test cases
@@ -29,7 +30,7 @@ type TestFixture struct {
 }
 
 // NewTestFixture creates a new test fixture for a test (for use with new suite pattern)
-func NewTestFixture(t *testing.T, db *gorm.DB, httpServerAddr string, authServiceMock *mocks.MockAuthService) *TestFixture {
+func NewTestFixture(t *testing.T, db *gorm.DB, httpServerAddr string, authServiceMock *mocks.MockAuthService, userServiceMock *mocks.MockUserService) *TestFixture {
 	httpHelper := NewHTTPTestHelper(httpServerAddr)
 	httpHelper.SetAuthMock(authServiceMock)
 	return &TestFixture{
@@ -37,7 +38,7 @@ func NewTestFixture(t *testing.T, db *gorm.DB, httpServerAddr string, authServic
 		Ctx:        context.Background(),
 		DB:         db,
 		HTTPClient: httpHelper,
-		TestDB:     NewTestDB(context.Background(), db),
+		TestDB:     NewTestDB(context.Background(), db, authServiceMock, userServiceMock),
 	}
 }
 
@@ -58,13 +59,14 @@ type TestDB struct {
 	DB             *gorm.DB
 	ChatRepo       *repository.ChatRepository
 	MessageRepo    *repository.MessageRepository
-	UserRepo       *repository.UserRepository
+	AuthMock       *mocks.MockAuthService
+	UserMock       *mocks.MockUserService
 	ChatService    *service.ChatService
 	MessageService *service.MessageService
 }
 
 // NewTestDB creates a new test database wrapper
-func NewTestDB(ctx context.Context, db *gorm.DB) *TestDB {
+func NewTestDB(ctx context.Context, db *gorm.DB, authMock *mocks.MockAuthService, userMock *mocks.MockUserService) *TestDB {
 	// Initialize circuit breaker
 	testLogger := zap.NewNop()
 	cbs := circuits.New(testLogger)
@@ -74,21 +76,26 @@ func NewTestDB(ctx context.Context, db *gorm.DB) *TestDB {
 		DB:          db,
 		ChatRepo:    repository.NewChatRepository(db, cbs.Postgres),
 		MessageRepo: repository.NewMessageRepository(db, cbs.Postgres),
-		UserRepo:    repository.NewUserRepository(db, cbs.Postgres),
+		AuthMock:    authMock,
+		UserMock:    userMock,
 	}
 }
 
-// CreateTestUserProfile creates a test user profile
+// CreateTestUserProfile creates a test user profile in the mock
 func (t *TestDB) CreateTestUserProfile(id int64, globalName string) (*domain.UserProfile, error) {
-	profile := &domain.UserProfile{
-		ID:         id,
+	profile := &commonpb.UserProfileData{
+		UserId:     id,
 		GlobalName: globalName,
 		Bio:        "Test bio",
 	}
-	if err := t.UserRepo.Create(t.Ctx, profile); err != nil {
-		return nil, err
-	}
-	return profile, nil
+	t.UserMock.SetUserProfile(id, profile)
+	
+	// Return as domain profile for convenience
+	return &domain.UserProfile{
+		ID:         id,
+		GlobalName: globalName,
+		Bio:        "Test bio",
+	}, nil
 }
 
 // CreateTestChat creates a test chat

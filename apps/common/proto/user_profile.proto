@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/arpansaha13/messaging-system/apps/common/pb";
+
+import "google/protobuf/timestamp.proto";
+
+// UserProfileService provides CRUD operations for user profiles.
+// User profiles are application-specific data (display name, bio, avatar)
+// that lives alongside auth data in the auth database.
+service UserProfileService {
+    // CreateUserProfile creates a profile for a newly registered user.
+    rpc CreateUserProfile(CreateUserProfileRequest) returns (CreateUserProfileResponse);
+
+    // GetUserProfile retrieves a single user profile by user ID.
+    rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse);
+
+    // GetUserProfiles retrieves multiple user profiles by user IDs (batch).
+    rpc GetUserProfiles(GetUserProfilesRequest) returns (GetUserProfilesResponse);
+
+    // UpdateUserProfile updates mutable profile fields for a user.
+    rpc UpdateUserProfile(UpdateUserProfileRequest) returns (UpdateUserProfileResponse);
+
+    // SearchUserProfiles searches profiles by global_name (ILIKE match).
+    rpc SearchUserProfiles(SearchUserProfilesRequest) returns (SearchUserProfilesResponse);
+}
+
+// UserProfileData contains profile information for a user.
+message UserProfileData {
+    int64  user_id     = 1; // Bigint ID matching users.id
+    string global_name = 2; // Display name (separate from auth users.name)
+    string dp          = 3; // Avatar URL (empty string means no avatar set)
+    string bio         = 4; // Short biography text
+    google.protobuf.Timestamp created_at = 5;
+    google.protobuf.Timestamp updated_at = 6;
+}
+
+// CreateUserProfileRequest creates a profile for a newly registered user.
+message CreateUserProfileRequest {
+    int64  user_id     = 1; // Must match an existing users.id
+    string global_name = 2; // Initial display name
+}
+
+// CreateUserProfileResponse returns the newly created profile.
+message CreateUserProfileResponse {
+    UserProfileData profile = 1;
+}
+
+// GetUserProfileRequest fetches a single profile by user ID.
+message GetUserProfileRequest {
+    int64 user_id = 1;
+}
+
+// GetUserProfileResponse returns the profile.
+message GetUserProfileResponse {
+    UserProfileData profile = 1;
+}
+
+// GetUserProfilesRequest fetches multiple profiles by user IDs (batch).
+message GetUserProfilesRequest {
+    repeated int64 user_ids = 1;
+}
+
+// GetUserProfilesResponse returns a map of user_id -> profile.
+message GetUserProfilesResponse {
+    map<int64, UserProfileData> profiles = 1;
+}
+
+// UpdateUserProfileRequest updates mutable profile fields.
+// Fields left empty will not be modified.
+message UpdateUserProfileRequest {
+    int64  user_id     = 1;
+    string global_name = 2;
+    string dp          = 3;
+    string bio         = 4;
+}
+
+// UpdateUserProfileResponse returns the updated profile.
+message UpdateUserProfileResponse {
+    UserProfileData profile = 1;
+}
+
+// SearchUserProfilesRequest searches profiles by global_name.
+message SearchUserProfilesRequest {
+    string query = 1;
+    int32  limit = 2; // Max results to return (default 20)
+}
+
+// SearchUserProfilesResponse returns matching profiles.
+message SearchUserProfilesResponse {
+    repeated UserProfileData profiles = 1;
+}

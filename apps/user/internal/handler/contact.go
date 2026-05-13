@@ -4,10 +4,9 @@ import (
 	"net/http"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/user/internal/dto"
+	"github.com/arpansaha13/messaging-system/apps/user/internal/service"
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
 )
 
 // SetupContactRoutes sets up contact routes
@@ -25,33 +24,23 @@ func addContactController(contactService service.IContactService) gtk.Controller
 
 		req, err := dto.NewAddContactDTO(r)
 		if err != nil {
-			log.Warn("failed to parse add contact request", zap.Error(err))
 			return nil, err
 		}
 		if err := req.Validate(); err != nil {
-			log.Warn("add contact validation failed")
 			return nil, err
 		}
-
-		log.Debug("adding contact", zap.Int64("contact_user_id", req.UserIDToAdd))
 
 		contact, err := contactService.AddContact(r.Context(), req)
 		if err != nil {
-			log.Error("failed to add contact", zap.Int64("contact_user_id", req.UserIDToAdd), zap.Error(err))
 			return nil, err
 		}
-
-		log.Info("contact added successfully", zap.Int64("contact_id", contact.ID))
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusCreated,
 			Body: dto.ContactResponseDTO{
-				ID:         contact.ID,
-				Alias:      contact.Alias,
-				GlobalName: "", // populated when fetching contacts via GetContacts
-				DP:         nil,
-				Bio:        "",
-				UserID:     contact.UserIDInContact,
+				ID:     contact.ID,
+				Alias:  contact.Alias,
+				UserID: contact.UserIDInContact,
 			},
 		}, nil
 	}
@@ -64,27 +53,12 @@ func getContactsController(contactService service.IContactService) gtk.Controlle
 
 		contacts, err := contactService.GetContacts(r.Context())
 		if err != nil {
-			log.Error("failed to get contacts", zap.Error(err))
 			return nil, err
-		}
-
-		log.Debug("contacts retrieved successfully", zap.Int("contact_count", len(contacts)))
-
-		contactResponses := make([]dto.ContactResponseDTO, len(contacts))
-		for i, contact := range contacts {
-			contactResponses[i] = dto.ContactResponseDTO{
-				ID:         contact.ID,
-				Alias:      contact.Alias,
-				GlobalName: contact.GlobalName,
-				DP:         contact.DP,
-				Bio:        contact.Bio,
-				UserID:     contact.UserIDInContact,
-			}
 		}
 
 		return &gtk.ControllerResponse{
 			StatusCode: http.StatusOK,
-			Body:       contactResponses,
+			Body:       contacts,
 		}, nil
 	}
 }
@@ -96,17 +70,14 @@ func updateContactAliasController(contactService service.IContactService) gtk.Co
 
 		req, err := dto.NewUpdateContactAliasDTO(r)
 		if err != nil {
-			log.Warn("failed to parse update contact alias request", zap.Error(err))
 			return nil, err
 		}
 		if err := req.Validate(); err != nil {
-			log.Warn("update contact alias validation failed", zap.Int64("contact_id", req.ID))
 			return nil, err
 		}
 
 		contact, err := contactService.UpdateContactAlias(r.Context(), req)
 		if err != nil {
-			log.Error("failed to update contact alias", zap.Int64("contact_id", req.ID), zap.Error(err))
 			return nil, err
 		}
 
@@ -128,12 +99,10 @@ func deleteContactController(contactService service.IContactService) gtk.Control
 
 		req, err := dto.NewDeleteContactDTO(r)
 		if err != nil {
-			log.Warn("failed to parse delete contact request", zap.Error(err))
 			return nil, err
 		}
 
 		if err := contactService.DeleteContact(r.Context(), req); err != nil {
-			log.Error("failed to delete contact", zap.Int64("contact_id", req.ID), zap.Error(err))
 			return nil, err
 		}
 

@@ -40,7 +40,6 @@ func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, userID, group
 			Select("DISTINCT user_groups.*").
 			Joins("JOIN user_groups AS requester_membership ON requester_membership.group_id = user_groups.group_id").
 			Where("user_groups.group_id = ? AND requester_membership.user_id = ?", groupID, userID).
-			Preload("User").
 			Find(&members).Error
 		if err != nil {
 			return nil, err

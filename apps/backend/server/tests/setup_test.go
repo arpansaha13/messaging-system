@@ -33,6 +33,7 @@ type BaseTestSuite struct {
 	HTTPServerAddr  string
 	HTTPServer      *http.Server
 	AuthServiceMock *mocks.MockAuthService
+	UserServiceMock *mocks.MockUserService
 }
 
 // SetupSuite initializes the test environment (runs once before all tests)
@@ -121,7 +122,6 @@ func (s *BaseTestSuite) TearDownSuite() {
 // CleanupTablesForSuite truncates all tables for test isolation (called by SetupTest in child suites)
 func (s *BaseTestSuite) CleanupTablesForSuite() {
 	tables := []string{
-		"user_profiles",
 		"chats",
 		"messages",
 		"message_recipients",
@@ -141,7 +141,6 @@ func (s *BaseTestSuite) CleanupTablesForSuite() {
 // migrateDatabase runs all database migrations
 func migrateDatabase(db *gorm.DB) error {
 	return db.AutoMigrate(
-		&domain.UserProfile{},
 		&domain.Chat{},
 		&domain.Message{},
 		&domain.MessageRecipient{},
@@ -155,9 +154,12 @@ func migrateDatabase(db *gorm.DB) error {
 
 // setupHTTPServer sets up the HTTP server with mocked auth service
 func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error {
-	// Create mock auth service
+	// Create mock auth and user services
 	s.AuthServiceMock = mocks.NewMockAuthService()
 	mockAuthClient := mocks.NewMockAuthServiceClient(s.AuthServiceMock)
+
+	s.UserServiceMock = mocks.NewMockUserService()
+	mockUserClient := mocks.NewMockUserServiceClient(s.UserServiceMock)
 
 	// Initialize circuit breakers and logger
 	testLogger := zap.NewNop()
@@ -180,6 +182,7 @@ func (s *BaseTestSuite) setupHTTPServer(ctx context.Context, db *gorm.DB) error 
 		DB:         db,
 		RabbitMQ:   testRabbitMQ,
 		AuthClient: mockAuthClient,
+		UserClient: mockUserClient,
 		Circuits:   cbs,
 		Logger:     testLogger,
 	})

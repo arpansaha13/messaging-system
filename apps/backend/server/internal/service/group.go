@@ -15,15 +15,15 @@ import (
 type GroupService struct {
 	groupRepo     repository.IGroupRepository
 	userGroupRepo repository.IUserGroupRepository
-	userRepo      repository.IUserRepository
+	userClient    IUserServiceClient
 }
 
 // NewGroupService creates a new group service
-func NewGroupService(groupRepo repository.IGroupRepository, userGroupRepo repository.IUserGroupRepository, userRepo repository.IUserRepository) *GroupService {
+func NewGroupService(groupRepo repository.IGroupRepository, userGroupRepo repository.IUserGroupRepository, userClient IUserServiceClient) *GroupService {
 	return &GroupService{
 		groupRepo:     groupRepo,
 		userGroupRepo: userGroupRepo,
-		userRepo:      userRepo,
+		userClient:    userClient,
 	}
 }
 

@@ -9,3 +9,5 @@ use ./apps/backend/server
 use ./apps/chat-worker
 
 use ./apps/socket
+
+use ./apps/user

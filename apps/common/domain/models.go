@@ -22,7 +22,6 @@ type AuthUser struct {
 	UserID   int64  `json:"user_id"`
 	Email    string `json:"email"`
 	Username string `json:"username"`
-	Name     string `json:"name"`
 	Verified bool   `json:"verified"`
 }
 
@@ -42,7 +41,7 @@ type UserProfile struct {
 type Message struct {
 	ID        int64 `gorm:"primaryKey"`
 	SenderID  int64 `gorm:"index"`
-	Sender    *UserProfile
+	Sender    *UserProfile `gorm:"-"`
 	ChannelID *int64 `gorm:"index"` // Null for personal messages
 	Channel   *Channel
 	Content   string    `gorm:"type:text"`
@@ -57,7 +56,7 @@ type MessageRecipient struct {
 	MessageID  int64 `gorm:"index" json:"message_id"`
 	Message    *Message
 	ReceiverID int64 `gorm:"index" json:"receiver_id"`
-	Receiver   *UserProfile
+	Receiver   *UserProfile `gorm:"-"`
 	Status     MessageStatus `gorm:"type:smallint;default:1" json:"status"`
 	CreatedAt  time.Time     `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt  time.Time     `gorm:"autoUpdateTime" json:"updated_at"`
@@ -67,9 +66,9 @@ type MessageRecipient struct {
 type Chat struct {
 	ID         int64 `gorm:"primaryKey"`
 	SenderID   int64 `gorm:"index"`
-	Sender     *UserProfile
+	Sender     *UserProfile `gorm:"-"`
 	ReceiverID int64 `gorm:"index"`
-	Receiver   *UserProfile
+	Receiver   *UserProfile `gorm:"-"`
 	Muted      bool `gorm:"default:false"`
 	Pinned     bool `gorm:"default:false"`
 	Archived   bool `gorm:"default:false"`
@@ -94,9 +93,9 @@ type Channel struct {
 type Contact struct {
 	ID              int64 `gorm:"primaryKey"`
 	UserID          int64 `gorm:"index"`
-	User            *UserProfile
+	User            *UserProfile `gorm:"-"`
 	UserIDInContact int64        `gorm:"index"`
-	ContactUser     *UserProfile `gorm:"foreignKey:UserIDInContact"`
+	ContactUser     *UserProfile `gorm:"-"`
 	Alias           string       `gorm:"default:''"`
 	CreatedAt       time.Time    `gorm:"autoCreateTime"`
 	UpdatedAt       time.Time    `gorm:"autoUpdateTime"`
@@ -108,7 +107,7 @@ type Group struct {
 	ID        int64  `gorm:"primaryKey"`
 	Name      string `gorm:"not null"`
 	FounderID int64  `gorm:"not null"`
-	Founder   *UserProfile
+	Founder   *UserProfile `gorm:"-"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 	DeletedAt *time.Time
@@ -118,7 +117,7 @@ type Group struct {
 type UserGroup struct {
 	ID        int64        `gorm:"primaryKey"`
 	UserID    int64        `gorm:"index"`
-	User      *UserProfile `gorm:"foreignKey:UserID;references:ID"`
+	User      *UserProfile `gorm:"-"`
 	GroupID   int64        `gorm:"index"`
 	Group     *Group
 	Role      string    `gorm:"default:'member'"`
@@ -131,7 +130,7 @@ type UserGroup struct {
 type Invite struct {
 	Hash      string `gorm:"primaryKey" json:"hash"`
 	InviterID int64  `gorm:"index"`
-	Inviter   *UserProfile
+	Inviter   *UserProfile `gorm:"-"`
 	GroupID   *int64     `gorm:"index"`
 	Group     *Group     `gorm:"foreignKey:GroupID;references:ID"`
 	CreatedAt time.Time  `gorm:"autoCreateTime" json:"created_at"`

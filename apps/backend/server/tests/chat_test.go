@@ -77,7 +77,7 @@ func (s *ChatTestSuite) TestGetUnarchivedChats() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
@@ -158,7 +158,7 @@ func (s *ChatTestSuite) TestGetArchivedChats() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
@@ -229,7 +229,7 @@ func (s *ChatTestSuite) TestPinChat() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
@@ -291,7 +291,7 @@ func (s *ChatTestSuite) TestUnpinChat() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
@@ -354,7 +354,7 @@ func (s *ChatTestSuite) TestArchiveChat() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			err := tt.Setup(fixture)
@@ -416,7 +416,7 @@ func (s *ChatTestSuite) TestUnarchiveChat() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
@@ -470,7 +470,7 @@ func (s *ChatTestSuite) TestDeleteChat() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
@@ -525,7 +525,7 @@ func (s *ChatTestSuite) TestClearChat() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {

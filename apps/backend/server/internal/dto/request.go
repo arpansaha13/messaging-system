@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/gorilla/mux"
@@ -74,58 +73,6 @@ func (d *VerifyOTPDTO) Validate() error {
 	if d.OtpHash == "" || d.Code == "" {
 		return &gtk.ValidationError{Message: "otp hash and code are required"}
 	}
-	return nil
-}
-
-// ── User DTOs ─────────────────────────────────────────────────────────────────
-
-// UpdateUserDTO holds fields for updating the authenticated user's profile.
-type UpdateUserDTO struct {
-	GlobalName *string `json:"globalName,omitempty"`
-	DP         *string `json:"dp,omitempty"`
-	Bio        *string `json:"bio,omitempty"`
-}
-
-func NewUpdateUserDTO(r *http.Request) (*UpdateUserDTO, error) {
-	d := &UpdateUserDTO{}
-	if err := json.NewDecoder(r.Body).Decode(d); err != nil {
-		return nil, &gtk.ValidationError{Message: "invalid request body"}
-	}
-	return d, nil
-}
-
-func (d *UpdateUserDTO) Validate() error {
-	return nil // all fields optional
-}
-
-// SearchUsersDTO holds a user search query.
-type SearchUsersDTO struct {
-	Q string
-}
-
-func NewSearchUsersDTO(r *http.Request) (*SearchUsersDTO, error) {
-	return &SearchUsersDTO{Q: r.URL.Query().Get("q")}, nil
-}
-
-func (d *SearchUsersDTO) Validate() error {
-	return nil // optional
-}
-
-// GetUserByIDDTO holds the target user ID for profile lookups.
-type GetUserByIDDTO struct {
-	ID int64
-}
-
-func NewGetUserByIDDTO(r *http.Request) (*GetUserByIDDTO, error) {
-	vars := mux.Vars(r)
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		return nil, &gtk.ValidationError{Message: "invalid user id"}
-	}
-	return &GetUserByIDDTO{ID: id}, nil
-}
-
-func (d *GetUserByIDDTO) Validate() error {
 	return nil
 }
 
@@ -467,72 +414,6 @@ func NewGetChannelInfoDTO(r *http.Request) (*GetChannelInfoDTO, error) {
 }
 
 func (d *GetChannelInfoDTO) Validate() error { return nil }
-
-// ── Contact DTOs ──────────────────────────────────────────────────────────────
-
-// AddContactDTO holds data for adding a contact.
-type AddContactDTO struct {
-	UserIDToAdd int64  `json:"userIdToAdd"`
-	Alias       string `json:"alias"`
-}
-
-func NewAddContactDTO(r *http.Request) (*AddContactDTO, error) {
-	d := &AddContactDTO{}
-	if err := json.NewDecoder(r.Body).Decode(d); err != nil {
-		return nil, &gtk.ValidationError{Message: "invalid request body"}
-	}
-	return d, nil
-}
-
-func (d *AddContactDTO) Validate() error {
-	if d.UserIDToAdd == 0 {
-		return &gtk.ValidationError{Message: "contact user id is required"}
-	}
-	return nil
-}
-
-// UpdateContactAliasDTO holds data for updating a contact alias (path param + body).
-type UpdateContactAliasDTO struct {
-	ID       int64
-	NewAlias string `json:"new_alias"`
-}
-
-func NewUpdateContactAliasDTO(r *http.Request) (*UpdateContactAliasDTO, error) {
-	vars := mux.Vars(r)
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		return nil, &gtk.ValidationError{Message: "invalid contact id"}
-	}
-	d := &UpdateContactAliasDTO{ID: id}
-	if err := json.NewDecoder(r.Body).Decode(d); err != nil {
-		return nil, &gtk.ValidationError{Message: "invalid request body"}
-	}
-	return d, nil
-}
-
-func (d *UpdateContactAliasDTO) Validate() error {
-	d.NewAlias = strings.TrimSpace(d.NewAlias)
-	if d.NewAlias == "" {
-		return &gtk.ValidationError{Message: "alias is required"}
-	}
-	return nil
-}
-
-// DeleteContactDTO holds the contact ID for deletion.
-type DeleteContactDTO struct {
-	ID int64
-}
-
-func NewDeleteContactDTO(r *http.Request) (*DeleteContactDTO, error) {
-	vars := mux.Vars(r)
-	id, err := strconv.ParseInt(vars["id"], 10, 64)
-	if err != nil {
-		return nil, &gtk.ValidationError{Message: "invalid contact id"}
-	}
-	return &DeleteContactDTO{ID: id}, nil
-}
-
-func (d *DeleteContactDTO) Validate() error { return nil }
 
 // ── Invite DTOs ───────────────────────────────────────────────────────────────
 

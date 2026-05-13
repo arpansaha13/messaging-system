@@ -71,7 +71,7 @@ services:
     ports:
       - "7511:5432"
     volumes:
-      - ./data/test/auth:/var/lib/postgresql/data
+      - ./.docker/test/auth:/var/lib/postgresql/data
       - ./tests/init-auth-dbs.sh:/docker-entrypoint-initdb.d/init-auth-dbs.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U testuser"]
@@ -105,7 +105,7 @@ services:
     ports:
       - "7521:5432"
     volumes:
-      - ./data/test/default:/var/lib/postgresql/data
+      - ./.docker/test/default:/var/lib/postgresql/data
       - ./tests/init-default-dbs.sh:/docker-entrypoint-initdb.d/init-default-dbs.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U testuser"]
@@ -144,7 +144,7 @@ services:
       CHAT_WORKER_RABBITMQ_USER: chat-worker
       CHAT_WORKER_RABBITMQ_PASS: password
     volumes:
-      - ./data/test/rabbitmq:/var/lib/rabbitmq
+      - ./.docker/test/rabbitmq:/var/lib/rabbitmq
     healthcheck:
       test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
       interval: 20s
@@ -508,7 +508,7 @@ services:
     profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
-      - ./data/test/tempo:/tmp/tempo
+      - ./.docker/test/tempo:/tmp/tempo
     expose:
       - "4317" # OTLP gRPC — reachable by backend/auth as tempo:4317
       - "3200" # HTTP — reachable by Grafana as tempo:3200
@@ -531,7 +531,7 @@ services:
       GF_LOG_LEVEL: info
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./data/test/grafana:/var/lib/grafana
+      - ./.docker/test/grafana:/var/lib/grafana
       - ./apps/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./apps/observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
     ports:
@@ -605,7 +605,7 @@ services:
     container_name: loki_test
     profiles: [logging, all]
     volumes:
-      - ./data/test/loki:/tmp/loki
+      - ./.docker/test/loki:/tmp/loki
     healthcheck:
       test: ["CMD", "/usr/bin/loki", "-health"]
       start_period: 30s

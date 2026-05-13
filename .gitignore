@@ -47,8 +47,8 @@ lerna-debug.log*
 .settings/
 *.sublime-workspace
 
-# Postgres Data Volume
-data
+# Docker Data Volumes
+.docker/**
 
 # Nuxt
 .nuxt

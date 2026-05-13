@@ -8,29 +8,26 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 
-// AuthServiceClient defines the interface for auth service client operations
+// IAuthServiceClient defines the interface for auth service client operations (identity)
 type IAuthServiceClient interface {
 	ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error)
 	GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error)
+	LiveZ(ctx context.Context) error
 	Close() error
 }
 
-// UserService defines the interface for user service operations
-type IUserService interface {
-	GetUserProfile(ctx context.Context) (*domain.UserProfile, error)
-	SearchUserProfiles(ctx context.Context, req *dto.SearchUsersDTO) ([]*domain.UserProfile, error)
-	GetUserProfileWithContact(ctx context.Context, req *dto.GetUserByIDDTO) (*domain.UserProfile, *domain.Contact, error)
-	UpdateUserProfile(ctx context.Context, req *dto.UpdateUserDTO) (*domain.UserProfile, error)
-}
-
-// ContactService defines the interface for contact service operations
-type IContactService interface {
-	AddContact(ctx context.Context, req *dto.AddContactDTO) (*domain.Contact, error)
-	GetContacts(ctx context.Context) ([]*repository.ContactWithUserInfo, error)
-	UpdateContactAlias(ctx context.Context, req *dto.UpdateContactAliasDTO) (*domain.Contact, error)
-	DeleteContact(ctx context.Context, req *dto.DeleteContactDTO) error
+// IUserServiceClient defines the interface for user service client operations (profiles)
+type IUserServiceClient interface {
+	GetUserProfiles(ctx context.Context, userIDs []int64) (*commonpb.GetUserProfilesResponse, error)
+	GetUserProfile(ctx context.Context, userID int64) (*commonpb.UserProfileData, error)
+	GetDomainProfiles(ctx context.Context, userIDs []int64) (map[int64]*domain.UserProfile, error)
+	GetDomainProfile(ctx context.Context, userID int64) (*domain.UserProfile, error)
+	SearchUserProfiles(ctx context.Context, query string, limit int32) (*commonpb.SearchUserProfilesResponse, error)
+	UpdateUserProfile(ctx context.Context, req *commonpb.UpdateUserProfileRequest) (*commonpb.UpdateUserProfileResponse, error)
+	Close() error
 }
 
 // ChatService defines the interface for chat service operations

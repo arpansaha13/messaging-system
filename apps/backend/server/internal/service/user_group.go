@@ -14,15 +14,15 @@ import (
 // UserGroupService handles user group membership logic
 type UserGroupService struct {
 	userGroupRepo repository.IUserGroupRepository
-	userRepo      repository.IUserRepository
+	userClient    IUserServiceClient
 	groupRepo     repository.IGroupRepository
 }
 
 // NewUserGroupService creates a new user group service
-func NewUserGroupService(userGroupRepo repository.IUserGroupRepository, userRepo repository.IUserRepository, groupRepo repository.IGroupRepository) *UserGroupService {
+func NewUserGroupService(userGroupRepo repository.IUserGroupRepository, userClient IUserServiceClient, groupRepo repository.IGroupRepository) *UserGroupService {
 	return &UserGroupService{
 		userGroupRepo: userGroupRepo,
-		userRepo:      userRepo,
+		userClient:    userClient,
 		groupRepo:     groupRepo,
 	}
 }
@@ -49,7 +49,29 @@ func (s *UserGroupService) GetGroupMembers(ctx context.Context, req *dto.GetGrou
 		return nil, err
 	}
 
-	log.Debug("group members retrieved successfully", zap.Int64("group_id", req.GroupID), zap.Int("member_count", len(members)))
+	if len(members) == 0 {
+		return members, nil
+	}
+
+	// Hydrate members with profiles
+	userIDs := make([]int64, 0, len(members))
+	for _, m := range members {
+		userIDs = append(userIDs, m.UserID)
+	}
+
+	profiles, err := s.userClient.GetDomainProfiles(ctx, userIDs)
+	if err != nil {
+		log.Error("failed to fetch profiles for group members", zap.Int64("group_id", req.GroupID), zap.Error(err))
+		return nil, err
+	}
+
+	for _, m := range members {
+		if p, ok := profiles[m.UserID]; ok {
+			m.User = p
+		}
+	}
+
+	log.Debug("group members retrieved and hydrated successfully", zap.Int64("group_id", req.GroupID), zap.Int("member_count", len(members)))
 	return members, nil
 }
 

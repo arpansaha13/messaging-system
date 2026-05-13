@@ -1,10 +1,12 @@
 package app
 
 import (
+	"context"
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/gorm"
 
 	"github.com/arpansaha13/goauthkit/pb"
@@ -12,9 +14,10 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
+	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 
-// SetupDependencies wires repositories, email provider, and the auth service.
+// SetupDependencies wires repositories, email provider, the auth service, and the user profile service.
 func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuits, memcachedClient *gtk.MemcachedClient) *Dependencies {
 	cfg, err := config.Load()
 	if err != nil {
@@ -54,6 +57,30 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 		sessionCache = goauthkit.NewSessionCache(memcachedClient, cbs.Cache)
 	}
 
+	// Connect to user service
+	userConn, err := grpc.NewClient(cfg.UserServiceGRPCAddr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		zapLogger.Error("failed to connect to user service", zap.Error(err))
+	}
+	userProfileClient := commonpb.NewUserProfileServiceClient(userConn)
+
+	// Configure hooks for user profile creation
+	hooks := &goauthkit.AuthServiceHooks{
+		OnUserCreated: func(ctx context.Context, event goauthkit.UserCreatedEvent) error {
+			_, err := userProfileClient.CreateUserProfile(ctx, &commonpb.CreateUserProfileRequest{
+				UserId:     event.UserID,
+				GlobalName: event.GlobalName,
+			})
+			if err != nil {
+				zapLogger.Error("failed to create user profile via hook",
+					zap.Int64("user_id", event.UserID),
+					zap.Error(err),
+				)
+			}
+			return err
+		},
+	}
+
 	authService := goauthkit.NewAuthService(
 		userRepo,
 		otpRepo,
@@ -68,13 +95,15 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 			SecretKey:  cfg.SecretKey(),
 			EmailPool:  emailPool,
 		},
+		hooks,
 	)
 
 	return &Dependencies{
-		AuthService:   authService,
-		Validator:     validator,
-		EmailPool:     emailPool,
-		EmailProvider: emailProvider,
+		AuthService:       authService,
+		UserProfileClient: userProfileClient,
+		Validator:         validator,
+		EmailPool:         emailPool,
+		EmailProvider:     emailProvider,
 	}
 }
 

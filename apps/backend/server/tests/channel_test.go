@@ -168,7 +168,7 @@ func (s *ChannelTestSuite) TestCreateChannel() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
@@ -333,7 +333,7 @@ func (s *ChannelTestSuite) TestGetChannels() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {
@@ -475,7 +475,7 @@ func (s *ChannelTestSuite) TestGetChannelInfo() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {

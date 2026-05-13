@@ -36,13 +36,15 @@ type ChatMetadataDTO struct {
 type ChatService struct {
 	chatRepo    repository.IChatRepository
 	messageRepo repository.IMessageRepository
+	userClient  IUserServiceClient
 }
 
 // NewChatService creates a new chat service
-func NewChatService(chatRepo repository.IChatRepository, messageRepo repository.IMessageRepository) *ChatService {
+func NewChatService(chatRepo repository.IChatRepository, messageRepo repository.IMessageRepository, userClient IUserServiceClient) *ChatService {
 	return &ChatService{
 		chatRepo:    chatRepo,
 		messageRepo: messageRepo,
+		userClient:  userClient,
 	}
 }
 
@@ -100,23 +102,20 @@ func (s *ChatService) getUserChatsByArchivedStatus(ctx context.Context, archived
 	}
 
 	items := make([]*ChatItemDTO, 0, len(chats))
+	if len(chats) == 0 {
+		return items, nil
+	}
 
-	chatMetadataMap := make(map[int64]*ChatMetadataDTO)
-	receiverInfoMap := make(map[int64]*ChatReceiverDTO)
-
+	// Fetch profiles for all receivers in batch
+	receiverUserIDs := make([]int64, 0, len(chats))
 	for _, chat := range chats {
-		chatMetadataMap[chat.ID] = &ChatMetadataDTO{
-			Muted:    chat.Muted,
-			Pinned:   chat.Pinned,
-			Archived: chat.Archived,
-		}
+		receiverUserIDs = append(receiverUserIDs, chat.ReceiverID)
+	}
 
-		receiverInfoMap[chat.ReceiverID_pk] = &ChatReceiverDTO{
-			ID:         chat.ReceiverID_pk,
-			DP:         chat.ReceiverDP,
-			Bio:        chat.ReceiverBio,
-			GlobalName: chat.ReceiverGlobalName,
-		}
+	profiles, err := s.userClient.GetDomainProfiles(ctx, receiverUserIDs)
+	if err != nil {
+		log.Error("failed to fetch profiles for chat receivers", zap.Int64("user_id", userID), zap.Error(err))
+		return nil, err
 	}
 
 	for _, chat := range chats {
@@ -141,10 +140,23 @@ func (s *ChatService) getUserChatsByArchivedStatus(ctx context.Context, archived
 			}
 		}
 
+		receiverDTO := &ChatReceiverDTO{
+			ID: chat.ReceiverID,
+		}
+		if p, ok := profiles[chat.ReceiverID]; ok {
+			receiverDTO.GlobalName = p.GlobalName
+			receiverDTO.Bio = p.Bio
+			receiverDTO.DP = p.DP
+		}
+
 		item := &ChatItemDTO{
 			LatestMsg: latestMsgDTO,
-			Receiver:  receiverInfoMap[chat.ReceiverID_pk],
-			Chat:      chatMetadataMap[chat.ID],
+			Receiver:  receiverDTO,
+			Chat: &ChatMetadataDTO{
+				Muted:    chat.Muted,
+				Pinned:   chat.Pinned,
+				Archived: chat.Archived,
+			},
 		}
 
 		items = append(items, item)

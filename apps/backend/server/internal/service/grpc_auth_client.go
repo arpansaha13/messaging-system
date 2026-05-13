@@ -17,39 +17,39 @@ import (
 // defaultTimeout is the default timeout for service operations
 const defaultTimeout = 10 * time.Second
 
-// AuthService provides gRPC client methods for the auth service
-type AuthService struct {
-	conn   *grpc.ClientConn
-	client pb.AuthServiceClient
-	cb     *gobreaker.CircuitBreaker[any]
-	mu     sync.RWMutex
+// AuthServiceClient provides gRPC client methods for the auth service
+type AuthServiceClient struct {
+	authConn *grpc.ClientConn
+	client   pb.AuthServiceClient
+	cb       *gobreaker.CircuitBreaker[any]
+	mu       sync.RWMutex
 }
 
-// NewAuthService creates a new auth service
-func NewAuthService(conn *grpc.ClientConn, client pb.AuthServiceClient, cb *gobreaker.CircuitBreaker[any]) *AuthService {
-	svc := &AuthService{
+// NewAuthServiceClient creates a new auth service client
+func NewAuthServiceClient(authConn *grpc.ClientConn, client pb.AuthServiceClient, cb *gobreaker.CircuitBreaker[any]) *AuthServiceClient {
+	svc := &AuthServiceClient{
 		cb: cb,
 	}
-	svc.SetConnection(conn, client)
+	svc.SetConnection(authConn, client)
 	return svc
 }
 
 // SetConnection swaps the underlying gRPC connection and client.
-func (a *AuthService) SetConnection(conn *grpc.ClientConn, client pb.AuthServiceClient) {
+func (a *AuthServiceClient) SetConnection(authConn *grpc.ClientConn, client pb.AuthServiceClient) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.conn = conn
+	a.authConn = authConn
 	a.client = client
 }
 
-func (a *AuthService) getClient() pb.AuthServiceClient {
+func (a *AuthServiceClient) getClient() pb.AuthServiceClient {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return a.client
 }
 
 // ValidateSession validates a session token with the auth service
-func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
+func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error) {
 	log := gtk.LoggerFromContext(ctx)
 
 	if token == "" {
@@ -87,7 +87,7 @@ func (a *AuthService) ValidateSession(ctx context.Context, token string) (*pb.Va
 }
 
 // GetUser retrieves user information from the auth service
-func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
+func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error) {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("get user request received", zap.Int64("user_id", userID))
 
@@ -119,21 +119,21 @@ func (a *AuthService) GetUser(ctx context.Context, userID int64, token string) (
 }
 
 // Close closes the gRPC connection
-func (a *AuthService) Close() error {
+func (a *AuthServiceClient) Close() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	if a.conn == nil {
-		a.client = nil
-		return nil
+	if a.authConn != nil {
+		if err := a.authConn.Close(); err != nil {
+			return err
+		}
 	}
-	err := a.conn.Close()
-	a.conn = nil
+	a.authConn = nil
 	a.client = nil
-	return err
+	return nil
 }
 
 // LiveZ probes the auth service for liveness.
-func (a *AuthService) LiveZ(ctx context.Context) error {
+func (a *AuthServiceClient) LiveZ(ctx context.Context) error {
 	client := a.getClient()
 	if client == nil {
 		return fmt.Errorf("auth service client not connected")
@@ -145,3 +145,5 @@ func (a *AuthService) LiveZ(ctx context.Context) error {
 	}
 	return nil
 }
+
+var _ IAuthServiceClient = (*AuthServiceClient)(nil)

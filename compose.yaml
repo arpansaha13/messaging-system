@@ -10,7 +10,7 @@ services:
     ports:
       - "7000:443"
     volumes:
-      - ./data/dev/certs-local:/etc/nginx/certs:ro
+      - ./.docker/dev/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
       - socket
@@ -38,7 +38,30 @@ services:
     ports:
       - "7010:5432"
     volumes:
-      - ./data/dev/auth:/var/lib/postgresql/data
+      - ./.docker/dev/auth:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - messaging-network
+
+  user-db:
+    build:
+      context: .
+      dockerfile: apps/auth/postgres/Dockerfile
+    container_name: user-db
+    profiles: [app, all]
+    environment:
+      POSTGRES_USER: ${USER_DB_USERNAME:-user}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD:-password}
+      POSTGRES_DB: ${USER_DB_NAME:-users_db}
+    command: ["postgres", "-c", "max_connections=100"]
+    ports:
+      - "7040:5432"
+    volumes:
+      - ./.docker/dev/user:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -61,7 +84,7 @@ services:
     ports:
       - "7020:5432"
     volumes:
-      - ./data/dev/default:/var/lib/postgresql/data
+      - ./.docker/dev/default:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -105,6 +128,7 @@ services:
       JWT_TOKEN_VALIDITY_SECONDS: ${JWT_TOKEN_VALIDITY_SECONDS}
       OTP_VALIDATION_SECONDS: ${OTP_VALIDATION_SECONDS}
       AUTH_SYSTEM_HOST: ${AUTH_SYSTEM_HOST}
+      USER_SERVICE_HOST: user:50051
       OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
     ports:
       - "7030:4000"
@@ -114,6 +138,8 @@ services:
       rabbitmq:
         condition: service_healthy
       auth:
+        condition: service_started
+      user:
         condition: service_started
     networks:
       - messaging-network
@@ -245,6 +271,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      USER_SERVICE_GRPC_ADDR: user:50051
     # ports:
     #   - '7060:${GRPC_PORT:-50051}'
     depends_on:
@@ -268,6 +295,49 @@ services:
           path: ./apps/auth/server/go.sum
         - action: rebuild
           path: ./apps/auth/server/Dockerfile
+
+  user:
+    build:
+      context: .
+      dockerfile: apps/user/Dockerfile
+    container_name: user
+    profiles: [app, all]
+    labels:
+      service_name: "user"
+    logging:
+      driver: json-file
+      options:
+        labels: "service_name"
+    environment:
+      ENVIRONMENT: development
+      USER_DB_URL: postgres://${USER_DB_USERNAME:-user}:${USER_DB_PASSWORD:-password}@user-db:5432/${USER_DB_NAME:-users_db}?sslmode=disable
+      USER_DB_MAX_CONNECTIONS: ${USER_DB_MAX_CONNECTIONS:-100}
+      AUTH_SERVICE_GRPC_ADDR: auth:50051
+      AUTH_COOKIE_NAME: ${AUTH_COOKIE_NAME}
+      LOG_LEVEL: ${LOG_LEVEL}
+      OTLP_ENDPOINT: ${OTLP_ENDPOINT:-}
+    expose:
+      - "4000"
+      - "50051"
+    depends_on:
+      user-db:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    networks:
+      - messaging-network
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/user/cmd
+        - action: rebuild
+          path: ./apps/user/internal
+        - action: rebuild
+          path: ./apps/user/go.mod
+        - action: rebuild
+          path: ./apps/user/go.sum
+        - action: rebuild
+          path: ./apps/user/Dockerfile
 
   frontend:
     build:
@@ -421,7 +491,7 @@ services:
     environment:
       LOKI_CONFIG_FILENAME: /etc/loki/loki-config.yml
     volumes:
-      - ./data/dev/loki:/tmp/loki
+      - ./.docker/dev/loki:/tmp/loki
     # ports:
     #   - "7080:3100"
     healthcheck:
@@ -478,7 +548,7 @@ services:
       GF_LOG_LEVEL: info
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./data/dev/grafana:/var/lib/grafana
+      - ./.docker/dev/grafana:/var/lib/grafana
     ports:
       - "7090:3000"
     healthcheck:
@@ -604,7 +674,7 @@ services:
     profiles: [metrics, all]
     command: ["-config.file=/etc/tempo/tempo.yaml"]
     volumes:
-      - ./data/dev/tempo:/tmp/tempo
+      - ./.docker/dev/tempo:/tmp/tempo
     expose:
       - "4317" # OTLP gRPC — reachable by backend/auth as tempo:4317
       - "3200" # HTTP — reachable by Grafana as tempo:3200

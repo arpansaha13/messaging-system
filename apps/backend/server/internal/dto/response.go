@@ -41,15 +41,7 @@ type UserProfileResponseDTO struct {
 	Contact    *ContactInfoDTO `json:"contact"`
 }
 
-// AuthUserResponseDTO represents authenticated user data
-type AuthUserResponseDTO struct {
-	ID         int64   `json:"id"`
-	Email      string  `json:"email"`
-	Username   string  `json:"username"`
-	GlobalName string  `json:"globalName"`
-	DP         *string `json:"dp"`
-	Bio        string  `json:"bio"`
-}
+
 
 // Message Response DTOs
 
@@ -139,17 +131,7 @@ type ChannelResponseDTO struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-// Contact Response DTOs
 
-// ContactResponseDTO represents a contact in responses
-type ContactResponseDTO struct {
-	ID         int64   `json:"id"`
-	Alias      string  `json:"alias"`
-	GlobalName string  `json:"globalName"`
-	DP         *string `json:"dp"`
-	Bio        string  `json:"bio"`
-	UserID     int64   `json:"userId"`
-}
 
 // UserGroup Response DTOs
 

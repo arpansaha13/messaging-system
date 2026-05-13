@@ -169,7 +169,7 @@ func (s *UserGroupTestSuite) TestGetMembers() {
 
 	for _, tt := range tests {
 		s.Run(tt.Name, func() {
-			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock)
+			fixture := NewTestFixture(s.T(), s.DB, s.HTTPServerAddr, s.AuthServiceMock, s.UserServiceMock)
 			fixture.Setup()
 
 			if err := tt.Setup(fixture); err != nil {

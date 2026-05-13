@@ -11,6 +11,12 @@ services:
       dockerfile: apps/auth/server/Dockerfile
     image: europe-north1-docker.pkg.dev/chat-application-13/auth/api:0.1.0
 
+  user:
+    build:
+      context: .
+      dockerfile: apps/user/Dockerfile
+    image: europe-north1-docker.pkg.dev/chat-application-13/user/api:0.1.0
+
   backend:
     build:
       context: .
