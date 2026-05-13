@@ -1,0 +1,119 @@
+version: '3'
+
+# Taskfile for managing messaging-system microservices.
+# Uses golang-migrate (https://github.com/golang-migrate/migrate)
+
+vars:
+  SERVICES: backend user
+  # Default database connection strings for local access via exposed ports (host mode)
+  # These can be overridden by environment variables or by passing them to the task
+  BACKEND_DB_URL: '{{.DATABASE_URL | default (printf "postgres://%s:%s@localhost:7020/%s?sslmode=disable" (.DB_USERNAME | default "user") (.DB_PASSWORD | default "password") (.DB_NAME | default "messaging_db"))}}'
+  USER_DB_URL_VAR: '{{.USER_DB_URL | default (printf "postgres://%s:%s@localhost:7040/%s?sslmode=disable" (.USER_DB_USERNAME | default "user") (.USER_DB_PASSWORD | default "password") (.USER_DB_NAME | default "users_db"))}}'
+
+dotenv: ['.env']
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  migrate:up:
+    desc: Run all pending migrations for a service or all services
+    summary: |
+      Apply all pending migrations.
+      Usage:
+        task migrate:up SERVICE=<service_name>
+        task migrate:up (runs for all services: {{.SERVICES}})
+    vars:
+      TARGET_SERVICES: '{{.SERVICE | default .SERVICES}}'
+    cmds:
+      - for: { var: TARGET_SERVICES, split: " " }
+        task: migrate:service:up
+        vars: { SERVICE: '{{.ITEM}}' }
+    silent: true
+
+  migrate:down:
+    desc: Rollback the last migration for a service or all services
+    summary: |
+      Rollback the last migration (count=1).
+      Usage:
+        task migrate:down SERVICE=<service_name>
+        task migrate:down (runs for all services: {{.SERVICES}})
+    vars:
+      TARGET_SERVICES: '{{.SERVICE | default .SERVICES}}'
+    cmds:
+      - for: { var: TARGET_SERVICES, split: " " }
+        task: migrate:service:down
+        vars: { SERVICE: '{{.ITEM}}' }
+    silent: true
+
+  migrate:status:
+    desc: Show current migration version for a service or all services
+    summary: |
+      Show current migration version.
+      Usage:
+        task migrate:status SERVICE=<service_name>
+        task migrate:status (runs for all services: {{.SERVICES}})
+    vars:
+      TARGET_SERVICES: '{{.SERVICE | default .SERVICES}}'
+    cmds:
+      - for: { var: TARGET_SERVICES, split: " " }
+        task: migrate:service:status
+        vars: { SERVICE: '{{.ITEM}}' }
+    silent: true
+
+  migrate:create:
+    desc: Create a new SQL migration file for a specific service
+    summary: |
+      Create a new SQL migration file.
+      Usage:
+        task migrate:create SERVICE=<service_name> NAME=<migration_name>
+    preconditions:
+      - sh: '[ "{{.SERVICE}}" != "" ]'
+        msg: "SERVICE is required (e.g., SERVICE=backend)"
+      - sh: '[ "{{.NAME}}" != "" ]'
+        msg: "NAME is required (e.g., NAME=add_fields)"
+    cmds:
+      - task: migrate:service:create
+        vars: { SERVICE: "{{.SERVICE}}", NAME: "{{.NAME}}" }
+    silent: true
+
+  # ---------------------------------------------------------------------------
+  # Internal service-specific tasks
+  # ---------------------------------------------------------------------------
+
+  migrate:service:up:
+    internal: true
+    vars:
+      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
+      MIG_URL: '{{if eq .SERVICE "backend"}}{{.BACKEND_DB_URL}}{{else}}{{.USER_DB_URL_VAR}}{{end}}'
+    cmds:
+      - echo ">>> Running migrations UP for [{{.SERVICE}}]"
+      - migrate -path {{.MIG_PATH}} -database "{{.MIG_URL}}" up
+
+  migrate:service:down:
+    internal: true
+    vars:
+      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
+      MIG_URL: '{{if eq .SERVICE "backend"}}{{.BACKEND_DB_URL}}{{else}}{{.USER_DB_URL_VAR}}{{end}}'
+    cmds:
+      - echo ">>> Rolling back last migration for [{{.SERVICE}}]"
+      - migrate -path {{.MIG_PATH}} -database "{{.MIG_URL}}" down 1
+
+  migrate:service:status:
+    internal: true
+    vars:
+      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
+      MIG_URL: '{{if eq .SERVICE "backend"}}{{.BACKEND_DB_URL}}{{else}}{{.USER_DB_URL_VAR}}{{end}}'
+    cmds:
+      - echo ">>> Status for [{{.SERVICE}}]:"
+      - migrate -path {{.MIG_PATH}} -database "{{.MIG_URL}}" version
+
+  migrate:service:create:
+    internal: true
+    vars:
+      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
+    cmds:
+      - echo ">>> Creating migration '{{.NAME}}' for [{{.SERVICE}}]"
+      - migrate create -ext sql -dir {{.MIG_PATH}} -seq {{.NAME}}
