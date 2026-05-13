@@ -49,12 +49,15 @@ func (rb *RabbitMQBroker) Connect(ctx context.Context, opts ...gtk.BackoffOption
 		return fmt.Errorf("failed to open channel: %w", err)
 	}
 
+	rb.mu.Lock()
 	rb.conn = conn
 	rb.channel = channel
+	rb.mu.Unlock()
 
 	rb.watchConnection(conn)
 
-	if err := rb.declareExchangesAndQueues(); err != nil {
+	chToUse := rb.getChannel()
+	if err := rb.declareExchangesAndQueues(chToUse); err != nil {
 		channel.Close()
 		conn.Close()
 		return err
@@ -87,41 +90,47 @@ func (rb *RabbitMQBroker) getDisconnectHandler() func(err error) {
 	return rb.onDisconnect
 }
 
+func (rb *RabbitMQBroker) getChannel() *amqp091.Channel {
+	rb.mu.RLock()
+	defer rb.mu.RUnlock()
+	return rb.channel
+}
+
 // declareExchangesAndQueues sets up all exchanges and queue bindings
-func (rb *RabbitMQBroker) declareExchangesAndQueues() error {
+func (rb *RabbitMQBroker) declareExchangesAndQueues(ch *amqp091.Channel) error {
 	// Declare exchanges
-	if err := rb.channel.ExchangeDeclare(incomingExchange, "direct", true, false, false, false, nil); err != nil {
+	if err := ch.ExchangeDeclare(incomingExchange, "direct", true, false, false, false, nil); err != nil {
 		return fmt.Errorf("failed to declare incoming exchange: %w", err)
 	}
 
-	if err := rb.channel.ExchangeDeclare(outgoingExchange, "direct", true, false, false, false, nil); err != nil {
+	if err := ch.ExchangeDeclare(outgoingExchange, "direct", true, false, false, false, nil); err != nil {
 		return fmt.Errorf("failed to declare outgoing exchange: %w", err)
 	}
 
-	if err := rb.channel.ExchangeDeclare(subscriptionExchange, "direct", true, false, false, false, nil); err != nil {
+	if err := ch.ExchangeDeclare(subscriptionExchange, "direct", true, false, false, false, nil); err != nil {
 		return fmt.Errorf("failed to declare subscription exchange: %w", err)
 	}
 
 	// Declare worker queue
-	if _, err := rb.channel.QueueDeclare(workerQueue, true, false, false, false, nil); err != nil {
+	if _, err := ch.QueueDeclare(workerQueue, true, false, false, false, nil); err != nil {
 		return fmt.Errorf("failed to declare worker queue: %w", err)
 	}
 
 	// Declare connection queue
-	if _, err := rb.channel.QueueDeclare(connectionQueue, true, false, false, false, nil); err != nil {
+	if _, err := ch.QueueDeclare(connectionQueue, true, false, false, false, nil); err != nil {
 		return fmt.Errorf("failed to declare connection queue: %w", err)
 	}
 
 	// Bind worker queue to routing keys
 	routingKeys := []string{"personal.message", "personal.delivered", "personal.read", "group.message"}
 	for _, key := range routingKeys {
-		if err := rb.channel.QueueBind(workerQueue, key, incomingExchange, false, nil); err != nil {
+		if err := ch.QueueBind(workerQueue, key, incomingExchange, false, nil); err != nil {
 			return fmt.Errorf("failed to bind queue %s: %w", key, err)
 		}
 	}
 
 	// Bind connection queue
-	if err := rb.channel.QueueBind(connectionQueue, "connection.user", incomingExchange, false, nil); err != nil {
+	if err := ch.QueueBind(connectionQueue, "connection.user", incomingExchange, false, nil); err != nil {
 		return fmt.Errorf("failed to bind connection queue: %w", err)
 	}
 
@@ -130,11 +139,12 @@ func (rb *RabbitMQBroker) declareExchangesAndQueues() error {
 
 // ConsumeWorkerQueue consumes messages from the worker queue
 func (rb *RabbitMQBroker) ConsumeWorkerQueue(onMessage func(msg *broker.MessagePayload, ack func()) error) error {
-	if !rb.IsConnected() {
+	ch := rb.getChannel()
+	if ch == nil {
 		return fmt.Errorf("RabbitMQ not connected")
 	}
 
-	deliveries, err := rb.channel.Consume(workerQueue, "", false, false, false, false, nil)
+	deliveries, err := ch.Consume(workerQueue, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to consume from worker queue: %w", err)
 	}
@@ -144,11 +154,11 @@ func (rb *RabbitMQBroker) ConsumeWorkerQueue(onMessage func(msg *broker.MessageP
 			var msg broker.MessagePayload
 			if err := json.Unmarshal(delivery.Body, &msg); err != nil {
 				zap.L().Error("failed to unmarshal message", zap.Error(err))
-				rb.channel.Ack(delivery.DeliveryTag, false)
+				ch.Ack(delivery.DeliveryTag, false)
 				continue
 			}
 
-			ackFn := func() { rb.channel.Ack(delivery.DeliveryTag, false) }
+			ackFn := func() { ch.Ack(delivery.DeliveryTag, false) }
 			if err := onMessage(&msg, ackFn); err != nil {
 				zap.L().Error("error processing message", zap.Error(err))
 			}
@@ -160,11 +170,12 @@ func (rb *RabbitMQBroker) ConsumeWorkerQueue(onMessage func(msg *broker.MessageP
 
 // ConsumeConnectionQueue consumes messages from the connection queue
 func (rb *RabbitMQBroker) ConsumeConnectionQueue(onMessage func(msg *broker.UserConnectionPayload, ack func()) error) error {
-	if !rb.IsConnected() {
+	ch := rb.getChannel()
+	if ch == nil {
 		return fmt.Errorf("RabbitMQ not connected")
 	}
 
-	deliveries, err := rb.channel.Consume(connectionQueue, "", false, false, false, false, nil)
+	deliveries, err := ch.Consume(connectionQueue, "", false, false, false, false, nil)
 	if err != nil {
 		return fmt.Errorf("failed to consume from connection queue: %w", err)
 	}
@@ -174,11 +185,11 @@ func (rb *RabbitMQBroker) ConsumeConnectionQueue(onMessage func(msg *broker.User
 			var msg broker.UserConnectionPayload
 			if err := json.Unmarshal(delivery.Body, &msg); err != nil {
 				zap.L().Error("failed to unmarshal connection message", zap.Error(err))
-				rb.channel.Ack(delivery.DeliveryTag, false)
+				ch.Ack(delivery.DeliveryTag, false)
 				continue
 			}
 
-			ackFn := func() { rb.channel.Ack(delivery.DeliveryTag, false) }
+			ackFn := func() { ch.Ack(delivery.DeliveryTag, false) }
 			if err := onMessage(&msg, ackFn); err != nil {
 				zap.L().Error("error processing connection message", zap.Error(err))
 			}
@@ -190,7 +201,8 @@ func (rb *RabbitMQBroker) ConsumeConnectionQueue(onMessage func(msg *broker.User
 
 // PublishToOutgoing publishes a message to the outgoing exchange
 func (rb *RabbitMQBroker) PublishToOutgoing(routingKey string, message any) error {
-	if !rb.IsConnected() {
+	ch := rb.getChannel()
+	if ch == nil {
 		return fmt.Errorf("RabbitMQ not connected")
 	}
 
@@ -200,7 +212,7 @@ func (rb *RabbitMQBroker) PublishToOutgoing(routingKey string, message any) erro
 			return nil, fmt.Errorf("failed to marshal message: %w", err)
 		}
 
-		err = rb.channel.Publish(outgoingExchange, routingKey, false, false, amqp091.Publishing{
+		err = ch.Publish(outgoingExchange, routingKey, false, false, amqp091.Publishing{
 			ContentType:  "application/json",
 			Body:         body,
 			DeliveryMode: amqp091.Persistent,
@@ -222,7 +234,8 @@ func (rb *RabbitMQBroker) PublishToOutgoing(routingKey string, message any) erro
 
 // PublishToSubscription publishes a message to the subscription exchange
 func (rb *RabbitMQBroker) PublishToSubscription(serverId string, message any) error {
-	if !rb.IsConnected() {
+	ch := rb.getChannel()
+	if ch == nil {
 		return fmt.Errorf("RabbitMQ not connected")
 	}
 
@@ -232,7 +245,7 @@ func (rb *RabbitMQBroker) PublishToSubscription(serverId string, message any) er
 			return nil, fmt.Errorf("failed to marshal message: %w", err)
 		}
 
-		err = rb.channel.Publish(subscriptionExchange, serverId, false, false, amqp091.Publishing{
+		err = ch.Publish(subscriptionExchange, serverId, false, false, amqp091.Publishing{
 			ContentType:  "application/json",
 			Body:         body,
 			DeliveryMode: amqp091.Persistent,
@@ -254,6 +267,9 @@ func (rb *RabbitMQBroker) PublishToSubscription(serverId string, message any) er
 
 // Disconnect closes the RabbitMQ connection
 func (rb *RabbitMQBroker) Disconnect() error {
+	rb.mu.Lock()
+	defer rb.mu.Unlock()
+
 	if rb.channel != nil {
 		if err := rb.channel.Close(); err != nil {
 			zap.L().Error("error closing channel", zap.Error(err))
@@ -266,11 +282,16 @@ func (rb *RabbitMQBroker) Disconnect() error {
 		}
 	}
 
+	rb.conn = nil
+	rb.channel = nil
+
 	zap.L().Info("disconnected from RabbitMQ")
 	return nil
 }
 
 // IsConnected checks if the broker is connected
 func (rb *RabbitMQBroker) IsConnected() bool {
+	rb.mu.RLock()
+	defer rb.mu.RUnlock()
 	return rb.conn != nil && rb.channel != nil && !rb.conn.IsClosed()
 }

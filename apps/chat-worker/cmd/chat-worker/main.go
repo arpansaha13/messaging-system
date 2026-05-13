@@ -47,10 +47,10 @@ func main() {
 		log.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	// Setup RabbitMQ connection manager with auto-reconnect
-	rabbitMQConnMgr, err := setupRabbitMQ(rootCtx, cfg.RabbitMQ, log, database, cbs)
+	// Setup ChatBroker connection manager with auto-reconnect
+	chatBrokerConnMgr, err := setupChatBroker(rootCtx, cfg.RabbitMQ, log, database, cbs)
 	if err != nil {
-		log.Fatal("failed to setup rabbitmq", zap.Error(err))
+		log.Fatal("failed to setup chat broker", zap.Error(err))
 	}
 
 	log.Info("chat worker started and ready to process messages")
@@ -62,9 +62,9 @@ func main() {
 	<-sigChan
 	log.Info("SIGTERM received, shutting down gracefully")
 
-	// Stop RabbitMQ connection manager
-	if err := rabbitMQConnMgr.Stop(); err != nil {
-		log.Error("error stopping rabbitmq connection manager", zap.Error(err))
+	// Stop ChatBroker connection manager
+	if err := chatBrokerConnMgr.Stop(); err != nil {
+		log.Error("error stopping chat broker connection manager", zap.Error(err))
 	}
 
 	// Close database

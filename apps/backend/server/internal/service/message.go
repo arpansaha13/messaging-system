@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
+	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
@@ -24,7 +26,7 @@ type MessageService struct {
 	chatRepo             repository.IChatRepository
 	userGroupRepo        repository.IUserGroupRepository
 	userClient           IUserServiceClient
-	rabbitmqService      *RabbitMQService
+	chatBroker           broker.ChatBroker
 	db                   *gorm.DB
 	cb                   *gobreaker.CircuitBreaker[any]
 }
@@ -36,7 +38,7 @@ func NewMessageService(
 	chatRepo repository.IChatRepository,
 	userGroupRepo repository.IUserGroupRepository,
 	userClient IUserServiceClient,
-	rabbitmqService *RabbitMQService,
+	chatBroker broker.ChatBroker,
 	db *gorm.DB,
 	cb *gobreaker.CircuitBreaker[any],
 ) *MessageService {
@@ -46,7 +48,7 @@ func NewMessageService(
 		chatRepo:             chatRepo,
 		userGroupRepo:        userGroupRepo,
 		userClient:           userClient,
-		rabbitmqService:      rabbitmqService,
+		chatBroker:           chatBroker,
 		db:                   db,
 		cb:                   cb,
 	}
@@ -59,7 +61,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 	senderID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("sending personal message", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID), zap.Int("content_length", len(req.Content)))
 
-	if !s.rabbitmqService.IsConnected() {
+	if !s.chatBroker.IsConnected() {
 		log.Error("RabbitMQ not connected for personal message send", zap.Int64("sender_id", senderID), zap.Int64("receiver_id", req.ReceiverID))
 		return 0, time.Time{}, &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
@@ -109,7 +111,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 		return 0, time.Time{}, err
 	}
 
-	if err := s.rabbitmqService.PublishToOutgoing(strconv.FormatInt(req.ReceiverID, 10), map[string]any{
+	if err := s.chatBroker.PublishToOutgoing(strconv.FormatInt(req.ReceiverID, 10), map[string]any{
 		"event":  "personal:receive-message",
 		"userId": req.ReceiverID,
 		"data": map[string]any{
@@ -161,7 +163,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 		return 0, time.Time{}, &gtk.ForbiddenError{Message: "channel does not belong to the specified group"}
 	}
 
-	if !s.rabbitmqService.IsConnected() {
+	if !s.chatBroker.IsConnected() {
 		log.Error("RabbitMQ not connected for group message send", zap.Int64("sender_id", senderID), zap.Int64("group_id", req.GroupID), zap.Int64("channel_id", req.ChannelID))
 		return 0, time.Time{}, &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
@@ -207,7 +209,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 		return 0, time.Time{}, err
 	}
 
-	if err := s.rabbitmqService.PublishToOutgoing("channel:"+strconv.FormatInt(req.ChannelID, 10), map[string]any{
+	if err := s.chatBroker.PublishToOutgoing("channel:"+strconv.FormatInt(req.ChannelID, 10), map[string]any{
 		"event":     "group:receive-message",
 		"channelId": req.ChannelID,
 		"data": map[string]any{
@@ -251,7 +253,7 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, req *dto.Ha
 	receiverID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("marking message as delivered", zap.Int64("message_id", req.MessageID), zap.Int64("receiver_id", receiverID))
 
-	if !s.rabbitmqService.IsConnected() {
+	if !s.chatBroker.IsConnected() {
 		log.Error("RabbitMQ not connected for delivered status", zap.Int64("message_id", req.MessageID))
 		return &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
@@ -271,18 +273,18 @@ func (s *MessageService) MarkMessageAsDelivered(ctx context.Context, req *dto.Ha
 		return err
 	}
 
-	payload := DeliveredPayload{
-		MessageID:  req.MessageID,
-		ReceiverID: receiverID,
-		SenderID:   msg.SenderID,
+	payload := commonbr.DeliveredPayload{
+		MessageId:  req.MessageID,
+		ReceiverId: receiverID,
+		SenderId:   msg.SenderID,
 	}
 
-	message := RabbitMQMessage{
+	message := commonbr.MessagePayload{
 		Type:    "STATUS_DELIVERED",
 		Payload: payload,
 	}
 
-	if err := s.rabbitmqService.PublishToIncoming("personal.delivered", message); err != nil {
+	if err := s.chatBroker.PublishToIncoming("personal.delivered", message); err != nil {
 		log.Error("failed to publish delivered status", zap.Int64("message_id", req.MessageID), zap.Error(err))
 		return err
 	}
@@ -299,7 +301,7 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleR
 	receiverID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("marking messages as read", zap.Int("message_count", len(req.Messages)))
 
-	if !s.rabbitmqService.IsConnected() {
+	if !s.chatBroker.IsConnected() {
 		log.Error("RabbitMQ not connected for read status")
 		return &gtk.InternalError{Message: "RabbitMQ not connected"}
 	}
@@ -351,12 +353,12 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleR
 		senderByMessageID[msg.ID] = msg.SenderID
 	}
 
-	readPayloads := make([]ReadPayload, 0, len(msgs))
+	readPayloads := make([]commonbr.ReadPayload, 0, len(msgs))
 	for _, msg := range msgs {
-		readPayloads = append(readPayloads, ReadPayload{
-			MessageID:  msg.ID,
-			SenderID:   senderByMessageID[msg.ID],
-			ReceiverID: receiverID,
+		readPayloads = append(readPayloads, commonbr.ReadPayload{
+			MessageId:  msg.ID,
+			SenderId:   senderByMessageID[msg.ID],
+			ReceiverId: receiverID,
 		})
 	}
 
@@ -364,12 +366,12 @@ func (s *MessageService) MarkMessageAsRead(ctx context.Context, req *dto.HandleR
 		return nil
 	}
 
-	rmqMsg := RabbitMQMessage{
+	rmqMsg := commonbr.MessagePayload{
 		Type:    "STATUS_READ",
 		Payload: readPayloads,
 	}
 
-	if err := s.rabbitmqService.PublishToIncoming("personal.read", rmqMsg); err != nil {
+	if err := s.chatBroker.PublishToIncoming("personal.read", rmqMsg); err != nil {
 		log.Error("failed to publish read status", zap.Int("message_count", len(readPayloads)), zap.Error(err))
 		return err
 	}

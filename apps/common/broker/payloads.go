@@ -1,10 +1,5 @@
 package broker
 
-import (
-	"context"
-
-	"github.com/arpansaha13/gotoolkit/gtk"
-)
 
 // MessagePayload represents the base structure for messages in RabbitMQ
 type MessagePayload struct {
@@ -49,18 +44,4 @@ type UserConnectionPayload struct {
 	ServerId string `json:"serverId"`
 }
 
-// MessageBroker defines the interface for message broking
-type MessageBroker interface {
-	// Message consumption
-	ConsumeWorkerQueue(onMessage func(msg *MessagePayload, ack func()) error) error
-	ConsumeConnectionQueue(onMessage func(msg *UserConnectionPayload, ack func()) error) error
 
-	// Message publishing
-	PublishToOutgoing(routingKey string, message any) error
-	PublishToSubscription(serverId string, message any) error
-
-	// Lifecycle
-	Connect(ctx context.Context, opts ...gtk.BackoffOption) error
-	Disconnect() error
-	IsConnected() bool
-}

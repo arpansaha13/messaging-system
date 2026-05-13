@@ -16,9 +16,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// setupRabbitMQ creates a RabbitMQBroker and a ConnectionManager with auto-reconnect.
+// SetupChatBroker creates a ChatBroker and a ConnectionManager with auto-reconnect.
 // Returns the broker (for injection into app) and the manager (for graceful shutdown in main).
-func SetupRabbitMQ(
+func SetupChatBroker(
 	ctx context.Context,
 	creds config.RabbitMQCreds,
 	serverId string,
@@ -26,24 +26,24 @@ func SetupRabbitMQ(
 	hub *ws.Hub,
 	chatsStore *store.ChatsStore,
 	groupHandlers *ws.GroupHandlers,
-) (*broker.RabbitMQBroker, *gtk.ConnectionManager, error) {
-	rabbitBroker := broker.NewRabbitMQBroker(creds.GetUrl(), serverId, log)
-	var rabbitMQConnMgr *gtk.ConnectionManager
+) (broker.ChatBroker, *gtk.ConnectionManager, error) {
+	chatBroker := broker.NewRabbitMQBroker(creds.GetUrl(), serverId, log)
+	var brokerConnMgr *gtk.ConnectionManager
 
-	rabbitBroker.SetDisconnectHandler(func(err error) {
+	chatBroker.SetDisconnectHandler(func(err error) {
 		if err != nil {
-			log.Warn("RabbitMQ connection closed, triggering reconnect", zap.Error(err))
+			log.Warn("ChatBroker connection closed, triggering reconnect", zap.Error(err))
 		} else {
-			log.Warn("RabbitMQ connection closed, triggering reconnect")
+			log.Warn("ChatBroker connection closed, triggering reconnect")
 		}
-		if rabbitMQConnMgr != nil {
-			rabbitMQConnMgr.Signal()
+		if brokerConnMgr != nil {
+			brokerConnMgr.Signal()
 		}
 	})
 
 	setupConsumers := func() error {
 		// Server-queue consumer: route messages to the correct socket or room.
-		if err := rabbitBroker.ConsumeFromServerQueue(func(msg *broker.ServerQueueMessage, ack func()) {
+		if err := chatBroker.ConsumeFromServerQueue(func(msg *broker.ServerQueueMessage, ack func()) {
 			defer ack()
 			switch {
 			case msg.UserId != nil:
@@ -72,7 +72,7 @@ func SetupRabbitMQ(
 		}
 
 		// Subscription-queue consumer: bind channels/groups and join rooms for a user.
-		if err := rabbitBroker.ConsumeFromSubscriptionQueue(func(msg *broker.SubscriptionMessage, ack func()) {
+		if err := chatBroker.ConsumeFromSubscriptionQueue(func(msg *broker.SubscriptionMessage, ack func()) {
 			defer ack()
 
 			socketId, ok := chatsStore.GetClient(msg.UserId)
@@ -81,12 +81,12 @@ func SetupRabbitMQ(
 			}
 
 			for _, channelId := range msg.ChannelIds {
-				if err := rabbitBroker.BindChannelToQueue(channelId); err != nil {
+				if err := chatBroker.BindChannelToQueue(channelId); err != nil {
 					log.Error("failed to bind channel", zap.Int64("channel_id", channelId), zap.Error(err))
 				}
 			}
 			for _, groupId := range msg.GroupIds {
-				if err := rabbitBroker.BindGroupToQueue(groupId); err != nil {
+				if err := chatBroker.BindGroupToQueue(groupId); err != nil {
 					log.Error("failed to bind group", zap.Int64("group_id", groupId), zap.Error(err))
 				}
 			}
@@ -117,33 +117,33 @@ func SetupRabbitMQ(
 		return nil
 	}
 
-	rabbitMQConnMgr = gtk.NewConnectionManager(
+	brokerConnMgr = gtk.NewConnectionManager(
 		gtk.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
 		},
 		log,
 		func(connectCtx context.Context) error {
-			if err := rabbitBroker.Connect(
+			if err := chatBroker.Connect(
 				connectCtx,
 				gtk.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
 			); err != nil {
 				return err
 			}
 			if err := setupConsumers(); err != nil {
-				rabbitBroker.Disconnect()
+				chatBroker.Disconnect()
 				return fmt.Errorf("failed to setup consumers: %w", err)
 			}
 			return nil
 		},
 		func() {
-			rabbitBroker.Disconnect()
+			chatBroker.Disconnect()
 		},
 	)
 
-	if err := rabbitMQConnMgr.Start(ctx); err != nil {
-		return nil, nil, fmt.Errorf("failed to start rabbitmq connection manager: %w", err)
+	if err := brokerConnMgr.Start(ctx); err != nil {
+		return nil, nil, fmt.Errorf("failed to start chat broker connection manager: %w", err)
 	}
 
-	return rabbitBroker, rabbitMQConnMgr, nil
+	return chatBroker, brokerConnMgr, nil
 }

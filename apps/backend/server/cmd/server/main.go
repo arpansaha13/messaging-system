@@ -48,9 +48,9 @@ func main() {
 		zapLogger.Fatal("failed to connect to postgres", zap.Error(err))
 	}
 
-	rabbitmqService, rabbitMQConnMgr, err := app.SetupRabbitMQ(svcCtx, zapLogger, cbs)
+	chatBroker, chatBrokerConnMgr, err := app.SetupChatBroker(svcCtx, zapLogger, cbs)
 	if err != nil {
-		zapLogger.Fatal("failed to setup rabbitmq", zap.Error(err))
+		zapLogger.Fatal("failed to setup chat broker", zap.Error(err))
 	}
 
 	authClient, authConnMgr, err := app.SetupAuthService(svcCtx, zapLogger, cbs)
@@ -65,7 +65,7 @@ func main() {
 
 	router := app.SetupRouter(app.Deps{
 		DB:         db,
-		RabbitMQ:   rabbitmqService,
+		ChatBroker: chatBroker,
 		AuthClient: authClient,
 		UserClient: userClient,
 		Circuits:   cbs,
@@ -126,8 +126,8 @@ func main() {
 		zap.L().Error("user connection manager stop error", zap.Error(err))
 	}
 
-	if err := rabbitMQConnMgr.Stop(); err != nil {
-		zap.L().Error("rabbitmq connection manager stop error", zap.Error(err))
+	if err := chatBrokerConnMgr.Stop(); err != nil {
+		zap.L().Error("chat broker connection manager stop error", zap.Error(err))
 	}
 
 	sqlDB, err := db.DB()

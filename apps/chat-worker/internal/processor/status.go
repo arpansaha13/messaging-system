@@ -6,7 +6,8 @@ import (
 	"strconv"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
-	"github.com/arpansaha13/messaging-system/apps/common/broker"
+	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
+	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
@@ -16,12 +17,12 @@ import (
 // StatusProcessor handles message status updates (delivered, read)
 type StatusProcessor struct {
 	db     *gorm.DB
-	broker broker.MessageBroker
+	broker broker.ChatBroker
 	cb     *gobreaker.CircuitBreaker[any]
 }
 
 // NewStatusProcessor creates a new status processor
-func NewStatusProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobreaker.CircuitBreaker[any]) *StatusProcessor {
+func NewStatusProcessor(db *gorm.DB, broker broker.ChatBroker, cb *gobreaker.CircuitBreaker[any]) *StatusProcessor {
 	return &StatusProcessor{
 		db:     db,
 		broker: broker,
@@ -30,7 +31,7 @@ func NewStatusProcessor(db *gorm.DB, broker broker.MessageBroker, cb *gobreaker.
 }
 
 // ProcessDelivered handles message delivered status updates
-func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker.DeliveredPayload) error {
+func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *commonbr.DeliveredPayload) error {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("processing delivered status", zap.Int64("message_id", payload.MessageId), zap.Int64("receiver_id", payload.ReceiverId), zap.Int64("sender_id", payload.SenderId))
 
@@ -71,7 +72,7 @@ func (sp *StatusProcessor) ProcessDelivered(ctx context.Context, payload *broker
 }
 
 // ProcessRead handles message read status updates
-func (sp *StatusProcessor) ProcessRead(ctx context.Context, payloads []broker.ReadPayload) error {
+func (sp *StatusProcessor) ProcessRead(ctx context.Context, payloads []commonbr.ReadPayload) error {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("processing read status", zap.Int("payload_count", len(payloads)))
 

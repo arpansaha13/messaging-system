@@ -60,18 +60,18 @@ func main() {
 	hub := ws.NewHub(log)
 
 	// GroupHandlers has no service deps — created before broker setup
-	// because SetupRabbitMQ needs it for subscription consumer callbacks.
+	// because SetupChatBroker needs it for subscription consumer callbacks.
 	groupHandlers := ws.NewGroupHandlers(chatsStore, hub, log)
 
-	rabbitBroker, rabbitMQConnMgr, err := app.SetupRabbitMQ(rootCtx, cfg.RabbitMQ, cfg.ServerId, log, hub, chatsStore, groupHandlers)
+	chatBroker, chatBrokerConnMgr, err := app.SetupChatBroker(rootCtx, cfg.RabbitMQ, cfg.ServerId, log, hub, chatsStore, groupHandlers)
 	if err != nil {
-		log.Fatal("failed to setup rabbitmq", zap.Error(err))
+		log.Fatal("failed to setup chat broker", zap.Error(err))
 	}
 
 	router := app.SetupRouter(app.Deps{
 		Logger:           log,
 		Hub:              hub,
-		RabbitBroker:     rabbitBroker,
+		ChatBroker:       chatBroker,
 		ChatsStore:       chatsStore,
 		MemcachedService: memcachedService,
 		GroupHandlers:    groupHandlers,
@@ -129,8 +129,8 @@ func main() {
 		log.Error("error stopping memcached connection manager", zap.Error(err))
 	}
 
-	if err := rabbitMQConnMgr.Stop(); err != nil {
-		log.Error("error stopping rabbitmq connection manager", zap.Error(err))
+	if err := chatBrokerConnMgr.Stop(); err != nil {
+		log.Error("error stopping chat broker connection manager", zap.Error(err))
 	}
 
 	if err := authConnMgr.Stop(); err != nil {
