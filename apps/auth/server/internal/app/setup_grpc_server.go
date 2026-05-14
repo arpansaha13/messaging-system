@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/arpansaha13/goauthkit/pb"
-	goauthkit "github.com/arpansaha13/goauthkit/pkg"
+	"github.com/arpansaha13/goauthkit"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
@@ -52,6 +52,8 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 	var sessionCache goauthkit.ISessionCache
 	if memcachedClient != nil && cbs.Cache != nil {
 		sessionCache = goauthkit.NewMemcachedSessionCache(memcachedClient, cbs.Cache)
+	} else {
+		sessionCache = goauthkit.NewInMemorySessionCache()
 	}
 
 	authService := goauthkit.NewAuthService(
