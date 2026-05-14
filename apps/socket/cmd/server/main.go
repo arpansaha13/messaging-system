@@ -51,9 +51,9 @@ func main() {
 	// In-memory state
 	chatsStore := store.NewChatsStore()
 
-	memcachedService, memcachedConnMgr, err := app.SetupMemcached(rootCtx, cfg.Memcached, log)
+	presenceCache, presenceCacheConnMgr, err := app.SetupPresenceCache(rootCtx, cfg.Memcached, log)
 	if err != nil {
-		log.Fatal("failed to setup memcached", zap.Error(err))
+		log.Fatal("failed to setup presence cache", zap.Error(err))
 	}
 
 	// Initialize WebSocket hub
@@ -73,7 +73,7 @@ func main() {
 		Hub:              hub,
 		ChatBroker:       chatBroker,
 		ChatsStore:       chatsStore,
-		MemcachedService: memcachedService,
+		PresenceCache:    presenceCache,
 		GroupHandlers:    groupHandlers,
 		AuthClient:       authService,
 		ClientDomain:     cfg.ClientDomain,
@@ -95,8 +95,8 @@ func main() {
 		for range ticker.C {
 			userIds := chatsStore.GetAndClearPingTrackingSet()
 			if len(userIds) > 0 {
-				if err := memcachedService.SetBatchOnline(userIds, onlineStatusTTL); err != nil {
-					log.Error("error flushing ping tracking to memcached", zap.Error(err))
+				if err := presenceCache.SetBatchOnline(userIds, onlineStatusTTL); err != nil {
+					log.Error("error flushing ping tracking to presence cache", zap.Error(err))
 				}
 			}
 		}
@@ -125,8 +125,8 @@ func main() {
 		log.Error("HTTP server shutdown error", zap.Error(err))
 	}
 
-	if err := memcachedConnMgr.Stop(); err != nil {
-		log.Error("error stopping memcached connection manager", zap.Error(err))
+	if err := presenceCacheConnMgr.Stop(); err != nil {
+		log.Error("error stopping presence cache connection manager", zap.Error(err))
 	}
 
 	if err := chatBrokerConnMgr.Stop(); err != nil {

@@ -54,7 +54,7 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 	// Create sessionCache from memcachedClient if available
 	var sessionCache goauthkit.ISessionCache
 	if memcachedClient != nil && cbs.Cache != nil {
-		sessionCache = goauthkit.NewSessionCache(memcachedClient, cbs.Cache)
+		sessionCache = goauthkit.NewMemcachedSessionCache(memcachedClient, cbs.Cache)
 	}
 
 	// Connect to user service

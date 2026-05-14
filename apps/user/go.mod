@@ -5,7 +5,7 @@ go 1.25.6
 replace github.com/arpansaha13/messaging-system/apps/common => ../common
 
 require (
-	github.com/arpansaha13/goauthkit v0.6.6
+	github.com/arpansaha13/goauthkit v0.7.2
 	github.com/arpansaha13/gotoolkit v0.12.1
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0-00010101000000-000000000000
 	github.com/gorilla/mux v1.8.1

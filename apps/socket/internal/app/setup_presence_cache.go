@@ -14,16 +14,16 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// setupMemcached creates a MemcachedService and a ConnectionManager with auto-reconnect.
-// Returns the service (for injection into app) and the manager (for graceful shutdown in main).
-func SetupMemcached(
+// SetupPresenceCache creates a PresenceCache and a ConnectionManager with auto-reconnect.
+// Returns the presence cache (for injection into app) and the manager (for graceful shutdown in main).
+func SetupPresenceCache(
 	ctx context.Context,
 	creds config.MemcachedCreds,
 	log *zap.Logger,
-) (*cache.MemcachedService, *gtk.ConnectionManager, error) {
-	memcachedService := cache.NewMemcachedService()
+) (cache.PresenceCache, *gtk.ConnectionManager, error) {
+	presenceCache := cache.NewMemcachedPresenceCache()
 
-	memcachedConnMgr := gtk.NewConnectionManager(
+	presenceCacheConnMgr := gtk.NewConnectionManager(
 		gtk.ReconnectConfig{
 			ConnectTimeout:    15 * time.Second,
 			ReconnectInterval: 500 * time.Millisecond,
@@ -36,20 +36,20 @@ func SetupMemcached(
 				gtk.WithPermanentErrorLogLevel(zapcore.ErrorLevel),
 			)
 			if err != nil {
-				return fmt.Errorf("failed to connect to memcached: %w", err)
+				return fmt.Errorf("failed to connect to presence cache: %w", err)
 			}
-			memcachedService.SetClient(client)
-			log.Info("memcached connected", zap.String("address", creds.GetUrl()))
+			presenceCache.SetClient(client)
+			log.Info("presence cache connected", zap.String("address", creds.GetUrl()))
 			return nil
 		},
 		func() {
-			memcachedService.UnsetClient()
-			log.Info("memcached disconnected")
+			presenceCache.UnsetClient()
+			log.Info("presence cache disconnected")
 		},
 	)
 
-	if err := memcachedConnMgr.Start(ctx); err != nil {
-		return nil, nil, fmt.Errorf("failed to start memcached connection manager: %w", err)
+	if err := presenceCacheConnMgr.Start(ctx); err != nil {
+		return nil, nil, fmt.Errorf("failed to start presence cache connection manager: %w", err)
 	}
 
 	go func() {
@@ -61,18 +61,18 @@ func SetupMemcached(
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				client := memcachedService.GetClient()
+				client := presenceCache.GetClient()
 				if client == nil {
-					memcachedConnMgr.Signal()
+					presenceCacheConnMgr.Signal()
 					continue
 				}
 				if _, err := client.Get("__health_probe__"); err != nil && !errors.Is(err, memcache.ErrCacheMiss) {
-					log.Warn("memcached heartbeat failed, triggering reconnect", zap.Error(err))
-					memcachedConnMgr.Signal()
+					log.Warn("presence cache heartbeat failed, triggering reconnect", zap.Error(err))
+					presenceCacheConnMgr.Signal()
 				}
 			}
 		}
 	}()
 
-	return memcachedService, memcachedConnMgr, nil
+	return presenceCache, presenceCacheConnMgr, nil
 }

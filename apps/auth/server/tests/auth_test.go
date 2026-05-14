@@ -26,8 +26,10 @@ func (s *AuthTestSuite) TestAuthFlows() {
 
 				// 1. Signup
 				signupPayload := map[string]string{
-					"email":    email,
-					"password": password,
+					"email":           email,
+					"password":        password,
+					"confirmPassword": password,
+					"globalName":      "Test User",
 				}
 				resp, err := f.HTTPClient.POST("/api/auth/signup", signupPayload)
 				s.Require().NoError(err)
@@ -35,7 +37,7 @@ func (s *AuthTestSuite) TestAuthFlows() {
 
 				var signupResp struct {
 					Message string `json:"message"`
-					OtpHash string `json:"otp_hash"`
+					OtpHash string `json:"otpHash"`
 				}
 				err = json.NewDecoder(resp.Body).Decode(&signupResp)
 				resp.Body.Close()
@@ -50,7 +52,7 @@ func (s *AuthTestSuite) TestAuthFlows() {
 				s.Require().True(ok, "EmailProvider should be MockEmailProvider")
 				emails := mockEmailProvider.GetSentEmails()
 				s.Require().NotEmpty(emails)
-				
+
 				var otpCode string
 				for _, e := range emails {
 					if e.To == email {
@@ -65,8 +67,8 @@ func (s *AuthTestSuite) TestAuthFlows() {
 
 				// 2. Verify OTP
 				verifyPayload := map[string]string{
-					"otp_hash": signupResp.OtpHash,
-					"code":     otpCode,
+					"otpHash": signupResp.OtpHash,
+					"code":    otpCode,
 				}
 				resp, err = f.HTTPClient.POST("/api/auth/verify/"+signupResp.OtpHash, verifyPayload)
 				s.Require().NoError(err)
@@ -123,10 +125,16 @@ func (s *AuthTestSuite) TestAuthFlows() {
 
 				// Manually create a verified user via signup and DB update
 				signupPayload := map[string]string{
-					"email":    email,
-					"password": password,
+					"email":           email,
+					"password":        password,
+					"confirmPassword": password,
+					"globalName":      "Test User",
 				}
-				f.HTTPClient.POST("/api/auth/signup", signupPayload)
+				resp, err := f.HTTPClient.POST("/api/auth/signup", signupPayload)
+				s.Require().NoError(err)
+				s.Require().Equal(http.StatusCreated, resp.StatusCode)
+				resp.Body.Close()
+
 				f.DB.Exec("UPDATE users SET verified = true WHERE email = ?", email)
 
 				// Ensure user exists and is verified
@@ -139,7 +147,7 @@ func (s *AuthTestSuite) TestAuthFlows() {
 					"email":    email,
 					"password": password,
 				}
-				resp, err := f.HTTPClient.POST("/api/auth/login", loginPayload)
+				resp, err = f.HTTPClient.POST("/api/auth/login", loginPayload)
 				s.Require().NoError(err)
 				s.Require().Equal(http.StatusOK, resp.StatusCode)
 

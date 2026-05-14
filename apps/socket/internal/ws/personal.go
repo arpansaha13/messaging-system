@@ -16,7 +16,7 @@ import (
 // PersonalHandlers handles all events related to 1-to-1 personal chats.
 type PersonalHandlers struct {
 	store  *store.ChatsStore
-	cache  *cache.MemcachedService
+	cache  cache.PresenceCache
 	broker broker.ChatBroker
 	hub    *Hub
 	log    *zap.Logger
@@ -25,7 +25,7 @@ type PersonalHandlers struct {
 // NewPersonalHandlers creates a PersonalHandlers.
 func NewPersonalHandlers(
 	st *store.ChatsStore,
-	mc *cache.MemcachedService,
+	mc cache.PresenceCache,
 	br broker.ChatBroker,
 	hub *Hub,
 	log *zap.Logger,
