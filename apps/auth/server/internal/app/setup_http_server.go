@@ -3,7 +3,7 @@ package app
 import (
 	"net/http"
 
-	goauthkit "github.com/arpansaha13/goauthkit/pkg"
+	"github.com/arpansaha13/goauthkit"
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
