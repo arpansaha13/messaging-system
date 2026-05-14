@@ -8,7 +8,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-// MemcachedService manages user online-status keys in Memcached.
+// MemcachedPresenceCache manages user online-status keys in Memcached.
 //
 // Key format: "user:online:<userId>"
 // Value:      "1"  (presence marker; TTL drives expiry)
@@ -16,31 +16,34 @@ import (
 // Note on protocol: the Node.js counterpart (memjs) uses Memcached's binary
 // protocol, while gomemcache uses the text protocol. Both read and write the
 // same byte values on the server, so there is no data incompatibility.
-type MemcachedService struct {
+type MemcachedPresenceCache struct {
 	*gtk.MemcachedClient
 }
 
-// NewMemcachedService creates an unconnected MemcachedService.
+// Ensure MemcachedPresenceCache implements PresenceCache.
+var _ PresenceCache = (*MemcachedPresenceCache)(nil)
+
+// NewMemcachedPresenceCache creates an unconnected MemcachedPresenceCache.
 // Call SetClient after a successful connection is established.
-func NewMemcachedService() *MemcachedService {
-	return &MemcachedService{
+func NewMemcachedPresenceCache() *MemcachedPresenceCache {
+	return &MemcachedPresenceCache{
 		MemcachedClient: gtk.NewMemcachedClient(),
 	}
 }
 
 // UnsetClient sets the client to nil (for graceful disconnect handling).
-func (m *MemcachedService) UnsetClient() {
+func (m *MemcachedPresenceCache) UnsetClient() {
 	m.MemcachedClient.SetClient(nil)
 }
 
 // getClient safely retrieves the current memcached client.
-func (m *MemcachedService) getClient() *memcache.Client {
+func (m *MemcachedPresenceCache) getClient() *memcache.Client {
 	return m.GetClient()
 }
 
 // SetOnline marks userId as online with the given TTL in seconds.
 // Returns nil when not connected (presence updates are best-effort).
-func (m *MemcachedService) SetOnline(userId int64, ttl int32) error {
+func (m *MemcachedPresenceCache) SetOnline(userId int64, ttl int32) error {
 	client := m.getClient()
 	if client == nil {
 		return nil
@@ -55,7 +58,7 @@ func (m *MemcachedService) SetOnline(userId int64, ttl int32) error {
 // SetBatchOnline marks all userIds as online concurrently.
 // Returns nil when not connected (presence updates are best-effort).
 // Returns the first error encountered when connected; other sets may still succeed.
-func (m *MemcachedService) SetBatchOnline(userIds []int64, ttl int32) error {
+func (m *MemcachedPresenceCache) SetBatchOnline(userIds []int64, ttl int32) error {
 	if len(userIds) == 0 {
 		return nil
 	}
@@ -93,7 +96,7 @@ func (m *MemcachedService) SetBatchOnline(userIds []int64, ttl int32) error {
 // GetBatchOnlineStatus returns a map of userId → isOnline for the given IDs.
 // A cache miss is treated as offline. Network errors are also treated as offline
 // and the first such error is returned alongside the (partial) status map.
-func (m *MemcachedService) GetBatchOnlineStatus(userIds []int64) (map[int64]bool, error) {
+func (m *MemcachedPresenceCache) GetBatchOnlineStatus(userIds []int64) (map[int64]bool, error) {
 	client := m.getClient()
 	if client == nil {
 		return nil, fmt.Errorf("memcached not connected")
@@ -138,6 +141,6 @@ func (m *MemcachedService) GetBatchOnlineStatus(userIds []int64) (map[int64]bool
 	return statuses, firstErr
 }
 
-func (m *MemcachedService) key(userId int64) string {
+func (m *MemcachedPresenceCache) key(userId int64) string {
 	return fmt.Sprintf("user:online:%d", userId)
 }

@@ -20,7 +20,7 @@ type Deps struct {
 	Hub              *ws.Hub
 	ChatBroker       broker.ChatBroker
 	ChatsStore       *store.ChatsStore
-	MemcachedService *cache.MemcachedService
+	PresenceCache    cache.PresenceCache
 	// GroupHandlers is created in main before SetupChatBroker (consumer callbacks need it).
 	GroupHandlers *ws.GroupHandlers
 	AuthClient    service.IAuthServiceClient
@@ -37,7 +37,7 @@ func SetupRouter(deps Deps) *mux.Router {
 	// PersonalHandlers is wired here from injected deps
 	personalHandlers := ws.NewPersonalHandlers(
 		deps.ChatsStore,
-		deps.MemcachedService,
+		deps.PresenceCache,
 		deps.ChatBroker,
 		deps.Hub,
 		log,
