@@ -1,0 +1,324 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memcached
+  labels:
+    app.kubernetes.io/name: memcached
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.memcached }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: memcached
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: memcached
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: memcached
+          image: "{{ .Values.images.memcached.repository }}:{{ .Values.images.memcached.tag }}"
+          imagePullPolicy: {{ .Values.images.memcached.pullPolicy }}
+          ports:
+            - name: memcached
+              containerPort: 11211
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-cache
+  labels:
+    app.kubernetes.io/name: auth-cache
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.authCache }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth-cache
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth-cache
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: auth-cache
+          image: "{{ .Values.images.memcached.repository }}:{{ .Values.images.memcached.tag }}"
+          imagePullPolicy: {{ .Values.images.memcached.pullPolicy }}
+          ports:
+            - name: memcached
+              containerPort: 11211
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  labels:
+    app.kubernetes.io/name: auth
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.auth }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: auth
+          image: "{{ .Values.images.auth.repository }}:{{ .Values.images.auth.tag }}"
+          imagePullPolicy: {{ .Values.images.auth.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 4000
+            - name: grpc
+              containerPort: 50051
+          env:
+            - name: ENVIRONMENT
+              value: development
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: AUTH_DATABASE_URL
+            - name: MEMCACHED_HOST
+              value: auth-cache
+            - name: MEMCACHED_PORT
+              value: "11211"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user
+  labels:
+    app.kubernetes.io/name: user
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.user }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: user
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: user
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: user
+          image: "{{ .Values.images.user.repository }}:{{ .Values.images.user.tag }}"
+          imagePullPolicy: {{ .Values.images.user.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 4000
+            - name: grpc
+              containerPort: 50051
+          env:
+            - name: ENVIRONMENT
+              value: development
+            - name: USER_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: USER_DB_URL
+            - name: AUTH_SERVICE_GRPC_ADDR
+              value: auth:50051
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: backend
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.backend }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.images.backend.repository }}:{{ .Values.images.backend.tag }}"
+          imagePullPolicy: {{ .Values.images.backend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 4000
+            - name: metrics
+              containerPort: 9090
+          env:
+            - name: ENVIRONMENT
+              value: development
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: BACKEND_DATABASE_URL
+            - name: USER_SERVICE_HOST
+              value: user:50051
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: socket
+  labels:
+    app.kubernetes.io/name: socket
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.socket }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: socket
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: socket
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: socket
+          image: "{{ .Values.images.socket.repository }}:{{ .Values.images.socket.tag }}"
+          imagePullPolicy: {{ .Values.images.socket.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 4000
+          env:
+            - name: ENVIRONMENT
+              value: development
+            - name: PORT
+              value: "4000"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: MEMCACHED_HOST
+              value: memcached
+            - name: MEMCACHED_PORT
+              value: "11211"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.frontend }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: frontend
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: frontend
+          image: "{{ .Values.images.frontend.repository }}:{{ .Values.images.frontend.tag }}"
+          imagePullPolicy: {{ .Values.images.frontend.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NUXT_ENVIRONMENT
+              value: development
+            - name: NUXT_PUBLIC_ENVIRONMENT
+              value: development
+            - name: NUXT_AUTH_COOKIE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.env.configMapName }}
+                  key: AUTH_COOKIE_NAME
+            - name: NUXT_PUBLIC_AUTH_COOKIE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.env.configMapName }}
+                  key: AUTH_COOKIE_NAME
+            - name: NUXT_API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.env.configMapName }}
+                  key: NUXT_API_BASE_URL
+            - name: NUXT_HOST
+              value: 0.0.0.0
+            - name: HOST
+              value: 0.0.0.0
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-worker
+  labels:
+    app.kubernetes.io/name: chat-worker
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount.chatWorker }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chat-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: chat-worker
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: chat-worker
+          image: "{{ .Values.images.chatWorker.repository }}:{{ .Values.images.chatWorker.tag }}"
+          imagePullPolicy: {{ .Values.images.chatWorker.pullPolicy }}
+          env:
+            - name: ENVIRONMENT
+              value: development
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}

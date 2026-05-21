@@ -1,0 +1,243 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-db-headless
+  labels:
+    app.kubernetes.io/name: auth-db
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: auth-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-db-headless
+  labels:
+    app.kubernetes.io/name: user-db
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: user-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  labels:
+    app.kubernetes.io/name: postgres
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-headless
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: mgmt
+      port: 15672
+      targetPort: 15672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-db
+  labels:
+    app.kubernetes.io/name: auth-db
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: auth-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-db
+  labels:
+    app.kubernetes.io/name: user-db
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: user-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: rabbitmq
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: mgmt
+      port: 15672
+      targetPort: 15672
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached
+  labels:
+    app.kubernetes.io/name: memcached
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: memcached
+  ports:
+    - name: memcached
+      port: 11211
+      targetPort: 11211
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-cache
+  labels:
+    app.kubernetes.io/name: auth-cache
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: auth-cache
+  ports:
+    - name: memcached
+      port: 11211
+      targetPort: 11211
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+  labels:
+    app.kubernetes.io/name: auth
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: auth
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user
+  labels:
+    app.kubernetes.io/name: user
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: user
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+    - name: grpc
+      port: 50051
+      targetPort: 50051
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app.kubernetes.io/name: backend
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: backend
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: socket
+  labels:
+    app.kubernetes.io/name: socket
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: socket
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    app.kubernetes.io/name: frontend
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

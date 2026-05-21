@@ -1,6 +1,7 @@
 import { isNullOrUndefined } from '@arpansaha13/utils'
 
 export default defineNuxtPlugin(nuxtApp => {
+  const logger = useLogger('api')
   const api = $fetch.create({
     onRequest({ options }) {
       const runtimeConfig = useRuntimeConfig()
@@ -32,6 +33,8 @@ export default defineNuxtPlugin(nuxtApp => {
       }
     },
     async onResponseError({ response }) {
+      logger.debug(`API Request failed: [${response.status}] ${response.url}`, response._data)
+
       try {
         response._data = JSON.parse(response._data)
       } catch {

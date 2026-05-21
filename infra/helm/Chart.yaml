@@ -1,0 +1,6 @@
+apiVersion: v2
+name: messaging-system
+description: Kubernetes dev stack for messaging-system (compose app profile)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

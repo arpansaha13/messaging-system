@@ -9,7 +9,7 @@
   "scripts": {
     "preinstall": "npx -y only-allow pnpm",
     "prepare": "husky",
-    "dev": "docker compose --profile app watch --prune",
+    "dev": "skaffold dev --no-prune=false --cache-artifacts=false",
     "build": "docker compose -f compose.build.yaml build"
   },
   "engines": {
