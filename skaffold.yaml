@@ -1,0 +1,114 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: messaging-system
+
+build:
+  local:
+    push: false
+    useDockerCLI: true
+  artifacts:
+    - image: auth-db
+      context: .
+      docker:
+        dockerfile: apps/auth/postgres/Dockerfile
+    - image: postgres-db
+      context: .
+      docker:
+        dockerfile: apps/backend/postgres/Dockerfile
+    - image: auth
+      context: .
+      docker:
+        dockerfile: apps/auth/server/Dockerfile
+    - image: backend
+      context: .
+      docker:
+        dockerfile: apps/backend/server/Dockerfile
+    - image: socket
+      context: .
+      docker:
+        dockerfile: apps/socket/Dockerfile
+    - image: frontend
+      context: .
+      docker:
+        dockerfile: apps/frontend/Dockerfile.dev
+      sync:
+        manual:
+          - src: apps/frontend/src/**/*
+            dest: /app/apps/frontend/src
+          - src: apps/frontend/public/**/*
+            dest: /app/apps/frontend/public
+          - src: apps/frontend/nuxt.config.ts
+            dest: /app/apps/frontend/nuxt.config.ts
+          - src: apps/frontend/tsconfig.json
+            dest: /app/apps/frontend/tsconfig.json
+    - image: rabbitmq
+      context: .
+      docker:
+        dockerfile: apps/rabbitmq/Dockerfile
+    - image: chat-worker
+      context: .
+      docker:
+        dockerfile: apps/chat-worker/Dockerfile
+
+deploy:
+  helm:
+    hooks:
+      before:
+        - host:
+            command: ["bash", "-c", "./infra/helm/scripts/apply-env.sh .env messaging-dev messaging-env messaging-secret"]
+            os: [darwin, linux]
+    releases:
+      - name: messaging-system
+        namespace: messaging-dev
+        createNamespace: true
+        chartPath: infra/helm
+        setValueTemplates:
+          images.authDb.repository: "{{.IMAGE_REPO_auth_db}}"
+          images.authDb.tag: "{{.IMAGE_TAG_auth_db}}"
+          images.postgres.repository: "{{.IMAGE_REPO_postgres_db}}"
+          images.postgres.tag: "{{.IMAGE_TAG_postgres_db}}"
+          images.auth.repository: "{{.IMAGE_REPO_auth}}"
+          images.auth.tag: "{{.IMAGE_TAG_auth}}"
+          images.backend.repository: "{{.IMAGE_REPO_backend}}"
+          images.backend.tag: "{{.IMAGE_TAG_backend}}"
+          images.socket.repository: "{{.IMAGE_REPO_socket}}"
+          images.socket.tag: "{{.IMAGE_TAG_socket}}"
+          images.frontend.repository: "{{.IMAGE_REPO_frontend}}"
+          images.frontend.tag: "{{.IMAGE_TAG_frontend}}"
+          images.rabbitmq.repository: "{{.IMAGE_REPO_rabbitmq}}"
+          images.rabbitmq.tag: "{{.IMAGE_TAG_rabbitmq}}"
+          images.chatWorker.repository: "{{.IMAGE_REPO_chat_worker}}"
+          images.chatWorker.tag: "{{.IMAGE_TAG_chat_worker}}"
+
+portForward:
+  - resourceType: service
+    resourceName: ingress-nginx-controller
+    namespace: ingress-nginx
+    port: 80
+    localPort: 7000
+  - resourceType: service
+    resourceName: backend
+    namespace: messaging-dev
+    port: 4000
+    localPort: 7030
+  - resourceType: service
+    resourceName: auth-db
+    namespace: messaging-dev
+    port: 5432
+    localPort: 7010
+  - resourceType: service
+    resourceName: postgres
+    namespace: messaging-dev
+    port: 5432
+    localPort: 7020
+  - resourceType: service
+    resourceName: rabbitmq
+    namespace: messaging-dev
+    port: 15672
+    localPort: 7050
+
+profiles:
+  - name: docker-desktop
+    activation:
+      - kubeContext: docker-desktop

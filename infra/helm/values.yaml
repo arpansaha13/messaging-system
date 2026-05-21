@@ -1,0 +1,63 @@
+env:
+  configMapName: messaging-env
+  secretName: messaging-secret
+
+images:
+  authDb:
+    repository: auth-db
+    tag: dev
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres-db
+    tag: dev
+    pullPolicy: IfNotPresent
+  auth:
+    repository: auth
+    tag: dev
+    pullPolicy: IfNotPresent
+  backend:
+    repository: backend
+    tag: dev
+    pullPolicy: IfNotPresent
+  socket:
+    repository: socket
+    tag: dev
+    pullPolicy: IfNotPresent
+  frontend:
+    repository: frontend
+    tag: dev
+    pullPolicy: IfNotPresent
+  rabbitmq:
+    repository: rabbitmq
+    tag: dev
+    pullPolicy: IfNotPresent
+  chatWorker:
+    repository: chat-worker
+    tag: dev
+    pullPolicy: IfNotPresent
+  memcached:
+    repository: memcached
+    tag: 1.6.40-alpine
+    pullPolicy: IfNotPresent
+
+replicaCount:
+  auth: 1
+  backend: 1
+  socket: 1
+  frontend: 1
+  chatWorker: 1
+  memcached: 1
+  authCache: 1
+
+persistence:
+  authDb:
+    hostPath: /tmp/messaging-system-k8s/auth-db
+  postgres:
+    hostPath: /tmp/messaging-system-k8s/postgres
+  rabbitmq:
+    hostPath: /tmp/messaging-system-k8s/rabbitmq
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations: {}

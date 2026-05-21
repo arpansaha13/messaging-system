@@ -15,6 +15,8 @@ TOOLS=(
     "migrate:golang-migrate"
     "goimports:goimports"
     "gopls:gopls"
+    "helm:helm"
+    "skaffold:skaffold"
 )
 
 MISSING_TOOLS=()
@@ -33,27 +35,49 @@ for tool_entry in "${TOOLS[@]}"; do
     fi
 done
 
-if [ ${#MISSING_TOOLS[@]} -eq 0 ]; then
+if command -v kubectl &> /dev/null; then
+    echo -e " - kubectl: ${GREEN}Installed${NC}"
+else
+    echo -e " - kubectl: ${RED}Not Installed${NC}"
+fi
+
+INSTALL_HEADLAMP=false
+if helm status headlamp -n kube-system &> /dev/null; then
+    echo -e " - headlamp: ${GREEN}Installed${NC}"
+else
+    echo -e " - headlamp: ${RED}Not Installed${NC}"
+    INSTALL_HEADLAMP=true
+fi
+
+if [ ${#MISSING_TOOLS[@]} -eq 0 ] && [ "$INSTALL_HEADLAMP" = false ]; then
     echo -e "\n${GREEN}All tools are installed and available!${NC}"
     exit 0
 fi
 
-echo -e "\nSome tools are missing. Attempting to install them..."
+if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
+    echo -e "\nSome tools are missing. Attempting to install them..."
 
-# Check if homebrew is available
-if ! command -v brew &> /dev/null; then
-    echo -e "${RED}Homebrew is not installed.${NC}"
-    echo "Please install Homebrew first by running the following command:"
-    echo '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
-    echo "Then re-run this script."
-    exit 1
+    # Check if homebrew is available
+    if ! command -v brew &> /dev/null; then
+        echo -e "${RED}Homebrew is not installed.${NC}"
+        echo "Please install Homebrew first by running the following command:"
+        echo '/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
+        echo "Then re-run this script."
+        exit 1
+    fi
+
+    echo -e "${GREEN}Homebrew is available. Installing missing tools...${NC}\n"
+
+    for pkg in "${MISSING_TOOLS[@]}"; do
+        echo "Installing $pkg..."
+        brew install "$pkg"
+    done
 fi
 
-echo -e "${GREEN}Homebrew is available. Installing missing tools...${NC}\n"
-
-for pkg in "${MISSING_TOOLS[@]}"; do
-    echo "Installing $pkg..."
-    brew install "$pkg"
-done
+if [ "$INSTALL_HEADLAMP" = true ]; then
+    echo -e "\nInstalling headlamp via helm..."
+    helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+    helm upgrade --install headlamp headlamp/headlamp --create-namespace --namespace kube-system
+fi
 
 echo -e "\n${GREEN}Setup complete!${NC}"

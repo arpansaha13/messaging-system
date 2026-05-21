@@ -1,0 +1,145 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: auth-db
+  labels:
+    app.kubernetes.io/name: auth-db
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  serviceName: auth-db-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: auth-db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: auth-db
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: auth-db
+          image: "{{ .Values.images.authDb.repository }}:{{ .Values.images.authDb.tag }}"
+          imagePullPolicy: {{ .Values.images.authDb.pullPolicy }}
+          args: ["-c", "max_connections=100"]
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: AUTH_DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: AUTH_DB_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.env.configMapName }}
+                  key: AUTH_DB_NAME
+          volumeMounts:
+            - name: auth-db-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: auth-db-data
+          hostPath:
+            path: {{ .Values.persistence.authDb.hostPath }}
+            type: DirectoryOrCreate
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  serviceName: postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.images.postgres.repository }}:{{ .Values.images.postgres.tag }}"
+          imagePullPolicy: {{ .Values.images.postgres.pullPolicy }}
+          args: ["-c", "max_connections=100"]
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.env.secretName }}
+                  key: DB_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ .Values.env.configMapName }}
+                  key: DB_NAME
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: {{ .Values.persistence.postgres.hostPath }}
+            type: DirectoryOrCreate
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  labels:
+    app.kubernetes.io/name: rabbitmq
+    {{- include "messaging-system.labels" . | nindent 4 }}
+spec:
+  serviceName: rabbitmq-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rabbitmq
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: rabbitmq
+        {{- include "messaging-system.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: rabbitmq
+          image: "{{ .Values.images.rabbitmq.repository }}:{{ .Values.images.rabbitmq.tag }}"
+          imagePullPolicy: {{ .Values.images.rabbitmq.pullPolicy }}
+          ports:
+            - name: amqp
+              containerPort: 5672
+            - name: mgmt
+              containerPort: 15672
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.env.configMapName }}
+            - secretRef:
+                name: {{ .Values.env.secretName }}
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+      volumes:
+        - name: rabbitmq-data
+          hostPath:
+            path: {{ .Values.persistence.rabbitmq.hostPath }}
+            type: DirectoryOrCreate
