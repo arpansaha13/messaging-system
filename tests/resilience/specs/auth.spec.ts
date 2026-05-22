@@ -1,18 +1,15 @@
-import * as grpc from '@grpc/grpc-js'
 import { createHash } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { TEST_USERS } from '../fixtures/users'
 import { stopService, startService, waitServiceHealthy } from '../helpers/compose'
 import { ensureTestUser } from '../helpers/db'
-import { createAuthClient, grpcLogin } from '../helpers/grpc'
+import { login } from '../helpers/auth'
 import { closeClient, createAuthCacheClient, getKey } from '../helpers/memcached'
 import { poll } from '../helpers/poll'
 
 const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY ?? 'test-secret-key-32-chars-minimum!'
 
 describe.sequential('auth resilience', () => {
-  let authClient = createAuthClient()
-
   beforeAll(async () => {
     await waitServiceHealthy('auth-db_test')
     await waitServiceHealthy('auth-cache_test')
@@ -36,29 +33,26 @@ describe.sequential('auth resilience', () => {
   })
 
   afterAll(async () => {
-    authClient.close()
     startService('auth-db')
     startService('auth-cache')
     await waitServiceHealthy('auth-db_test')
     await waitServiceHealthy('auth-cache_test')
   })
 
-  it('auth-db outage returns gRPC failure then heals', async () => {
+  it('auth-db outage returns failure then heals', async () => {
     const alice = TEST_USERS.alice
-    const baseline = await grpcLogin(authClient, alice.email, alice.password)
+    const baseline = await login(alice.email, alice.password)
     expect(baseline).toBeTruthy()
 
     stopService('auth-db')
-    let error: grpc.ServiceError | null = null
+    let error: Error | null = null
     try {
-      await grpcLogin(authClient, alice.email, alice.password)
+      await login(alice.email, alice.password)
     } catch (err) {
-      error = err as grpc.ServiceError
+      error = err as Error
     }
     expect(error).toBeTruthy()
-    if (error?.code !== undefined) {
-      expect([grpc.status.UNAVAILABLE, grpc.status.INTERNAL, grpc.status.UNKNOWN]).toContain(error.code)
-    }
+    expect(error!.message).toMatch(/Login failed \((500|502|503|504)\)/)
 
     startService('auth-db')
     await waitServiceHealthy('auth-db_test')
@@ -66,7 +60,7 @@ describe.sequential('auth resilience', () => {
     await poll(
       async () => {
         try {
-          await grpcLogin(authClient, alice.email, alice.password)
+          await login(alice.email, alice.password)
           return true
         } catch {
           return false
@@ -79,7 +73,7 @@ describe.sequential('auth resilience', () => {
 
   it('auth-cache outage degrades cache but login still succeeds', async () => {
     const alice = TEST_USERS.alice
-    const sessionToken = await grpcLogin(authClient, alice.email, alice.password)
+    const sessionToken = await login(alice.email, alice.password)
     expect(sessionToken).toBeTruthy()
 
     const tokenHash = hashSessionToken(sessionToken)
@@ -113,7 +107,7 @@ describe.sequential('auth resilience', () => {
     }
     expect(cacheUnavailable).toBe(true)
 
-    const degradedLogin = await grpcLogin(authClient, alice.email, alice.password)
+    const degradedLogin = await login(alice.email, alice.password)
     expect(degradedLogin).toBeTruthy()
 
     startService('auth-cache')
@@ -121,7 +115,7 @@ describe.sequential('auth resilience', () => {
 
     await poll(
       async () => {
-        const token = await grpcLogin(authClient, alice.email, alice.password)
+        const token = await login(alice.email, alice.password)
         const latestHash = hashSessionToken(token)
         const client = createAuthCacheClient()
         try {

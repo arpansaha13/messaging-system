@@ -61,6 +61,8 @@ if [[ "$SKIP_MIGRATIONS" == false ]]; then
   migrate -path "${GOAUTHKIT_MIGRATIONS_DIR}" -database "${AUTH_DB_URL}" up
   log "Running messaging DB migrations..."
   migrate -path "../../apps/backend/server/migrations" -database "${MESSAGING_DB_URL}" up
+  log "Running user DB migrations..."
+  migrate -path "../../apps/user/migrations" -database "${MESSAGING_DB_URL}&x-migrations-table=user_schema_migrations" up
   log "Migrations complete."
 else
   log "Skipping migrations (--skip-migrations)."

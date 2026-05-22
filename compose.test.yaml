@@ -257,6 +257,7 @@ services:
       - "50051"
     ports:
       - "7541:50051"
+      - "7544:4000"
     networks:
       - messaging-test-network
     deploy:

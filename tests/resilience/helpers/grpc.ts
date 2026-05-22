@@ -6,7 +6,7 @@ import { AUTH_GRPC_ADDRESS } from './config'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../../')
-const protoPath = path.join(repoRoot, 'apps/backend/server/proto/auth.proto')
+const protoPath = path.join(repoRoot, '../goauthkit/proto/auth.proto')
 
 const packageDef = protoLoader.loadSync(protoPath, {
   keepCase: true,
@@ -16,7 +16,7 @@ const packageDef = protoLoader.loadSync(protoPath, {
   oneofs: true,
 })
 
-const loaded = grpc.loadPackageDefinition(packageDef) as {
+const loaded = grpc.loadPackageDefinition(packageDef) as unknown as {
   proto: {
     AuthService: new (address: string, creds: grpc.ChannelCredentials) => AuthServiceClient
   }

@@ -1,7 +1,7 @@
-import { BACKEND_BASE_URL } from './config'
+import { BACKEND_BASE_URL, AUTH_BASE_URL } from './config'
 
 export async function login(email: string, password: string): Promise<string> {
-  const res = await fetch(`${BACKEND_BASE_URL}/api/auth/login`, {
+  const res = await fetch(`${AUTH_BASE_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
