@@ -15,6 +15,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -38,6 +39,16 @@ func main() {
 	defer zapLogger.Sync()
 
 	log := zap.L()
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), "socket", log)
+	if err != nil {
+		log.Fatal("failed to setup telemetry", zap.Error(err))
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		shutdownTelemetry(ctx)
+	}()
+
 	rootCtx := gtk.LoggerWithContext(context.Background(), zapLogger)
 
 	// Initialize circuit breakers
@@ -82,7 +93,7 @@ func main() {
 	addr := fmt.Sprintf(":%d", cfg.Port)
 	httpServer := &http.Server{
 		Addr:         addr,
-		Handler:      router,
+		Handler:      otelhttp.NewHandler(router, "socket-http"),
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

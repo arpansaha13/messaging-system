@@ -38,6 +38,7 @@ type Config struct {
 	AuthSystemHost string
 	AuthCookieName string
 	LogLevel       string
+	OTLPEndpoint   string
 	RabbitMQ       RabbitMQCreds
 	Memcached      MemcachedCreds
 }
@@ -62,6 +63,7 @@ func Load() (*Config, error) {
 		AuthSystemHost: getEnv("AUTH_SYSTEM_HOST", "auth:50051"),
 		AuthCookieName: getEnv("AUTH_COOKIE_NAME", "auth_token"),
 		LogLevel:       getEnv("LOG_LEVEL", "info"),
+		OTLPEndpoint:   getEnv("OTLP_ENDPOINT", ""),
 		RabbitMQ: RabbitMQCreds{
 			Host: getEnv("RABBITMQ_HOST", "localhost"),
 			Port: rabbitPort,

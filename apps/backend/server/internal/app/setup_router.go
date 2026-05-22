@@ -51,6 +51,7 @@ func SetupRouter(deps Deps) *mux.Router {
 	router := mux.NewRouter()
 
 	// Apply middlewares
+	router.Use(gtk.HttpTraceMiddleware)
 	router.Use(gtk.HttpRecoveryMiddleware)
 	router.Use(gtk.HttpLoggerMiddleware(deps.Logger))
 	router.Use(gtk.HttpErrorMiddleware)
