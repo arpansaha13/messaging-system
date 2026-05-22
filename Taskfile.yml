@@ -18,6 +18,16 @@ tasks:
       - task --list
     silent: true
 
+  setup:
+    desc: Check and install required development tools and dependencies
+    cmds:
+      - ./tools/scripts/setup.sh
+
+  headlamp:
+    desc: Generate authentication token and start Headlamp dashboard UI
+    cmds:
+      - ./tools/scripts/start-headlamp.sh
+
   migrate:up:
     desc: Run all pending migrations for a service or all services
     summary: |
