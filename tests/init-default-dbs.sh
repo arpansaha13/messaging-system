@@ -7,7 +7,7 @@ databases=("messaging_e2e_db" "messaging_load_db" "messaging_resilience_db")
 # Loop through and create each database
 for db in "${databases[@]}"; do
     echo "Creating database: $db"
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" -d postgres <<-EOSQL
         CREATE DATABASE "$db";
 EOSQL
 done

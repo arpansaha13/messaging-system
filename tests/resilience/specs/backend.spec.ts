@@ -90,10 +90,10 @@ describe.sequential('backend resilience', () => {
   })
 
   it('auth outage returns 503 then heals', async () => {
-    const controlInvalid = await getMe('invalid-token')
+    const controlInvalid = await getChats('invalid-token')
     expect(controlInvalid.status).toBe(401)
 
-    const baseline = await getMe(aliceSession)
+    const baseline = await getChats(aliceSession)
     expect(baseline.status).toBe(200)
 
     stopService('auth')
@@ -102,7 +102,7 @@ describe.sequential('backend resilience', () => {
     await poll(
       async () => {
         try {
-          const res = await getMe(aliceSession)
+          const res = await getChats(aliceSession)
           return res.status
         } catch {
           return 0
@@ -118,7 +118,7 @@ describe.sequential('backend resilience', () => {
     await poll(
       async () => {
         try {
-          const res = await getMe(aliceSession)
+          const res = await getChats(aliceSession)
           return res.status
         } catch {
           return 0
@@ -212,11 +212,7 @@ async function getChats(sessionToken: string): Promise<Response> {
   })
 }
 
-async function getMe(sessionToken: string): Promise<Response> {
-  return backendFetch('/api/users/me', {
-    headers: { Cookie: `session=${sessionToken}` },
-  })
-}
+
 
 async function postReadAck(sessionToken: string): Promise<Response> {
   return backendFetch('/api/messages/status/read', {

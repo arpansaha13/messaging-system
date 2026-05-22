@@ -1,4 +1,5 @@
 export const BACKEND_BASE_URL = process.env.BACKEND_BASE_URL ?? 'http://localhost:7530'
+export const AUTH_BASE_URL = process.env.AUTH_BASE_URL ?? 'http://localhost:7544'
 export const SOCKET_BASE_URL = process.env.SOCKET_BASE_URL ?? 'http://localhost:7540'
 export const SOCKET_ORIGIN = process.env.SOCKET_ORIGIN ?? 'http://localhost:7500'
 export const AUTH_GRPC_ADDRESS = process.env.AUTH_GRPC_ADDRESS ?? 'localhost:7541'
