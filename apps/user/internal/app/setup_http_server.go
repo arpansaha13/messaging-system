@@ -9,6 +9,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/user/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/middleware"
 	"github.com/gorilla/mux"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.uber.org/zap"
 )
 
@@ -18,7 +19,7 @@ func SetupHTTPServer(cfg *config.Config, deps *Dependencies, zapLogger *zap.Logg
 
 	return &http.Server{
 		Addr:    ":" + cfg.HTTPPort(),
-		Handler: router,
+		Handler: otelhttp.NewHandler(router, "user-http"),
 	}
 }
 
@@ -27,6 +28,7 @@ func SetupRouter(deps *Dependencies, zapLogger *zap.Logger) *mux.Router {
 	router := mux.NewRouter()
 
 	// Base middleware
+	router.Use(gtk.HttpTraceMiddleware)
 	router.Use(gtk.HttpRecoveryMiddleware)
 	router.Use(gtk.HttpLoggerMiddleware(zapLogger))
 	router.Use(gtk.HttpErrorMiddleware)

@@ -3,7 +3,7 @@ module github.com/arpansaha13/messaging-system/apps/chat-worker
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.12.1
+	github.com/arpansaha13/gotoolkit v0.13.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/sony/gobreaker/v2 v2.4.0
@@ -67,7 +67,7 @@ require (
 	github.com/tklauser/numcpus v0.11.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.65.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0 // indirect
 	go.opentelemetry.io/otel v1.43.0 // indirect
 	go.opentelemetry.io/otel/metric v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect

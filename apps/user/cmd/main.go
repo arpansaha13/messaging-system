@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/config"
@@ -25,8 +26,22 @@ func main() {
 		zapLogger.Fatal("failed to load config", zap.Error(err))
 	}
 
+	shutdownTelemetry, err := app.SetupTelemetry(context.Background(), "user", zapLogger)
+	if err != nil {
+		zapLogger.Fatal("failed to setup telemetry", zap.Error(err))
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		shutdownTelemetry(ctx)
+	}()
+
 	cbs := circuits.NewCircuits()
-	db := app.SetupDB(cfg, zapLogger)
+	svcCtx := gtk.LoggerWithContext(context.Background(), zapLogger)
+	db, err := app.SetupDB(svcCtx, cfg, zapLogger)
+	if err != nil {
+		zapLogger.Fatal("failed to connect to database", zap.Error(err))
+	}
 	deps := app.SetupDependencies(cfg, db, zapLogger, cbs)
 
 	// gRPC Server
