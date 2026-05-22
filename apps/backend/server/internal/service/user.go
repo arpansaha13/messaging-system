@@ -7,14 +7,17 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 )
 
 // UserService handles user profile business logic
 type UserService struct {
 	userRepo    repository.IUserRepository
 	contactRepo repository.IContactRepository
+	sf          singleflight.Group
 }
 
 // NewUserService creates a new user service
@@ -31,14 +34,26 @@ func (s *UserService) GetUserProfile(ctx context.Context) (*domain.UserProfile, 
 	userID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving user profile", zap.Int64("user_id", userID))
 
-	userProfile, err := s.userRepo.GetByID(ctx, userID)
-	if err != nil {
-		log.Error("failed to retrieve user profile", zap.Int64("user_id", userID), zap.Error(err))
-		return nil, err
-	}
+	key := coalesce.GetUserProfilesKey([]int64{userID})
+	ch := s.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
+		return s.userRepo.GetByID(detachedCtx, userID)
+	})
 
-	log.Debug("user profile retrieved successfully", zap.Int64("user_id", userID))
-	return userProfile, nil
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			log.Error("failed to retrieve user profile", zap.Int64("user_id", userID), zap.Error(res.Err))
+			return nil, res.Err
+		}
+		userProfile := res.Val.(*domain.UserProfile)
+		log.Debug("user profile retrieved successfully", zap.Int64("user_id", userID))
+		return userProfile, nil
+	}
 }
 
 // SearchUserProfiles searches for user profiles
@@ -62,10 +77,24 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, req *dto.Ge
 	authUserID := utils.GetUserIDFromCtx(ctx)
 	log.Debug("retrieving user profile with contact info", zap.Int64("auth_user_id", authUserID), zap.Int64("user_id", req.ID))
 
-	userProfile, err := s.userRepo.GetByID(ctx, req.ID)
-	if err != nil {
-		log.Error("failed to retrieve user profile", zap.Int64("user_id", req.ID), zap.Error(err))
-		return nil, nil, err
+	key := coalesce.GetUserProfilesKey([]int64{req.ID})
+	ch := s.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
+		return s.userRepo.GetByID(detachedCtx, req.ID)
+	})
+
+	var userProfile *domain.UserProfile
+	select {
+	case <-ctx.Done():
+		return nil, nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			log.Error("failed to retrieve user profile", zap.Int64("user_id", req.ID), zap.Error(res.Err))
+			return nil, nil, res.Err
+		}
+		userProfile = res.Val.(*domain.UserProfile)
 	}
 
 	contact, err := s.contactRepo.GetContactByUserIds(ctx, authUserID, req.ID)
