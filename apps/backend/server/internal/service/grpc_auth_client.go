@@ -9,8 +9,10 @@ import (
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/grpc"
 )
 
@@ -23,6 +25,7 @@ type AuthServiceClient struct {
 	client   pb.AuthServiceClient
 	cb       *gobreaker.CircuitBreaker[any]
 	mu       sync.RWMutex
+	sf       singleflight.Group
 }
 
 // NewAuthServiceClient creates a new auth service client
@@ -64,26 +67,33 @@ func (a *AuthServiceClient) ValidateSession(ctx context.Context, token string) (
 
 	log.Debug("validating session token with auth service")
 
-	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
+	key := coalesce.ValidateSessionKey(token)
 
-	// Add token to context as metadata for gRPC request
-	ctxWithMetadata := utils.WithAuthMetadata(ctx, token)
+	ch := a.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
 
-	req := &pb.ValidateSessionRequest{}
+		ctxWithMetadata := utils.WithAuthMetadata(detachedCtx, token)
+		req := &pb.ValidateSessionRequest{}
 
-	result, err := a.cb.Execute(func() (any, error) {
-		return client.ValidateSession(ctxWithMetadata, req)
+		return a.cb.Execute(func() (any, error) {
+			return client.ValidateSession(ctxWithMetadata, req)
+		})
 	})
 
-	if err != nil {
-		log.Error("failed to validate session", zap.Error(err))
-		return nil, fmt.Errorf("failed to validate session: %w", err)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			log.Error("failed to validate session", zap.Error(res.Err))
+			return nil, fmt.Errorf("failed to validate session: %w", res.Err)
+		}
+		resp := res.Val.(*pb.ValidateSessionResponse)
+		log.Debug("session validated successfully", zap.Int64("user_id", resp.UserId))
+		return resp, nil
 	}
-
-	resp := result.(*pb.ValidateSessionResponse)
-	log.Debug("session validated successfully", zap.Int64("user_id", resp.UserId))
-	return resp, nil
 }
 
 // GetUser retrieves user information from the auth service
@@ -96,26 +106,33 @@ func (a *AuthServiceClient) GetUser(ctx context.Context, userID int64, token str
 		return nil, fmt.Errorf("auth service client not connected")
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
+	key := coalesce.GetUserKey(userID)
 
-	req := &pb.GetUserRequest{UserId: userID}
+	ch := a.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
 
-	// Add token to context as metadata for gRPC request
-	ctxWithMetadata := utils.WithAuthMetadata(ctx, token)
+		req := &pb.GetUserRequest{UserId: userID}
+		ctxWithMetadata := utils.WithAuthMetadata(detachedCtx, token)
 
-	result, err := a.cb.Execute(func() (any, error) {
-		return client.GetUser(ctxWithMetadata, req)
+		return a.cb.Execute(func() (any, error) {
+			return client.GetUser(ctxWithMetadata, req)
+		})
 	})
 
-	if err != nil {
-		log.Error("failed to get user", zap.Int64("user_id", userID), zap.Error(err))
-		return nil, fmt.Errorf("failed to get user: %w", err)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			log.Error("failed to get user", zap.Int64("user_id", userID), zap.Error(res.Err))
+			return nil, fmt.Errorf("failed to get user: %w", res.Err)
+		}
+		resp := res.Val.(*pb.GetUserResponse)
+		log.Debug("user info retrieved successfully", zap.Int64("user_id", userID))
+		return resp, nil
 	}
-
-	resp := result.(*pb.GetUserResponse)
-	log.Debug("user info retrieved successfully", zap.Int64("user_id", userID))
-	return resp, nil
 }
 
 // Close closes the gRPC connection

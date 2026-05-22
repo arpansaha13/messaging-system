@@ -6,10 +6,12 @@ import (
 	"sync"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/grpc"
 )
 
@@ -19,6 +21,7 @@ type UserServiceClient struct {
 	profileClient commonpb.UserProfileServiceClient
 	cb            *gobreaker.CircuitBreaker[any]
 	mu            sync.RWMutex
+	sf            singleflight.Group
 }
 
 // NewUserServiceClient creates a new user service client
@@ -54,23 +57,32 @@ func (s *UserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64
 		return nil, fmt.Errorf("user profile service client not connected")
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
+	key := coalesce.GetUserProfilesKey(userIDs)
 
-	req := &commonpb.GetUserProfilesRequest{UserIds: userIDs}
+	ch := s.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
 
-	result, err := s.cb.Execute(func() (any, error) {
-		return client.GetUserProfiles(ctx, req)
+		req := &commonpb.GetUserProfilesRequest{UserIds: userIDs}
+
+		return s.cb.Execute(func() (any, error) {
+			return client.GetUserProfiles(detachedCtx, req)
+		})
 	})
 
-	if err != nil {
-		log.Error("failed to get user profiles", zap.Int64s("user_ids", userIDs), zap.Error(err))
-		return nil, fmt.Errorf("failed to get user profiles: %w", err)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			log.Error("failed to get user profiles", zap.Int64s("user_ids", userIDs), zap.Error(res.Err))
+			return nil, fmt.Errorf("failed to get user profiles: %w", res.Err)
+		}
+		resp := res.Val.(*commonpb.GetUserProfilesResponse)
+		log.Debug("user profiles retrieved successfully", zap.Int("count", len(resp.Profiles)))
+		return resp, nil
 	}
-
-	resp := result.(*commonpb.GetUserProfilesResponse)
-	log.Debug("user profiles retrieved successfully", zap.Int("count", len(resp.Profiles)))
-	return resp, nil
 }
 
 // GetDomainProfiles retrieves multiple user profiles and converts them to domain models
@@ -120,26 +132,35 @@ func (s *UserServiceClient) SearchUserProfiles(ctx context.Context, query string
 		return nil, fmt.Errorf("user profile service client not connected")
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, defaultTimeout)
-	defer cancel()
+	key := coalesce.SearchUserProfilesKey(query, limit)
 
-	req := &commonpb.SearchUserProfilesRequest{
-		Query: query,
-		Limit: limit,
-	}
+	ch := s.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
 
-	result, err := s.cb.Execute(func() (any, error) {
-		return client.SearchUserProfiles(ctx, req)
+		req := &commonpb.SearchUserProfilesRequest{
+			Query: query,
+			Limit: limit,
+		}
+
+		return s.cb.Execute(func() (any, error) {
+			return client.SearchUserProfiles(detachedCtx, req)
+		})
 	})
 
-	if err != nil {
-		log.Error("failed to search user profiles", zap.String("query", query), zap.Error(err))
-		return nil, fmt.Errorf("failed to search user profiles: %w", err)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			log.Error("failed to search user profiles", zap.String("query", query), zap.Error(res.Err))
+			return nil, fmt.Errorf("failed to search user profiles: %w", res.Err)
+		}
+		resp := res.Val.(*commonpb.SearchUserProfilesResponse)
+		log.Debug("user profiles search successfully", zap.Int("count", len(resp.Profiles)))
+		return resp, nil
 	}
-
-	resp := result.(*commonpb.SearchUserProfilesResponse)
-	log.Debug("user profiles search successfully", zap.Int("count", len(resp.Profiles)))
-	return resp, nil
 }
 
 // UpdateUserProfile updates user profile fields via gRPC

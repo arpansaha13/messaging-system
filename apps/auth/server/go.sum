@@ -6,8 +6,8 @@ github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c h1:udKWzYgxTojEK
 github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c/go.mod h1:xomTg63KZ2rFqZQzSB4Vz2SUXa1BpHTVz9L5PTmPC4E=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/arpansaha13/goauthkit v0.7.5 h1:Z59ccNCoYfU4BFl/oXDtb4ZVgCws5mxMYDgIu3blur0=
-github.com/arpansaha13/goauthkit v0.7.5/go.mod h1:PgsFhgTD600iq0wP1pnX7kmoPREDnZ6hXEAsGCVInAY=
+github.com/arpansaha13/goauthkit v0.7.6 h1:Tay6k3ctWBPMhUeS3I8xdWQHnGhDQwYu1lzXO1DcTKA=
+github.com/arpansaha13/goauthkit v0.7.6/go.mod h1:OKLUK7hCPvDyqX73npquxYb49IzVkPVyqZwmU2xJK6s=
 github.com/arpansaha13/gotoolkit v0.13.0 h1:9xFkZcj6s+/SK+e5lzGnBRKOXuKl89mzBB+em/yBz/k=
 github.com/arpansaha13/gotoolkit v0.13.0/go.mod h1:BOoXg3xOEDph6Y1KTVvGXjBQNCEKgXz5kO9esw+FcoQ=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

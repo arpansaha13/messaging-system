@@ -2,11 +2,16 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/repository"
 	"go.uber.org/zap"
+	"golang.org/x/sync/singleflight"
 )
 
 // IUserProfileService defines business logic for user profiles.
@@ -21,6 +26,7 @@ type IUserProfileService interface {
 // UserProfileService implements IUserProfileService.
 type UserProfileService struct {
 	repo repository.IUserProfileRepository
+	sf   singleflight.Group
 }
 
 // NewUserProfileService creates a new UserProfileService.
@@ -43,20 +49,76 @@ func (s *UserProfileService) Create(ctx context.Context, userID int64, globalNam
 	return profile, nil
 }
 
+func profileKey(userID int64) string {
+	return fmt.Sprintf("user:profile:%d", userID)
+}
+
+func profilesKey(userIDs []int64) string {
+	sorted := make([]int64, len(userIDs))
+	copy(sorted, userIDs)
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i] < sorted[j] })
+
+	var sb strings.Builder
+	sb.WriteString("user:profiles:")
+	for i, id := range sorted {
+		if i > 0 {
+			sb.WriteByte(',')
+		}
+		sb.WriteString(strconv.FormatInt(id, 10))
+	}
+	return sb.String()
+}
+
 func (s *UserProfileService) GetByID(ctx context.Context, userID int64) (*domain.UserProfile, error) {
-	return s.repo.GetByID(ctx, userID)
+	key := profileKey(userID)
+	ch := s.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
+		return s.repo.GetByID(detachedCtx, userID)
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		return res.Val.(*domain.UserProfile), nil
+	}
 }
 
 func (s *UserProfileService) GetByIDs(ctx context.Context, userIDs []int64) (map[int64]*domain.UserProfile, error) {
-	profiles, err := s.repo.GetByIDs(ctx, userIDs)
-	if err != nil {
-		return nil, err
+	if len(userIDs) == 0 {
+		return make(map[int64]*domain.UserProfile), nil
 	}
-	result := make(map[int64]*domain.UserProfile, len(profiles))
-	for _, p := range profiles {
-		result[p.ID] = p
+	key := profilesKey(userIDs)
+	ch := s.sf.DoChan(key, func() (any, error) {
+		detachedCtx := context.WithoutCancel(ctx)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		defer cancel()
+
+		profiles, err := s.repo.GetByIDs(detachedCtx, userIDs)
+		if err != nil {
+			return nil, err
+		}
+		result := make(map[int64]*domain.UserProfile, len(profiles))
+		for _, p := range profiles {
+			result[p.ID] = p
+		}
+		return result, nil
+	})
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case res := <-ch:
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		return res.Val.(map[int64]*domain.UserProfile), nil
 	}
-	return result, nil
 }
 
 func (s *UserProfileService) Update(ctx context.Context, userID int64, globalName, dp, bio *string) (*domain.UserProfile, error) {
