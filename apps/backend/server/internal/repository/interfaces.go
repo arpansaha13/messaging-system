@@ -5,11 +5,13 @@ import (
 	"time"
 
 	domain "github.com/arpansaha13/messaging-system/apps/common/domain"
+	"gorm.io/gorm"
 )
 
 // ChatRepository defines the interface for chat repository operations
 type IChatRepository interface {
 	Create(ctx context.Context, chat *domain.Chat) error
+	FirstOrCreate(ctx context.Context, tx *gorm.DB, chat *domain.Chat) error
 	GetByID(ctx context.Context, chatID int64) (*domain.Chat, error)
 	GetByUsers(ctx context.Context, user1ID, user2ID int64) (*domain.Chat, error)
 	GetUserChatsByArchived(ctx context.Context, userID int64, archived bool) ([]*domain.Chat, error)
@@ -19,7 +21,7 @@ type IChatRepository interface {
 
 // MessageRepository defines the interface for message repository operations
 type IMessageRepository interface {
-	Create(ctx context.Context, message *domain.Message) error
+	Create(ctx context.Context, tx *gorm.DB, message *domain.Message) error
 	GetByID(ctx context.Context, messageID int64) (*domain.Message, error)
 	GetByIDs(ctx context.Context, ids []int64) ([]*domain.Message, error)
 	GetMessagesByUserId(ctx context.Context, senderID, receiverID int64, clearedAt *time.Time, before, after *int64) (*MessagePage, error)
@@ -27,11 +29,12 @@ type IMessageRepository interface {
 	Update(ctx context.Context, message *domain.Message) error
 	GetLatestMessageByUsersInChat(ctx context.Context, userID, receiverID int64, clearedAt *time.Time) (*MessageWithStatus, error)
 	GetMessagesByChannelID(ctx context.Context, channelID int64, before, after *int64) (*ChannelMessagePage, error)
+	Transaction(ctx context.Context, fn func(tx *gorm.DB) error) error
 }
 
 // MessageRecipientRepository defines the interface for message recipient repository operations
 type IMessageRecipientRepository interface {
-	Create(ctx context.Context, recipient *domain.MessageRecipient) error
+	Create(ctx context.Context, tx *gorm.DB, recipient *domain.MessageRecipient) error
 	GetByID(ctx context.Context, recipientID int64) (*domain.MessageRecipient, error)
 	GetByMessageAndReceiver(ctx context.Context, messageID, receiverID int64) (*domain.MessageRecipient, error)
 	GetByMessageIDsAndReceiver(ctx context.Context, messageIDs []int64, receiverID int64) ([]*domain.MessageRecipient, error)
@@ -45,6 +48,7 @@ type IMessageRecipientRepository interface {
 type IChannelRepository interface {
 	Create(ctx context.Context, channel *domain.Channel) error
 	GetByID(ctx context.Context, userID, channelID int64) (*domain.Channel, error)
+	GetByIDUnscoped(ctx context.Context, tx *gorm.DB, channelID int64) (*domain.Channel, error)
 	GetAll(ctx context.Context, userID int64) ([]*domain.Channel, error)
 	GetByGroupID(ctx context.Context, userID, groupID int64) ([]*domain.Channel, error)
 }
@@ -70,5 +74,6 @@ type IInviteRepository interface {
 type IUserGroupRepository interface {
 	Create(ctx context.Context, userGroup *domain.UserGroup) error
 	GetGroupMembers(ctx context.Context, userID, groupID int64) ([]*domain.UserGroup, error)
+	GetGroupMembersExceptSender(ctx context.Context, tx *gorm.DB, groupID, senderID int64) ([]*domain.UserGroup, error)
 	Exists(ctx context.Context, userID, groupID int64) (bool, error)
 }

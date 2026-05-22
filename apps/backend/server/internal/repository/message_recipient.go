@@ -22,9 +22,13 @@ func NewMessageRecipientRepository(db *gorm.DB, cb *gobreaker.CircuitBreaker[any
 }
 
 // Create creates a new message recipient record
-func (r *MessageRecipientRepository) Create(ctx context.Context, recipient *domain.MessageRecipient) error {
+func (r *MessageRecipientRepository) Create(ctx context.Context, tx *gorm.DB, recipient *domain.MessageRecipient) error {
+	db := r.db
+	if tx != nil {
+		db = tx
+	}
 	_, err := r.cb.Execute(func() (any, error) {
-		return nil, r.db.WithContext(ctx).Create(recipient).Error
+		return nil, db.WithContext(ctx).Create(recipient).Error
 	})
 
 	if err != nil {

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -25,9 +24,9 @@ type MessageService struct {
 	messageRecipientRepo repository.IMessageRecipientRepository
 	chatRepo             repository.IChatRepository
 	userGroupRepo        repository.IUserGroupRepository
+	channelRepo          repository.IChannelRepository
 	userClient           IUserServiceClient
 	chatBroker           broker.ChatBroker
-	db                   *gorm.DB
 	cb                   *gobreaker.CircuitBreaker[any]
 }
 
@@ -37,9 +36,9 @@ func NewMessageService(
 	messageRecipientRepo repository.IMessageRecipientRepository,
 	chatRepo repository.IChatRepository,
 	userGroupRepo repository.IUserGroupRepository,
+	channelRepo repository.IChannelRepository,
 	userClient IUserServiceClient,
 	chatBroker broker.ChatBroker,
-	db *gorm.DB,
 	cb *gobreaker.CircuitBreaker[any],
 ) *MessageService {
 	return &MessageService{
@@ -47,9 +46,9 @@ func NewMessageService(
 		messageRecipientRepo: messageRecipientRepo,
 		chatRepo:             chatRepo,
 		userGroupRepo:        userGroupRepo,
+		channelRepo:          channelRepo,
 		userClient:           userClient,
 		chatBroker:           chatBroker,
-		db:                   db,
 		cb:                   cb,
 	}
 }
@@ -70,16 +69,16 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 	var createdAt time.Time
 
 	_, err := s.cb.Execute(func() (any, error) {
-		return nil, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return nil, s.messageRepo.Transaction(ctx, func(tx *gorm.DB) error {
 			zero := time.Time{}
 
 			senderChat := &domain.Chat{SenderID: senderID, ReceiverID: req.ReceiverID, ClearedAt: &zero}
-			if err := tx.FirstOrCreate(senderChat, domain.Chat{SenderID: senderID, ReceiverID: req.ReceiverID}).Error; err != nil {
+			if err := s.chatRepo.FirstOrCreate(ctx, tx, senderChat); err != nil {
 				return fmt.Errorf("failed to ensure sender-to-receiver chat: %w", err)
 			}
 
 			receiverChat := &domain.Chat{SenderID: req.ReceiverID, ReceiverID: senderID, ClearedAt: &zero}
-			if err := tx.FirstOrCreate(receiverChat, domain.Chat{SenderID: req.ReceiverID, ReceiverID: senderID}).Error; err != nil {
+			if err := s.chatRepo.FirstOrCreate(ctx, tx, receiverChat); err != nil {
 				return fmt.Errorf("failed to ensure receiver-to-sender chat: %w", err)
 			}
 
@@ -87,7 +86,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 				SenderID: senderID,
 				Content:  req.Content,
 			}
-			if err := tx.Create(message).Error; err != nil {
+			if err := s.messageRepo.Create(ctx, tx, message); err != nil {
 				return fmt.Errorf("failed to create message: %w", err)
 			}
 
@@ -99,7 +98,7 @@ func (s *MessageService) SendPersonalMessage(ctx context.Context, req *dto.SendP
 				ReceiverID: req.ReceiverID,
 				Status:     domain.MessageStatusSent,
 			}
-			if err := tx.Create(recipient).Error; err != nil {
+			if err := s.messageRecipientRepo.Create(ctx, tx, recipient); err != nil {
 				return fmt.Errorf("failed to create message recipient: %w", err)
 			}
 
@@ -147,12 +146,9 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 		return 0, time.Time{}, &gtk.ForbiddenError{Message: "not a member of this group"}
 	}
 
-	var channel domain.Channel
-	if err := s.db.WithContext(ctx).First(&channel, req.ChannelID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return 0, time.Time{}, &gtk.NotFoundError{Message: "channel not found"}
-		}
-		return 0, time.Time{}, fmt.Errorf("failed to fetch channel: %w", err)
+	channel, err := s.channelRepo.GetByIDUnscoped(ctx, nil, req.ChannelID)
+	if err != nil {
+		return 0, time.Time{}, err
 	}
 
 	if channel.GroupID != req.GroupID {
@@ -172,9 +168,9 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 	var createdAt time.Time
 
 	_, err = s.cb.Execute(func() (any, error) {
-		return nil, s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-			var userGroups []domain.UserGroup
-			if err := tx.Where("group_id = ? AND user_id != ?", req.GroupID, senderID).Find(&userGroups).Error; err != nil {
+		return nil, s.messageRepo.Transaction(ctx, func(tx *gorm.DB) error {
+			userGroups, err := s.userGroupRepo.GetGroupMembersExceptSender(ctx, tx, req.GroupID, senderID)
+			if err != nil {
 				return fmt.Errorf("failed to fetch group members: %w", err)
 			}
 
@@ -183,7 +179,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 				ChannelID: &req.ChannelID,
 				Content:   req.Content,
 			}
-			if err := tx.Create(message).Error; err != nil {
+			if err := s.messageRepo.Create(ctx, tx, message); err != nil {
 				return fmt.Errorf("failed to create message: %w", err)
 			}
 
@@ -196,7 +192,7 @@ func (s *MessageService) SendGroupMessage(ctx context.Context, req *dto.SendGrou
 					ReceiverID: ug.UserID,
 					Status:     domain.MessageStatusSent,
 				}
-				if err := tx.Create(recipient).Error; err != nil {
+				if err := s.messageRecipientRepo.Create(ctx, tx, recipient); err != nil {
 					log.Error("failed to create message recipient", zap.Int64("user_id", ug.UserID), zap.Error(err))
 				}
 			}
@@ -387,12 +383,9 @@ func (s *MessageService) GetChannelMessages(ctx context.Context, req *dto.GetCha
 	log.Debug("retrieving channel messages", zap.Int64("channel_id", req.ChannelID), zap.Int64("user_id", userID))
 
 	// Verify membership
-	var channel domain.Channel
-	if err := s.db.WithContext(ctx).First(&channel, req.ChannelID).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, &gtk.NotFoundError{Message: "channel not found"}
-		}
-		return nil, fmt.Errorf("failed to fetch channel: %w", err)
+	channel, err := s.channelRepo.GetByIDUnscoped(ctx, nil, req.ChannelID)
+	if err != nil {
+		return nil, err
 	}
 
 	isMember, err := s.userGroupRepo.Exists(ctx, userID, channel.GroupID)
