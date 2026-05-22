@@ -64,6 +64,31 @@ func (r *ChannelRepository) GetByID(ctx context.Context, userID, channelID int64
 	return result.(*domain.Channel), nil
 }
 
+// GetByIDUnscoped retrieves a channel by ID without user context
+func (r *ChannelRepository) GetByIDUnscoped(ctx context.Context, tx *gorm.DB, channelID int64) (*domain.Channel, error) {
+	db := r.db
+	if tx != nil {
+		db = tx
+	}
+	result, err := r.cb.Execute(func() (any, error) {
+		var channel domain.Channel
+		err := db.WithContext(ctx).First(&channel, channelID).Error
+		if err != nil {
+			return nil, err
+		}
+		return &channel, nil
+	})
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, &gtk.NotFoundError{Message: "channel not found"}
+		}
+		return nil, &gtk.InternalError{Message: "failed to get channel", Err: err}
+	}
+
+	return result.(*domain.Channel), nil
+}
+
 // GetAll retrieves all channels where the user belongs to the parent group
 func (r *ChannelRepository) GetAll(ctx context.Context, userID int64) ([]*domain.Channel, error) {
 	result, err := r.cb.Execute(func() (any, error) {

@@ -113,7 +113,7 @@ func (t *TestDB) CreateTestMessage(senderID int64, content string) (*domain.Mess
 		ChannelID: nil,
 		Content:   content,
 	}
-	if err := t.MessageRepo.Create(t.Ctx, msg); err != nil {
+	if err := t.MessageRepo.Create(t.Ctx, nil, msg); err != nil {
 		return nil, err
 	}
 	return msg, nil

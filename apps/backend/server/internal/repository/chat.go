@@ -51,6 +51,22 @@ func (r *ChatRepository) Create(ctx context.Context, chat *domain.Chat) error {
 	return nil
 }
 
+// FirstOrCreate retrieves a chat matching sender and receiver or creates it if not found
+func (r *ChatRepository) FirstOrCreate(ctx context.Context, tx *gorm.DB, chat *domain.Chat) error {
+	db := r.db
+	if tx != nil {
+		db = tx
+	}
+	_, err := r.cb.Execute(func() (any, error) {
+		return nil, db.WithContext(ctx).FirstOrCreate(chat, domain.Chat{SenderID: chat.SenderID, ReceiverID: chat.ReceiverID}).Error
+	})
+
+	if err != nil {
+		return &gtk.InternalError{Message: "failed to first or create chat", Err: err}
+	}
+	return nil
+}
+
 // GetByID retrieves a chat by ID
 func (r *ChatRepository) GetByID(ctx context.Context, chatID int64) (*domain.Chat, error) {
 	result, err := r.cb.Execute(func() (any, error) {

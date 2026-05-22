@@ -55,6 +55,30 @@ func (r *UserGroupRepository) GetGroupMembers(ctx context.Context, userID, group
 	return result.([]*domain.UserGroup), nil
 }
 
+// GetGroupMembersExceptSender retrieves members of a group excluding the sender
+func (r *UserGroupRepository) GetGroupMembersExceptSender(ctx context.Context, tx *gorm.DB, groupID, senderID int64) ([]*domain.UserGroup, error) {
+	db := r.db
+	if tx != nil {
+		db = tx
+	}
+	result, err := r.cb.Execute(func() (any, error) {
+		var userGroups []*domain.UserGroup
+		err := db.WithContext(ctx).
+			Where("group_id = ? AND user_id != ?", groupID, senderID).
+			Find(&userGroups).Error
+		if err != nil {
+			return nil, err
+		}
+		return userGroups, nil
+	})
+
+	if err != nil {
+		return nil, &gtk.InternalError{Message: "failed to get group members except sender", Err: err}
+	}
+
+	return result.([]*domain.UserGroup), nil
+}
+
 // Exists checks if a user is a member of a group
 func (r *UserGroupRepository) Exists(ctx context.Context, userID, groupID int64) (bool, error) {
 	result, err := r.cb.Execute(func() (any, error) {

@@ -47,15 +47,24 @@ func NewMessageRepository(db *gorm.DB, cb *gobreaker.CircuitBreaker[any]) *Messa
 }
 
 // Create creates a new message
-func (r *MessageRepository) Create(ctx context.Context, message *domain.Message) error {
+func (r *MessageRepository) Create(ctx context.Context, tx *gorm.DB, message *domain.Message) error {
+	db := r.db
+	if tx != nil {
+		db = tx
+	}
 	_, err := r.cb.Execute(func() (any, error) {
-		return nil, r.db.WithContext(ctx).Create(message).Error
+		return nil, db.WithContext(ctx).Create(message).Error
 	})
 
 	if err != nil {
 		return &gtk.InternalError{Message: "failed to create message", Err: err}
 	}
 	return nil
+}
+
+// Transaction executes a transaction function using the repository's database
+func (r *MessageRepository) Transaction(ctx context.Context, fn func(tx *gorm.DB) error) error {
+	return r.db.WithContext(ctx).Transaction(fn)
 }
 
 // GetByID retrieves a message by ID

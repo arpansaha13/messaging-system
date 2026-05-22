@@ -40,7 +40,7 @@ func SetupRouter(deps Deps) *mux.Router {
 	// Initialize services
 	userService := service.NewUserService(userRepo, contactRepo)
 	chatService := service.NewChatService(chatRepo, messageRepo)
-	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, userGroupRepo, deps.ChatBroker, deps.DB, deps.Circuits.Postgres)
+	messageService := service.NewMessageService(messageRepo, messageRecipientRepo, chatRepo, userGroupRepo, channelRepo, deps.ChatBroker, deps.Circuits.Postgres)
 	channelService := service.NewChannelService(channelRepo, groupRepo, userGroupRepo)
 	contactService := service.NewContactService(contactRepo, userRepo)
 	groupService := service.NewGroupService(groupRepo, userGroupRepo, userRepo)
