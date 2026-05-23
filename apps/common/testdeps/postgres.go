@@ -16,7 +16,6 @@ import (
 
 const (
 	EnvDepsMode    = "TEST_DEPS_MODE"
-	EnvPostgresDSN = "TEST_POSTGRES_DSN"
 	modeContainer  = "container"
 	modeExternal   = "external"
 	defaultPGPort  = "5432/tcp"
@@ -197,16 +196,12 @@ func (p *externalPostgresProvider) Teardown(context.Context) error {
 
 func (p *externalPostgresProvider) resolveExternalDSN() (string, error) {
 	normalizedService := strings.ToUpper(strings.ReplaceAll(p.cfg.ServiceName, "-", "_"))
-	serviceKey := fmt.Sprintf("%s_%s", EnvPostgresDSN, normalizedService)
+	serviceKey := fmt.Sprintf("TEST_POSTGRES_DSN_%s", normalizedService)
 
 	if dsn := strings.TrimSpace(os.Getenv(serviceKey)); dsn != "" {
 		return dsn, nil
 	}
-	if dsn := strings.TrimSpace(os.Getenv(EnvPostgresDSN)); dsn != "" {
-		return dsn, nil
-	}
-
-	return "", fmt.Errorf("missing external postgres DSN: set %s (or %s)", serviceKey, EnvPostgresDSN)
+	return "", fmt.Errorf("missing external postgres DSN: set %s", serviceKey)
 }
 
 func healthCheckPostgres(ctx context.Context, dsn string) error {
