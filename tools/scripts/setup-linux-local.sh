@@ -91,16 +91,55 @@ ensure_db_and_migrate 5433 "auth_db" "auth"
 ensure_db_and_migrate 5434 "users_db" "user"
 ensure_db_and_migrate 5432 "messaging_db" "backend"
 
-echo "Enabling and starting RabbitMQ and Memcached..."
-${SUDO} systemctl enable rabbitmq-server memcached >/dev/null 2>&1 || true
-for svc in rabbitmq-server memcached; do
-  if ${SUDO} systemctl is-active --quiet "$svc"; then
-    echo "$svc already running, skipping restart."
-  else
-    echo "Starting $svc..."
-    ${SUDO} systemctl start "$svc"
+has_systemd() {
+  [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1
+}
+
+start_service_fallback() {
+  local svc="$1"
+  if command -v service >/dev/null 2>&1; then
+    ${SUDO} service "$svc" status >/dev/null 2>&1 && {
+      echo "$svc already running, skipping restart."
+      return 0
+    }
+    echo "Starting $svc with service..."
+    ${SUDO} service "$svc" start
+    return 0
   fi
-done
+  if [[ "$svc" == "rabbitmq-server" ]] && command -v rabbitmq-server >/dev/null 2>&1; then
+    echo "Starting rabbitmq-server in detached mode..."
+    ${SUDO} rabbitmq-server -detached
+    return 0
+  fi
+  if [[ "$svc" == "memcached" ]] && command -v memcached >/dev/null 2>&1; then
+    if pgrep -x memcached >/dev/null 2>&1; then
+      echo "memcached already running, skipping start."
+      return 0
+    fi
+    echo "Starting memcached in daemon mode..."
+    ${SUDO} memcached -d
+    return 0
+  fi
+  echo "Unable to manage service $svc: no systemd/service/manual fallback available."
+  return 1
+}
+
+echo "Enabling and starting RabbitMQ and Memcached..."
+if has_systemd; then
+  ${SUDO} systemctl enable rabbitmq-server memcached >/dev/null 2>&1 || true
+  for svc in rabbitmq-server memcached; do
+    if ${SUDO} systemctl is-active --quiet "$svc"; then
+      echo "$svc already running, skipping restart."
+    else
+      echo "Starting $svc with systemd..."
+      ${SUDO} systemctl start "$svc"
+    fi
+  done
+else
+  echo "systemd not detected; using non-systemd service fallback."
+  start_service_fallback rabbitmq-server
+  start_service_fallback memcached
+fi
 
 echo ""
 echo "Local Linux setup complete (non-containerized mode)."
@@ -111,8 +150,13 @@ echo " - ${DATA_ROOT}/default"
 echo ""
 echo "Verify installation with:"
 echo "  pg_lsclusters"
-echo "  sudo systemctl status rabbitmq-server --no-pager"
-echo "  sudo systemctl status memcached --no-pager"
+if has_systemd; then
+  echo "  ${SUDO} systemctl status rabbitmq-server --no-pager"
+  echo "  ${SUDO} systemctl status memcached --no-pager"
+else
+  echo "  ${SUDO} service rabbitmq-server status   # or: rabbitmqctl status"
+  echo "  ${SUDO} service memcached status          # or: pgrep -x memcached"
+fi
 echo "  pg_isready -h localhost -p 5433"
 echo "  pg_isready -h localhost -p 5434"
 echo "  pg_isready -h localhost -p 5432"
