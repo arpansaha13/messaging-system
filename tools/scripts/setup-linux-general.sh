@@ -52,9 +52,16 @@ install_go_tool() {
 install_go_tool "protoc-gen-go" "google.golang.org/protobuf/cmd/protoc-gen-go@latest"
 install_go_tool "protoc-gen-go-grpc" "google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest"
 install_go_tool "task" "github.com/go-task/task/v3/cmd/task@latest"
-install_go_tool "migrate" "github.com/golang-migrate/migrate/v4/cmd/migrate@latest"
 install_go_tool "goimports" "golang.org/x/tools/cmd/goimports@latest"
 install_go_tool "gopls" "golang.org/x/tools/gopls@latest"
+
+# Install migrate with postgres build tag so DB migrations work for postgres URLs.
+if command -v migrate >/dev/null 2>&1; then
+  echo "migrate already installed"
+else
+  echo "Installing migrate with postgres driver support..."
+  GOBIN="$(go env GOPATH)/bin" go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+fi
 
 if command -v pnpm >/dev/null 2>&1; then
   echo "pnpm already installed"
