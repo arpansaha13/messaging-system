@@ -74,6 +74,13 @@ if [[ -z "${MIGRATE_BIN}" || ! -x "${MIGRATE_BIN}" ]]; then
   exit 1
 fi
 
+# Ensure migrate is accessible to postgres user
+if [[ ! -x /usr/local/bin/migrate ]]; then
+  cp "${MIGRATE_BIN}" /usr/local/bin/migrate
+  chmod 755 /usr/local/bin/migrate
+fi
+MIGRATE_BIN="/usr/local/bin/migrate"
+
 ensure_db_and_migrate() {
   local port="$1"
   local db_name="$2"
