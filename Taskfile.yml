@@ -4,22 +4,13 @@ version: '3'
 # Uses golang-migrate (https://github.com/golang-migrate/migrate)
 
 vars:
-  SERVICES: backend user
-  # Default database connection strings for local access via exposed ports (host mode)
-  # These can be overridden by environment variables or by passing them to the task
-  BACKEND_DB_URL: '{{.DATABASE_URL | default (printf "postgres://%s:%s@localhost:7020/%s?sslmode=disable" (.DB_USERNAME | default "user") (.DB_PASSWORD | default "password") (.DB_NAME | default "messaging_db"))}}'
-  USER_DB_URL_VAR: '{{.USER_DB_URL | default (printf "postgres://%s:%s@localhost:7040/%s?sslmode=disable" (.USER_DB_USERNAME | default "user") (.USER_DB_PASSWORD | default "password") (.USER_DB_NAME | default "users_db"))}}'
+  SERVICES: auth backend user
 
 tasks:
   default:
     cmds:
       - task --list
     silent: true
-
-  setup:
-    desc: Check and install required development tools and dependencies
-    cmds:
-      - ./tools/scripts/setup.sh
 
   headlamp:
     desc: Generate authentication token and start Headlamp dashboard UI
@@ -43,7 +34,6 @@ tasks:
       - TEST_POSTGRES_DSN_BACKEND
       - TEST_POSTGRES_DSN_USER
       - TEST_POSTGRES_DSN_CHAT_WORKER
-      You may also use TEST_POSTGRES_DSN as a global fallback.
     cmds:
       - TEST_DEPS_MODE=external sh -c 'cd apps/auth/server && go test ./tests/... -timeout 300s'
       - TEST_DEPS_MODE=external sh -c 'cd apps/backend/server && go test ./tests/... -timeout 300s'
@@ -117,35 +107,20 @@ tasks:
 
   migrate:service:up:
     internal: true
-    vars:
-      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
-      MIG_URL: '{{if eq .SERVICE "backend"}}{{.BACKEND_DB_URL}}{{else}}{{.USER_DB_URL_VAR}}{{end}}'
     cmds:
-      - echo ">>> Running migrations UP for [{{.SERVICE}}]"
-      - migrate -path {{.MIG_PATH}} -database "{{.MIG_URL}}" up
+      - DB_URL="{{.DB_URL}}" ./tools/scripts/migrate.sh up {{.SERVICE}}
 
   migrate:service:down:
     internal: true
-    vars:
-      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
-      MIG_URL: '{{if eq .SERVICE "backend"}}{{.BACKEND_DB_URL}}{{else}}{{.USER_DB_URL_VAR}}{{end}}'
     cmds:
-      - echo ">>> Rolling back last migration for [{{.SERVICE}}]"
-      - migrate -path {{.MIG_PATH}} -database "{{.MIG_URL}}" down 1
+      - DB_URL="{{.DB_URL}}" ./tools/scripts/migrate.sh down {{.SERVICE}}
 
   migrate:service:status:
     internal: true
-    vars:
-      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
-      MIG_URL: '{{if eq .SERVICE "backend"}}{{.BACKEND_DB_URL}}{{else}}{{.USER_DB_URL_VAR}}{{end}}'
     cmds:
-      - echo ">>> Status for [{{.SERVICE}}]:"
-      - migrate -path {{.MIG_PATH}} -database "{{.MIG_URL}}" version
+      - DB_URL="{{.DB_URL}}" ./tools/scripts/migrate.sh status {{.SERVICE}}
 
   migrate:service:create:
     internal: true
-    vars:
-      MIG_PATH: '{{if eq .SERVICE "backend"}}apps/backend/server/migrations{{else}}apps/{{.SERVICE}}/migrations{{end}}'
     cmds:
-      - echo ">>> Creating migration '{{.NAME}}' for [{{.SERVICE}}]"
-      - migrate create -ext sql -dir {{.MIG_PATH}} -seq {{.NAME}}
+      - ./tools/scripts/migrate.sh create {{.SERVICE}} {{.NAME}}

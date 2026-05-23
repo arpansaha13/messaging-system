@@ -22,8 +22,8 @@ skaffold dev --no-prune=false --cache-artifacts=false
 ### Setup & code generation
 
 ```bash
-# Verify / install required tools (protoc, task, migrate, skaffold, helm, kubectl, headlamp)
-bash tools/scripts/setup.sh
+# Verify / install required tools (protoc, task, migrate, goimports, gopls)
+bash tools/scripts/setup-mac-general.sh
 
 # Generate Go code from protobuf definitions in apps/common/proto/
 bash tools/scripts/protoc-gen.sh

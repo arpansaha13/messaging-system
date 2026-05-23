@@ -27,7 +27,6 @@ func TestResolveDepsMode_InvalidMode(t *testing.T) {
 
 func TestExternalProvider_MissingDSN(t *testing.T) {
 	t.Setenv(EnvDepsMode, modeExternal)
-	t.Setenv(EnvPostgresDSN, "")
 	t.Setenv("TEST_POSTGRES_DSN_AUTH", "")
 
 	provider := &externalPostgresProvider{cfg: PostgresConfig{ServiceName: "auth"}}
@@ -37,7 +36,7 @@ func TestExternalProvider_MissingDSN(t *testing.T) {
 }
 
 func TestExternalProvider_UnreachableDSN(t *testing.T) {
-	t.Setenv(EnvPostgresDSN, "host=127.0.0.1 port=1 user=x password=x dbname=x sslmode=disable connect_timeout=1")
+	t.Setenv("TEST_POSTGRES_DSN_AUTH", "host=127.0.0.1 port=1 user=x password=x dbname=x sslmode=disable connect_timeout=1")
 
 	provider := &externalPostgresProvider{cfg: PostgresConfig{ServiceName: "auth"}}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -49,7 +48,7 @@ func TestExternalProvider_UnreachableDSN(t *testing.T) {
 }
 
 func TestExternalProvider_ServiceSpecificDSN(t *testing.T) {
-	os.Unsetenv(EnvPostgresDSN)
+	os.Unsetenv("TEST_POSTGRES_DSN_AUTH")
 	t.Setenv("TEST_POSTGRES_DSN_CHAT_WORKER", "host=127.0.0.1 port=1 user=x password=x dbname=x sslmode=disable connect_timeout=1")
 
 	provider := &externalPostgresProvider{cfg: PostgresConfig{ServiceName: "chat-worker"}}

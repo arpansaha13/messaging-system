@@ -47,9 +47,6 @@ lerna-debug.log*
 .settings/
 *.sublime-workspace
 
-# Docker Data Volumes
-.docker/**
-
 # Nuxt
 .nuxt
 .nitro
@@ -64,6 +61,10 @@ tests/e2e/.auth/
 tests/e2e/test-results/
 tests/e2e/test-report/
 playwright-report/
+
+# Data Volumes (Docker and others)
+.docker
+data
 
 # Other
 temp
