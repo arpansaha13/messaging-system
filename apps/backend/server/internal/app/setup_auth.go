@@ -9,7 +9,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
+	"github.com/arpansaha13/goauthkit/pb"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"

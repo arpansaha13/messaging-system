@@ -8,8 +8,8 @@ import (
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
+	"github.com/arpansaha13/goauthkit/pb"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
+	"github.com/arpansaha13/goauthkit/pb"
 )
 
 // ValidateSessionResponse represents the auth service response

@@ -6,8 +6,8 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/arpansaha13/goauthkit/pb"
 )
 
 // AuthServiceClient defines the interface for auth service client operations

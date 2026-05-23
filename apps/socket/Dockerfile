@@ -15,7 +15,6 @@ ENV GOMODCACHE=/gomod-cache
 COPY apps/socket/go.mod apps/socket/go.sum ./
 COPY apps/socket/cmd/ ./cmd/
 COPY apps/socket/internal/ ./internal/
-COPY apps/socket/pb/ ./pb/
 
 RUN --mount=type=cache,target=/gomod-cache \
 	--mount=type=cache,target=/go-cache \

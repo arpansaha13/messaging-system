@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/arpansaha13/messaging-system/apps/socket/pb"
+	"github.com/arpansaha13/goauthkit/pb"
 )
 
 // IAuthServiceClient defines the auth service operations needed by the socket server.

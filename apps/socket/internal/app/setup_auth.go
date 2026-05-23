@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/goauthkit/pb"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/socket/pb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

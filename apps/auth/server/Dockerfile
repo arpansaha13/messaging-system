@@ -1,7 +1,7 @@
 FROM golang:1.25-alpine AS builder
 
 # Add required build dependencies
-RUN apk add --no-cache gcc musl-dev git
+RUN apk add --no-cache gcc musl-dev
 
 WORKDIR /app/common
 
@@ -14,8 +14,6 @@ WORKDIR /app/auth/server
 ENV CGO_ENABLED=1
 ENV GOCACHE=/go-cache
 ENV GOMODCACHE=/gomod-cache
-ENV GOPROXY=direct
-ENV GOSUMDB=off
 
 COPY apps/auth/server/go.mod apps/auth/server/go.sum ./
 COPY apps/auth/server/cmd/ ./cmd/
