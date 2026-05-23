@@ -5,14 +5,8 @@ set -euo pipefail
 # Creates isolated auth/backend/user clusters on dedicated ports,
 # then creates test databases and runs migrations.
 
-if [[ "${EUID}" -eq 0 ]]; then
-  SUDO=""
-elif command -v sudo >/dev/null 2>&1; then
-  SUDO="sudo"
-elif command -v doas >/dev/null 2>&1; then
-  SUDO="doas"
-else
-  echo "This script requires root privileges. Run as root, or install sudo/doas."
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "This script must be run as root."
   exit 1
 fi
 
@@ -27,8 +21,8 @@ DATA_ROOT="${REPO_ROOT}/data/integration"
 mkdir -p "${DATA_ROOT}/auth" "${DATA_ROOT}/user" "${DATA_ROOT}/default"
 
 echo "Ensuring PostgreSQL is installed..."
-${SUDO} apt-get update
-${SUDO} apt-get install -y postgresql postgresql-contrib
+apt-get update
+apt-get install -y postgresql postgresql-contrib
 
 PG_VERSION="$(psql -V | awk '{print $3}' | cut -d. -f1)"
 
@@ -37,14 +31,14 @@ create_cluster() {
   local port="$2"
   local datadir="$3"
 
-  if ${SUDO} pg_lsclusters 2>/dev/null | awk '{print $2}' | grep -qx "${cluster_name}"; then
+  if pg_lsclusters 2>/dev/null | awk '{print $2}' | grep -qx "${cluster_name}"; then
     echo "Cluster ${cluster_name} already exists, skipping create"
   else
     echo "Creating integration cluster ${cluster_name} at ${datadir} on port ${port}"
-    ${SUDO} pg_createcluster --datadir "${datadir}" --port "${port}" "${PG_VERSION}" "${cluster_name}"
+    pg_createcluster --datadir "${datadir}" --port "${port}" "${PG_VERSION}" "${cluster_name}"
   fi
 
-  ${SUDO} pg_ctlcluster "${PG_VERSION}" "${cluster_name}" start
+  pg_ctlcluster "${PG_VERSION}" "${cluster_name}" start
 }
 
 create_cluster "int-auth" 6433 "${DATA_ROOT}/auth"
@@ -62,8 +56,8 @@ ensure_db_and_migrate() {
   local service="$3"
 
   echo "Ensuring database ${db_name} exists on port ${port}..."
-  ${SUDO} -u postgres psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
-    || ${SUDO} -u postgres createdb -p "${port}" "${db_name}"
+  runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
+    || runuser -u postgres -- createdb -p "${port}" "${db_name}"
 
   local dsn="postgres://postgres@localhost:${port}/${db_name}?sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
