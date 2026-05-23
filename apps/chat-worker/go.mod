@@ -3,8 +3,8 @@ module github.com/arpansaha13/messaging-system/apps/chat-worker
 go 1.25.6
 
 require (
-	github.com/arpansaha13/gotoolkit v0.13.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
+	github.com/arpansaha13/messaging-system/packages/gotoolkit v0.0.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/sony/gobreaker/v2 v2.4.0
 	github.com/stretchr/testify v1.11.1
@@ -84,3 +84,7 @@ require (
 )
 
 replace github.com/arpansaha13/messaging-system/apps/common => ../common
+
+replace github.com/arpansaha13/messaging-system/packages/goauthkit => ../../packages/goauthkit
+
+replace github.com/arpansaha13/messaging-system/packages/gotoolkit => ../../packages/gotoolkit

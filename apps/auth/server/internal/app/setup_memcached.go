@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"
 	"github.com/bradfitz/gomemcache/memcache"
 	"go.uber.org/zap"

@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/arpansaha13/goauthkit"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit"
 )
 
 // Dependencies holds the shared dependencies for gRPC and HTTP servers.

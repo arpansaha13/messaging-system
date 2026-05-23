@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/rabbitmq/amqp091-go"
 	"go.uber.org/zap"
 )

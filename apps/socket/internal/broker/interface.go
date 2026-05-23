@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 )
 
 // ServerQueueMessage is the envelope published to the outgoing exchange

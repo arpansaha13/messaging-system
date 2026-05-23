@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/broker"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"

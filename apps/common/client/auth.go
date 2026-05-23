@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/arpansaha13/goauthkit/pb"
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"

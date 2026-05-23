@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arpansaha13/goauthkit"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit"
 	"github.com/stretchr/testify/suite"
 )
 

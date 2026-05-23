@@ -3,7 +3,7 @@ package broker
 import (
 	"context"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	commonbr "github.com/arpansaha13/messaging-system/apps/common/broker"
 )
 

@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
