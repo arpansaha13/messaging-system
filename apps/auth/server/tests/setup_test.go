@@ -16,9 +16,8 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"
+	"github.com/arpansaha13/messaging-system/apps/common/testdeps"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -27,7 +26,7 @@ import (
 
 type AuthTestSuite struct {
 	suite.Suite
-	Container      testcontainers.Container
+	DepSet         *testdeps.ResolvedDependencySet
 	DB             *gorm.DB
 	Ctx            context.Context
 	HTTPServerAddr string
@@ -76,30 +75,15 @@ func (s *AuthTestSuite) SetupSuite() {
 	ctx := context.Background()
 	s.Ctx = ctx
 
-	// Start Postgres container
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:16-alpine",
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_USER":     "testuser",
-			"POSTGRES_PASSWORD": "testpass",
-			"POSTGRES_DB":       "test_auth",
-		},
-		WaitingFor: wait.ForLog("database system is ready to accept connections").
-			WithOccurrence(2).
-			WithStartupTimeout(60 * time.Second),
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
+	resolvedDeps, err := testdeps.ResolveTestDependencies(ctx, testdeps.PostgresConfig{
+		ServiceName: "auth",
+		DBUser:      "testuser",
+		DBPassword:  "testpass",
+		DBName:      "test_auth",
 	})
 	s.Require().NoError(err)
-	s.Container = container
-
-	host, _ := container.Host(ctx)
-	port, _ := container.MappedPort(ctx, "5432")
-	databaseURL := fmt.Sprintf("postgres://testuser:testpass@%s:%s/test_auth?sslmode=disable", host, port.Port())
+	s.DepSet = resolvedDeps
+	databaseURL := resolvedDeps.Deps.PostgresURL
 	os.Setenv("DATABASE_URL", databaseURL)
 
 	db, err := gorm.Open(postgres.Open(databaseURL), &gorm.Config{
@@ -115,9 +99,9 @@ func (s *AuthTestSuite) SetupSuite() {
 	// Initialize deps and server
 	logger, _ := zap.NewDevelopment()
 	cbs := circuits.New(logger)
-	deps := app.SetupDependencies(db, logger, cbs, nil)
-	s.Deps = deps
-	s.HTTPServer = app.SetupHTTPServer(deps, logger)
+	appDeps := app.SetupDependencies(db, logger, cbs, nil)
+	s.Deps = appDeps
+	s.HTTPServer = app.SetupHTTPServer(appDeps, logger)
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	s.Require().NoError(err)
@@ -137,8 +121,8 @@ func (s *AuthTestSuite) TearDownSuite() {
 	if s.HTTPServer != nil {
 		s.HTTPServer.Shutdown(s.Ctx)
 	}
-	if s.Container != nil {
-		s.Container.Terminate(s.Ctx)
+	if s.DepSet != nil {
+		s.Require().NoError(s.DepSet.Teardown(s.Ctx))
 	}
 }
 
