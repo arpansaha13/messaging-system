@@ -8,32 +8,32 @@ import (
 	"time"
 
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // MockUserService mocks the user service state for testing
 type MockUserService struct {
 	mu           sync.RWMutex
-	userProfiles map[int64]*commonpb.UserProfileData
+	userProfiles map[int64]*pb.UserProfileData
 }
 
 // NewMockUserService creates a new mock user service
 func NewMockUserService() *MockUserService {
 	return &MockUserService{
-		userProfiles: make(map[int64]*commonpb.UserProfileData),
+		userProfiles: make(map[int64]*pb.UserProfileData),
 	}
 }
 
 // SetUserProfile sets the user profile for a specific user ID
-func (m *MockUserService) SetUserProfile(userID int64, profile *commonpb.UserProfileData) {
+func (m *MockUserService) SetUserProfile(userID int64, profile *pb.UserProfileData) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.userProfiles[userID] = profile
 }
 
 // GetUserProfile gets user profile by ID (internal helper)
-func (m *MockUserService) GetUserProfile(userID int64) (*commonpb.UserProfileData, bool) {
+func (m *MockUserService) GetUserProfile(userID int64) (*pb.UserProfileData, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -57,19 +57,19 @@ func NewMockUserServiceClient(mockUser *MockUserService) *MockUserServiceClient 
 }
 
 // GetUserProfiles retrieves profile information for multiple users
-func (c *MockUserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64) (*commonpb.GetUserProfilesResponse, error) {
-	profiles := make(map[int64]*commonpb.UserProfileData)
+func (c *MockUserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64) (*pb.GetUserProfilesResponse, error) {
+	profiles := make(map[int64]*pb.UserProfileData)
 	for _, id := range userIDs {
 		p, exists := c.mockUser.GetUserProfile(id)
 		if exists {
 			profiles[id] = p
 		}
 	}
-	return &commonpb.GetUserProfilesResponse{Profiles: profiles}, nil
+	return &pb.GetUserProfilesResponse{Profiles: profiles}, nil
 }
 
 // GetUserProfile retrieves profile information for a single user
-func (c *MockUserServiceClient) GetUserProfile(ctx context.Context, userID int64) (*commonpb.UserProfileData, error) {
+func (c *MockUserServiceClient) GetUserProfile(ctx context.Context, userID int64) (*pb.UserProfileData, error) {
 	p, exists := c.mockUser.GetUserProfile(userID)
 	if !exists {
 		return nil, fmt.Errorf("profile not found")
@@ -99,7 +99,7 @@ func (c *MockUserServiceClient) GetDomainProfile(ctx context.Context, userID int
 }
 
 // ToDomainProfile converts a protobuf UserProfileData to a domain.UserProfile
-func (c *MockUserServiceClient) ToDomainProfile(p *commonpb.UserProfileData) *domain.UserProfile {
+func (c *MockUserServiceClient) ToDomainProfile(p *pb.UserProfileData) *domain.UserProfile {
 	if p == nil {
 		return nil
 	}
@@ -119,11 +119,11 @@ func (c *MockUserServiceClient) ToDomainProfile(p *commonpb.UserProfileData) *do
 }
 
 // SearchUserProfiles searches user profiles by query
-func (c *MockUserServiceClient) SearchUserProfiles(ctx context.Context, query string, limit int32) (*commonpb.SearchUserProfilesResponse, error) {
+func (c *MockUserServiceClient) SearchUserProfiles(ctx context.Context, query string, limit int32) (*pb.SearchUserProfilesResponse, error) {
 	c.mockUser.mu.RLock()
 	defer c.mockUser.mu.RUnlock()
 
-	profiles := []*commonpb.UserProfileData{}
+	profiles := []*pb.UserProfileData{}
 	query = strings.ToLower(query)
 
 	for _, p := range c.mockUser.userProfiles {
@@ -134,14 +134,14 @@ func (c *MockUserServiceClient) SearchUserProfiles(ctx context.Context, query st
 			}
 		}
 	}
-	return &commonpb.SearchUserProfilesResponse{Profiles: profiles}, nil
+	return &pb.SearchUserProfilesResponse{Profiles: profiles}, nil
 }
 
 // UpdateUserProfile updates user profile fields via gRPC
-func (c *MockUserServiceClient) UpdateUserProfile(ctx context.Context, req *commonpb.UpdateUserProfileRequest) (*commonpb.UpdateUserProfileResponse, error) {
+func (c *MockUserServiceClient) UpdateUserProfile(ctx context.Context, req *pb.UpdateUserProfileRequest) (*pb.UpdateUserProfileResponse, error) {
 	p, exists := c.mockUser.GetUserProfile(req.UserId)
 	if !exists {
-		p = &commonpb.UserProfileData{
+		p = &pb.UserProfileData{
 			UserId:    req.UserId,
 			CreatedAt: timestamppb.New(time.Now()),
 		}
@@ -157,7 +157,7 @@ func (c *MockUserServiceClient) UpdateUserProfile(ctx context.Context, req *comm
 		p.Dp = req.Dp
 	}
 	c.mockUser.SetUserProfile(req.UserId, p)
-	return &commonpb.UpdateUserProfileResponse{Profile: p}, nil
+	return &pb.UpdateUserProfileResponse{Profile: p}, nil
 }
 
 // Close is a stub implementation

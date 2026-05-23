@@ -8,7 +8,7 @@ import (
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
@@ -18,14 +18,14 @@ import (
 // UserServiceClient provides gRPC client methods for the user service (profiles/contacts)
 type UserServiceClient struct {
 	conn          *grpc.ClientConn
-	profileClient commonpb.UserProfileServiceClient
+	profileClient pb.UserProfileServiceClient
 	cb            *gobreaker.CircuitBreaker[any]
 	mu            sync.RWMutex
 	sf            singleflight.Group
 }
 
 // NewUserServiceClient creates a new user service client
-func NewUserServiceClient(conn *grpc.ClientConn, profileClient commonpb.UserProfileServiceClient, cb *gobreaker.CircuitBreaker[any]) *UserServiceClient {
+func NewUserServiceClient(conn *grpc.ClientConn, profileClient pb.UserProfileServiceClient, cb *gobreaker.CircuitBreaker[any]) *UserServiceClient {
 	svc := &UserServiceClient{
 		cb: cb,
 	}
@@ -34,21 +34,21 @@ func NewUserServiceClient(conn *grpc.ClientConn, profileClient commonpb.UserProf
 }
 
 // SetConnection swaps the underlying gRPC connection and client.
-func (s *UserServiceClient) SetConnection(conn *grpc.ClientConn, profileClient commonpb.UserProfileServiceClient) {
+func (s *UserServiceClient) SetConnection(conn *grpc.ClientConn, profileClient pb.UserProfileServiceClient) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.conn = conn
 	s.profileClient = profileClient
 }
 
-func (s *UserServiceClient) getProfileClient() commonpb.UserProfileServiceClient {
+func (s *UserServiceClient) getProfileClient() pb.UserProfileServiceClient {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.profileClient
 }
 
 // GetUserProfiles retrieves profile information for multiple users from the user service
-func (s *UserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64) (*commonpb.GetUserProfilesResponse, error) {
+func (s *UserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64) (*pb.GetUserProfilesResponse, error) {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("get user profiles request received", zap.Int64s("user_ids", userIDs))
 
@@ -64,7 +64,7 @@ func (s *UserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64
 		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
 		defer cancel()
 
-		req := &commonpb.GetUserProfilesRequest{UserIds: userIDs}
+		req := &pb.GetUserProfilesRequest{UserIds: userIDs}
 
 		return s.cb.Execute(func() (any, error) {
 			return client.GetUserProfiles(detachedCtx, req)
@@ -79,7 +79,7 @@ func (s *UserServiceClient) GetUserProfiles(ctx context.Context, userIDs []int64
 			log.Error("failed to get user profiles", zap.Int64s("user_ids", userIDs), zap.Error(res.Err))
 			return nil, fmt.Errorf("failed to get user profiles: %w", res.Err)
 		}
-		resp := res.Val.(*commonpb.GetUserProfilesResponse)
+		resp := res.Val.(*pb.GetUserProfilesResponse)
 		log.Debug("user profiles retrieved successfully", zap.Int("count", len(resp.Profiles)))
 		return resp, nil
 	}
@@ -100,7 +100,7 @@ func (s *UserServiceClient) GetDomainProfiles(ctx context.Context, userIDs []int
 }
 
 // GetUserProfile retrieves profile information for a single user from the user service
-func (s *UserServiceClient) GetUserProfile(ctx context.Context, userID int64) (*commonpb.UserProfileData, error) {
+func (s *UserServiceClient) GetUserProfile(ctx context.Context, userID int64) (*pb.UserProfileData, error) {
 	resp, err := s.GetUserProfiles(ctx, []int64{userID})
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (s *UserServiceClient) GetDomainProfile(ctx context.Context, userID int64) 
 }
 
 // SearchUserProfiles searches user profiles by query
-func (s *UserServiceClient) SearchUserProfiles(ctx context.Context, query string, limit int32) (*commonpb.SearchUserProfilesResponse, error) {
+func (s *UserServiceClient) SearchUserProfiles(ctx context.Context, query string, limit int32) (*pb.SearchUserProfilesResponse, error) {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("search user profiles request received", zap.String("query", query))
 
@@ -139,7 +139,7 @@ func (s *UserServiceClient) SearchUserProfiles(ctx context.Context, query string
 		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
 		defer cancel()
 
-		req := &commonpb.SearchUserProfilesRequest{
+		req := &pb.SearchUserProfilesRequest{
 			Query: query,
 			Limit: limit,
 		}
@@ -157,14 +157,14 @@ func (s *UserServiceClient) SearchUserProfiles(ctx context.Context, query string
 			log.Error("failed to search user profiles", zap.String("query", query), zap.Error(res.Err))
 			return nil, fmt.Errorf("failed to search user profiles: %w", res.Err)
 		}
-		resp := res.Val.(*commonpb.SearchUserProfilesResponse)
+		resp := res.Val.(*pb.SearchUserProfilesResponse)
 		log.Debug("user profiles search successfully", zap.Int("count", len(resp.Profiles)))
 		return resp, nil
 	}
 }
 
 // UpdateUserProfile updates user profile fields via gRPC
-func (s *UserServiceClient) UpdateUserProfile(ctx context.Context, req *commonpb.UpdateUserProfileRequest) (*commonpb.UpdateUserProfileResponse, error) {
+func (s *UserServiceClient) UpdateUserProfile(ctx context.Context, req *pb.UpdateUserProfileRequest) (*pb.UpdateUserProfileResponse, error) {
 	log := gtk.LoggerFromContext(ctx)
 	log.Debug("update user profile request received", zap.Int64("user_id", req.UserId))
 
@@ -185,7 +185,7 @@ func (s *UserServiceClient) UpdateUserProfile(ctx context.Context, req *commonpb
 		return nil, fmt.Errorf("failed to update user profile: %w", err)
 	}
 
-	resp := result.(*commonpb.UpdateUserProfileResponse)
+	resp := result.(*pb.UpdateUserProfileResponse)
 	log.Debug("user profile updated successfully", zap.Int64("user_id", req.UserId))
 	return resp, nil
 }
@@ -205,7 +205,7 @@ func (s *UserServiceClient) Close() error {
 }
 
 // ToDomainProfile converts a protobuf UserProfileData to a domain.UserProfile
-func ToDomainProfile(p *commonpb.UserProfileData) *domain.UserProfile {
+func ToDomainProfile(p *pb.UserProfileData) *domain.UserProfile {
 	if p == nil {
 		return nil
 	}

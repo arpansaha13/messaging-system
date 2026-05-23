@@ -9,7 +9,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -46,7 +46,7 @@ func SetupUserService(
 				return fmt.Errorf("failed to connect to user service: %w", err)
 			}
 
-			userClient.SetConnection(userConn, commonpb.NewUserProfileServiceClient(userConn))
+			userClient.SetConnection(userConn, pb.NewUserProfileServiceClient(userConn))
 			log.Info("user service connected", zap.String("address", cfg.UserServiceHost()))
 			return nil
 		},

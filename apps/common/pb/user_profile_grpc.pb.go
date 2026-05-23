@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.1
 // - protoc             v7.34.1
-// source: user_profile.proto
+// source: proto/user_profile.proto
 
 package pb
 
@@ -287,5 +287,5 @@ var UserProfileService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "user_profile.proto",
+	Metadata: "proto/user_profile.proto",
 }

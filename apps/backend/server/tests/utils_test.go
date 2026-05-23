@@ -17,7 +17,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/tests/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 
 // TestFixture represents a common test fixture for all test cases
@@ -83,7 +83,7 @@ func NewTestDB(ctx context.Context, db *gorm.DB, authMock *mocks.MockAuthService
 
 // CreateTestUserProfile creates a test user profile in the mock
 func (t *TestDB) CreateTestUserProfile(id int64, globalName string) (*domain.UserProfile, error) {
-	profile := &commonpb.UserProfileData{
+	profile := &pb.UserProfileData{
 		UserId:     id,
 		GlobalName: globalName,
 		Bio:        "Test bio",

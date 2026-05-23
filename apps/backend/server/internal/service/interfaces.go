@@ -6,9 +6,8 @@ import (
 
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 
 // IAuthServiceClient defines the interface for auth service client operations (identity)
@@ -21,12 +20,12 @@ type IAuthServiceClient interface {
 
 // IUserServiceClient defines the interface for user service client operations (profiles)
 type IUserServiceClient interface {
-	GetUserProfiles(ctx context.Context, userIDs []int64) (*commonpb.GetUserProfilesResponse, error)
-	GetUserProfile(ctx context.Context, userID int64) (*commonpb.UserProfileData, error)
+	GetUserProfiles(ctx context.Context, userIDs []int64) (*pb.GetUserProfilesResponse, error)
+	GetUserProfile(ctx context.Context, userID int64) (*pb.UserProfileData, error)
 	GetDomainProfiles(ctx context.Context, userIDs []int64) (map[int64]*domain.UserProfile, error)
 	GetDomainProfile(ctx context.Context, userID int64) (*domain.UserProfile, error)
-	SearchUserProfiles(ctx context.Context, query string, limit int32) (*commonpb.SearchUserProfilesResponse, error)
-	UpdateUserProfile(ctx context.Context, req *commonpb.UpdateUserProfileRequest) (*commonpb.UpdateUserProfileResponse, error)
+	SearchUserProfiles(ctx context.Context, query string, limit int32) (*pb.SearchUserProfilesResponse, error)
+	UpdateUserProfile(ctx context.Context, req *pb.UpdateUserProfileRequest) (*pb.UpdateUserProfileResponse, error)
 	Close() error
 }
 

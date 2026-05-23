@@ -35,11 +35,11 @@ for proto_file in "$PROTO_DIR"/*.proto; do
     if [ -f "$proto_file" ]; then
         echo "Processing $proto_file..."
         protoc \
-            --proto_path="$PROTO_DIR" \
-            --go_out="./$OUT_DIR" \
-            --go-grpc_out="./$OUT_DIR" \
-            --go_opt=paths=source_relative \
-            --go-grpc_opt=paths=source_relative \
+            --proto_path=. \
+            --go_out=. \
+            --go-grpc_out=. \
+            --go_opt=module=github.com/arpansaha13/messaging-system/apps/common \
+            --go-grpc_opt=module=github.com/arpansaha13/messaging-system/apps/common \
             "$proto_file"
     fi
 done

@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/arpansaha13/gotoolkit/gtk"
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/controller"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
@@ -22,7 +22,7 @@ func SetupGRPCServer(deps *Dependencies, zapLogger *zap.Logger) *grpc.Server {
 	grpcServer := grpc.NewServer(opts...)
 
 	userProfileController := controller.NewUserProfileController(deps.UserProfileService)
-	commonpb.RegisterUserProfileServiceServer(grpcServer, userProfileController)
+	pb.RegisterUserProfileServiceServer(grpcServer, userProfileController)
 
 	return grpcServer
 }

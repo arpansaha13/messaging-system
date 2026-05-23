@@ -18,7 +18,6 @@ ENV GOMODCACHE=/gomod-cache
 COPY apps/backend/server/go.mod apps/backend/server/go.sum ./
 COPY apps/backend/server/cmd/ ./cmd/
 COPY apps/backend/server/internal/ ./internal/
-COPY apps/backend/server/pb/ ./pb/
 
 RUN --mount=type=cache,target=/gomod-cache \
   --mount=type=cache,target=/go-cache \

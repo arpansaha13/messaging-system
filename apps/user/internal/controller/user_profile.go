@@ -3,7 +3,7 @@ package controller
 import (
 	"context"
 
-	commonpb "github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/pb"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/service"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -11,7 +11,7 @@ import (
 
 // UserProfileController implements the UserProfileService gRPC server.
 type UserProfileController struct {
-	commonpb.UnimplementedUserProfileServiceServer
+	pb.UnimplementedUserProfileServiceServer
 	service service.IUserProfileService
 }
 
@@ -20,41 +20,41 @@ func NewUserProfileController(service service.IUserProfileService) *UserProfileC
 	return &UserProfileController{service: service}
 }
 
-func (c *UserProfileController) CreateUserProfile(ctx context.Context, req *commonpb.CreateUserProfileRequest) (*commonpb.CreateUserProfileResponse, error) {
+func (c *UserProfileController) CreateUserProfile(ctx context.Context, req *pb.CreateUserProfileRequest) (*pb.CreateUserProfileResponse, error) {
 	profile, err := c.service.Create(ctx, req.UserId, req.GlobalName)
 	if err != nil {
 		return nil, err
 	}
-	return &commonpb.CreateUserProfileResponse{
+	return &pb.CreateUserProfileResponse{
 		Profile: mapDomainToProto(profile),
 	}, nil
 }
 
-func (c *UserProfileController) GetUserProfile(ctx context.Context, req *commonpb.GetUserProfileRequest) (*commonpb.GetUserProfileResponse, error) {
+func (c *UserProfileController) GetUserProfile(ctx context.Context, req *pb.GetUserProfileRequest) (*pb.GetUserProfileResponse, error) {
 	profile, err := c.service.GetByID(ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
-	return &commonpb.GetUserProfileResponse{
+	return &pb.GetUserProfileResponse{
 		Profile: mapDomainToProto(profile),
 	}, nil
 }
 
-func (c *UserProfileController) GetUserProfiles(ctx context.Context, req *commonpb.GetUserProfilesRequest) (*commonpb.GetUserProfilesResponse, error) {
+func (c *UserProfileController) GetUserProfiles(ctx context.Context, req *pb.GetUserProfilesRequest) (*pb.GetUserProfilesResponse, error) {
 	profiles, err := c.service.GetByIDs(ctx, req.UserIds)
 	if err != nil {
 		return nil, err
 	}
-	pbProfiles := make(map[int64]*commonpb.UserProfileData, len(profiles))
+	pbProfiles := make(map[int64]*pb.UserProfileData, len(profiles))
 	for id, p := range profiles {
 		pbProfiles[id] = mapDomainToProto(p)
 	}
-	return &commonpb.GetUserProfilesResponse{
+	return &pb.GetUserProfilesResponse{
 		Profiles: pbProfiles,
 	}, nil
 }
 
-func (c *UserProfileController) UpdateUserProfile(ctx context.Context, req *commonpb.UpdateUserProfileRequest) (*commonpb.UpdateUserProfileResponse, error) {
+func (c *UserProfileController) UpdateUserProfile(ctx context.Context, req *pb.UpdateUserProfileRequest) (*pb.UpdateUserProfileResponse, error) {
 	var gn, dp, bio *string
 	if req.GlobalName != "" {
 		gn = &req.GlobalName
@@ -70,26 +70,26 @@ func (c *UserProfileController) UpdateUserProfile(ctx context.Context, req *comm
 	if err != nil {
 		return nil, err
 	}
-	return &commonpb.UpdateUserProfileResponse{
+	return &pb.UpdateUserProfileResponse{
 		Profile: mapDomainToProto(profile),
 	}, nil
 }
 
-func (c *UserProfileController) SearchUserProfiles(ctx context.Context, req *commonpb.SearchUserProfilesRequest) (*commonpb.SearchUserProfilesResponse, error) {
+func (c *UserProfileController) SearchUserProfiles(ctx context.Context, req *pb.SearchUserProfilesRequest) (*pb.SearchUserProfilesResponse, error) {
 	profiles, err := c.service.Search(ctx, req.Query, int(req.Limit))
 	if err != nil {
 		return nil, err
 	}
-	pbProfiles := make([]*commonpb.UserProfileData, len(profiles))
+	pbProfiles := make([]*pb.UserProfileData, len(profiles))
 	for i, p := range profiles {
 		pbProfiles[i] = mapDomainToProto(p)
 	}
-	return &commonpb.SearchUserProfilesResponse{
+	return &pb.SearchUserProfilesResponse{
 		Profiles: pbProfiles,
 	}, nil
 }
 
-func mapDomainToProto(p *domain.UserProfile) *commonpb.UserProfileData {
+func mapDomainToProto(p *domain.UserProfile) *pb.UserProfileData {
 	if p == nil {
 		return nil
 	}
@@ -97,7 +97,7 @@ func mapDomainToProto(p *domain.UserProfile) *commonpb.UserProfileData {
 	if p.DP != nil {
 		dp = *p.DP
 	}
-	return &commonpb.UserProfileData{
+	return &pb.UserProfileData{
 		UserId:     p.ID,
 		GlobalName: p.GlobalName,
 		Dp:         dp,
