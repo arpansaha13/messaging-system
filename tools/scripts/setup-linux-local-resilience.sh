@@ -41,7 +41,14 @@ create_cluster "res-auth" 7531 "${DATA_ROOT}/auth"
 create_cluster "res-user" 7532 "${DATA_ROOT}/user"
 create_cluster "res-default" 7533 "${DATA_ROOT}/default"
 
-if ! command -v migrate >/dev/null 2>&1; then
+MIGRATE_BIN="$(command -v migrate || true)"
+if [[ -z "${MIGRATE_BIN}" ]]; then
+  GOPATH_BIN="$(go env GOPATH 2>/dev/null)/bin/migrate"
+  if [[ -x "${GOPATH_BIN}" ]]; then
+    MIGRATE_BIN="${GOPATH_BIN}"
+  fi
+fi
+if [[ -z "${MIGRATE_BIN}" || ! -x "${MIGRATE_BIN}" ]]; then
   echo "migrate CLI is required but not installed. Run tools/scripts/setup-linux-general.sh first."
   exit 1
 fi
@@ -57,7 +64,7 @@ ensure_db_and_migrate() {
 
   local dsn="postgres://postgres@/${db_name}?host=/var/run/postgresql&port=${port}&sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
-  runuser -u postgres -- env DB_URL="${dsn}" "${REPO_ROOT}/tools/scripts/migrate.sh" up "${service}"
+  runuser -u postgres -- env MIGRATE_BIN="${MIGRATE_BIN}" DB_URL="${dsn}" "${REPO_ROOT}/tools/scripts/migrate.sh" up "${service}"
 }
 
 ensure_db_and_migrate 7531 "auth_resilience_db" "auth"

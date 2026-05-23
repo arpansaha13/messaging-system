@@ -3,7 +3,15 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-if ! command -v migrate >/dev/null 2>&1; then
+MIGRATE_BIN="$(command -v migrate || true)"
+if [[ -z "${MIGRATE_BIN}" ]]; then
+  GOPATH_BIN="$(go env GOPATH 2>/dev/null)/bin/migrate"
+  if [[ -x "${GOPATH_BIN}" ]]; then
+    MIGRATE_BIN="${GOPATH_BIN}"
+  fi
+fi
+
+if [[ -z "${MIGRATE_BIN}" || ! -x "${MIGRATE_BIN}" ]]; then
   echo "migrate CLI is required but not installed."
   exit 1
 fi
@@ -69,7 +77,7 @@ case "$action" in
       exit 1
     fi
     echo ">>> Running migrations UP for [$service]"
-    migrate -path "$full_mig_path" -database "$DB_URL" up
+    "${MIGRATE_BIN}" -path "$full_mig_path" -database "$DB_URL" up
     ;;
   down)
     if [[ -z "${DB_URL:-}" ]]; then
@@ -78,7 +86,7 @@ case "$action" in
       exit 1
     fi
     echo ">>> Rolling back last migration for [$service]"
-    migrate -path "$full_mig_path" -database "$DB_URL" down 1
+    "${MIGRATE_BIN}" -path "$full_mig_path" -database "$DB_URL" down 1
     ;;
   status)
     if [[ -z "${DB_URL:-}" ]]; then
@@ -87,7 +95,7 @@ case "$action" in
       exit 1
     fi
     echo ">>> Status for [$service]"
-    migrate -path "$full_mig_path" -database "$DB_URL" version
+    "${MIGRATE_BIN}" -path "$full_mig_path" -database "$DB_URL" version
     ;;
   create)
     if [[ -z "$name" ]]; then
@@ -96,7 +104,7 @@ case "$action" in
       exit 1
     fi
     echo ">>> Creating migration '$name' for [$service]"
-    migrate create -ext sql -dir "$full_mig_path" -seq "$name"
+    "${MIGRATE_BIN}" create -ext sql -dir "$full_mig_path" -seq "$name"
     ;;
   *)
     echo "Unsupported action: $action"
