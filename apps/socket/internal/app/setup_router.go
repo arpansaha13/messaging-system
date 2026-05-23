@@ -4,10 +4,10 @@ import (
 	"net/http"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/broker"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/cache"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/middleware"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/store"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/ws"
 	"github.com/gorilla/mux"
@@ -23,7 +23,7 @@ type Deps struct {
 	PresenceCache    cache.PresenceCache
 	// GroupHandlers is created in main before SetupChatBroker (consumer callbacks need it).
 	GroupHandlers *ws.GroupHandlers
-	AuthClient    service.IAuthServiceClient
+	AuthClient    client.IAuthServiceClient
 	ClientDomain  string
 }
 

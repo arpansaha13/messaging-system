@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/coalesce"
@@ -14,6 +15,9 @@ import (
 	"golang.org/x/sync/singleflight"
 	"google.golang.org/grpc"
 )
+
+// defaultTimeout is the default timeout for service operations
+const defaultTimeout = 10 * time.Second
 
 // UserServiceClient provides gRPC client methods for the user service (profiles/contacts)
 type UserServiceClient struct {

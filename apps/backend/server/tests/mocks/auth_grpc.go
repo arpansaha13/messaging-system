@@ -4,8 +4,11 @@ import (
 	"context"
 	"sync"
 
-	"github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 )
+
+var _ client.IAuthServiceClient = (*MockAuthServiceClient)(nil)
 
 // ValidateSessionResponse represents the auth service response
 type ValidateSessionResponse struct {

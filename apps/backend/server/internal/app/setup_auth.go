@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arpansaha13/goauthkit/pb"
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
-	"github.com/arpansaha13/messaging-system/apps/common/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -23,13 +23,13 @@ func SetupAuthService(
 	ctx context.Context,
 	log *zap.Logger,
 	cbs *circuits.Circuits,
-) (*service.AuthServiceClient, *gtk.ConnectionManager, error) {
+) (*client.AuthClient, *gtk.ConnectionManager, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	authClient := service.NewAuthServiceClient(nil, nil, cbs.AuthGRPC)
+	authClient := client.NewAuthClient(nil, nil, cbs.AuthGRPC)
 	var authConnMgr *gtk.ConnectionManager
 
 	authConnMgr = gtk.NewConnectionManager(
@@ -70,7 +70,7 @@ func SetupAuthService(
 
 func runAuthLivezHeartbeat(
 	ctx context.Context,
-	authClient *service.AuthServiceClient,
+	authClient *client.AuthClient,
 	authConnMgr *gtk.ConnectionManager,
 	log *zap.Logger,
 ) {

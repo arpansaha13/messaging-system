@@ -10,14 +10,6 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 
-// IAuthServiceClient defines the interface for auth service client operations (identity)
-type IAuthServiceClient interface {
-	ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error)
-	GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error)
-	LiveZ(ctx context.Context) error
-	Close() error
-}
-
 // IUserServiceClient defines the interface for user service client operations (profiles)
 type IUserServiceClient interface {
 	GetUserProfiles(ctx context.Context, userIDs []int64) (*pb.GetUserProfilesResponse, error)
