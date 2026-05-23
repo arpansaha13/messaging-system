@@ -1,8 +1,8 @@
 -- Main Users Table
 CREATE TABLE IF NOT EXISTS users (
     id BIGSERIAL PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    username VARCHAR(100) UNIQUE,
+    email VARCHAR(255) NOT NULL CONSTRAINT uni_users_email UNIQUE,
+    username VARCHAR(100) CONSTRAINT uni_users_username UNIQUE,
     verified BOOLEAN DEFAULT FALSE,
     last_login TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS credentials (
 CREATE TABLE IF NOT EXISTS otps (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    otp_hash VARCHAR(255) NOT NULL UNIQUE, -- Random hash to identify OTP
+    otp_hash VARCHAR(255) NOT NULL CONSTRAINT uni_otps_otp_hash UNIQUE, -- Random hash to identify OTP
     hashed_code VARCHAR(255) NOT NULL, -- Hashed OTP code
     purpose SMALLINT NOT NULL DEFAULT 1, -- 1 = email verification after signup
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS otps (
 CREATE TABLE IF NOT EXISTS sessions (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash VARCHAR(255) NOT NULL UNIQUE,
+    token_hash VARCHAR(255) NOT NULL CONSTRAINT uni_sessions_token_hash UNIQUE,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     deleted_at TIMESTAMP WITH TIME ZONE, -- Soft delete timestamp
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
