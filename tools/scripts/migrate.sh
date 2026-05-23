@@ -3,11 +3,13 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-MIGRATE_BIN="$(command -v migrate || true)"
-if [[ -z "${MIGRATE_BIN}" ]]; then
-  GOPATH_BIN="$(go env GOPATH 2>/dev/null)/bin/migrate"
-  if [[ -x "${GOPATH_BIN}" ]]; then
-    MIGRATE_BIN="${GOPATH_BIN}"
+if [[ -z "${MIGRATE_BIN:-}" ]]; then
+  MIGRATE_BIN="$(command -v migrate || true)"
+  if [[ -z "${MIGRATE_BIN}" ]]; then
+    GOPATH_BIN="$(go env GOPATH 2>/dev/null)/bin/migrate"
+    if [[ -x "${GOPATH_BIN}" ]]; then
+      MIGRATE_BIN="${GOPATH_BIN}"
+    fi
   fi
 fi
 
