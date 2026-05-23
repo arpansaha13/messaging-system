@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/arpansaha13/goauthkit/pb"
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
-	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -23,13 +23,13 @@ func SetupAuthService(
 	ctx context.Context,
 	log *zap.Logger,
 	cbs *circuits.Circuits,
-) (*service.AuthService, *gtk.ConnectionManager, error) {
+) (*client.AuthClient, *gtk.ConnectionManager, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	authService := service.NewAuthService(nil, nil, cbs.AuthGRPC)
+	authClient := client.NewAuthClient(nil, nil, cbs.AuthGRPC)
 	var authConnMgr *gtk.ConnectionManager
 
 	authConnMgr = gtk.NewConnectionManager(
@@ -39,7 +39,7 @@ func SetupAuthService(
 		},
 		log,
 		func(connectCtx context.Context) error {
-			conn, err := grpc.NewClient(
+			authConn, err := grpc.NewClient(
 				cfg.AuthSystemHost(),
 				grpc.WithTransportCredentials(insecure.NewCredentials()),
 				grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
@@ -47,12 +47,13 @@ func SetupAuthService(
 			if err != nil {
 				return fmt.Errorf("failed to connect to auth service: %w", err)
 			}
-			authService.SetConnection(conn, pb.NewAuthServiceClient(conn))
+
+			authClient.SetConnection(authConn, pb.NewAuthServiceClient(authConn))
 			log.Info("auth service connected", zap.String("address", cfg.AuthSystemHost()))
 			return nil
 		},
 		func() {
-			if err := authService.Close(); err != nil {
+			if err := authClient.Close(); err != nil {
 				log.Warn("auth service close error", zap.Error(err))
 			}
 		},
@@ -62,14 +63,14 @@ func SetupAuthService(
 		return nil, nil, fmt.Errorf("failed to start auth connection manager: %w", err)
 	}
 
-	go runAuthLivezHeartbeat(ctx, authService, authConnMgr, log)
+	go runAuthLivezHeartbeat(ctx, authClient, authConnMgr, log)
 
-	return authService, authConnMgr, nil
+	return authClient, authConnMgr, nil
 }
 
 func runAuthLivezHeartbeat(
 	ctx context.Context,
-	authService *service.AuthService,
+	authClient *client.AuthClient,
 	authConnMgr *gtk.ConnectionManager,
 	log *zap.Logger,
 ) {
@@ -81,7 +82,7 @@ func runAuthLivezHeartbeat(
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := authService.LiveZ(ctx); err != nil {
+			if err := authClient.LiveZ(ctx); err != nil {
 				if st, ok := status.FromError(err); ok && st.Code() == codes.Unauthenticated {
 					// Temporary compatibility: some auth deployments gate this RPC; reachability is still fine.
 					log.Debug("auth livez returned unauthenticated; skipping reconnect")

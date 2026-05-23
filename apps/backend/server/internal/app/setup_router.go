@@ -10,6 +10,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/middleware"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -19,7 +20,7 @@ import (
 type Deps struct {
 	DB         *gorm.DB
 	ChatBroker broker.ChatBroker
-	AuthClient service.IAuthServiceClient
+	AuthClient client.IAuthServiceClient
 	Circuits   *circuits.Circuits
 	Logger     *zap.Logger
 }

@@ -7,8 +7,8 @@ import (
 
 	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
@@ -16,7 +16,7 @@ import (
 )
 
 // AuthMiddleware validates JWT token with the auth service via gRPC and fetches user details
-func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) http.Handler {
+func AuthMiddleware(authClient client.IAuthServiceClient) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Get token from Authorization header or cookie

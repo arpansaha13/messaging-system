@@ -7,15 +7,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
-	"github.com/arpansaha13/goauthkit/pb"
 )
-
-// AuthServiceClient defines the interface for auth service client operations
-type IAuthServiceClient interface {
-	ValidateSession(ctx context.Context, token string) (*pb.ValidateSessionResponse, error)
-	GetUser(ctx context.Context, userID int64, token string) (*pb.GetUserResponse, error)
-	Close() error
-}
 
 // UserService defines the interface for user service operations
 type IUserService interface {

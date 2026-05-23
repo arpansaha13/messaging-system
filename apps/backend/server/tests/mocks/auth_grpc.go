@@ -5,7 +5,10 @@ import (
 	"sync"
 
 	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 )
+
+var _ client.IAuthServiceClient = (*MockAuthServiceClient)(nil)
 
 // ValidateSessionResponse represents the auth service response
 type ValidateSessionResponse struct {
@@ -55,15 +58,15 @@ func NewMockAuthService() *MockAuthService {
 // SetValidateSessionResponse sets the response for a specific token
 func (m *MockAuthService) SetValidateSessionResponse(token string, resp *ValidateSessionResponse) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	m.validateSessions[token] = resp
+	m.mu.Unlock()
 }
 
 // SetGetUserResponse sets the response for a specific user ID
 func (m *MockAuthService) SetGetUserResponse(userID int64, resp *GetUserResponse) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	m.getUsers[userID] = resp
+	m.mu.Unlock()
 }
 
 // ValidateSession validates a session token
@@ -98,15 +101,15 @@ func (m *MockAuthService) GetUser(userID int64) *GetUserResponse {
 // SetDefaultValidateResponse sets the default validate response
 func (m *MockAuthService) SetDefaultValidateResponse(resp *ValidateSessionResponse) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	m.defaultValidate = resp
+	m.mu.Unlock()
 }
 
 // SetDefaultGetUserResponse sets the default get user response
 func (m *MockAuthService) SetDefaultGetUserResponse(resp *GetUserResponse) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	m.defaultGetUser = resp
+	m.mu.Unlock()
 }
 
 // MockAuthServiceClient wraps the mock auth service to work with the auth middleware
@@ -155,7 +158,12 @@ func (c *MockAuthServiceClient) GetUser(ctx context.Context, userID int64, token
 	}, nil
 }
 
-// Signup is a stub implementation of the IAuthServiceClient interface
+// LiveZ is a stub implementation
+func (c *MockAuthServiceClient) LiveZ(ctx context.Context) error {
+	return nil
+}
+
+// Signup is a stub implementation
 func (c *MockAuthServiceClient) Signup(ctx context.Context, email, password string) (*pb.SignupResponse, error) {
 	if c.SignupFunc != nil {
 		return c.SignupFunc(ctx, email, password)
@@ -163,7 +171,7 @@ func (c *MockAuthServiceClient) Signup(ctx context.Context, email, password stri
 	return &pb.SignupResponse{}, nil
 }
 
-// Login is a stub implementation of the IAuthServiceClient interface
+// Login is a stub implementation
 func (c *MockAuthServiceClient) Login(ctx context.Context, email, password string) (*pb.LoginResponse, error) {
 	if c.LoginFunc != nil {
 		return c.LoginFunc(ctx, email, password)
@@ -171,7 +179,7 @@ func (c *MockAuthServiceClient) Login(ctx context.Context, email, password strin
 	return &pb.LoginResponse{}, nil
 }
 
-// VerifyOTP is a stub implementation of the IAuthServiceClient interface
+// VerifyOTP is a stub implementation
 func (c *MockAuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code string) (*pb.VerifyOTPResponse, error) {
 	if c.VerifyOTPFunc != nil {
 		return c.VerifyOTPFunc(ctx, otpHash, code)
@@ -179,7 +187,7 @@ func (c *MockAuthServiceClient) VerifyOTP(ctx context.Context, otpHash, code str
 	return &pb.VerifyOTPResponse{}, nil
 }
 
-// Logout is a stub implementation of the IAuthServiceClient interface
+// Logout is a stub implementation
 func (c *MockAuthServiceClient) Logout(ctx context.Context, token string) (*pb.LogoutResponse, error) {
 	if c.LogoutFunc != nil {
 		return c.LogoutFunc(ctx, token)
@@ -187,7 +195,7 @@ func (c *MockAuthServiceClient) Logout(ctx context.Context, token string) (*pb.L
 	return &pb.LogoutResponse{}, nil
 }
 
-// Close is a stub implementation of the IAuthServiceClient interface
+// Close is a stub implementation
 func (c *MockAuthServiceClient) Close() error {
 	return nil
 }

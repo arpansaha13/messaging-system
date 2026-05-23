@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
 	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/circuits"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -22,8 +22,8 @@ func SetupAuthService(
 	authSystemHost string,
 	log *zap.Logger,
 	cbs *circuits.Circuits,
-) (*service.AuthService, *gtk.ConnectionManager, error) {
-	authService := service.NewAuthService(nil, nil, cbs.AuthGRPC)
+) (*client.AuthClient, *gtk.ConnectionManager, error) {
+	authService := client.NewAuthClient(nil, nil, cbs.AuthGRPC)
 	var authConnMgr *gtk.ConnectionManager
 
 	authConnMgr = gtk.NewConnectionManager(

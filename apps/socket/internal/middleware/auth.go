@@ -7,9 +7,9 @@ import (
 	"strconv"
 
 	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/apps/common/client"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/config"
-	"github.com/arpansaha13/messaging-system/apps/socket/internal/service"
 	"github.com/arpansaha13/messaging-system/apps/socket/internal/utils"
 	"go.uber.org/zap"
 )
@@ -21,7 +21,7 @@ const (
 
 // AuthMiddleware validates the session token via the auth gRPC service and
 // populates the request context with the authenticated user's details.
-func AuthMiddleware(authClient service.IAuthServiceClient) func(http.Handler) http.Handler {
+func AuthMiddleware(authClient client.IAuthServiceClient) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := getToken(r)
