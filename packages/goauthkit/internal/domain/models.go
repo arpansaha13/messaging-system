@@ -16,8 +16,8 @@ const (
 // User represents the users table
 type User struct {
 	ID        int64   `gorm:"primaryKey;autoIncrement"`
-	Email     string  `gorm:"type:varchar(255);uniqueIndex;not null"`
-	Username   *string `gorm:"type:varchar(100);uniqueIndex"`
+	Email     string  `gorm:"type:varchar(255);unique;not null"`
+	Username   *string `gorm:"type:varchar(100);unique"`
 	Verified   bool    `gorm:"default:false;not null"`
 	LastLogin *time.Time
 	CreatedAt time.Time
@@ -59,7 +59,7 @@ const (
 type OTP struct {
 	ID         int64      `gorm:"primaryKey;autoIncrement"`
 	UserID     int64      `gorm:"not null;index"`
-	OTPHash    string     `gorm:"type:varchar(255);uniqueIndex;not null"`
+	OTPHash    string     `gorm:"type:varchar(255);unique;not null"`
 	HashedCode string     `gorm:"type:varchar(255);not null"`
 	Purpose    OTPPurpose `gorm:"not null;default:1;index"`
 	ExpiresAt  time.Time  `gorm:"not null"`
@@ -79,7 +79,7 @@ func (OTP) TableName() string {
 type Session struct {
 	ID        int64      `gorm:"primaryKey;autoIncrement"`
 	UserID    int64      `gorm:"not null;index"`
-	TokenHash string     `gorm:"type:varchar(255);uniqueIndex;not null"`
+	TokenHash string     `gorm:"type:varchar(255);unique;not null"`
 	ExpiresAt time.Time  `gorm:"not null"`
 	DeletedAt *time.Time `gorm:"type:timestamp with time zone" json:"deleted_at,omitempty"` // Soft delete
 	CreatedAt time.Time  `gorm:"not null;default:CURRENT_TIMESTAMP"`
