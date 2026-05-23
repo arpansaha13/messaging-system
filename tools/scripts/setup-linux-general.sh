@@ -3,8 +3,13 @@ set -euo pipefail
 
 if [[ "${EUID}" -eq 0 ]]; then
   SUDO=""
-else
+elif command -v sudo >/dev/null 2>&1; then
   SUDO="sudo"
+elif command -v doas >/dev/null 2>&1; then
+  SUDO="doas"
+else
+  echo "This script requires root privileges. Run as root, or install sudo/doas."
+  exit 1
 fi
 
 if ! command -v apt-get >/dev/null 2>&1; then
@@ -14,7 +19,11 @@ fi
 
 echo "Installing base development dependencies..."
 ${SUDO} apt-get update
-${SUDO} apt-get install -y protobuf-compiler curl git build-essential
+${SUDO} apt-get install -y protobuf-compiler curl git build-essential locales
+
+echo "Ensuring UTF-8 locale is configured (en_US.UTF-8)..."
+${SUDO} locale-gen en_US.UTF-8
+${SUDO} update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
 
 if ! command -v node >/dev/null 2>&1; then
   echo "Node.js is required but not installed. Install Node.js first, then rerun this script."

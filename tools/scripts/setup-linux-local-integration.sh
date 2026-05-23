@@ -7,8 +7,13 @@ set -euo pipefail
 
 if [[ "${EUID}" -eq 0 ]]; then
   SUDO=""
-else
+elif command -v sudo >/dev/null 2>&1; then
   SUDO="sudo"
+elif command -v doas >/dev/null 2>&1; then
+  SUDO="doas"
+else
+  echo "This script requires root privileges. Run as root, or install sudo/doas."
+  exit 1
 fi
 
 if ! command -v apt-get >/dev/null 2>&1; then
