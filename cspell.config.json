@@ -21,6 +21,7 @@
     "certbot",
     "convo",
     "csrftoken",
+    "dotenv",
     "goauthkit",
     "gobreaker",
     "gocache",

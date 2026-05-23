@@ -49,7 +49,7 @@ task migrate:create SERVICE=backend NAME=add_fields  # create new migration file
 ```bash
 go run ./cmd/server          # run directly
 go build -o bin/server ./cmd/server  # compile binary
-go test ./tests/... -timeout 300s    # run integration tests (requires Docker for Testcontainers)
+go test ./tests/... -timeout 300s    # run integration tests (default: TEST_DEPS_MODE=container)
 go test ./tests/... -coverprofile=coverage.out -timeout 300s  # with coverage
 golangci-lint run            # lint
 go fmt ./...                 # format
@@ -60,7 +60,19 @@ go vet ./...                 # vet
 
 ```bash
 go run ./cmd/main.go         # run directly (serves gRPC + HTTP)
-go test ./tests/... -timeout 300s    # run integration tests
+go test ./tests/... -timeout 300s    # run integration tests (default: TEST_DEPS_MODE=container)
+```
+
+**Integration dependency switching (all Go services)**
+
+```bash
+task test:integration  # container mode (default)
+TEST_DEPS_MODE=external \
+  TEST_POSTGRES_DSN_AUTH='host=localhost port=7511 user=testuser password=testpass dbname=test_auth sslmode=disable' \
+  TEST_POSTGRES_DSN_BACKEND='host=localhost port=7020 user=user password=password dbname=messaging_db sslmode=disable' \
+  TEST_POSTGRES_DSN_USER='host=localhost port=7040 user=user password=password dbname=users_db sslmode=disable' \
+  TEST_POSTGRES_DSN_CHAT_WORKER='host=localhost port=7020 user=user password=password dbname=messaging_db sslmode=disable' \
+  task test:integration:external
 ```
 
 **Frontend (Nuxt 4 — from `apps/frontend/`)**
@@ -275,9 +287,9 @@ Go services → structured JSON (zap + OTel) → stdout → Fluent-bit → Kafka
 
 ## Testing
 
-**Backend integration tests** (`apps/backend/server/tests/`) use testify suite + Testcontainers (spins up a real Postgres container). Tests are isolated via table truncation in `SetupTest`. The mock auth service is in `tests/mocks/`. Run with `go test ./tests/...` from `apps/backend/server/`.
+**Backend integration tests** (`apps/backend/server/tests/`) use testify suite with a shared dependency resolver. Default mode (`TEST_DEPS_MODE` unset or `container`) starts a real Postgres via Testcontainers; `TEST_DEPS_MODE=external` uses env-provided Postgres DSN. Tests are isolated via table truncation in `SetupTest`. The mock auth service is in `tests/mocks/`. Run with `go test ./tests/...` from `apps/backend/server/`.
 
-**User service integration tests** (`apps/user/tests/`) use testify suite + Testcontainers, same pattern as backend. Mock auth in `tests/mocks/`.
+**User service integration tests** (`apps/user/tests/`) follow the same dependency-mode pattern as backend (`container` default, `external` optional). Mock auth in `tests/mocks/`.
 
 **Frontend unit tests** use Vitest with `@nuxt/test-utils` and `happy-dom`. Run with `pnpm test` from `apps/frontend/`.
 

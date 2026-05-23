@@ -8,8 +8,6 @@ import (
 
 	"github.com/sony/gobreaker/v2"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -17,6 +15,7 @@ import (
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/chat-worker/internal/mocks"
 	"github.com/arpansaha13/messaging-system/apps/common/domain"
+	"github.com/arpansaha13/messaging-system/apps/common/testdeps"
 )
 
 // BaseTestSuite provides common test setup for chat-worker integration tests
@@ -24,7 +23,7 @@ type BaseTestSuite struct {
 	suite.Suite
 	Ctx          context.Context
 	DB           *gorm.DB
-	Container    testcontainers.Container
+	DepSet       *testdeps.ResolvedDependencySet
 	Broker       *mocks.MockBroker
 	CircuitBreak *gobreaker.CircuitBreaker[any]
 }
@@ -40,35 +39,17 @@ func (s *BaseTestSuite) SetupSuite() {
 
 	s.Ctx = context.Background()
 
-	// Request PostgreSQL container
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:16-alpine",
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_USER":     "test",
-			"POSTGRES_PASSWORD": "test",
-			"POSTGRES_DB":       "messaging_test",
-		},
-		WaitingFor: wait.ForListeningPort("5432/tcp").WithStartupTimeout(30 * time.Second),
-	}
-
-	// Start container
-	container, err := testcontainers.GenericContainer(s.Ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
+	deps, err := testdeps.ResolveTestDependencies(s.Ctx, testdeps.PostgresConfig{
+		ServiceName:    "chat-worker",
+		DBUser:         "test",
+		DBPassword:     "test",
+		DBName:         "messaging_test",
+		StartupTimeout: 30 * time.Second,
 	})
-	s.Require().NoError(err, "Failed to start PostgreSQL container")
-	s.Container = container
+	s.Require().NoError(err, "Failed to initialize test dependencies")
+	s.DepSet = deps
 
-	// Get container host and port
-	host, err := container.Host(s.Ctx)
-	s.Require().NoError(err)
-	port, err := container.MappedPort(s.Ctx, "5432")
-	s.Require().NoError(err)
-
-	// Set DATABASE_URL with actual container host/port
-	databaseURL := fmt.Sprintf("host=%s port=%s user=test password=test dbname=messaging_test sslmode=disable",
-		host, port.Port())
+	databaseURL := deps.Deps.PostgresDSN
 	os.Setenv("DATABASE_URL", databaseURL)
 
 	// Connect to database
@@ -115,8 +96,8 @@ func (s *BaseTestSuite) TearDownSuite() {
 	}
 
 	// Stop container
-	if s.Container != nil {
-		err := s.Container.Terminate(s.Ctx)
+	if s.DepSet != nil {
+		err := s.DepSet.Teardown(s.Ctx)
 		s.Require().NoError(err)
 	}
 

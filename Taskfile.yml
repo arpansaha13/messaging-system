@@ -10,8 +10,6 @@ vars:
   BACKEND_DB_URL: '{{.DATABASE_URL | default (printf "postgres://%s:%s@localhost:7020/%s?sslmode=disable" (.DB_USERNAME | default "user") (.DB_PASSWORD | default "password") (.DB_NAME | default "messaging_db"))}}'
   USER_DB_URL_VAR: '{{.USER_DB_URL | default (printf "postgres://%s:%s@localhost:7040/%s?sslmode=disable" (.USER_DB_USERNAME | default "user") (.USER_DB_PASSWORD | default "password") (.USER_DB_NAME | default "users_db"))}}'
 
-dotenv: ['.env']
-
 tasks:
   default:
     cmds:
@@ -27,6 +25,30 @@ tasks:
     desc: Generate authentication token and start Headlamp dashboard UI
     cmds:
       - ./tools/scripts/start-headlamp.sh
+
+  test:integration:
+    desc: Run all Go service integration tests (default container mode)
+    cmds:
+      - TEST_DEPS_MODE=container sh -c 'cd apps/auth/server && go test ./tests/... -timeout 300s'
+      - TEST_DEPS_MODE=container sh -c 'cd apps/backend/server && go test ./tests/... -timeout 300s'
+      - TEST_DEPS_MODE=container sh -c 'cd apps/user && go test ./tests/... -timeout 300s'
+      - TEST_DEPS_MODE=container sh -c 'cd apps/chat-worker && go test ./tests/... -timeout 300s'
+
+  test:integration:external:
+    desc: Run all Go service integration tests against externally running dependencies
+    dotenv: ['.env.test']
+    summary: |
+      Uses TEST_DEPS_MODE=external and service-specific Postgres DSNs:
+      - TEST_POSTGRES_DSN_AUTH
+      - TEST_POSTGRES_DSN_BACKEND
+      - TEST_POSTGRES_DSN_USER
+      - TEST_POSTGRES_DSN_CHAT_WORKER
+      You may also use TEST_POSTGRES_DSN as a global fallback.
+    cmds:
+      - TEST_DEPS_MODE=external sh -c 'cd apps/auth/server && go test ./tests/... -timeout 300s'
+      - TEST_DEPS_MODE=external sh -c 'cd apps/backend/server && go test ./tests/... -timeout 300s'
+      - TEST_DEPS_MODE=external sh -c 'cd apps/user && go test ./tests/... -timeout 300s'
+      - TEST_DEPS_MODE=external sh -c 'cd apps/chat-worker && go test ./tests/... -timeout 300s'
 
   migrate:up:
     desc: Run all pending migrations for a service or all services

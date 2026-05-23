@@ -8,9 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/arpansaha13/messaging-system/apps/common/testdeps"
 	"github.com/stretchr/testify/suite"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -27,7 +26,7 @@ import (
 
 type BaseTestSuite struct {
 	suite.Suite
-	Container      testcontainers.Container
+	DepSet         *testdeps.ResolvedDependencySet
 	DB             *gorm.DB
 	Ctx            context.Context
 	HTTPServerAddr string
@@ -47,39 +46,19 @@ func (s *BaseTestSuite) SetupSuite() {
 	ctx := context.Background()
 	s.Ctx = ctx
 
-	req := testcontainers.ContainerRequest{
-		Image:        "postgres:16-alpine",
-		ExposedPorts: []string{"5432/tcp"},
-		Env: map[string]string{
-			"POSTGRES_USER":     "testuser",
-			"POSTGRES_PASSWORD": "testpass",
-			"POSTGRES_DB":       "test_user_service",
-		},
-		WaitingFor: wait.ForLog("database system is ready to accept connections").
-			WithOccurrence(2).
-			WithStartupTimeout(60 * time.Second),
-	}
-
-	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
-		ContainerRequest: req,
-		Started:          true,
+	deps, err := testdeps.ResolveTestDependencies(ctx, testdeps.PostgresConfig{
+		ServiceName: "user",
+		DBUser:      "testuser",
+		DBPassword:  "testpass",
+		DBName:      "test_user_service",
 	})
 	s.Require().NoError(err)
-	s.Container = container
+	s.DepSet = deps
 
-	host, _ := container.Host(ctx)
-	port, _ := container.MappedPort(ctx, "5432")
-
-	databaseURL := fmt.Sprintf(
-		"postgres://testuser:testpass@%s:%s/test_user_service?sslmode=disable",
-		host, port.Port(),
-	)
+	databaseURL := deps.Deps.PostgresURL
 	os.Setenv("DATABASE_URL", databaseURL)
 
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=testuser password=testpass dbname=test_user_service sslmode=disable",
-		host, port.Port(),
-	)
+	dsn := deps.Deps.PostgresDSN
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
@@ -97,8 +76,8 @@ func (s *BaseTestSuite) TearDownSuite() {
 	if s.HTTPServer != nil {
 		s.HTTPServer.Shutdown(s.Ctx)
 	}
-	if s.Container != nil {
-		s.Container.Terminate(s.Ctx)
+	if s.DepSet != nil {
+		s.Require().NoError(s.DepSet.Teardown(s.Ctx))
 	}
 }
 

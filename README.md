@@ -35,11 +35,11 @@ Full-stack real-time messaging app. Supports one-to-one personal chats, group me
 - **PostgreSQL**: Primary relational database
 - **RabbitMQ**: Message queue for distributing events across servers
 - **Memcached**: In-memory cache for online/offline status
-- **Testcontainers**: Integration testing with containerized dependencies
 
 ### Testing
 
 - **Playwright**: End-to-End testing framework
+- **Testcontainers**: Integration testing with containerized dependencies
 
 ### Infrastructure
 
