@@ -57,6 +57,13 @@ if [[ -z "${MIGRATE_BIN}" || ! -x "${MIGRATE_BIN}" ]]; then
   exit 1
 fi
 
+# Ensure migrate is accessible to postgres user
+if [[ ! -x /usr/local/bin/migrate ]]; then
+  cp "${MIGRATE_BIN}" /usr/local/bin/migrate
+  chmod 755 /usr/local/bin/migrate
+fi
+MIGRATE_BIN="/usr/local/bin/migrate"
+
 ensure_db_and_migrate() {
   local port="$1"
   local db_name="$2"
@@ -65,6 +72,10 @@ ensure_db_and_migrate() {
   echo "Ensuring database ${db_name} exists on port ${port}..."
   runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
     || runuser -u postgres -- createdb -p "${port}" "${db_name}"
+
+  echo "Ensuring test user exists on port ${port}..."
+  runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='user'" | grep -q 1 \
+    || runuser -u postgres -- psql -p "${port}" -d postgres -c "CREATE USER \"user\" WITH PASSWORD 'password' SUPERUSER;"
 
   local dsn="postgres://postgres@/${db_name}?host=/var/run/postgresql&port=${port}&sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
