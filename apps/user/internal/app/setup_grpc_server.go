@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/common/pb"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/controller"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"

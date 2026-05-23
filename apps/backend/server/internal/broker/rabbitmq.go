@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/sony/gobreaker/v2"
 	"go.uber.org/zap"

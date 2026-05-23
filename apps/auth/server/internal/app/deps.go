@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/arpansaha13/goauthkit"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit"
 	"github.com/arpansaha13/messaging-system/apps/common/pb"
 )
 

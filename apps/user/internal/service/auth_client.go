@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit/pb"
 )
 
 // IAuthServiceClient defines the interface for auth service client operations.

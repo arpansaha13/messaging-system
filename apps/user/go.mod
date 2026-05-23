@@ -5,9 +5,9 @@ go 1.25.6
 replace github.com/arpansaha13/messaging-system/apps/common => ../common
 
 require (
-	github.com/arpansaha13/goauthkit v0.7.6
-	github.com/arpansaha13/gotoolkit v0.13.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0-00010101000000-000000000000
+	github.com/arpansaha13/messaging-system/packages/goauthkit v0.0.0
+	github.com/arpansaha13/messaging-system/packages/gotoolkit v0.0.0
 	github.com/gorilla/mux v1.8.1
 	github.com/sony/gobreaker/v2 v2.4.0
 	github.com/stretchr/testify v1.11.1
@@ -94,3 +94,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/arpansaha13/messaging-system/packages/goauthkit => ../../packages/goauthkit
+
+replace github.com/arpansaha13/messaging-system/packages/gotoolkit => ../../packages/gotoolkit

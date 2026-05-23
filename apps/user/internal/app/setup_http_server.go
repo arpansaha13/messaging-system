@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/handler"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/middleware"

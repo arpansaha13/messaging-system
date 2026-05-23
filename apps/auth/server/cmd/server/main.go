@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/config"

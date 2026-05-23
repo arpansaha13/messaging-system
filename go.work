@@ -11,3 +11,7 @@ use ./apps/chat-worker
 use ./apps/socket
 
 use ./apps/user
+
+use ./packages/goauthkit
+
+use ./packages/gotoolkit

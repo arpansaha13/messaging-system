@@ -3,9 +3,9 @@ module github.com/arpansaha13/messaging-system/apps/socket
 go 1.25.6
 
 require (
-	github.com/arpansaha13/goauthkit v0.7.6
-	github.com/arpansaha13/gotoolkit v0.13.0
 	github.com/arpansaha13/messaging-system/apps/common v0.0.0
+	github.com/arpansaha13/messaging-system/packages/goauthkit v0.0.0
+	github.com/arpansaha13/messaging-system/packages/gotoolkit v0.0.0
 	github.com/bradfitz/gomemcache v0.0.0-20250403215159-8d39553ac7cf
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
@@ -54,3 +54,7 @@ require (
 )
 
 replace github.com/arpansaha13/messaging-system/apps/common => ../common
+
+replace github.com/arpansaha13/messaging-system/packages/goauthkit => ../../packages/goauthkit
+
+replace github.com/arpansaha13/messaging-system/packages/gotoolkit => ../../packages/gotoolkit

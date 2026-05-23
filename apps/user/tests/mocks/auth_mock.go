@@ -3,7 +3,7 @@ package mocks
 import (
 	"context"
 
-	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit/pb"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/service"
 	"github.com/stretchr/testify/mock"
 )

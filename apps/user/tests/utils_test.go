@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit/pb"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/dto"
 	"github.com/stretchr/testify/mock"
 )

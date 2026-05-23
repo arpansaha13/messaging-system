@@ -3,7 +3,7 @@ package utils
 import (
 	"testing"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/stretchr/testify/assert"
 )
 

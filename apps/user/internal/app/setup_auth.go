@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit/pb"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/config"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/repository"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/arpansaha13/goauthkit/pb"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit/pb"
 	"github.com/arpansaha13/messaging-system/apps/common/client"
 )
 

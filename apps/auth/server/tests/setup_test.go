@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arpansaha13/goauthkit"
+	"github.com/arpansaha13/messaging-system/packages/goauthkit"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/app"
 	"github.com/arpansaha13/messaging-system/apps/auth/server/internal/circuits"
 	"github.com/arpansaha13/messaging-system/apps/common/constants"

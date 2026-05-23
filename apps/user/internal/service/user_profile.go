@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/domain"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/repository"
 	"go.uber.org/zap"

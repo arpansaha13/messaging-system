@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/user/internal/domain"
 	"github.com/sony/gobreaker/v2"
 	"gorm.io/gorm"
