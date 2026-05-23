@@ -59,9 +59,9 @@ ensure_db_and_migrate() {
   runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
     || runuser -u postgres -- createdb -p "${port}" "${db_name}"
 
-  local dsn="postgres://postgres@localhost:${port}/${db_name}?sslmode=disable"
+  local dsn="postgres://postgres@/${db_name}?host=/var/run/postgresql&port=${port}&sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
-  DB_URL="${dsn}" "${REPO_ROOT}/tools/scripts/migrate.sh" up "${service}"
+  runuser -u postgres -- env DB_URL="${dsn}" "${REPO_ROOT}/tools/scripts/migrate.sh" up "${service}"
 }
 
 ensure_db_and_migrate 6433 "auth_db" "auth"
