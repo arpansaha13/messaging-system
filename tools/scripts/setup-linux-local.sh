@@ -4,14 +4,8 @@ set -euo pipefail
 # Optional local setup for non-containerized development.
 # Use this only if you do NOT want to run infrastructure via containers.
 
-if [[ "${EUID}" -eq 0 ]]; then
-  SUDO=""
-elif command -v sudo >/dev/null 2>&1; then
-  SUDO="sudo"
-elif command -v doas >/dev/null 2>&1; then
-  SUDO="doas"
-else
-  echo "This script requires root privileges. Run as root, or install sudo/doas."
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "This script must be run as root."
   exit 1
 fi
 
@@ -35,8 +29,8 @@ done
 
 if [[ ${#MISSING_PKGS[@]} -gt 0 ]]; then
   echo "Missing packages: ${MISSING_PKGS[*]}"
-  ${SUDO} apt-get update
-  ${SUDO} apt-get install -y "${MISSING_PKGS[@]}"
+  apt-get update
+  apt-get install -y "${MISSING_PKGS[@]}"
 else
   echo "All required local infra packages already installed, skipping apt install."
 fi
@@ -44,9 +38,9 @@ fi
 PG_VERSION="$(psql -V | awk '{print $3}' | cut -d. -f1)"
 
 # Remove distro default cluster so we avoid using the default PostgreSQL data directory.
-if ${SUDO} pg_lsclusters 2>/dev/null | awk '{print $2}' | grep -qx 'main'; then
+if pg_lsclusters 2>/dev/null | awk '{print $2}' | grep -qx 'main'; then
   echo "Dropping default cluster ${PG_VERSION}/main..."
-  ${SUDO} pg_dropcluster --stop "${PG_VERSION}" main
+  pg_dropcluster --stop "${PG_VERSION}" main
 fi
 
 create_cluster() {
@@ -54,14 +48,14 @@ create_cluster() {
   local port="$2"
   local datadir="$3"
 
-  if ${SUDO} pg_lsclusters 2>/dev/null | awk '{print $2}' | grep -qx "${cluster_name}"; then
+  if pg_lsclusters 2>/dev/null | awk '{print $2}' | grep -qx "${cluster_name}"; then
     echo "Cluster ${cluster_name} already exists, skipping create"
   else
     echo "Creating cluster ${cluster_name} at ${datadir} on port ${port}"
-    ${SUDO} pg_createcluster --datadir "${datadir}" --port "${port}" "${PG_VERSION}" "${cluster_name}"
+    pg_createcluster --datadir "${datadir}" --port "${port}" "${PG_VERSION}" "${cluster_name}"
   fi
 
-  ${SUDO} pg_ctlcluster "${PG_VERSION}" "${cluster_name}" start
+  pg_ctlcluster "${PG_VERSION}" "${cluster_name}" start
 }
 
 create_cluster "auth" 5433 "${DATA_ROOT}/auth"
@@ -79,8 +73,8 @@ ensure_db_and_migrate() {
   local service="$3"
 
   echo "Ensuring database ${db_name} exists on port ${port}..."
-  ${SUDO} -u postgres psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
-    || ${SUDO} -u postgres createdb -p "${port}" "${db_name}"
+  runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
+    || runuser -u postgres -- createdb -p "${port}" "${db_name}"
 
   local dsn="postgres://postgres@localhost:${port}/${db_name}?sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
@@ -98,17 +92,17 @@ has_systemd() {
 start_service_fallback() {
   local svc="$1"
   if command -v service >/dev/null 2>&1; then
-    ${SUDO} service "$svc" status >/dev/null 2>&1 && {
+    service "$svc" status >/dev/null 2>&1 && {
       echo "$svc already running, skipping restart."
       return 0
     }
     echo "Starting $svc with service..."
-    ${SUDO} service "$svc" start
+    service "$svc" start
     return 0
   fi
   if [[ "$svc" == "rabbitmq-server" ]] && command -v rabbitmq-server >/dev/null 2>&1; then
     echo "Starting rabbitmq-server in detached mode..."
-    ${SUDO} rabbitmq-server -detached
+    rabbitmq-server -detached
     return 0
   fi
   if [[ "$svc" == "memcached" ]] && command -v memcached >/dev/null 2>&1; then
@@ -117,7 +111,7 @@ start_service_fallback() {
       return 0
     fi
     echo "Starting memcached in daemon mode..."
-    ${SUDO} memcached -d
+    memcached -d
     return 0
   fi
   echo "Unable to manage service $svc: no systemd/service/manual fallback available."
@@ -126,13 +120,13 @@ start_service_fallback() {
 
 echo "Enabling and starting RabbitMQ and Memcached..."
 if has_systemd; then
-  ${SUDO} systemctl enable rabbitmq-server memcached >/dev/null 2>&1 || true
+  systemctl enable rabbitmq-server memcached >/dev/null 2>&1 || true
   for svc in rabbitmq-server memcached; do
-    if ${SUDO} systemctl is-active --quiet "$svc"; then
+    if systemctl is-active --quiet "$svc"; then
       echo "$svc already running, skipping restart."
     else
       echo "Starting $svc with systemd..."
-      ${SUDO} systemctl start "$svc"
+      systemctl start "$svc"
     fi
   done
 else
@@ -151,11 +145,11 @@ echo ""
 echo "Verify installation with:"
 echo "  pg_lsclusters"
 if has_systemd; then
-  echo "  ${SUDO} systemctl status rabbitmq-server --no-pager"
-  echo "  ${SUDO} systemctl status memcached --no-pager"
+  echo "  systemctl status rabbitmq-server --no-pager"
+  echo "  systemctl status memcached --no-pager"
 else
-  echo "  ${SUDO} service rabbitmq-server status   # or: rabbitmqctl status"
-  echo "  ${SUDO} service memcached status          # or: pgrep -x memcached"
+  echo "  service rabbitmq-server status   # or: rabbitmqctl status"
+  echo "  service memcached status          # or: pgrep -x memcached"
 fi
 echo "  pg_isready -h localhost -p 5433"
 echo "  pg_isready -h localhost -p 5434"
