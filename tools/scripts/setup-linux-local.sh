@@ -6,8 +6,13 @@ set -euo pipefail
 
 if [[ "${EUID}" -eq 0 ]]; then
   SUDO=""
-else
+elif command -v sudo >/dev/null 2>&1; then
   SUDO="sudo"
+elif command -v doas >/dev/null 2>&1; then
+  SUDO="doas"
+else
+  echo "This script requires root privileges. Run as root, or install sudo/doas."
+  exit 1
 fi
 
 if ! command -v apt-get >/dev/null 2>&1; then
@@ -21,8 +26,20 @@ DATA_ROOT="${REPO_ROOT}/data/dev"
 mkdir -p "${DATA_ROOT}/auth" "${DATA_ROOT}/user" "${DATA_ROOT}/default"
 
 echo "Installing local infra packages (PostgreSQL, RabbitMQ, Memcached)..."
-${SUDO} apt-get update
-${SUDO} apt-get install -y postgresql postgresql-contrib rabbitmq-server memcached
+MISSING_PKGS=()
+for pkg in postgresql postgresql-contrib rabbitmq-server memcached; do
+  if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+    MISSING_PKGS+=("$pkg")
+  fi
+done
+
+if [[ ${#MISSING_PKGS[@]} -gt 0 ]]; then
+  echo "Missing packages: ${MISSING_PKGS[*]}"
+  ${SUDO} apt-get update
+  ${SUDO} apt-get install -y "${MISSING_PKGS[@]}"
+else
+  echo "All required local infra packages already installed, skipping apt install."
+fi
 
 PG_VERSION="$(psql -V | awk '{print $3}' | cut -d. -f1)"
 
@@ -76,8 +93,14 @@ ensure_db_and_migrate 5432 "messaging_db" "backend"
 
 echo "Enabling and starting RabbitMQ and Memcached..."
 ${SUDO} systemctl enable rabbitmq-server memcached >/dev/null 2>&1 || true
-${SUDO} systemctl restart rabbitmq-server
-${SUDO} systemctl restart memcached
+for svc in rabbitmq-server memcached; do
+  if ${SUDO} systemctl is-active --quiet "$svc"; then
+    echo "$svc already running, skipping restart."
+  else
+    echo "Starting $svc..."
+    ${SUDO} systemctl start "$svc"
+  fi
+done
 
 echo ""
 echo "Local Linux setup complete (non-containerized mode)."
@@ -85,3 +108,14 @@ echo "PostgreSQL data directories:"
 echo " - ${DATA_ROOT}/auth"
 echo " - ${DATA_ROOT}/user"
 echo " - ${DATA_ROOT}/default"
+echo ""
+echo "Verify installation with:"
+echo "  pg_lsclusters"
+echo "  sudo systemctl status rabbitmq-server --no-pager"
+echo "  sudo systemctl status memcached --no-pager"
+echo "  pg_isready -h localhost -p 5433"
+echo "  pg_isready -h localhost -p 5434"
+echo "  pg_isready -h localhost -p 5432"
+echo "  psql 'postgres://postgres@localhost:5433/auth_db?sslmode=disable' -c 'select 1;'"
+echo "  psql 'postgres://postgres@localhost:5434/users_db?sslmode=disable' -c 'select 1;'"
+echo "  psql 'postgres://postgres@localhost:5432/messaging_db?sslmode=disable' -c 'select 1;'"
