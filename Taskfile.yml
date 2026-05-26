@@ -96,7 +96,29 @@ tasks:
     cmds:
       - task: migrate:service:create
         vars: { SERVICE: "{{.SERVICE}}", NAME: "{{.NAME}}" }
-    silent: true
+  dev:local:
+    desc: Start the entire local development server stack (non-containerized, Linux)
+    cmds:
+      - ./tools/scripts/start-local-dev.sh
+
+  dev:local:stop:
+    desc: Stop the local development server stack
+    cmds:
+      - ./tools/scripts/start-local-dev.sh stop
+
+  dev:local:status:
+    desc: Check status of all local dev services and their ports
+    cmds:
+      - ./tools/scripts/status-local-dev.sh
+
+  dev:local:seed:
+    desc: Seed the local dev databases using .env.local variables
+    cmds:
+      - |
+        set -a
+        source .env.local
+        set +a
+        pnpm --filter seed db:seed
 
   # ---------------------------------------------------------------------------
   # Internal service-specific tasks

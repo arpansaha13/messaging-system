@@ -19,9 +19,9 @@ DATA_ROOT="${REPO_ROOT}/data/dev"
 
 mkdir -p "${DATA_ROOT}/auth" "${DATA_ROOT}/user" "${DATA_ROOT}/default"
 
-echo "Installing local infra packages (PostgreSQL, RabbitMQ, Memcached)..."
+echo "Installing local infra packages (PostgreSQL, RabbitMQ, Memcached, Nginx)..."
 MISSING_PKGS=()
-for pkg in postgresql postgresql-contrib rabbitmq-server memcached; do
+for pkg in postgresql postgresql-contrib rabbitmq-server memcached nginx; do
   if ! dpkg -s "$pkg" >/dev/null 2>&1; then
     MISSING_PKGS+=("$pkg")
   fi
@@ -55,7 +55,7 @@ create_cluster() {
     pg_createcluster --datadir "${datadir}" --port "${port}" "${PG_VERSION}" "${cluster_name}"
   fi
 
-  pg_ctlcluster "${PG_VERSION}" "${cluster_name}" start
+  pg_ctlcluster "${PG_VERSION}" "${cluster_name}" start || true
 }
 
 create_cluster "auth" 5433 "${DATA_ROOT}/auth"
@@ -85,6 +85,10 @@ ensure_db_and_migrate() {
   local port="$1"
   local db_name="$2"
   local service="$3"
+
+  echo "Ensuring user 'user' exists on port ${port}..."
+  runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='user'" | grep -q 1 \
+    || runuser -u postgres -- psql -p "${port}" -d postgres -c "CREATE USER \"user\" WITH PASSWORD 'password' SUPERUSER;"
 
   echo "Ensuring database ${db_name} exists on port ${port}..."
   runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
@@ -125,7 +129,11 @@ start_service_fallback() {
       return 0
     fi
     echo "Starting memcached in daemon mode..."
-    memcached -d
+    if [[ "${EUID}" -eq 0 ]]; then
+      memcached -d -u nobody || true
+    else
+      memcached -d || true
+    fi
     return 0
   fi
   echo "Unable to manage service $svc: no systemd/service/manual fallback available."

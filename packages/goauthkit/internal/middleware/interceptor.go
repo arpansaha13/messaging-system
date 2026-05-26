@@ -61,6 +61,7 @@ func isPublicEndpoint(fullMethod string) bool {
 		"/proto.AuthService/VerifyOTP":      true,
 		"/proto.AuthService/ForgotPassword": true,
 		"/proto.AuthService/ResetPassword":  true,
+		"/proto.AuthService/LiveZ":          true,
 	}
 
 	return publicEndpoints[fullMethod]
