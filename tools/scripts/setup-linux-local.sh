@@ -81,10 +81,9 @@ if [[ ! -x /usr/local/bin/migrate ]]; then
 fi
 MIGRATE_BIN="/usr/local/bin/migrate"
 
-ensure_db_and_migrate() {
+ensure_db() {
   local port="$1"
   local db_name="$2"
-  local service="$3"
 
   echo "Ensuring user 'user' exists on port ${port}..."
   runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_roles WHERE rolname='user'" | grep -q 1 \
@@ -93,6 +92,14 @@ ensure_db_and_migrate() {
   echo "Ensuring database ${db_name} exists on port ${port}..."
   runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
     || runuser -u postgres -- createdb -p "${port}" "${db_name}"
+}
+
+ensure_db_and_migrate() {
+  local port="$1"
+  local db_name="$2"
+  local service="$3"
+
+  ensure_db "${port}" "${db_name}"
 
   local dsn="postgres://postgres@/${db_name}?host=/var/run/postgresql&port=${port}&sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
@@ -100,7 +107,7 @@ ensure_db_and_migrate() {
 }
 
 ensure_db_and_migrate 5433 "auth_db" "auth"
-ensure_db_and_migrate 5434 "users_db" "user"
+ensure_db 5434 "users_db"
 ensure_db_and_migrate 5432 "messaging_db" "backend"
 
 has_systemd() {

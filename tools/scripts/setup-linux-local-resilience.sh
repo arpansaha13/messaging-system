@@ -53,14 +53,21 @@ if [[ -z "${MIGRATE_BIN}" || ! -x "${MIGRATE_BIN}" ]]; then
   exit 1
 fi
 
+ensure_db() {
+  local port="$1"
+  local db_name="$2"
+
+  echo "Ensuring database ${db_name} exists on port ${port}..."
+  runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
+    || runuser -u postgres -- createdb -p "${port}" "${db_name}"
+}
+
 ensure_db_and_migrate() {
   local port="$1"
   local db_name="$2"
   local service="$3"
 
-  echo "Ensuring database ${db_name} exists on port ${port}..."
-  runuser -u postgres -- psql -p "${port}" -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname='${db_name}'" | grep -q 1 \
-    || runuser -u postgres -- createdb -p "${port}" "${db_name}"
+  ensure_db "${port}" "${db_name}"
 
   local dsn="postgres://postgres@/${db_name}?host=/var/run/postgresql&port=${port}&sslmode=disable"
   echo "Running migrations for ${service} on ${db_name}..."
@@ -68,7 +75,7 @@ ensure_db_and_migrate() {
 }
 
 ensure_db_and_migrate 7531 "auth_resilience_db" "auth"
-ensure_db_and_migrate 7532 "users_resilience_db" "user"
+ensure_db 7532 "users_resilience_db"
 ensure_db_and_migrate 7533 "messaging_resilience_db" "backend"
 
 echo ""
