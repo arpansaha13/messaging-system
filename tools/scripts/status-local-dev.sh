@@ -158,11 +158,13 @@ echo "Infrastructure status checks:"
 # Check PostgreSQL instances
 pg_5432=$( (pg_isready -p 5432 -h localhost >/dev/null 2>&1 || check_tcp_port 5432) && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}" )
 pg_5433=$( (pg_isready -p 5433 -h localhost >/dev/null 2>&1 || check_tcp_port 5433) && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}" )
+pg_5434=$( (pg_isready -p 5434 -h localhost >/dev/null 2>&1 || check_tcp_port 5434) && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}" )
 rabbitmq=$(check_tcp_port 5672 && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}")
 memcached=$(check_tcp_port 11211 && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}")
 
 echo " - PostgreSQL (default, 5432): $pg_5432"
 echo " - PostgreSQL (auth, 5433):    $pg_5433"
+echo " - PostgreSQL (user, 5434):    $pg_5434"
 echo " - RabbitMQ (5672):            $rabbitmq"
 echo " - Memcached (11211):          $memcached"
 echo "=========================================================================================="

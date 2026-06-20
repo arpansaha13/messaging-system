@@ -74,6 +74,12 @@ start_infra() {
     pg_ctlcluster "${pg_ver}" auth start || echo "Warning: Could not start auth PostgreSQL cluster. Please start it manually."
   fi
 
+  # Check user Postgres (port 5434)
+  if ! pg_isready -p 5434 -h localhost >/dev/null 2>&1 && ! check_tcp_port 5434; then
+    echo "PostgreSQL (user cluster, port 5434) is not running. Attempting to start..."
+    pg_ctlcluster "${pg_ver}" user start || echo "Warning: Could not start user PostgreSQL cluster. Please start it manually."
+  fi
+
   # Check RabbitMQ (port 5672)
   if ! check_tcp_port 5672; then
     echo "RabbitMQ is not running. Attempting to start..."
