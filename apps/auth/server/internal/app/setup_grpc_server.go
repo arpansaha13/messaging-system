@@ -70,6 +70,7 @@ func SetupDependencies(db *gorm.DB, zapLogger *zap.Logger, cbs *circuits.Circuit
 			SecretKey:  cfg.SecretKey(),
 			EmailPool:  emailPool,
 		},
+		nil,
 	)
 
 	return &Dependencies{

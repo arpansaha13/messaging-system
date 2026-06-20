@@ -2,8 +2,9 @@ package service
 
 import (
 	"context"
+	"time"
 
-	"github.com/arpansaha13/gotoolkit/gtk"
+	"github.com/arpansaha13/messaging-system/packages/gotoolkit/gtk"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/dto"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/repository"
 	"github.com/arpansaha13/messaging-system/apps/backend/server/internal/utils"
@@ -12,6 +13,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 )
+
+const userProfileTimeout = 10 * time.Second
 
 // UserService handles user profile business logic
 type UserService struct {
@@ -37,7 +40,7 @@ func (s *UserService) GetUserProfile(ctx context.Context) (*domain.UserProfile, 
 	key := coalesce.GetUserProfilesKey([]int64{userID})
 	ch := s.sf.DoChan(key, func() (any, error) {
 		detachedCtx := context.WithoutCancel(ctx)
-		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, userProfileTimeout)
 		defer cancel()
 		return s.userRepo.GetByID(detachedCtx, userID)
 	})
@@ -80,7 +83,7 @@ func (s *UserService) GetUserProfileWithContact(ctx context.Context, req *dto.Ge
 	key := coalesce.GetUserProfilesKey([]int64{req.ID})
 	ch := s.sf.DoChan(key, func() (any, error) {
 		detachedCtx := context.WithoutCancel(ctx)
-		detachedCtx, cancel := context.WithTimeout(detachedCtx, defaultTimeout)
+		detachedCtx, cancel := context.WithTimeout(detachedCtx, userProfileTimeout)
 		defer cancel()
 		return s.userRepo.GetByID(detachedCtx, req.ID)
 	})

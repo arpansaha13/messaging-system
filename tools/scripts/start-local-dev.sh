@@ -74,12 +74,6 @@ start_infra() {
     pg_ctlcluster "${pg_ver}" auth start || echo "Warning: Could not start auth PostgreSQL cluster. Please start it manually."
   fi
 
-  # Check user Postgres (port 5434)
-  if ! pg_isready -p 5434 -h localhost >/dev/null 2>&1 && ! check_tcp_port 5434; then
-    echo "PostgreSQL (user cluster, port 5434) is not running. Attempting to start..."
-    pg_ctlcluster "${pg_ver}" user start || echo "Warning: Could not start user PostgreSQL cluster. Please start it manually."
-  fi
-
   # Check RabbitMQ (port 5672)
   if ! check_tcp_port 5672; then
     echo "RabbitMQ is not running. Attempting to start..."
@@ -110,12 +104,12 @@ stop_all() {
   fi
 
   # Stop Go services and frontend
-  for svc in auth user backend socket chat-worker frontend; do
+  for svc in auth backend socket chat-worker frontend; do
     stop_service "$svc"
   done
 
   # Force clear ports to ensure no ghost processes remain
-  for port in 7000 3000 4001 4002 4003 4004 50051 50052; do
+  for port in 7000 3000 4001 4003 4004 50051; do
     kill_port "$port"
   done
 
@@ -140,8 +134,6 @@ start_all() {
   
   # Build auth
   (cd "${REPO_ROOT}/apps/auth/server" && go build -o bin/auth ./cmd/server)
-  # Build user
-  (cd "${REPO_ROOT}/apps/user" && go build -o bin/user ./cmd)
   # Build backend
   (cd "${REPO_ROOT}/apps/backend/server" && go build -o bin/backend ./cmd/server)
   # Build socket
@@ -160,17 +152,7 @@ start_all() {
   "${REPO_ROOT}/apps/auth/server/bin/auth" > "${REPO_ROOT}/logs/auth.log" 2>&1 &
   echo $! > "${REPO_ROOT}/.pids/auth.pid"
 
-  # 2. Start User Service
-  echo " - Starting User Service..."
-  USER_DB_URL="$USER_DATABASE_URL" \
-  DATABASE_URL="$USER_DATABASE_URL" \
-  HTTP_PORT="$USER_HTTP_PORT" \
-  GRPC_PORT="50052" \
-  METRICS_PORT="$USER_METRICS_PORT" \
-  "${REPO_ROOT}/apps/user/bin/user" > "${REPO_ROOT}/logs/user.log" 2>&1 &
-  echo $! > "${REPO_ROOT}/.pids/user.pid"
-
-  # 3. Start Backend Service
+  # 2. Start Backend Service
   echo " - Starting Backend Service..."
   DATABASE_URL="$BACKEND_DATABASE_URL" \
   API_PORT="$BACKEND_HTTP_PORT" \
@@ -178,25 +160,25 @@ start_all() {
   "${REPO_ROOT}/apps/backend/server/bin/backend" > "${REPO_ROOT}/logs/backend.log" 2>&1 &
   echo $! > "${REPO_ROOT}/.pids/backend.pid"
 
-  # 4. Start Socket Service
+  # 3. Start Socket Service
   echo " - Starting Socket Service..."
   PORT="$SOCKET_HTTP_PORT" \
   METRICS_PORT="$SOCKET_METRICS_PORT" \
   "${REPO_ROOT}/apps/socket/bin/socket" > "${REPO_ROOT}/logs/socket.log" 2>&1 &
   echo $! > "${REPO_ROOT}/.pids/socket.pid"
 
-  # 5. Start Chat Worker
+  # 4. Start Chat Worker
   echo " - Starting Chat Worker..."
   DATABASE_URL="$BACKEND_DATABASE_URL" \
   "${REPO_ROOT}/apps/chat-worker/bin/chat-worker" > "${REPO_ROOT}/logs/chat-worker.log" 2>&1 &
   echo $! > "${REPO_ROOT}/.pids/chat-worker.pid"
 
-  # 6. Start Frontend (Nuxt)
+  # 5. Start Frontend (Nuxt)
   echo " - Starting Frontend (Nuxt)..."
   pnpm --dir "${REPO_ROOT}/apps/frontend" run dev > "${REPO_ROOT}/logs/frontend.log" 2>&1 &
   echo $! > "${REPO_ROOT}/.pids/frontend.pid"
 
-  # 7. Start Nginx
+  # 6. Start Nginx
   echo " - Starting Nginx Reverse Proxy..."
   if ! command -v nginx >/dev/null 2>&1; then
     echo "Error: Nginx not installed. Cannot start reverse proxy on port 7000."

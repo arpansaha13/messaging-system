@@ -143,9 +143,6 @@ print_service_status "frontend" "3000" "${REPO_ROOT}/.pids/frontend.pid" "${REPO
 # Auth Service
 print_service_status "auth-service" "4001,50051" "${REPO_ROOT}/.pids/auth.pid" "${REPO_ROOT}/logs/auth.log"
 
-# User Service
-print_service_status "user-service" "4002,50052" "${REPO_ROOT}/.pids/user.pid" "${REPO_ROOT}/logs/user.log"
-
 # Backend Service
 print_service_status "backend" "4003" "${REPO_ROOT}/.pids/backend.pid" "${REPO_ROOT}/logs/backend.log"
 
@@ -161,13 +158,11 @@ echo "Infrastructure status checks:"
 # Check PostgreSQL instances
 pg_5432=$( (pg_isready -p 5432 -h localhost >/dev/null 2>&1 || check_tcp_port 5432) && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}" )
 pg_5433=$( (pg_isready -p 5433 -h localhost >/dev/null 2>&1 || check_tcp_port 5433) && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}" )
-pg_5434=$( (pg_isready -p 5434 -h localhost >/dev/null 2>&1 || check_tcp_port 5434) && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}" )
 rabbitmq=$(check_tcp_port 5672 && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}")
 memcached=$(check_tcp_port 11211 && echo "${GREEN}Active${NC}" || echo "${RED}Inactive${NC}")
 
 echo " - PostgreSQL (default, 5432): $pg_5432"
 echo " - PostgreSQL (auth, 5433):    $pg_5433"
-echo " - PostgreSQL (user, 5434):    $pg_5434"
 echo " - RabbitMQ (5672):            $rabbitmq"
 echo " - Memcached (11211):          $memcached"
 echo "=========================================================================================="
